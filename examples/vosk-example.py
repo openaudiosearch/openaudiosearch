@@ -47,7 +47,7 @@ if __name__ == "__main__":
             metavar="<file>",
             type=str,
             required=True,
-            help="The file to read the transition probabilities from."
+            help="The Audiofile to transcribe"
                                                                                 )
     # Parse the command line arguments.
     args = parser.parse_args()
