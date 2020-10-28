@@ -15,8 +15,6 @@ def preprocessAudio(samplerate, audiofile):
 def transcribe_vosk(audio, model_path):
     model = Model(model_path)
     rec = KaldiRecognizer(model, 16000)
-
-    transcript = ""
     results = []
     process = preprocessAudio(16000,audio)
     while True:
@@ -25,8 +23,7 @@ def transcribe_vosk(audio, model_path):
             break
         if rec.AcceptWaveform(data):
             recResult = json.loads(rec.Result())
-            transcript = transcript + " " + recResult['text']
             results.append(recResult)
-    return (results, transcript)
+    return  results
 
 
