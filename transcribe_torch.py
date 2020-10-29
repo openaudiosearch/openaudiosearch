@@ -24,7 +24,6 @@ def init_jit_model(model_path: str,
                    device: torch.device = torch.device('cpu')):
     torch.set_grad_enabled(False)
     model = torch.jit.load(os.path.join(model_path, "de_v1_jit.model"))
-    #FIXME maybe labels from file
     return model, Decoder(model.labels)
 
 class Decoder():
@@ -110,12 +109,8 @@ def split_into_batches(lst: List[str],
 def read_audio(path: str,
                target_sr: int = 16000):
 
-    #FIXME is 'sox' assert torchaudio.get_audio_backend() == 'soundfile'
+    assert torchaudio.get_audio_backend() == 'sox'
     wav, sr = torchaudio.load(path)
-    #FIXME throws OSError.
-    #   Filecheck fails in **torchaudio/backend/sox_backend.py: os.path.isfile(filepath)
-    #   Gets tensor instead of fpath, ???
-    #   Invoked by prepare_model_input OR read_batch afterwards ???
 
     if wav.size(0) > 1:
         wav = wav.mean(dim=0, keepdim=True)
@@ -147,13 +142,12 @@ def transcribe_torch(audio, model_path):
     model, decoder = init_jit_model(model_path, device=device)
     input_audio = read_audio(audio)
     batches = split_into_batches(input_audio, batch_size=10)
-    in_batches = read_batch(batches[0]) #FIXME error invoked here, by passing audio, too
-    #input = prepare_model_input(in_batches, device=device)
+    input = prepare_model_input(batches, device=device)
 
-    #output = model(input)
+    output = model(input)
 
-    #for example in output:
-    #    print(decoder(example.cpu()))
+    for example in output:
+        print(decoder(example.cpu()))
     
-    #FIXME return (results, transcript)
+    # return (results, transcript)
     
