@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
+
 import setuptools
 
-with open("README.md","r") as readme:
+with open("README.md", "r") as readme:
     long_description = readme.read()
 
 setuptools.setup(

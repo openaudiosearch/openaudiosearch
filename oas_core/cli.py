@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 import typing as T
 from pydantic_cli import run_and_exit, to_runner

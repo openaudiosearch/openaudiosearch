@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import uvicorn
 from app.server.main import app
 
