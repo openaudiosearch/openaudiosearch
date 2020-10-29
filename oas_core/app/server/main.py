@@ -3,8 +3,6 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 
 from app.server.api import router as api_router
-#  from app.core.config import settings
-
 
 api_v1_prefix = '/oas/v1'
 
@@ -14,6 +12,7 @@ app = FastAPI(
     description="Open Audio Search API server",
     openapi_url=f"{api_v1_prefix}/openapi.json"
 )
+
 
 @app.get("/", include_in_schema=False)
 def docs_redirect():
@@ -28,5 +27,6 @@ def docs_redirect():
 #          allow_methods=["*"],
 #          allow_headers=["*"],
 #      )
+
 
 app.include_router(api_router, prefix=api_v1_prefix)

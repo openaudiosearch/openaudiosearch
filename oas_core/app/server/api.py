@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 
+from app.core.util import uuid
 from app.server.models import (
     TranscriptResponse,
     TranscriptRequest,
@@ -10,14 +11,16 @@ from app.server.models import (
 
 router = APIRouter()
 
+
 @router.post("/transcript", response_model=TranscriptResponse)
 def post_transcript(item: TranscriptRequest):
-    return {"id": task.id, "status":"queued"}
+    id = uuid()
+    return {"id": id, "status": "queued"}
+
 
 @router.get("/transcript/{id}", response_model=StatusResponse)
 def get_status(id: str):
-    return {"id": id, "status":"completed", "foo": "asdf"}
-
+    return {"id": id, "status": "completed", "foo": "asdf"}
 
 
 #  from app.queue import queue
