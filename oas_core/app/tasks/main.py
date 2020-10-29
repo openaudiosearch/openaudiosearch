@@ -57,7 +57,8 @@ def asr(task: Task, args: AsrArgs, opts: AsrOpts) -> AsrResult:
     model_path='/home/oas/models/vosk-model-de-0.6'
     if opts.engine == "vosk":
         result = transcribe_vosk(args.file_path, model_path)
-        return AsrResult(text=result)
+        print(f'RESULT: {result}')
+        return AsrResult(text=str(result))
     elif opts.engine == "deepspeech":
         raise NotImplementedError("ASR using deepspeech is not available yet")
     elif opts.engine == "torch":
@@ -70,7 +71,7 @@ def asr(task: Task, args: AsrArgs, opts: AsrOpts) -> AsrResult:
 @worker.task('transcribe')
 def transcribe(task: Task, args: TranscribeArgs, opts: TranscribeOpts):
     job = task.job
-    job.add_task(download)
+    job.add_task(download, opts=DownloadOpts())
     job.add_task(prepare, opts=opts)
     job.add_task(asr, opts=opts)
     return DownloadArgs(media_url=args.media_url)
