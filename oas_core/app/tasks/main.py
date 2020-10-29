@@ -10,7 +10,7 @@ from app.core.util import download_file, pretty_bytes
 
 
 @worker.task('download', result=PrepareArgs)
-def download(task: Task, args: DownloadArgs, opts: None) -> PrepareArgs:
+def download(task: Task, args: DownloadArgs, opts: DownloadOpts) -> PrepareArgs:
     # todo: maybe cache downloads globally by url hash
     # instead of locally per job
     #url_hash = sha256(args.media_url).hexdigest()

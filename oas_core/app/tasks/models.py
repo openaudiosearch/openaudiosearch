@@ -3,11 +3,10 @@ from pydantic import BaseModel
 
 class DownloadArgs(BaseModel):
     media_url: str
-    refresh = False
 
 
 class DownloadOpts(BaseModel):
-    pass
+    refresh = False
 
 
 class PrepareArgs(BaseModel):
