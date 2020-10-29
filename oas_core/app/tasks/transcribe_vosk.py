@@ -12,6 +12,6 @@ def transcribe_vosk(audio, model_path):
         if len(data) == 0:
             break
         if rec.AcceptWaveform(data):
-            recResult = json.loads(rec.Result())
-            results.append(recResult)
+            rec_result = json.loads(rec.Result())
+            results.append(rec_result)
     return  results

@@ -35,6 +35,10 @@ class NlpArgs(BaseModel):
     text: str
 
 
+class NlpResult(BaseModel):
+    result: dict
+
+
 class TranscribeArgs(BaseModel):
     media_url: str
 
@@ -43,6 +47,7 @@ class TranscribeOpts(PrepareOpts, AsrOpts):
     samplerate = 16000
     engine: str
     language: str = 'de'
+
 
 
 # this is used by the CLI

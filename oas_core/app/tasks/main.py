@@ -7,7 +7,7 @@ from app.worker import worker
 from app.core.job import Task
 from app.tasks.models import *
 from app.core.util import download_file, pretty_bytes
-
+from app.tasks.spacy_pipe import SpacyPipe
 from app.tasks.transcribe_vosk import transcribe_vosk
 
 
@@ -67,6 +67,11 @@ def asr(task: Task, args: AsrArgs, opts: AsrOpts) -> AsrResult:
         raise RuntimeError("ASR engine not specified")
     return AsrResult(text='')
 
+@worker.task('nlp')
+def nlp(task: Task, args: NlpArgs) -> NlpResult:
+    spacy = SpacyPipe(args.pipeline)
+    res = spacy.run(args.text)
+    return NlpResult(result=res)
 
 @worker.task('transcribe')
 def transcribe(task: Task, args: TranscribeArgs, opts: TranscribeOpts):
