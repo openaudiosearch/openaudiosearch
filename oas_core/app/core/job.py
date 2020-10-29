@@ -12,7 +12,7 @@ from enum import Enum
 from pydantic import BaseModel
 from redis import StrictRedis as Redis, ConnectionPool
 from typing import Any, Dict
-from functools import wraps
+# from functools import wraps
 
 from app.core.util import uuid, get_typed_signature
 
