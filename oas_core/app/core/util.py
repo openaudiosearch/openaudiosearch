@@ -1,7 +1,14 @@
 import requests
+import inspect
 import os
 from base64 import b32encode
 from uuid import uuid4
+from typing import (
+    Any,
+    Callable,
+    Dict
+)
+from pydantic.typing import ForwardRef, evaluate_forwardref
 
 
 def uuid():
@@ -43,3 +50,30 @@ def download_file(url, local_filename, on_progress=None, on_headers=None):
                 if on_progress and download_size and total_size:
                     on_progress(download_size / total_size)
                 f.flush()
+
+
+# the following three functions are copied from fastapi/dependencies/utils.py
+def get_typed_signature(call: Callable) -> inspect.Signature:
+    signature = inspect.signature(call)
+    globalns = getattr(call, "__globals__", {})
+    typed_params = [
+        inspect.Parameter(
+            name=param.name,
+            kind=param.kind,
+            default=param.default,
+            annotation=get_typed_annotation(param, globalns),
+        )
+        for param in signature.parameters.values()
+    ]
+    typed_signature = inspect.Signature(typed_params)
+    return typed_signature
+
+
+def get_typed_annotation(param: inspect.Parameter, globalns: Dict[str, Any]) -> Any:
+    annotation = param.annotation
+    if isinstance(annotation, str):
+        # Temporary ignore type
+        # Ref: https://github.com/samuelcolvin/pydantic/issues/1738
+        annotation = ForwardRef(annotation)  # type: ignore
+        annotation = evaluate_forwardref(annotation, globalns, globalns)
+    return annotation

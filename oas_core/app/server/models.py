@@ -32,4 +32,6 @@ class StatusRequest (BaseModel):
 
 
 class StatusResponse(TranscriptResponse):
-    foo: str
+    id: str
+    status: TranscriptStatus
+    result: Optional[AsrResult] = None

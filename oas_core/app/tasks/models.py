@@ -6,6 +6,10 @@ class DownloadArgs(BaseModel):
     refresh = False
 
 
+class DownloadOpts(BaseModel):
+    pass
+
+
 class PrepareArgs(BaseModel):
     file_path: str
 
@@ -40,3 +44,10 @@ class TranscribeOpts(PrepareOpts, AsrOpts):
     samplerate = 16000
     engine: str
     language: str = 'de'
+
+
+# this is used by the CLI
+TASKS = {
+    'transcribe': (TranscribeArgs, TranscribeOpts),
+    'download': (DownloadArgs, DownloadOpts),
+}

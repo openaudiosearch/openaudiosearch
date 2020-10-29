@@ -6,20 +6,17 @@ from app.core.job import Worker
 from app.tasks.models import TranscribeOpts, TranscribeArgs
 from app.worker import worker
 
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    opts = TranscribeOpts(**{
-        'engine': 'vosk'
-    })
+from app.core.job import Client
 
-    url1 = 'https://audio1.thomann.de/wav_audiot/156266/2137_mp3-256.mp3?p=2x4p65p.mp3'
-    url2 = 'https://arso.xyz'
-    args1 = TranscribeArgs(**{
-        'media_url': url1
-    })
-    args2 = TranscribeArgs(**{
-        'media_url': url2
-    })
-    worker.enqueue_job('transcribe', args1, opts)
-    worker.enqueue_job('transcribe', args2, opts)
-    worker.run()
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    client = Client()
+
+    while True:
+        task = client.dequeue_task()
+        if task:
+            logging.info(f'START task {task.job_id}: {task.task_name}')
+            worker.queue_job(task.task_name, task.args,
+                             task.opts, id=task.job_id)
+            worker.run()
+            logging.info(f'DONE task {task.job_id}: {task.task_name}')
