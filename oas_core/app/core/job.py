@@ -1,15 +1,17 @@
 import os
-from typing import Any, Dict
 from pathlib import Path
 import logging
 import traceback
 import sys
 import tempfile
-from functools import wraps
 from queue import Queue
 from enum import Enum
 
-from .util import uuid
+from typing import Any, Dict
+from functools import wraps
+
+from app.core.util import uuid
+
 
 class State(Enum):
     queued = 'queued'
@@ -17,7 +19,8 @@ class State(Enum):
     blocked = 'blocked'
     completed = 'completed'
     error = 'error'
-    
+
+
 class Worker(object):
 
     def __init__(self, cache_path=None):
@@ -25,7 +28,7 @@ class Worker(object):
         self.registered_tasks: Dict[str, Any] = {}
         self.queue: Queue = Queue()
 
-    def task(self, name=None,result=None):
+    def task(self, name=None, result=None):
         print(f'register task: {name}')
         """
         Register a task
@@ -40,7 +43,7 @@ class Worker(object):
             # def wrapper(*args, **kwargs):
             #     # print(f'register call!! {name}')
             #     raise NotImplementedError('May not call tasks directly')
-            
+
             # wrapper.__task = task
 
             # print(f'worker self {self.registered_tasks}')
@@ -48,7 +51,7 @@ class Worker(object):
             return wrapped_fn
 
         return decorator
-        
+
     def enqueue_job(self, task_name: str, args, opts):
         if not task_name in self.registered_tasks:
             raise NameError(f'Task not found: {task_name}')
@@ -64,7 +67,6 @@ class Worker(object):
 
         self.queue.put(job)
 
-
     def run(self):
         while True:
             print(f'QUEUE LENGTH: {len(self.queue.queue)}')
@@ -73,6 +75,7 @@ class Worker(object):
             job.run()
             print(f'FIN {job.id}')
             self.queue.task_done()
+
 
 class Job(object):
 
@@ -114,7 +117,7 @@ class Job(object):
             task = self.queue.get()
 
             # TODO: multiprocessing
-            task.run(input) 
+            task.run(input)
 
             if task.success():
                 self.log(f'result {task.result}')
@@ -127,7 +130,6 @@ class Job(object):
                 # traceback.print_tb(task.error.__traceback__)
                 self.set_state(State.error)
                 return
-
 
     def file_path(self, filename, scope=True) -> str:
         # if not scope:
@@ -155,7 +157,7 @@ class Task(object):
 
     def set_opts(self, opts):
         self.opts = opts
-    
+
     def set_args(self, args):
         self.args = args
 
@@ -189,15 +191,16 @@ class Task(object):
             self.error = error
             self.set_state(State.error)
             traceback.print_exc()
-    
+
     def file_path(self, filename):
         return self.job.file_path(os.path.join(self.name, filename))
+
 
 class WrappedTaskFn(object):
     def __init__(self, name, fn):
         self.name = name
         self.fn = fn
-    
+
     def __call__(self, task: Task, args, opts):
         if not opts:
             opts = None
