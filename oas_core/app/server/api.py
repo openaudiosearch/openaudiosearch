@@ -2,25 +2,34 @@ from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 
 from app.core.util import uuid
+from app.server.jobs import jobs
 from app.server.models import (
+    TranscriptStatus,
     TranscriptResponse,
     TranscriptRequest,
     StatusRequest,
     StatusResponse,
 )
+from app.tasks.models import TranscribeArgs, TranscribeOpts
 
 router = APIRouter()
 
 
 @router.post("/transcript", response_model=TranscriptResponse)
 def post_transcript(item: TranscriptRequest):
-    id = uuid()
-    return {"id": id, "status": "queued"}
+    args = TranscribeArgs(**item.dict())
+    opts = TranscribeOpts(**item.dict())
+    id = jobs.queue_job('transcribe', args, opts)
+    return TranscriptResponse(id=id, status=TranscriptStatus.queued)
 
 
 @router.get("/transcript/{id}", response_model=StatusResponse)
 def get_status(id: str):
-    return {"id": id, "status": "completed", "foo": "asdf"}
+    result = jobs.get_result(id)
+    if not result:
+        return StatusResponse(id=id, status=TranscriptStatus.queued)
+    print('RESULT', result)
+    return StatusResponse(id=id, status=TranscriptStatus.completed, result=result)
 
 
 #  from app.queue import queue
