@@ -8,7 +8,7 @@ from app.core.job import Task
 from app.tasks.models import *
 from app.core.util import download_file, pretty_bytes
 
-from transcribe_vosk import transcribe_vosk
+from app.tasks.transcribe_vosk import transcribe_vosk
 
 
 @worker.task('download', result=PrepareArgs)
@@ -53,8 +53,10 @@ def prepare(task: Task, args: PrepareArgs, opts: PrepareOpts) -> AsrArgs:
 
 @worker.task('asr')
 def asr(task: Task, args: AsrArgs, opts: AsrOpts) -> AsrResult:
+    # TODO: Set via config
+    model_path='/home/oas/models/vosk-model-de-0.6'
     if opts.engine == "vosk":
-        result = transcribe_vosk(args.file_path, args.model_path)
+        result = transcribe_vosk(args.file_path, model_path)
         return AsrResult(text=result)
     elif opts.engine == "deepspeech":
         raise NotImplementedError("ASR using deepspeech is not available yet")
@@ -62,6 +64,7 @@ def asr(task: Task, args: AsrArgs, opts: AsrOpts) -> AsrResult:
         raise NotImplementedError("ASR using torch is not available yet")
     else:
         raise RuntimeError("ASR engine not specified")
+    return AsrResult(text='')
 
 
 @worker.task('transcribe')
