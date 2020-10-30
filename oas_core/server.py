@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 
-import uvicorn
-import os
-from app.server.main import app
+"""
+OAS server bin
+"""
 
-root_path = os.environ.get('ROOT_PATH') or None
-print(root_path)
+import os
+import uvicorn
+
+from app.server.main import app
+from app.config import config
+
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=8080, log_level='info', root_path=root_path)
+    uvicorn.run(app, host=config.host, port=config.port,
+                log_level=config.log_level, root_path=config.root_path)

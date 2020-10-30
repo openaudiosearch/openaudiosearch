@@ -15,6 +15,7 @@ from typing import Any, Dict
 # from functools import wraps
 
 from app.core.util import uuid, get_typed_signature
+from app.config import config
 
 
 class State(Enum):
@@ -223,9 +224,8 @@ class Job(object):
         # else:
         #     path = os.path.join(self.cache_path, 'job', self.id, filename)
         path = os.path.join(self.cache_path, filename)
-        path = Path(path)
-        os.makedirs(path.parent, exist_ok=True)
-        return str(path)
+        ensure_dir(path)
+        return path
 
 
 class Task(object):
@@ -278,7 +278,12 @@ class Task(object):
             self.set_state(State.error)
             traceback.print_exc()
 
-    def file_path(self, filename):
+    def file_path(self, filename, root=False):
+        if root:
+            path = os.path.join(config.storage_path, filename)
+            ensure_dir(path)
+            return path
+
         return self.job.file_path(os.path.join(self.name, filename))
 
 
@@ -304,3 +309,8 @@ class WrappedTaskFn(object):
         args = signature.parameters['args'].annotation
         opts = signature.parameters['opts'].annotation
         return (args, opts)
+
+
+def ensure_dir(path: str):
+    path = Path(path)
+    os.makedirs(path.parent, exist_ok=True)

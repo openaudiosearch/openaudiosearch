@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
+import os
 
 from app.server.api import router as api_router
+from app.config import config
 
 api_v1_prefix = '/oas/v1'
 

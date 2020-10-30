@@ -30,9 +30,8 @@ class AsrResult(BaseModel):
     text: str
 
 
-class NlpArgs(BaseModel):
+class NlpOpts(BaseModel):
     pipeline: str
-    text: str
 
 
 class NlpResult(BaseModel):
@@ -47,7 +46,6 @@ class TranscribeOpts(PrepareOpts, AsrOpts):
     samplerate = 16000
     engine: str
     language: str = 'de'
-
 
 
 # this is used by the CLI
