@@ -1,6 +1,7 @@
 # Open Audio Search
 
-[Installation](./docs/install.md)
+- [Installation](./docs/install.md)
+- [Development setup](./docs/development.md)
 
 ## Configuration
 
