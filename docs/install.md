@@ -29,3 +29,11 @@ Either download and extract the following models repositories in `~/models`:
 
 Or, run \#FIXME script to automate downloading and extraction of models.
 
+
+# Update your installation
+
+After pulling changes from others, you want to update your python environment.
+Run this command to update the active conda environment with changes:
+```bash
+conda env update -f environment.yml
+```
