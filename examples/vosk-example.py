@@ -6,7 +6,6 @@ import subprocess
 import json
 import argparse
 import spacy
-import deepspeech
 
 sample_rate = 16000
 
@@ -41,7 +40,7 @@ def transcribe_vosk(model_path, process):
             recResult = json.loads(rec.Result())
             transcript = transcript + " " + recResult['text']
             results.append(recResult)
-    return (results, transcript)
+    return transcript
 
 
 def transcribe_deepspeech(model_path, process):
@@ -87,24 +86,24 @@ if __name__ == "__main__":
             help="Path to Audiofile")
     
     # Add an argument to define the path for the Kaldi-Model.
-    parser.add_argument("-n", 
-            "--nlp", 
-            metavar="<nlp>", 
-            type=str, 
-            required=True, 
-            help="The NLP Engine to use.")
-    parser.add_argument("-p",
-            '--pipe',
-            metavar="<pipeline>", 
-            nargs='+',
-            help='list of nlp tasks (e.g "ner" "pos")'
-                                                                                )
+    # parser.add_argument("-n", 
+    #         "--nlp", 
+    #         metavar="<nlp>", 
+    #         type=str, 
+    #         required=True, 
+    #         help="The NLP Engine to use.")
+    # parser.add_argument("-p",
+    #         '--pipe',
+    #         metavar="<pipeline>", 
+    #         nargs='+',
+    #         help='list of nlp tasks (e.g "ner" "pos")'
+                                                                                
     # Parse the command line arguments.
     args = parser.parse_args()
-    if args.nlp == "spacy":
-        nlp = ("spacy", spacy.load("de_core_news_md"))
+    # if args.nlp == "spacy":
+    #     nlp = ("spacy", spacy.load("de_core_news_md"))
     process= preprocessAudio(16000, args.file)
-    results, transcript = transcribe(args.model, process, "deepspeech")
+    transcript = transcribe_vosk(args.model, process)
     print(transcript)
     #res = nlp(transcript, nlp, args.pipeline)
     #print(res)
