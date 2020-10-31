@@ -7,6 +7,7 @@ from pydub import AudioSegment
 from hashlib import sha256
 from mimetypes import guess_extension
 
+from app.config import config
 from app.worker import worker
 from app.core.job import Task
 from app.tasks.models import *
@@ -90,8 +91,7 @@ def prepare(task: Task, args: PrepareArgs, opts: PrepareOpts) -> AsrArgs:
 
 @worker.task('asr')
 def asr(task: Task, args: AsrArgs, opts: AsrOpts) -> AsrResult:
-    # TODO: Set via config
-    model_path = '/home/oas/models/vosk-model-de-0.6'
+    model_path = os.path.join(config.model_path, config.model)
     if opts.engine == "vosk":
         result = transcribe_vosk(args.file_path, model_path)
         print(f'RESULT: {result}')
