@@ -1,6 +1,7 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, HTMLResponse
 import os
 
 from app.server.api import router as api_router
@@ -16,9 +17,35 @@ app = FastAPI(
 )
 
 
+def read_index_html():
+    path = os.path.abspath('../frontend/dist/index.html')
+    # Open a file: file
+    with open(path, mode='r') as file:
+        # read all lines at once
+        text = file.read()
+        script = f'<script>window.OAS_ROOT_PATH="{config.root_path}";</script>'
+        text = text.replace('</head>', script + '</head>')
+        return text
+
+
+index_html = read_index_html()
+
+
 @app.get("/", include_in_schema=False)
 def docs_redirect():
-    return RedirectResponse(f"/docs")
+    ui_path = config.root_path + '/ui/index.html'
+    return RedirectResponse(ui_path)
+
+
+@app.get("/ui/index.html", include_in_schema=False)
+def get_index_html():
+    response = HTMLResponse(index_html)
+    return response
+
+
+static_path = os.path.abspath('../frontend/dist/static')
+app.mount("/ui/static", StaticFiles(directory=static_path,
+                                    html=True), name="static")
 
 
 # Set all CORS enabled origins
