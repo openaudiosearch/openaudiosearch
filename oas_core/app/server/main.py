@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 import os
@@ -18,8 +19,12 @@ app = FastAPI(
 
 @app.get("/", include_in_schema=False)
 def docs_redirect():
-    return RedirectResponse(f"/docs")
+    ui_path = config.root_path + '/ui'
+    return RedirectResponse(ui_path)
 
+
+static_path = os.path.abspath('../frontend/dist')
+app.mount("/ui", StaticFiles(directory=static_path, html=True), name="static")
 
 # Set all CORS enabled origins
 #  if settings.BACKEND_CORS_ORIGINS:
