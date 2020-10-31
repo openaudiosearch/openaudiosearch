@@ -14,6 +14,8 @@ from app.core.util import download_file, pretty_bytes
 from app.tasks.spacy_pipe import SpacyPipe
 from app.tasks.transcribe_vosk import transcribe_vosk
 
+import app.tasks.download_models
+
 
 def url_to_path(url: str) -> str:
     parsed_url = urlparse(url)
