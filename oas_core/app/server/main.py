@@ -24,7 +24,7 @@ def read_index_html():
         # read all lines at once
         text = file.read()
         script = f'<script>window.OAS_ROOT_PATH="{config.root_path}";</script>'
-        text = text.replace('</body>', script + '</body>')
+        text = text.replace('</head>', script + '</head>')
         return text
 
 
