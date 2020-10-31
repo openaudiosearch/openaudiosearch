@@ -26,7 +26,7 @@ def url_to_path(url: str) -> str:
     return target_name
 
 
-@worker.task('download', result=PrepareArgs)
+@worker.task('download', description='Download a media file', result=PrepareArgs)
 def download(task: Task, args: DownloadArgs, opts: DownloadOpts) -> PrepareArgs:
     # todo: maybe cache downloads globally by url hash
     # instead of locally per job

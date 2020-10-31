@@ -133,15 +133,15 @@ class Worker(object):
         self.registered_tasks: Dict[str, Any] = {}
         self.queue: Queue = Queue()
 
-    def task(self, name=None, result=None):
-        print(f'register task: {name}')
+    def task(self, name=None, result=None, description=None):
+        # print(f'register task: {name}')
         """
         Register a task
         """
         def decorator(fn):
             # print(f'register decorator: {name} {fn}')
             # task = Task(self, name, fn)
-            wrapped_fn = WrappedTaskFn(name, fn)
+            wrapped_fn = WrappedTaskFn(name, fn, description=description)
             self.registered_tasks[name] = wrapped_fn
 
             # @wraps(fn)
@@ -310,8 +310,9 @@ class Task(object):
 
 
 class WrappedTaskFn(object):
-    def __init__(self, name, fn):
+    def __init__(self, name, fn, description=None):
         self.name = name
+        self.description = description or self.name
         self.fn = fn
 
     def __call__(self, task: Task, args, opts):
