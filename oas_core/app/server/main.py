@@ -20,15 +20,18 @@ app = FastAPI(
 def docs_redirect():
     return RedirectResponse(f"/docs")
 
+
 # Set all CORS enabled origins
 #  if settings.BACKEND_CORS_ORIGINS:
-#      app.add_middleware(
-#          CORSMiddleware,
-#          allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-#          allow_credentials=True,
-#          allow_methods=["*"],
-#          allow_headers=["*"],
-#      )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    # allow_origins=[str(origin)
+    #                for origin in settings.BACKEND_CORS_ORIGINS],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 app.include_router(api_router, prefix=api_v1_prefix)
