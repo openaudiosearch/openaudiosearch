@@ -1,4 +1,5 @@
 import os
+import subprocess
 from urllib.parse import urlparse
 from base64 import b32encode
 
@@ -82,10 +83,15 @@ def download(task: Task, args: DownloadArgs, opts: DownloadOpts) -> PrepareArgs:
 @worker.task('prepare')
 def prepare(task: Task, args: PrepareArgs, opts: PrepareOpts) -> AsrArgs:
     dst = task.file_path('processed.wav')
-    sound = AudioSegment.from_file(args.file_path)
-    sound.set_frame_rate(opts.samplerate)
-    sound.set_channels(1)
-    sound.export(dst, format="wav")
+    # TODO: Find out why this pydub segment does not work.
+    # sound = AudioSegment.from_file(args.file_path)
+    # sound.set_frame_rate(opts.samplerate)
+    # sound.set_channels(1)
+    # sound.export(dst, format="wav")
+    subprocess.call(['ffmpeg', '-i',
+                     args.file_path,
+                     '-ar', str(opts.samplerate), '-ac', '1', dst],
+                    stdout=subprocess.PIPE)
     return AsrArgs(file_path=dst)
 
 
@@ -94,21 +100,21 @@ def asr(task: Task, args: AsrArgs, opts: AsrOpts) -> AsrResult:
     model_path = os.path.join(config.model_path, config.model)
     if opts.engine == "vosk":
         result = transcribe_vosk(args.file_path, model_path)
-        print(f'RESULT: {result}')
-        return AsrResult(text=str(result))
+        print(f'ASR RESULT: {result}')
+        return AsrResult(**result)
     elif opts.engine == "deepspeech":
         raise NotImplementedError("ASR using deepspeech is not available yet")
     elif opts.engine == "torch":
         raise NotImplementedError("ASR using torch is not available yet")
     else:
         raise RuntimeError("ASR engine not specified")
-    return AsrResult(text='')
 
 
 @worker.task('nlp')
 def nlp(task: Task, args: AsrResult, opts: NlpOpts) -> NlpResult:
     spacy = SpacyPipe(opts.pipeline)
     res = spacy.run(args.text)
+    # print(f'NLP RESULT {res}')
     return NlpResult(result=res)
 
 

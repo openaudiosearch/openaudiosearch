@@ -3,21 +3,32 @@ import wave
 import json
 
 
-def transcribe_vosk(audio, model_path):
+def transcribe_vosk(audio_file_path, model_path):
     model = Model(model_path)
     rec = KaldiRecognizer(model, 16000)
     results = []
-    wave_frames = wave.open(audio, "rb")
     transcript = ""
+
+    wf = wave.open(audio_file_path, "rb")
+    # print(
+    #     f'WAVE INFO chan {wf.getnchannels()} sampw {wf.getsampwidth()} comptype {wf.getcomptype()}')
+    if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getcomptype() != "NONE":
+        raise ValueError('Audio file must be WAV format mono PCM.')
+
     while True:
-        data = wave_frames.readframes(4000)
+        data = wf.readframes(4000)
         if len(data) == 0:
             break
         if rec.AcceptWaveform(data):
-            recResult = json.loads(rec.Result())
-            transcript = transcript + " " + recResult['text']
-            results.append(recResult)
+            result = json.loads(rec.Result())
+            text = result['text']
+            # print(f'RESULT: {text}')
+            transcript = transcript + ' ' + result['text']
+            results.append(result)
         else:
+            # print(f'PARTIAL: {rec.PartialResult()}')
             rec.PartialResult()
     # TODO: Why does rec.FinalResult() not work?
-    return results
+    # print('FINAL')
+    # print(rec.FinalResult())
+    return {'text': transcript, 'parts': results}

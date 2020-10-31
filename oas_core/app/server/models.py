@@ -19,6 +19,7 @@ class JobResponse(BaseModel):
     download: Optional[PrepareArgs] = None
     prepare: Optional[AsrArgs] = None
     asr: Optional[AsrResult] = None
+    nlp: Optional[NlpResult] = None
 
 # class TranscriptRequest(BaseModel):
 #     media_url: str

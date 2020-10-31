@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Any, List
 from enum import Enum
 
 
@@ -35,6 +36,7 @@ class AsrOpts(BaseModel):
 
 class AsrResult(BaseModel):
     text: str
+    parts: List[Any]
 
 
 class NlpOpts(BaseModel):
