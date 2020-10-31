@@ -88,7 +88,6 @@ def prepare(task: Task, args: PrepareArgs, opts: PrepareOpts) -> AsrArgs:
 
 @worker.task('asr')
 def asr(task: Task, args: AsrArgs, opts: AsrOpts) -> AsrResult:
-    return AsrResult(text='foo text')
     # TODO: Set via config
     model_path = '/home/oas/models/vosk-model-de-0.6'
     if opts.engine == "vosk":
