@@ -2,9 +2,14 @@ from vosk import Model, KaldiRecognizer, SetLogLevel
 import wave
 import json
 
+model = None
+
 
 def transcribe_vosk(audio_file_path, model_path):
-    model = Model(model_path)
+    global model
+    if not model:
+        model = Model(model_path)
+
     rec = KaldiRecognizer(model, 16000)
     results = []
     transcript = ""

@@ -40,7 +40,7 @@ class AsrResult(BaseModel):
 
 
 class NlpOpts(BaseModel):
-    pipeline: str = 'ner,pos'
+    pipeline: str = 'ner,pos,lemma,missed'
 
 
 class NlpResult(BaseModel):
