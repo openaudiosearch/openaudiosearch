@@ -17,6 +17,8 @@ module.exports = (env, argv) => {
     },
     mode: isDevelopment ? 'development' : 'production',
     output: {
+      path: path.resolve(path.join(__dirname, 'dist', 'static')),
+      publicPath: 'static/',
       filename: `${filename}.js`,
       sourceMapFilename: `${filename}.js.map`
     },
@@ -53,7 +55,8 @@ module.exports = (env, argv) => {
     plugins: [
       isDevelopment && new ReactRefreshPlugin(),
       new HtmlWebpackPlugin({
-        filename: 'index.html',
+        filename: path.resolve(path.join(__dirname, 'dist', 'index.html')),
+        publicPath: 'static',
         template: getPath('index.html')
       })
     ].filter(Boolean)
