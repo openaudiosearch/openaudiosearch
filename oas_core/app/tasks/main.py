@@ -97,7 +97,9 @@ def prepare(task: Task, args: PrepareArgs, opts: PrepareOpts) -> AsrArgs:
 
 @worker.task('asr')
 def asr(task: Task, args: AsrArgs, opts: AsrOpts) -> AsrResult:
-    model_path = os.path.join(config.model_path, config.model)
+    model_base_path = config.model_path or os.path.join(
+        config.storage_path, 'models')
+    model_path = os.path.join(model_base_path, config.model)
     if opts.engine == "vosk":
         result = transcribe_vosk(args.file_path, model_path)
         print(f'ASR RESULT: {result}')
