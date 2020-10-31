@@ -8,10 +8,10 @@ const getPath = (file) => {
 }
 
 module.exports = (env, argv) => {
-  const isDevelopment = argv.mode === 'development'
+  const isDevelopment = process.env.NODE_ENV === 'development'
   const filename = isDevelopment ? '[name]' : '[name]-[contenthash:6]'
 
-  return {
+  const config = {
     entry: {
       app: getPath('index.js')
     },
@@ -24,9 +24,6 @@ module.exports = (env, argv) => {
       extensions: ['.js', '.jsx']
     },
     devtool: 'source-map',
-    devServer: {
-      port: 4000
-    },
     module: {
       rules: [
         {
@@ -61,4 +58,10 @@ module.exports = (env, argv) => {
       })
     ].filter(Boolean)
   }
+  if (isDevelopment) {
+    config.devServer = {
+      port: 4000
+    }
+  }
+  return config
 }

@@ -5,8 +5,8 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "start": "webpack-dev-server --mode development --hot",
-    "build": "npm run clear && webpack --mode production",
+    "start": "NODE_ENV=development webpack-dev-server --hot",
+    "build": "npm run clear && cross-env NODE_ENV=production webpack",
     "clear": "rimraf ./dist",
     "lint": "standardx ./src/**/*.{ts,tsx}"
   },
@@ -38,6 +38,7 @@
     "@typescript-eslint/parser": "^4.4.1",
     "babel-loader": "^8.1.0",
     "core-js": "^3.6.5",
+    "cross-env": "^7.0.2",
     "css-loader": "^5.0.0",
     "eslint-loader": "^4.0.2",
     "file-loader": "^6.2.0",
