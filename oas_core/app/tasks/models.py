@@ -1,4 +1,11 @@
 from pydantic import BaseModel
+from enum import Enum
+
+
+class Engine(str, Enum):
+    vosk = "vosk"
+    pytorch = "pytorch"
+    foo = 'foo'
 
 
 class DownloadArgs(BaseModel):
@@ -22,7 +29,7 @@ class AsrArgs(BaseModel):
 
 
 class AsrOpts(BaseModel):
-    engine: str
+    engine: Engine
     language: str = 'de'
 
 
@@ -31,7 +38,7 @@ class AsrResult(BaseModel):
 
 
 class NlpOpts(BaseModel):
-    pipeline: str
+    pipeline: str = 'ner,pos'
 
 
 class NlpResult(BaseModel):
@@ -42,13 +49,11 @@ class TranscribeArgs(BaseModel):
     media_url: str
 
 
-class TranscribeOpts(PrepareOpts, AsrOpts):
-    samplerate = 16000
-    engine: str
-    language: str = 'de'
+class TranscribeOpts(PrepareOpts, AsrOpts, NlpOpts):
+    pass
 
 
-# this is used by the CLI
+    # this is used by the CLI
 TASKS = {
     'transcribe': (TranscribeArgs, TranscribeOpts),
     'download': (DownloadArgs, DownloadOpts),

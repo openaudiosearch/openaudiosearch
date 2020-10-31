@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     port: int = 8080
     root_path: str = ''
 
+    # set to 1 to enable development mode
+    # (hot reload code on changes)
+    oas_dev: bool = False
+
     # config parsing
     class Config:
         env_file = '.env'

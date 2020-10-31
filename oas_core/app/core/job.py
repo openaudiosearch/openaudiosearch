@@ -54,11 +54,15 @@ class Client(object):
             return obj.json()
         return json.dumps(obj)
 
+    def decode(self, obj):
+        return json.loads(obj)
+
     def key(self, key: str):
         return self.prefix + key
 
     def queue_job(self, task_name: str, args, opts):
         id = uuid()
+        self.redis.lpush(self.key_jobs, id)
         self.queue_task(id, task_name, args, opts)
         return id
         # encoded = json.dumps(
@@ -75,17 +79,34 @@ class Client(object):
         if not encoded:
             return None
         # print(f'GET RESULT {self.key_results} {id} : {encoded}')
-        decoded = json.loads(encoded)
+        decoded = self.decode(encoded)
         return decoded
+
+    def add_record(self, id, type, value):
+        encoded = self.encode(value)
+        key = self.key('records:' + id)
+        self.redis.hset(key, type, encoded)
+
+    def get_records(self, id):
+        key = self.key('records:' + id)
+        encoded = self.redis.hgetall(key)
+        dict = {k.decode('utf-8'): self.decode(v) for k, v in encoded.items()}
+        return dict
+
+    def list_jobs(self):
+        encoded = self.redis.lrange(self.key_jobs, 0, 100)
+        list = []
+        for k in encoded:
+            job_id = k.decode('utf-8')
+            info = {}
+            info['id'] = job_id
+            list.append(info)
+        return list
 
     def queue_task(self, job_id: str, task_name: str, args, opts):
         spec = TaskSpec(job_id=job_id, task_name=task_name,
                         args=args, opts=opts)
         encoded = self.encode(spec)
-        # args = self.encode(args)
-        # opts = self.encode(opts)
-        # encoded = json.dumps(
-        #     {'id': job_id, 'task': task_name, 'args': args, 'opts': opts})
         self.redis.lpush(self.key_tasks, encoded)
 
     def dequeue_task(self):
@@ -209,6 +230,7 @@ class Job(object):
                 self.log(f'result {task.result}')
                 # print(f'RES: {task.result}')
                 input = task.result
+                self.client.add_record(self.id, task.name, task.result)
                 self.queue.task_done()
             else:
                 self.log(f'error {task.error}')

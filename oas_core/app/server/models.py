@@ -14,6 +14,12 @@ class TranscriptStatus(str, Enum):
 class TranscriptRequest(TranscribeArgs, TranscribeOpts):
     pass
 
+
+class JobResponse(BaseModel):
+    download: Optional[PrepareArgs] = None
+    prepare: Optional[AsrArgs] = None
+    asr: Optional[AsrResult] = None
+
 # class TranscriptRequest(BaseModel):
 #     media_url: str
 #     language: str = "en"

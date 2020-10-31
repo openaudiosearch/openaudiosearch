@@ -9,6 +9,7 @@ from app.server.models import (
     TranscriptRequest,
     StatusRequest,
     StatusResponse,
+    JobResponse
 )
 from app.tasks.models import TranscribeArgs, TranscribeOpts
 
@@ -31,6 +32,22 @@ def get_status(id: str):
     print('RESULT', result)
     return StatusResponse(id=id, status=TranscriptStatus.completed, result=result)
 
+
+@router.get("/job/{id}", response_model=JobResponse)
+def get_job(id: str):
+    result = jobs.get_records(id)
+    print(f'RESULT {result}')
+    return JobResponse(**result)
+    # if not result:
+    #     return StatusResponse(id=id, status=TranscriptStatus.queued)
+    # print('RESULT', result)
+    # return StatusResponse(id=id, status=TranscriptStatus.completed, result=result)
+
+
+@router.get("/jobs")
+def get_jobs():
+    list = jobs.list_jobs()
+    return list
 
 #  from app.queue import queue
 #  @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
