@@ -17,7 +17,7 @@ class TranscriptRequest(TranscribeArgs, TranscribeOpts):
 
 class JobResponse(BaseModel):
     download: Optional[DownloadResult] = None
-    prepare: Optional[AsrArgs] = None
+    prepare: Optional[PrepareResult] = None
     asr: Optional[AsrResult] = None
     nlp: Optional[NlpResult] = None
 

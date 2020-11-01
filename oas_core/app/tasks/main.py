@@ -81,7 +81,7 @@ def download(task: Task, args: DownloadArgs, opts: DownloadOpts) -> DownloadResu
 
 
 @worker.task('prepare')
-def prepare(task: Task, args: DownloadResult, opts: PrepareOpts) -> AsrArgs:
+def prepare(task: Task, args: DownloadResult, opts: PrepareOpts) -> PrepareResult:
     dst = task.file_path('processed.wav')
     # TODO: Find out why this pydub segment does not work.
     # sound = AudioSegment.from_file(args.file_path)
@@ -92,11 +92,11 @@ def prepare(task: Task, args: DownloadResult, opts: PrepareOpts) -> AsrArgs:
                      args.file_path,
                      '-ar', str(opts.samplerate), '-ac', '1', dst],
                     stdout=subprocess.PIPE)
-    return AsrArgs(file_path=dst)
+    return PrepareResult(file_path=dst)
 
 
 @worker.task('asr')
-def asr(task: Task, args: AsrArgs, opts: AsrOpts) -> AsrResult:
+def asr(task: Task, args: PrepareResult, opts: AsrOpts) -> AsrResult:
     model_base_path = config.model_path or os.path.join(
         config.storage_path, 'models')
     model_path = os.path.join(model_base_path, config.model)
