@@ -30,8 +30,8 @@ def url_to_path(url: str) -> str:
     return target_name
 
 
-@worker.task('download', description='Download a media file', result=PrepareArgs)
-def download(task: Task, args: DownloadArgs, opts: DownloadOpts) -> PrepareArgs:
+@worker.task('download', description='Download a media file', result=DownloadResult)
+def download(task: Task, args: DownloadArgs, opts: DownloadOpts) -> DownloadResult:
     # todo: maybe cache downloads globally by url hash
     # instead of locally per job
     # target_filename = task.file_path('download/' + url_hash, root=True)
@@ -58,7 +58,7 @@ def download(task: Task, args: DownloadArgs, opts: DownloadOpts) -> PrepareArgs:
         if os.path.isfile(target_path) and not opts.refresh:
             task.log(
                 f'File exists, skipping download of {args.media_url} to {target_path} ({pretty_bytes(total_size)})')
-            return PrepareArgs(file_path=target_path)
+            return DownloadResult(file_path=target_path, source_url=url)
 
         task.log(
             f'Downloading {url} to {target_path} ({pretty_bytes(total_size)})')
@@ -77,11 +77,11 @@ def download(task: Task, args: DownloadArgs, opts: DownloadOpts) -> PrepareArgs:
                 task.report_progress(percent)
 
         os.rename(temp_path, target_path)
-        return PrepareArgs(file_path=target_path)
+        return DownloadResult(file_path=target_path, source_url=url)
 
 
 @worker.task('prepare')
-def prepare(task: Task, args: PrepareArgs, opts: PrepareOpts) -> AsrArgs:
+def prepare(task: Task, args: DownloadResult, opts: PrepareOpts) -> AsrArgs:
     dst = task.file_path('processed.wav')
     # TODO: Find out why this pydub segment does not work.
     # sound = AudioSegment.from_file(args.file_path)

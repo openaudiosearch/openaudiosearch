@@ -17,7 +17,8 @@ class DownloadOpts(BaseModel):
     refresh = False
 
 
-class PrepareArgs(BaseModel):
+class DownloadResult(BaseModel):
+    source_url: str
     file_path: str
 
 
