@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from pprint import pprint
@@ -24,6 +23,7 @@ class SearchIndex():
         doc = json.dumps(doc.reprJSON(), cls=Encoder)
         res = self.es.index(index=self.index_name, id=id, body=doc, doc_type="_doc")
         return res
+
     def get(self, id):
         self.es.get(index=self.index_name, id=id, doc_type="_doc")
     
@@ -105,7 +105,4 @@ if __name__ == "__main__":
     doc = Document(asr_result, path_to_audio)
 
     pprint(search_index.put(doc))
-  
-
-
 
