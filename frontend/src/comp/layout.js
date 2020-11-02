@@ -19,15 +19,15 @@ export default function Layout (props = {}) {
 
 function Header () {
   return (
-    <>
+    <Box p='8'>
       <Heading>Open Audio Search</Heading>
-    </>
+    </Box>
   )
 }
 
 function Main (props) {
   return (
-    <Box width='720px' mx='auto' p='8' {...props}>
+    <Box mx='auto' p='8' {...props}>
       <Jobs />
     </Box>
   )

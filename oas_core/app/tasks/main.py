@@ -1,4 +1,5 @@
 import os
+import subprocess
 from urllib.parse import urlparse
 from base64 import b32encode
 
@@ -7,12 +8,15 @@ from pydub import AudioSegment
 from hashlib import sha256
 from mimetypes import guess_extension
 
+from app.config import config
 from app.worker import worker
 from app.core.job import Task
 from app.tasks.models import *
 from app.core.util import download_file, pretty_bytes
 from app.tasks.spacy_pipe import SpacyPipe
 from app.tasks.transcribe_vosk import transcribe_vosk
+
+import app.tasks.download_models
 
 
 def url_to_path(url: str) -> str:
@@ -26,8 +30,8 @@ def url_to_path(url: str) -> str:
     return target_name
 
 
-@worker.task('download', result=PrepareArgs)
-def download(task: Task, args: DownloadArgs, opts: DownloadOpts) -> PrepareArgs:
+@worker.task('download', description='Download a media file', result=DownloadResult)
+def download(task: Task, args: DownloadArgs, opts: DownloadOpts) -> DownloadResult:
     # todo: maybe cache downloads globally by url hash
     # instead of locally per job
     # target_filename = task.file_path('download/' + url_hash, root=True)
@@ -54,7 +58,7 @@ def download(task: Task, args: DownloadArgs, opts: DownloadOpts) -> PrepareArgs:
         if os.path.isfile(target_path) and not opts.refresh:
             task.log(
                 f'File exists, skipping download of {args.media_url} to {target_path} ({pretty_bytes(total_size)})')
-            return PrepareArgs(file_path=target_path)
+            return DownloadResult(file_path=target_path, source_url=url)
 
         task.log(
             f'Downloading {url} to {target_path} ({pretty_bytes(total_size)})')
@@ -73,40 +77,46 @@ def download(task: Task, args: DownloadArgs, opts: DownloadOpts) -> PrepareArgs:
                 task.report_progress(percent)
 
         os.rename(temp_path, target_path)
-        return PrepareArgs(file_path=target_path)
+        return DownloadResult(file_path=target_path, source_url=url)
 
 
 @worker.task('prepare')
-def prepare(task: Task, args: PrepareArgs, opts: PrepareOpts) -> AsrArgs:
+def prepare(task: Task, args: DownloadResult, opts: PrepareOpts) -> PrepareResult:
     dst = task.file_path('processed.wav')
-    sound = AudioSegment.from_file(args.file_path)
-    sound.set_frame_rate(opts.samplerate)
-    sound.set_channels(1)
-    sound.export(dst, format="wav")
-    return AsrArgs(file_path=dst)
+    # TODO: Find out why this pydub segment does not work.
+    # sound = AudioSegment.from_file(args.file_path)
+    # sound.set_frame_rate(opts.samplerate)
+    # sound.set_channels(1)
+    # sound.export(dst, format="wav")
+    subprocess.call(['ffmpeg', '-i',
+                     args.file_path,
+                     '-ar', str(opts.samplerate), '-ac', '1', dst],
+                    stdout=subprocess.PIPE)
+    return PrepareResult(file_path=dst)
 
 
 @worker.task('asr')
-def asr(task: Task, args: AsrArgs, opts: AsrOpts) -> AsrResult:
-    # TODO: Set via config
-    model_path = '/home/oas/models/vosk-model-de-0.6'
+def asr(task: Task, args: PrepareResult, opts: AsrOpts) -> AsrResult:
+    model_base_path = config.model_path or os.path.join(
+        config.storage_path, 'models')
+    model_path = os.path.join(model_base_path, config.model)
     if opts.engine == "vosk":
         result = transcribe_vosk(args.file_path, model_path)
-        print(f'RESULT: {result}')
-        return AsrResult(text=str(result))
+        print(f'ASR RESULT: {result}')
+        return AsrResult(**result)
     elif opts.engine == "deepspeech":
         raise NotImplementedError("ASR using deepspeech is not available yet")
     elif opts.engine == "torch":
         raise NotImplementedError("ASR using torch is not available yet")
     else:
         raise RuntimeError("ASR engine not specified")
-    return AsrResult(text='')
 
 
 @worker.task('nlp')
 def nlp(task: Task, args: AsrResult, opts: NlpOpts) -> NlpResult:
     spacy = SpacyPipe(opts.pipeline)
     res = spacy.run(args.text)
+    # print(f'NLP RESULT {res}')
     return NlpResult(result=res)
 
 

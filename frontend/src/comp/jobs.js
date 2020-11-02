@@ -16,10 +16,10 @@ export default function JobPage (props) {
     <Stack>
       <ImportUrl onJobSubmit={setSelectedJobId} />
       <Flex>
-        <Box w={['100%', '50%']}>
+        <Box w={['100%', '30%']}>
           <JobList onSelect={setSelectedJobId} selected={selectedJobId} />
         </Box>
-        <Box w={['100%', '50%']}>
+        <Box w={['100%', '70%']}>
           {selectedJobId && <Job id={selectedJobId} />}
         </Box>
       </Flex>
@@ -103,7 +103,7 @@ function Job (props) {
   const { data, error } = useSWR('/job/' + id, { refreshInterval: 1000 })
   if (error) return <Error error={error} />
   if (!data) return <Loading />
-  return <ReactJson src={data} />
+  return <ReactJson src={data} collapsed='3' />
 }
 
 function Error (props) {

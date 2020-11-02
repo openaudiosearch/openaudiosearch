@@ -10,6 +10,8 @@ from pydantic import (
 class Settings(BaseSettings):
     # general settings
     storage_path: str = '/tmp/oas'
+    model: str = 'vosk-model-de-0.6'
+    model_path: str = ''
     redis: RedisDsn = 'redis://user:pass@localhost:6379/1'
     log_level: str = 'info'
 

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from pprint import pprint
@@ -25,7 +26,16 @@ class SearchIndex():
         return res
     def get(self, id):
         self.es.get(index=self.index_name, id=id, doc_type="_doc")
-
+    
+    def search(self, search_term):
+        search_param = {"query": {
+            "match": {
+            "text": search_term
+            }
+        }}
+        response = self.es.search(index=self.index_name, body=search_param, doc_type="_doc")
+        return response
+    
     def refresh(self):
         self.es.indices.refresh(index=self.index_name)
 
@@ -96,3 +106,6 @@ if __name__ == "__main__":
 
     pprint(search_index.put(doc))
   
+
+
+

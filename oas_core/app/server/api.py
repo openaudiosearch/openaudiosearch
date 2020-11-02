@@ -29,15 +29,16 @@ def get_status(id: str):
     result = jobs.get_result(id)
     if not result:
         return StatusResponse(id=id, status=TranscriptStatus.queued)
-    print('RESULT', result)
+    # print('RESULT', result)
     return StatusResponse(id=id, status=TranscriptStatus.completed, result=result)
 
 
 @router.get("/job/{id}", response_model=JobResponse)
 def get_job(id: str):
     result = jobs.get_records(id)
-    print(f'RESULT {result}')
-    return JobResponse(**result)
+    # print(f'RESULT {result}')
+    result = JobResponse(**result)
+    return result
     # if not result:
     #     return StatusResponse(id=id, status=TranscriptStatus.queued)
     # print('RESULT', result)

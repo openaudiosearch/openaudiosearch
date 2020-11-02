@@ -14,7 +14,7 @@ class SpacyPipe():
         >>> print(res["ner"])
         [('Samantha Bachfischer', 'PER'), ('Budapest', 'LOC')]
         >>> print(res["pos"])
-        [('Samantha', 'PROPN', 'pnc'), ('Bachfischer', 'NOUN', 'sb'), ('heute', 'ADV', 'mnr'), ('ist', 'AUX', 'ROOT'), ('ein', 'DET', 'nk'), ('schöner', 'ADJ', 'nk'), ('Tag', 'NOUN', 'pd'), ('in', 'ADP', 'mnr'), ('Budapest', 'PROPN', 'nk')]
+        [('Samantha', 'PROPN', 'pnc'), ('Bachfischer', 'PROPN', 'sb'), ('heute', 'ADV', 'mo'), ('ist', 'AUX', 'ROOT'), ('ein', 'DET', 'nk'), ('schöner', 'ADJ', 'nk'), ('Tag', 'NOUN', 'pd'), ('in', 'ADP', 'mnr'), ('Budapest', 'PROPN', 'nk')]
         """
         doc = self.nlp(transcript)
         ner = []

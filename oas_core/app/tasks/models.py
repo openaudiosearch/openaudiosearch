@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Any, List, Optional
 from enum import Enum
 
 
@@ -16,7 +17,8 @@ class DownloadOpts(BaseModel):
     refresh = False
 
 
-class PrepareArgs(BaseModel):
+class DownloadResult(BaseModel):
+    source_url: Optional[str] = None
     file_path: str
 
 
@@ -24,7 +26,7 @@ class PrepareOpts(BaseModel):
     samplerate = 16000
 
 
-class AsrArgs(BaseModel):
+class PrepareResult(BaseModel):
     file_path: str
 
 
@@ -35,10 +37,11 @@ class AsrOpts(BaseModel):
 
 class AsrResult(BaseModel):
     text: str
+    parts: List[Any]
 
 
 class NlpOpts(BaseModel):
-    pipeline: str = 'ner,pos'
+    pipeline: str = 'ner,pos,lemma,missed'
 
 
 class NlpResult(BaseModel):
@@ -51,7 +54,6 @@ class TranscribeArgs(BaseModel):
 
 class TranscribeOpts(PrepareOpts, AsrOpts, NlpOpts):
     pass
-
 
     # this is used by the CLI
 TASKS = {
