@@ -3,29 +3,32 @@ from elasticsearch import Elasticsearch
 from pprint import pprint
 import json
 
-
+es = None
 class SearchIndex():
 
     def __init__(self, host, port, index_name, ssl=False, check_certs=False, certs=""):
-        self.es = Elasticsearch([host + ":"+port])
+        global es
+        if not es:
+            es = self
+        self.connection = Elasticsearch([host + ":"+port])
         self.index_name = index_name
         self.certs = certs
         self.ssl = ssl
-        self.index = self.es.indices.create(index=index_name, ignore=400)
+        self.index = self.connection.indices.create(index=index_name, ignore=400)
 
     def is_connected(self, host, port):
-        if self.es != host + ":" + port:
+        if self.connection != host + ":" + port:
             return False
         else:
             return True
 
     def put(self, doc):
         doc = json.dumps(doc.reprJSON(), cls=Encoder)
-        res = self.es.index(index=self.index_name, id=id, body=doc, doc_type="_doc")
+        res = self.connection.index(index=self.index_name, id=id, body=doc, doc_type="_doc")
         return res
 
     def get(self, id):
-        self.es.get(index=self.index_name, id=id, doc_type="_doc")
+        self.connection.get(index=self.index_name, id=id, doc_type="_doc")
     
     def search(self, search_term):
         search_param = {"query": {
@@ -33,11 +36,11 @@ class SearchIndex():
             "text": search_term
             }
         }}
-        response = self.es.search(index=self.index_name, body=search_param, doc_type="_doc")
+        response = self.connection.search(index=self.index_name, body=search_param, doc_type="_doc")
         return response
     
     def refresh(self):
-        self.es.indices.refresh(index=self.index_name)
+        self.connection.indices.refresh(index=self.index_name)
 
 
 class Document():
