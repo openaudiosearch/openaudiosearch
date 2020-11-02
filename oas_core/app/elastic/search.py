@@ -3,10 +3,18 @@ from elasticsearch import Elasticsearch
 from pprint import pprint
 import json
 
+import app.config
+
 es = None
 class SearchIndex():
 
-    def __init__(self, host, port, index_name, ssl=False, check_certs=False, certs=""):
+    def __init__(self,
+                 host=config.es_host,
+                 port=config.es_port,
+                 index_name=config.index_name,
+                 ssl=False,
+                 check_certs=False,
+                 certs=""):
         global es
         if not es:
             es = self
@@ -103,8 +111,8 @@ if __name__ == "__main__":
         "text": "transcript"}
 
     path_to_audio = "path/to/audio"
-    search_index = SearchIndex("localhost", "9200", "oas")
     
+    search_index = SearchIndex("localhost", "9200", "oas")
     doc = Document(asr_result, path_to_audio)
 
     pprint(search_index.put(doc))
