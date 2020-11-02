@@ -15,7 +15,7 @@ from app.tasks.models import *
 from app.core.util import download_file, pretty_bytes
 from app.tasks.spacy_pipe import SpacyPipe
 from app.tasks.transcribe_vosk import transcribe_vosk
-from app.elastic.search import SearchIndex. AsrInnerResult, Document
+from app.elastic.search import SearchIndex, AsrInnerResult, Document
 
 import app.tasks.download_models
 
