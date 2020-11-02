@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     port: int = 8080
     root_path: str = ''
 
+    # elastic settings
+    es_host: str = '0.0.0.0'
+    es_port: int = 9200
+    index_name: str = 'oas'
+
     # set to 1 to enable development mode
     # (hot reload code on changes)
     oas_dev: bool = False
