@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from pprint import pprint
