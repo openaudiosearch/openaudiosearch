@@ -55,6 +55,16 @@ class TranscribeArgs(BaseModel):
 class TranscribeOpts(PrepareOpts, AsrOpts, NlpOpts):
     pass
 
+
+class ElasticIndexArgs(BaseModel):
+    asr_result: AsrResult
+    path_to_audio: str
+
+
+class ElasticIndexOpts(BaseModel):
+    pass
+
+
     # this is used by the CLI
 TASKS = {
     'transcribe': (TranscribeArgs, TranscribeOpts),

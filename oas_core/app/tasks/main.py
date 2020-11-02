@@ -15,6 +15,7 @@ from app.tasks.models import *
 from app.core.util import download_file, pretty_bytes
 from app.tasks.spacy_pipe import SpacyPipe
 from app.tasks.transcribe_vosk import transcribe_vosk
+from app.elastic.search import SearchIndex. AsrInnerResult, Document
 
 import app.tasks.download_models
 
@@ -132,3 +133,14 @@ def transcribe(task: Task, args: TranscribeArgs, opts: TranscribeOpts):
     job.add_task(nlp, opts=nlp_opts)
 
     return DownloadArgs(media_url=args.media_url)
+
+
+@worker.task('index')
+def index(task: Task, args: ElasticIndexArgs, opts: ElasticIndexOpts):
+    search_index = SearchIndex()
+
+    doc = Document(args.asr_result, args.path_to_audio)
+    res = search_index.put(doc)
+
+    return res
+
