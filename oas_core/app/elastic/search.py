@@ -3,7 +3,8 @@ from elasticsearch import Elasticsearch
 from pprint import pprint
 import json
 
-import app.config
+from app.config import config
+
 
 es = None
 class SearchIndex():
@@ -52,7 +53,7 @@ class SearchIndex():
 
 
 class Document():
-    def __init__(self, asr_result, path_to_audio):
+    def __init__(self, asr_result, path_to_audio="to-do.mp3"):
         self.results = []
         for result in asr_result["result"]:
             result = AsrInnerResult(
