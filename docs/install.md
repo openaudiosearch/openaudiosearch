@@ -21,13 +21,12 @@ Creat a new conda environment, using the yaml file provided in `oas_core` direct
 Activate environment: `conda activate oas`
 
 ### Download models
-Either download and extract the following models repositories in `~/models`:
+Run automatic download script  in `oas_core/`directory: ` python task-run.py download_models `.
+
+Or, manually download and extract the following models repositories in `/tmp/oas/models`:
+
 * [VOSK Standard DE](https://alphacephei.com/vosk/models/vosk-model-de-0.6.zip)
 * [VOSK Speaker Identification](https://alphacephei.com/vosk/models/vosk-model-spk-0.4.zip)
-* [deepspeech-german](https://drive.google.com/drive/folders/1PFSIdmi4Ge8EB75cYh2nfYOXlCIgiMEL)
-* silero-models: `mkdir silero-de` and download german jit model into it `wget https://silero-models.ams3.cdn.digitaloceanspaces.com/models/de/de_v1_jit.model`
-
-Or, run \#FIXME script to automate downloading and extraction of models.
 
 
 # Update your installation

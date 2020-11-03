@@ -4,6 +4,34 @@ Follow everything in [./install.md](install.md)
 
 Create a `.env` file with a suitable config.
 
+
+## Start Demo
+
+Build and start frontend:
+```
+cd frontend
+yarn
+yarn build
+yarn start
+```
+
+Start server:
+```
+cd oas_core
+python server.py
+```
+
+Start worker:
+```
+cd oas_core
+python worker.py
+```
+
+Open demo in browser at [http://localhost:8080/ui/index.html](http://localhost:8080/ui/index.html)
+
+
+## App Development
+
 ### Development mode
 
 The server can be reloaded automatically when application code changes. You can enable it by setting the `oas_dev` env config, or starting the server with `OAS_DEV=1 server.py`.
