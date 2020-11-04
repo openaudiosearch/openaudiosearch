@@ -125,21 +125,23 @@ def nlp(task: Task, args: AsrResult, opts: NlpOpts) -> NlpResult:
 def transcribe(task: Task, args: TranscribeArgs, opts: TranscribeOpts):
 
     nlp_opts = NlpOpts(pipeline='ner')
+    elastic_opts = ElasticIndexOpts()
 
     job = task.job
     job.add_task(download, opts=DownloadOpts())
     job.add_task(prepare, opts=opts)
     job.add_task(asr, opts=opts)
     job.add_task(nlp, opts=nlp_opts)
+    job.add_task(index, opts=elastic_opts)
 
     return DownloadArgs(media_url=args.media_url)
 
 
 @worker.task('index')
-def index(task: Task, args: ElasticIndexArgs, opts: ElasticIndexOpts):
+def index(task: Task, args: AsrResult, opts: ElasticIndexOpts):
     search_index = SearchIndex()
 
-    doc = Document(args.asr_result, args.path_to_audio)
+    doc = Document(args)
     res = search_index.put(doc)
 
     return res
