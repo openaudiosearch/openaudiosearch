@@ -37,7 +37,7 @@ class AsrOpts(BaseModel):
 
 class AsrResult(BaseModel):
     text: str
-    parts: List[Any]
+    parts: List[Any] = []
 
 
 class NlpOpts(BaseModel):
