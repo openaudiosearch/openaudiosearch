@@ -141,8 +141,9 @@ if __name__ == "__main__":
 
     path_to_audio = "path/to/audio"
     
-    search_index = SearchIndex("localhost", "9200", "oas")
+    search_index = SearchIndex()
     doc = Document(asr_result, path_to_audio)
-
+    #PUT Document in index
     pprint(search_index.put(doc))
-
+    #SEARCH the Word "transcript" in index
+    pprint(search_index.search("transcript"))
