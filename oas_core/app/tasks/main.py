@@ -138,11 +138,14 @@ def transcribe(task: Task, args: TranscribeArgs, opts: TranscribeOpts):
 
 
 @worker.task('index')
-def index(task: Task, args: AsrResult, opts: ElasticIndexOpts):
-    search_index = SearchIndex()
+def index(task: Task, args: NlpResult, opts: ElasticIndexOpts):
+    job = task.job
+    # all results of previous tasks are stored as records with the same
+    # id as the job. job.get_record(type) is the same as client.get_record(job.id, type)
+    asr_result = job.get_record('asr')
 
-    doc = Document(args)
+    search_index = SearchIndex()
+    doc = Document(asr_result)
     res = search_index.put(doc)
 
     return res
-

@@ -93,6 +93,12 @@ class Client(object):
         dict = {k.decode('utf-8'): self.decode(v) for k, v in encoded.items()}
         return dict
 
+    def get_record(self, id, type):
+        key = self.key('records:' + id)
+        encoded = self.redis.hget(key, type)
+        decoded = self.decode(encoded)
+        return decoded
+
     def list_jobs(self):
         encoded = self.redis.lrange(self.key_jobs, 0, 100)
         list = []
@@ -215,6 +221,9 @@ class Job(object):
 
     def set_state(self, state: State):
         self.state = state
+
+    def get_record(self, type):
+        return self.client.get_record(self.id, type)
 
     def run(self):
         # input = self.args
