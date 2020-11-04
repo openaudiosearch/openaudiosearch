@@ -142,10 +142,6 @@ if __name__ == "__main__":
     path_to_audio = "path/to/audio"
     
     search_index = SearchIndex("localhost", "9200", "oas")
-    search_index2 = SearchIndex("localhost", "9200", "oas")
-
-    if search_index2.get_con() != search_index.get_con():
-        print("fuck")
     doc = Document(asr_result, path_to_audio)
 
     pprint(search_index.put(doc))
