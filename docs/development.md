@@ -58,3 +58,20 @@ redis-commander
 ```
 
 Now, open your browser at [http://localhost:8081/](http://localhost:8081/)
+
+
+### ASR Evaluation
+
+Start worker:  
+```
+cd oas_core
+python worker.py
+```
+
+Run transcription using ASR engine in another Terminal:
+```
+cd oas_core
+(Optional, download models) python task-run.py download_models
+python task-run.py asr --engine ENGINE [--language LANGUAGE] --file_path FILE_PATH [--help]
+(e.g). python task-run.py asr --engine vosk --file_path ../examples/frn-leipzig.wav
+```
