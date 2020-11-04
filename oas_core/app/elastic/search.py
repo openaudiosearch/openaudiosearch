@@ -1,9 +1,9 @@
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from pprint import pprint
+from app.core.job import Worker
 import json
 
-import app.config
 
 es = None
 class SearchIndex():
