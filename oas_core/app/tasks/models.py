@@ -65,6 +65,14 @@ class ElasticIndexOpts(BaseModel):
     pass
 
 
+class ElasticSearchArgs(BaseModel):
+    search_term: str
+
+
+class ElasticSearchOpts(BaseModel):
+    pass
+
+
     # this is used by the CLI
 TASKS = {
     'transcribe': (TranscribeArgs, TranscribeOpts),

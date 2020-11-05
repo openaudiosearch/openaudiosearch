@@ -166,4 +166,4 @@ if __name__ == "__main__":
     #PUT Document in index
     pprint(search_index.put(doc))
     #SEARCH the Word "transcript" in index
-    pprint(search_index.search("transcript"))
+    pprint(search_index.search("jahren"))
