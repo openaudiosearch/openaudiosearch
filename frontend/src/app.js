@@ -1,6 +1,9 @@
 import React from 'react'
 import { ChakraProvider } from '@chakra-ui/core'
 import { SWRConfig } from 'swr'
+import {
+  HashRouter as Router
+} from 'react-router-dom'
 
 import createTheme from './theme'
 import Layout from './comp/layout'
@@ -26,9 +29,11 @@ function Wrapper (props) {
       value={{ fetcher: fetch }}
     >
       <ChakraProvider theme={theme}>
-        <PlayerProvider>
-          {children}
-        </PlayerProvider>
+        <Router>
+          <PlayerProvider>
+            {children}
+          </PlayerProvider>
+        </Router>
       </ChakraProvider>
     </SWRConfig>
   )

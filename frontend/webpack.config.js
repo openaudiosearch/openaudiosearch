@@ -7,6 +7,8 @@ const getPath = (file) => {
   return path.resolve(__dirname, 'src', file)
 }
 
+const outPath = path.resolve(path.join(__dirname, 'dist'))
+
 module.exports = (env, argv) => {
   const isDevelopment = process.env.NODE_ENV === 'development'
   const filename = isDevelopment ? '[name]' : '[name]-[contenthash:6]'
@@ -17,8 +19,7 @@ module.exports = (env, argv) => {
     },
     mode: isDevelopment ? 'development' : 'production',
     output: {
-      path: path.resolve(path.join(__dirname, 'dist', 'static')),
-      publicPath: 'static/',
+      path: outPath,
       filename: `${filename}.js`,
       sourceMapFilename: `${filename}.js.map`
     },
@@ -55,8 +56,6 @@ module.exports = (env, argv) => {
     plugins: [
       isDevelopment && new ReactRefreshPlugin(),
       new HtmlWebpackPlugin({
-        filename: path.resolve(path.join(__dirname, 'dist', 'index.html')),
-        publicPath: 'static',
         template: getPath('index.html')
       })
     ].filter(Boolean)
