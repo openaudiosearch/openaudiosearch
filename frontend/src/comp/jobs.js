@@ -14,6 +14,7 @@ export default function JobPage (props) {
   const [selectedJobId, setSelectedJobId] = useState(null)
   return (
     <Stack>
+      <Heading mb='2'>Jobs</Heading>
       <ImportUrl onJobSubmit={setSelectedJobId} />
       <Flex>
         <Box w={['100%', '30%']}>
@@ -37,28 +38,30 @@ function ImportUrl (props) {
 
   const engines = [{ name: 'Vosk/Kaldi', value: 'vosk' }, { name: 'PyTorch', value: 'pytorch' }]
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <Heading fontSize='lg'>Import audio from URL</Heading>
-      <Flex alignContent='end'>
-        <FormControl mr='2'>
-          <FormLabel>Media URL</FormLabel>
-          <Input name='media_url' ref={register()} placeholder='https://...' minW='40rem' />
-        </FormControl>
-        <FormControl mr='2'>
-          <FormLabel>Engine</FormLabel>
-          <Select name='engine' minW='10rem'>
-            {engines.map(engine => <option key={engine.value} value={engine.value}>{engine.name}</option>)}
-          </Select>
-        </FormControl>
-        <Flex direction='column' justifyContent='end' >
-          <Button type='submit' isLoading={isSubmitting}>Start</Button>
+    <Box p='4' border='1px solid black'>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Heading fontSize='lg'>Import audio from URL</Heading>
+        <Flex alignContent='end'>
+          <FormControl mr='2'>
+            <FormLabel>Media URL</FormLabel>
+            <Input name='media_url' ref={register()} placeholder='https://...' minW='40rem' />
+          </FormControl>
+          <FormControl mr='2'>
+            <FormLabel>Engine</FormLabel>
+            <Select name='engine' minW='10rem'>
+              {engines.map(engine => <option key={engine.value} value={engine.value}>{engine.name}</option>)}
+            </Select>
+          </FormControl>
+          <Flex direction='column' justifyContent='end' >
+            <Button type='submit' isLoading={isSubmitting}>Start</Button>
+          </Flex>
+          <Box mr='4' p='2'>
+            {error && <Error error={error} />}
+            {jobId && <Box>Created job: {jobId}</Box>}
+          </Box>
         </Flex>
-        <Box mr='4' p='2'>
-          {error && <Error error={error} />}
-          {jobId && <Box>Created job: {jobId}</Box>}
-        </Box>
-      </Flex>
-    </form>
+      </form>
+    </Box>
   )
 
   async function onSubmit (values) {
