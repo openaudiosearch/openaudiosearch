@@ -146,7 +146,7 @@ def index(task: Task, args: NlpResult, opts: ElasticIndexOpts):
 
     search_index = SearchIndex()
     doc = Document(asr_result)
-    res = search_index.put(doc)
+    res = search_index.put(doc, job.id)
 
     return res
 
@@ -156,4 +156,4 @@ def search(task: Task, args: ElasticSearchArgs, opts: ElasticSearchOpts):
     search_index = SearchIndex()
     resp = search_index.search(args.search_term)
 
-    return resp["hits"]
+    return resp['hits']
