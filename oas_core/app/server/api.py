@@ -15,6 +15,7 @@ from app.tasks.models import TranscribeArgs, TranscribeOpts
 
 from app.elastic.search import SearchIndex
 
+search_index = SearchIndex()
 router = APIRouter()
 
 
@@ -53,10 +54,10 @@ def get_jobs():
     return list
 
 
-# @router.get("/search")
-# def search(query):
-#     response = SearchIndex.search(query)
-#     return response
+@router.get("/search")
+def search(query: str = ''):
+    response = search_index.search(query)
+    return response
 
 #  from app.queue import queue
 #  @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)

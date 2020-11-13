@@ -8,6 +8,7 @@ from app.server.api import router as api_router
 from app.config import config
 
 api_v1_prefix = '/oas/v1'
+static_path = os.path.abspath('../frontend/dist')
 
 app = FastAPI(
     title="Open Audio Search API",
@@ -18,7 +19,7 @@ app = FastAPI(
 
 
 def read_index_html():
-    path = os.path.abspath('../frontend/dist/index.html')
+    path = os.path.join(static_path, 'index.html')
     # Open a file: file
     with open(path, mode='r') as file:
         # read all lines at once
@@ -43,9 +44,8 @@ def get_index_html():
     return response
 
 
-static_path = os.path.abspath('../frontend/dist/static')
-app.mount("/ui/static", StaticFiles(directory=static_path,
-                                    html=True), name="static")
+app.mount("/ui", StaticFiles(directory=static_path,
+                             html=True), name="static")
 
 
 # Set all CORS enabled origins

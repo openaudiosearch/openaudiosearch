@@ -79,10 +79,6 @@ async function betterFetch (url, opts = {}) {
       throw err
     }
 
-//     if (response.status >= 400 && response.status <= 499) {
-//   throw new Error('API Client Error', await response.json());
-// }
-
     if (opts.responseType === 'stream') {
       return res.body
     }
@@ -99,8 +95,6 @@ async function betterFetch (url, opts = {}) {
 
     return await res.text()
   } catch (err) {
-    // TODO: If error fails for insufficient authorization, try creating
-    // a new token if accessCode is set
     debug('fetch error', err)
     throw err
   }
