@@ -7,7 +7,7 @@ import json
 #from app.config import config
 config = {"es_host": "localhost",
             "es_port": "9200",
-            "index_name": "oas"}
+            "index_name": "oas123"}
 
 
 class SearchIndex:
@@ -17,8 +17,9 @@ class SearchIndex:
                     index_name=config["index_name"],
                     ssl=False,
                     check_certs=False,
-                    certs=""):
-        if not SearchIndex.instance:
+                    certs="",
+                    delete_old_index=True):
+        if delete_old_index or not SearchIndex.instance:
             SearchIndex.instance = SearchIndex.__SearchIndex(host,
                 port,
                 index_name,
@@ -48,7 +49,44 @@ class SearchIndex:
             self.index_name = index_name
             self.certs = certs
             self.ssl = ssl
-            self.index = self.connection.indices.create(index=index_name, ignore=400)
+            self.index = self.connection.indices.create(
+                index=index_name,
+                body={
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "autocomplete": {
+          "tokenizer": "autocomplete",
+          "filter": [
+            "lowercase"
+          ]
+        },
+        "autocomplete_search": {
+          "tokenizer": "lowercase"
+        }
+      },
+      "tokenizer": {
+        "autocomplete": {
+          "type": "edge_ngram",
+          "min_gram": 2,
+          "max_gram": 10,
+          "token_chars": [
+            "letter"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "text": {
+        "type": "text",
+        "analyzer": "autocomplete",
+        "search_analyzer": "autocomplete_search"
+      }
+    }
+  }
+}, ignore=400)
 
         def is_connected(self, host, port):
             if self.connection != host + ":" + port:
@@ -70,7 +108,10 @@ class SearchIndex:
         def search(self, search_term):
             search_param = {"query": {
                 "match": {
-                "text": search_term
+                    "text":  {
+                        "query": search_term, 
+                        "operator": "and"
+                    }
                 }
             }}
             response = self.connection.search(index=self.index_name, body=search_param, doc_type="_doc")
@@ -168,4 +209,4 @@ if __name__ == "__main__":
     pprint(search_index.put(doc, "1"))
     #SEARCH the Word "transcript" in index
     pprint("SEARCH")
-    pprint(search_index.search("jahren"))
+    pprint(search_index.search("leip"))
