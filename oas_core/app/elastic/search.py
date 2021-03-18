@@ -1,13 +1,15 @@
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from pprint import pprint
+from configs.index_configs import index_configs
 #from app.core.job import Worker
 import json
 
 #from app.config import config
 config = {"es_host": "localhost",
             "es_port": "9200",
-            "index_name": "oas123"}
+            "index_name": "oas111"}
+index_confs = index_configs()
 
 
 class SearchIndex:
@@ -18,14 +20,16 @@ class SearchIndex:
                     ssl=False,
                     check_certs=False,
                     certs="",
-                    delete_old_index=True):
+                    delete_old_index=True,
+                    index_config='prefix'):
         if delete_old_index or not SearchIndex.instance:
             SearchIndex.instance = SearchIndex.__SearchIndex(host,
                 port,
                 index_name,
                 ssl,
                 check_certs,
-                certs)
+                certs,
+                index_config)
         else:
             SearchIndex.instance.host = host
             SearchIndex.instance.port = port
@@ -44,49 +48,17 @@ class SearchIndex:
                     index_name,
                     ssl,
                     check_certs,
-                    certs):
+                    certs,
+                    index_config):
             self.connection = Elasticsearch([host + ":"+port])
             self.index_name = index_name
             self.certs = certs
             self.ssl = ssl
+            self.index_config = index_config
             self.index = self.connection.indices.create(
                 index=index_name,
-                body={
-  "settings": {
-    "analysis": {
-      "analyzer": {
-        "autocomplete": {
-          "tokenizer": "autocomplete",
-          "filter": [
-            "lowercase"
-          ]
-        },
-        "autocomplete_search": {
-          "tokenizer": "lowercase"
-        }
-      },
-      "tokenizer": {
-        "autocomplete": {
-          "type": "edge_ngram",
-          "min_gram": 2,
-          "max_gram": 10,
-          "token_chars": [
-            "letter"
-          ]
-        }
-      }
-    }
-  },
-  "mappings": {
-    "properties": {
-      "text": {
-        "type": "text",
-        "analyzer": "autocomplete",
-        "search_analyzer": "autocomplete_search"
-      }
-    }
-  }
-}, ignore=400)
+                body=index_confs[self.index_config], 
+                ignore=400)
 
         def is_connected(self, host, port):
             if self.connection != host + ":" + port:
