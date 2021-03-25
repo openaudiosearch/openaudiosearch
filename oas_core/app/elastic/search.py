@@ -4,29 +4,24 @@ from pprint import pprint
 #from app.core.job import Worker
 import json
 
-#from app.config import config
-config = {"es_host": "localhost",
-            "es_port": "9200",
-            "index_name": "oas"}
+from app.config import config
 
 
 class SearchIndex:
     instance = None
-    def __init__(self, host=config["es_host"],
-                    port=config["es_port"],
-                    index_name=config["index_name"],
+    def __init__(self, elastic_url=config.elastic_url,
+                    index_name=config.elastic_index,
                     ssl=False,
                     check_certs=False,
                     certs=""):
         if not SearchIndex.instance:
-            SearchIndex.instance = SearchIndex.__SearchIndex(host,
-                port,
+            SearchIndex.instance = SearchIndex.__SearchIndex(elastic_url,
                 index_name,
                 ssl,
                 check_certs,
                 certs)
         else:
-            SearchIndex.instance.host = host
+            SearchIndex.instance.elastic_url = elastic_url
             SearchIndex.instance.port = port
             SearchIndex.instance.index_name = index_name
             SearchIndex.instance.ssl = ssl
@@ -38,13 +33,12 @@ class SearchIndex:
 
     class __SearchIndex:
         def __init__(self,
-                    host,
-                    port,
+                    elastic_url,
                     index_name,
                     ssl,
                     check_certs,
                     certs):
-            self.connection = Elasticsearch([host + ":"+port])
+            self.connection = Elasticsearch([elastic_url])
             self.index_name = index_name
             self.certs = certs
             self.ssl = ssl

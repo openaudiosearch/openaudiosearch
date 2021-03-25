@@ -7,10 +7,11 @@ from app.tasks.models import TranscribeOpts, TranscribeArgs
 from app.worker import worker
 
 from app.core.job import Client
+from app.config import config
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    client = Client()
+    client = Client(redis_url=config.redis_url)
 
     while True:
         task = client.dequeue_task()
