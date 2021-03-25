@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     storage_path: str = '/tmp/oas'
     model: str = 'vosk-model-de-0.6'
     model_path: str = ''
-    redis: RedisDsn = 'redis://user:pass@localhost:6379/1'
     log_level: str = 'info'
 
     # server settings
@@ -20,10 +19,16 @@ class Settings(BaseSettings):
     port: int = 8080
     root_path: str = ''
 
+    # redis settings
+    redis_url: RedisDsn = 'redis://localhost:6379/0'
+
     # elastic settings
+    elastic_url: str = 'http://localhost:9200/'
+    elastic_index: str = 'oas'
+
     es_host: str = '0.0.0.0'
     es_port: int = 9200
-    index_name: str = 'oas'
+    es_index: str = 'oas'
 
     # set to 1 to enable development mode
     # (hot reload code on changes)
