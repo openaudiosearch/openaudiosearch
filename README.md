@@ -16,42 +16,67 @@ With **Open Audio Search**, we want to make the archives of community media, rad
 * *[Elasticsearch Community Edition](https://www.elastic.co/downloads/elasticsearch-oss)* baked indexing and search.
 * *React Single Page Application* as User Interface.
 
+## Run with Docker
 
-## Installation and Usage
+This project includes a Dockerfile to build a docker image for the backend and worker. It also includes a `docker-compose.yml` file to easily launch OAS together with Elastic Search and Redis.
 
-Follow the [installation guide](./docs/install.md) to install all dependencies.
+The easiest way to get started works like this:
+
+```sh
+git clone https://github.com/arso-project/open-audio-search
+cd open-audio-search
+docker-compose build
+docker-compose up
+```
+
+The OAS user interface and API are now available at `http://localhost:8080`.
+
+## Run without docker
+
+To develop locally you may want to run OAS without Docker. You should install the following requirements beforehand:
+- for the frontend: [Node.js](https://nodejs.org/en/) and npm or yarn
+- for the backend: Python and [poetry](https://python-poetry.org/docs/)
+- at runtime: [ffmpeg](https://www.ffmpeg.org/)
+
+*Clone this repository*
+```sh
+git clone https://github.com/arso-project/open-audio-search
+```
+
+*Prepare and build frontend* 
+```sh
+cd frontend
+yarn
+yarn build
+```
+
+*Prepare and install backend*
+```sh
+cd oas_core
+poetry install
+```
+
+*Start elasticsearch and redis via Docker*
+```sh
+docker-compose -f docker-compose.dev.yml up
+```
+
+*Start OAS server and worker*
+```sh
+cd oas_core
+poetry run python server.py
+# in another terminal:
+poetry run python worker.py
+```
+
+Open demo in browser at [http://localhost:8080](http://localhost:8080/).
+
 
 #### Configuration
 
 OAS is configured through an `.env` file in the directory from where you invoke it. To customize the configuration, copy [`.env.default`](`oas_core/.env.default`) in the `oas_core` folder to `.env` and adjust the values.
 
-By default, all data is stored in `/tmp/oas`. To keep models, downloads and intermediate results change the `STORAGE_PATH` setting to a non-temporary path.
-
-
-#### Run Demo
-
-Build and start frontend:
-```
-cd frontend
-yarn
-yarn build
-yarn start
-```
-
-Start server:
-```
-cd oas_core
-python server.py
-```
-
-Start worker:
-```
-cd oas_core
-python worker.py
-```
-
-Open demo in browser at [http://localhost:8080/ui/index.html](http://localhost:8080/ui/index.html)
-
+By default, all data is stored in `./data/oas`.
 
 ## Development Setup
 
