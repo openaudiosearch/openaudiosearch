@@ -26,11 +26,12 @@ Then, run the following commands:
 ```sh
 git clone https://github.com/arso-project/open-audio-search
 cd open-audio-search
+mkdir -p data/elastic && sudo chown 1000:root data/elastic
 docker-compose build
 docker-compose up
 ```
 
-The OAS user interface and API are now available at `http://localhost:8080`.
+It takes a little while for Elastic to start up. Then, the OAS user interface and API are available at [`http://localhost:8080`](http://localhost:8080).
 
 For the speech recognition to work, you'll need to download the models. Run this command once, it will download the models into the `./data/oas` volume:
 ```sh
@@ -64,6 +65,7 @@ poetry install
 
 *Start elasticsearch and redis via Docker*
 ```sh
+mkdir -p data/elastic && sudo chown 1000:root data/elastic
 docker-compose -f docker-compose.dev.yml up
 ```
 
