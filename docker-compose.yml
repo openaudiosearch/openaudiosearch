@@ -28,8 +28,6 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.11.2
-    ports:
-      - 9200:9200
     volumes:
       - "./data/elastic:/usr/share/elasticsearch/data"
     environment:
