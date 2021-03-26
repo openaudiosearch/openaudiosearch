@@ -3,15 +3,20 @@ version: "3.9"
 services:
   backend:
     build: .
-    tty: true
+    #tty: true
     ports:
-      - "8000:8000"
+      - "8080:8080"
     depends_on:
       - redis
       - elasticsearch
     environment:
       REDIS_URL: "redis://redis:6379/0"
       ELASTIC_URL: "http://elasticsearch:9200/"
+      STORAGE_PATH: "/data"
+    volumes:
+      - ./data:/data
+      - ./frontend/dist:/frontend/dist
+    command: sh -c './wait-for http://elasticsearch:9200/ -t 0 -- echo "Elasticsearch is up!"'
   redis:
     image: "redis:alpine"
   elasticsearch:

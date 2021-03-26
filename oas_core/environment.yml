@@ -90,7 +90,6 @@ dependencies:
   - pyrsistent=0.17.3
   - pysocks=1.7.1
   - python=3.8.5
-  - pytorch=1.7.0
   - readline=8.0
   - readme_renderer=24.0
   - regex=2020.10.15
@@ -104,17 +103,10 @@ dependencies:
   - spacy=2.3.2
   - sqlite=3.33.0
   - srsly=1.0.2
-  - tensorboard=2.2.1
-  - tensorboard-plugin-wit=1.6.0
-  - tensorflow=2.2.0
-  - tensorflow-base=2.2.0
-  - tensorflow-estimator=2.2.0
   - termcolor=1.1.0
   - thinc=7.4.1
   - tk=8.6.10
   - toml=0.10.1
-  - torchaudio=0.7.0
-  - torchvision=0.8.0
   - twine=3.2.0
   - typing_extensions=3.7.4.3
   - urllib3=1.25.11
@@ -130,6 +122,7 @@ dependencies:
   - zstd=1.4.5
   - pip:
     - aiohttp==3.7.2
+    - aiofiles==0.6.0
     - astroid==2.4.2
     - async-timeout==3.0.1
     - blis==0.4.1

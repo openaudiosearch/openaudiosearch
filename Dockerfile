@@ -1,5 +1,5 @@
 FROM continuumio/miniconda3
-RUN apt-get update && apt-get install -q -y portaudio19-dev gcc
+RUN apt-get update && apt-get install -q -y portaudio19-dev gcc netcat
 WORKDIR /code
 COPY oas_core/ /code/
 RUN conda env create -f environment.yml
