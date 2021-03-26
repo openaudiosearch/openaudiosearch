@@ -7,7 +7,7 @@ from pathlib import Path
 from app.config import config
 from app.logging import logger
 
-spacy_model = "de_core_news_sm"
+spacy_model = "de_core_news_lg"
 
 def get_spacy_path() -> Path:
     return os.path.join(config.storage_path, 'models', 'spacy')
