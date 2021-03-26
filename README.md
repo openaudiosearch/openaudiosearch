@@ -38,6 +38,11 @@ For the speech recognition to work, you'll need to download the models. Run this
 docker-compose exec worker python task-run.py download_models
 ```
 
+Elastic Search wants quite a lot of free space. If the threshold is not met, it refuses to do anything. Run the script at `oas_core/scripts/elastic-disable-threshold.sh` to disable the disc threshold (does not persist across Elastic restarts):
+``` sh
+docker-compose exec backend bash scripts/elastic-disable-threshold.sh
+```
+
 ## Run locally for developing
 
 To develop locally you may want to run OAS without Docker. You should install the following requirements beforehand:
