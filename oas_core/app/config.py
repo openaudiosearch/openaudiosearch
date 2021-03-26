@@ -6,10 +6,24 @@ from pydantic import (
     Field
 )
 
+import os
+from pathlib import Path
+
+def base_path():
+    self_path = Path(os.path.dirname(os.path.abspath(__file__)))
+    base_path = self_path.parent.parent
+    return base_path
+
+def default_data_dir():
+    return os.path.join(base_path(), 'data/oas')
+
+def default_frontend_path():
+    return os.path.join(base_path(), 'frontend/dist')
 
 class Settings(BaseSettings):
     # general settings
-    storage_path: str = '/tmp/oas'
+    storage_path: str = default_data_dir()
+    frontend_path: str = default_frontend_path()
     model: str = 'vosk-model-de-0.6'
     model_path: str = ''
     log_level: str = 'info'
