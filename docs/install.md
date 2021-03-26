@@ -1,5 +1,7 @@
 # Installation
 
+*TODO: This is covered in README.md, likely this file can be removed.*
+
 *Installation Steps:*
 * Databases
 * miniconda
