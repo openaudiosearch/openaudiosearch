@@ -39,32 +39,3 @@ COPY /oas_core /app/oas_core
 WORKDIR /app/oas_core
 ENV STORAGE_PATH="/data"
 CMD ["python", "server.py"]
-
-
-# prepare main image
-# FROM backend-build
-# WORKDIR /app/oas_core
-# COPY --from=backend-build /build/requirements.txt .
-
-# # copy poetry package files
-# COPY oas_core/poetry.lock oas_core/pyproject.toml ./
-# # install dependencies
-# RUN . $POETRY_HOME/env && \
-#   poetry install --no-dev --no-interaction --no-root
-
-# # prepare main image
-# FROM python:3.9.0-slim
-# RUN apt-get update && apt-get install -q -y curl ffmpeg
-# # copy code
-# COPY --from=backend-build /opt/poetry /opt/poetry
-# COPY --from=backend-build /opt/venv /opt/venv
-# COPY --from=frontend-build /build/dist /app/frontend/dist
-# COPY oas_core /app/oas_core
-
-# # setup runtime
-# WORKDIR /app/oas_core
-# ENV STORAGE_PATH="/data" \
-#   PATH="/opt/poetry/bin:${PATH}"
-
-# # run with poetry
-# CMD ["poetry", "run", "python", "server.py"]
