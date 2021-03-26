@@ -1,13 +1,26 @@
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from pprint import pprint
-#from app.core.job import Worker
+import requests
+import time
 import json
+#from app.core.job import Worker
 
 from app.elastic.configs.index_configs import index_configs
 from app.config import config
 
 index_confs = index_configs()
+
+def wait_for_elastic():
+    url = config.elastic_url + '_cat/health'
+    while True:
+        try:
+            res = requests.get(url)
+            return
+        except Exception as e:
+            print(f'Elastic cannot be reached at {url}, retrying in 1 second')
+            time.sleep(1)
+
 
 class SearchIndex:
     instance = None
