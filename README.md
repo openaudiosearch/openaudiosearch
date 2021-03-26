@@ -20,7 +20,7 @@ With **Open Audio Search**, we want to make the archives of community media, rad
 
 This project includes a Dockerfile to build a docker image for the backend and worker. It also includes a `docker-compose.yml` file to easily launch OAS together with Elastic Search and Redis.
 
-The easiest way to get started works like this:
+To get started, install [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/). You'll need a quite recent version of both.
 
 ```sh
 git clone https://github.com/arso-project/open-audio-search
