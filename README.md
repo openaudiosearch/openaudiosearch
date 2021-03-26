@@ -22,6 +22,7 @@ This project includes a Dockerfile to build a docker image for the backend and w
 
 To get started, install [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/). You'll need a quite recent version of both.
 
+Then, run the following commands:
 ```sh
 git clone https://github.com/arso-project/open-audio-search
 cd open-audio-search
@@ -30,6 +31,11 @@ docker-compose up
 ```
 
 The OAS user interface and API are now available at `http://localhost:8080`.
+
+For the speech recognition to work, you'll need to download the models. Run this command once, it will download the models into the `./data/oas` volume:
+```sh
+docker-compose exec worker python task-run.py download_models
+```
 
 ## Run locally for developing
 
