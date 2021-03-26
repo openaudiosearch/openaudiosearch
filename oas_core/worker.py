@@ -8,10 +8,12 @@ from app.worker import worker
 
 from app.core.job import Client
 from app.config import config
+from app.logging import logger
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
     client = Client(redis_url=config.redis_url)
+    logger.info("Worker started and waiting for tasks")
+
 
     while True:
         task = client.dequeue_task()
