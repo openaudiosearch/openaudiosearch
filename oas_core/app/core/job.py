@@ -2,7 +2,6 @@ import os
 import json
 import typing as T
 from pathlib import Path
-import logging
 import traceback
 import sys
 import tempfile
@@ -16,6 +15,7 @@ from typing import Any, Dict
 
 from app.core.util import uuid, get_typed_signature
 from app.config import config
+from app.logging import logger
 
 
 class State(Enum):
