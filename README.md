@@ -16,7 +16,7 @@ With **Open Audio Search**, we want to make the archives of community media, rad
 * *[Elasticsearch Community Edition](https://www.elastic.co/downloads/elasticsearch-oss)* baked indexing and search.
 * *React Single Page Application* as User Interface.
 
-## Run with Docker
+## Install & run with Docker
 
 This project includes a Dockerfile to build a docker image for the backend and worker. It also includes a `docker-compose.yml` file to easily launch OAS together with Elastic Search and Redis.
 
@@ -31,7 +31,7 @@ docker-compose up
 
 The OAS user interface and API are now available at `http://localhost:8080`.
 
-## Run without docker
+## Run locally for developing
 
 To develop locally you may want to run OAS without Docker. You should install the following requirements beforehand:
 - for the frontend: [Node.js](https://nodejs.org/en/) and npm or yarn
