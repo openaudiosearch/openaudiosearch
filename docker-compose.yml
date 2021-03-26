@@ -13,7 +13,7 @@ services:
 
   worker:
     build: .
-    command: ["poetry", "run", "python", "worker.py"]
+    command: ["python", "worker.py"]
     volumes:
       - "./data/oas:/data"
     environment:
