@@ -45,9 +45,9 @@ docker-compose exec backend bash scripts/elastic-disable-threshold.sh
 ## Run locally for developing
 
 To develop locally you may want to run OAS without Docker. You should install the following requirements beforehand:
-- for the frontend: [Node.js](https://nodejs.org/en/) and npm or yarn
-- for the backend: Python and [poetry](https://python-poetry.org/docs/)
-- at runtime: [ffmpeg](https://www.ffmpeg.org/)
+- Python 3 and [poetry](https://python-poetry.org/docs/)
+- For building the frontend: [Node.js](https://nodejs.org/en/) and npm or yarn
+- [ffmpeg](https://www.ffmpeg.org/)
 
 *Clone this repository*
 ```sh
@@ -61,7 +61,7 @@ yarn
 yarn build
 ```
 
-*Prepare and install backend*
+*Prepare and build backend*
 ```sh
 cd oas_core
 poetry install
@@ -80,18 +80,26 @@ poetry run python server.py
 poetry run python worker.py
 ```
 
-Open demo in browser at [http://localhost:8080](http://localhost:8080/).
+Open the UI in a browser at [http://localhost:8080](http://localhost:8080/).
 
-
-#### Configuration
-
-OAS is configured through an `.env` file in the directory from where you invoke it. To customize the configuration, copy [`.env.default`](`oas_core/.env.default`) in the `oas_core` folder to `.env` and adjust the values.
-
-By default, all data is stored in `./data/oas`.
-
-## Development Setup
+### Development tips and tricks
 
 Have a look at the [development guide](./docs/development.md).
+
+## Configuration
+
+OAS is configured through environment variables. If a `.env` file is present in the directory from which oas_core is started the variables from there will be used. To customize the configuration, copy [`.env.default`](`oas_core/.env.default`) in the `oas_core` folder to `.env` and adjust the values.
+
+|variable|default|description|
+|-|-|-|
+|`STORAGE_PATH`|`./data/oas`|Storage path for models, cached files and other assets|
+|`FRONTEND_PATH`|`./frontend/dist`|Path to the built frontend that will be served at `/`|
+|`HOST`|`0.0.0.0`|Interface for the HTTP server to bind to|
+|`PORT`|`8080`|Port for HTTP server to listen on|
+|`REDIS_URL`|`redis://localhost:6379/0`|URL to Redis server|
+|`ELASTIC_URL`|`http://localhost:9200/`|URL to Elastic server (note the trailing slash)|
+|`ELASTIC_INDEX`|`oas`|Name of the Elastic Search index to be created and used|
+|`OAS_DEV`||If set to `1`: Enable development mode (see [Development guide](./docs/development.md)|
 
 
 ## License

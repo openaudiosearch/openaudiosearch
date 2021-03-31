@@ -40,10 +40,6 @@ class Settings(BaseSettings):
     elastic_url: str = 'http://localhost:9200/'
     elastic_index: str = 'oas'
 
-    es_host: str = '0.0.0.0'
-    es_port: int = 9200
-    es_index: str = 'oas'
-
     # set to 1 to enable development mode
     # (hot reload code on changes)
     oas_dev: bool = False
