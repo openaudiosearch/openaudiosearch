@@ -34,3 +34,4 @@ services:
       http.host: 0.0.0.0
       discovery.type: single-node
       ES_JAVA_OPTS: "-Xms500m -Xmx500m"
+      TAKE_FILE_OWNERSHIP: 1

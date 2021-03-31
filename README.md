@@ -26,7 +26,6 @@ Then, run the following commands:
 ```sh
 git clone https://github.com/arso-project/open-audio-search
 cd open-audio-search
-mkdir -p data/elastic && sudo chown 1000:root data/elastic
 docker-compose build
 docker-compose up
 ```
@@ -38,7 +37,7 @@ For the speech recognition to work, you'll need to download the models. Run this
 docker-compose exec worker python task-run.py download_models
 ```
 
-Elastic Search wants quite a lot of free space. If the threshold is not met, it refuses to do anything. Run the script at `oas_core/scripts/elastic-disable-threshold.sh` to disable the disc threshold (does not persist across Elastic restarts):
+Elastic Search wants quite a lot of free disc space. If the threshold is not met, it refuses to do anything. Run the script at `oas_core/scripts/elastic-disable-threshold.sh` to disable the disc threshold (does not persist across Elastic restarts):
 ``` sh
 docker-compose exec backend bash scripts/elastic-disable-threshold.sh
 ```
@@ -70,7 +69,6 @@ poetry install
 
 *Start elasticsearch and redis via Docker*
 ```sh
-mkdir -p data/elastic && sudo chown 1000:root data/elastic
 docker-compose -f docker-compose.dev.yml up
 ```
 
