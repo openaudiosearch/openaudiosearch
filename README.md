@@ -12,9 +12,9 @@ With **Open Audio Search**, we want to make the archives of community media, rad
 ## Main Features
 
 * *Automatic Speech Recognition* using [Vosk toolkit](https://alphacephei.com/vosk/) ([Kaldi](http://kaldi-asr.org/) under the hood)
-* *Task queue app engine* using [Redis](https://redis.io/) for caching.
-* *[Elasticsearch Community Edition](https://www.elastic.co/downloads/elasticsearch-oss)* baked indexing and search.
-* *React Single Page Application* as User Interface.
+* *Task queue engine* using [Redis](https://redis.io/)
+* *Full-text search* using [Elasticsearch Community Edition](https://www.elastic.co/downloads/elasticsearch-oss)
+* *User Interface* using [React](https://reactjs.org/)
 
 ## Install & run with Docker
 
@@ -97,7 +97,7 @@ OAS is configured through environment variables. If a `.env` file is present in 
 |`HOST`|`0.0.0.0`|Interface for the HTTP server to bind to|
 |`PORT`|`8080`|Port for HTTP server to listen on|
 |`REDIS_URL`|`redis://localhost:6379/0`|URL to Redis server|
-|`ELASTIC_URL`|`http://localhost:9200/`|URL to Elastic server (note the trailing slash)|
+|`ELASTIC_URL`|`http://localhost:9200/`|URL to Elastic server (trailing slash is required)|
 |`ELASTIC_INDEX`|`oas`|Name of the Elastic Search index to be created and used|
 |`OAS_DEV`||If set to `1`: Enable development mode (see [Development guide](./docs/development.md)|
 

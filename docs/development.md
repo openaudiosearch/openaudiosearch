@@ -38,8 +38,8 @@ Make sure to run `yarn build` in this directory after pulling in changes. The `o
 
 ```bash
 # install redis-commander
-yarn global add redis
-# or: npm install -g redis
+yarn global add redis-commander
+# or: npm install -g redis-commander
 
 # start redis-commander
 redis-commander
