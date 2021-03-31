@@ -21,17 +21,19 @@ WORKDIR /build
 COPY --from=poetry-build /build/requirements.txt .
 RUN pip install --prefix="/build/pip" --no-warn-script-location -r requirements.txt
 
+# python-base: base image with a few utilities installed
+FROM python:3.9.0-slim as python-base
+RUN apt-get update && apt-get install -q -y wget curl xz-utils iputils-ping iproute2
+
 # ffmpeg-build: download ffmpeg-static
-# (this adds only 73MB to the finaly image, vs 350MB for ffmpeg via apt)
-FROM python:3.9.0-slim as ffmpeg-build
+# (this adds only 73MB to the final image, vs 350MB for ffmpeg via apt)
+FROM python-base as ffmpeg-build
 WORKDIR /build
-RUN apt-get update && apt-get install -q -y wget xz-utils
 RUN wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && \
   tar xf ffmpeg-release-amd64-static.tar.xz --strip-components=1
 
 # build main image
-FROM python:3.9.0-slim
-RUN apt-get update && apt-get install -q -y curl
+FROM python-base
 COPY --from=backend-build /build/pip/ /usr/local
 COPY --from=ffmpeg-build /build/ffmpeg /usr/local/bin/ffmpeg
 COPY --from=frontend-build /build/dist /app/frontend/dist
