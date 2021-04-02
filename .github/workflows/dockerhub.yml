@@ -3,7 +3,7 @@ name: dockerhub
 on:
   push:
     branches:
-      - 'docker2'
+      - 'main'
 
 jobs:
   docker:
