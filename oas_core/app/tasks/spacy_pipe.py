@@ -1,15 +1,54 @@
 import spacy
+import os
+import sys
 from spacy.lang.de import German
+from pathlib import Path
 
+from app.config import config
+from app.logging import logger
+
+spacy_model = "de_core_news_lg"
+
+def get_spacy_path() -> Path:
+    return os.path.join(config.storage_path, 'models', 'spacy')
+
+def ensure_spacy_import_path() -> bool:
+    path = get_spacy_path()
+    try:
+        ls = os.listdir(os.path.join(path, 'lib'))
+        if len(ls) < 1:
+            return False
+
+        py_version = ls[0]
+        module_path = os.path.join(path, 'lib', py_version, 'site-packages')
+        if not module_path in sys.path:
+            sys.path.append(module_path)
+        return True
+    except Exception as err:
+        return False
+
+def spacy_load(model):
+    model_path_exists = ensure_spacy_import_path()
+    if model_path_exists:
+        try:
+            nlp = spacy.load(model)
+            logger.info(f"loaded spaCy with model `{model}`")
+            return nlp
+        except Exception as err:
+            logger.warning(f"disabling spaCy: missing model `{model}`")
+            #  logger.exception(err)
+            logger.warning("run `python task-run.py download_models` to download the models.")
+            return None
+    else:
+        logger.warning("disabling spaCy: missing models")
+        logger.warning("run `python task-run.py download_models` to download the models.")
+        return None
 
 class SpacyPipe():
     def __init__(self, pipeline):
         self.pipeline = pipeline
-        try:
-            self.nlp = spacy.load("de_core_news_lg")
-        except Exception:
-            self.nlp = None
-            pass
+        # Will be None if the model cannot be loaded!
+        self.nlp = spacy_load(spacy_model)
     
     def run(self, transcript):
         """
