@@ -12,50 +12,94 @@ With **Open Audio Search**, we want to make the archives of community media, rad
 ## Main Features
 
 * *Automatic Speech Recognition* using [Vosk toolkit](https://alphacephei.com/vosk/) ([Kaldi](http://kaldi-asr.org/) under the hood)
-* *Task queue app engine* using [Redis](https://redis.io/) for caching.
-* *[Elasticsearch Community Edition](https://www.elastic.co/downloads/elasticsearch-oss)* baked indexing and search.
-* *React Single Page Application* as User Interface.
+* *Task queue engine* using [Redis](https://redis.io/)
+* *Full-text search* using [Elasticsearch Community Edition](https://www.elastic.co/downloads/elasticsearch-oss)
+* *User Interface* using [React](https://reactjs.org/)
 
+## Install & run with Docker
 
-## Installation and Usage
+This project includes a Dockerfile to build a docker image for the backend and worker. It also includes a `docker-compose.yml` file to easily launch OAS together with Elastic Search and Redis.
 
-Follow the [installation guide](./docs/install.md) to install all dependencies.
+To get started, install [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/). You'll need a quite recent version of both.
 
-#### Configuration
-
-OAS is configured through an `.env` file in the directory from where you invoke it. To customize the configuration, copy [`.env.default`](`oas_core/.env.default`) in the `oas_core` folder to `.env` and adjust the values.
-
-By default, all data is stored in `/tmp/oas`. To keep models, downloads and intermediate results change the `STORAGE_PATH` setting to a non-temporary path.
-
-
-#### Run Demo
-
-Build and start frontend:
+Then, run the following commands:
+```sh
+git clone https://github.com/arso-project/open-audio-search
+cd open-audio-search
+docker-compose build
+docker-compose up
 ```
+
+It takes a little while for Elastic to start up. Then, the OAS user interface and API are available at [`http://localhost:8080`](http://localhost:8080).
+
+For the speech recognition to work, you'll need to download the models. Run this command once, it will download the models into the `./data/oas` volume:
+```sh
+docker-compose exec worker python task-run.py download_models
+```
+
+Elastic Search wants quite a lot of free disc space. If the threshold is not met, it refuses to do anything. Run the script at `oas_core/scripts/elastic-disable-threshold.sh` to disable the disc threshold (does not persist across Elastic restarts):
+``` sh
+docker-compose exec backend bash scripts/elastic-disable-threshold.sh
+```
+
+## Run locally for developing
+
+To develop locally you may want to run OAS without Docker. You should install the following requirements beforehand:
+- Python 3 and [poetry](https://python-poetry.org/docs/)
+- For building the frontend: [Node.js](https://nodejs.org/en/) and npm or yarn
+- [ffmpeg](https://www.ffmpeg.org/)
+
+*Clone this repository*
+```sh
+git clone https://github.com/arso-project/open-audio-search
+```
+
+*Prepare and build frontend* 
+```sh
 cd frontend
 yarn
 yarn build
-yarn start
 ```
 
-Start server:
-```
+*Prepare and build backend*
+```sh
 cd oas_core
-python server.py
+poetry install
 ```
 
-Start worker:
+*Start elasticsearch and redis via Docker*
+```sh
+docker-compose -f docker-compose.dev.yml up
 ```
+
+*Start OAS server and worker*
+```sh
 cd oas_core
-python worker.py
+poetry run python server.py
+# in another terminal:
+poetry run python worker.py
 ```
 
-Open demo in browser at [http://localhost:8080/ui/index.html](http://localhost:8080/ui/index.html)
+Open the UI in a browser at [http://localhost:8080](http://localhost:8080/).
 
-
-## Development Setup
+### Development tips and tricks
 
 Have a look at the [development guide](./docs/development.md).
+
+## Configuration
+
+OAS is configured through environment variables. If a `.env` file is present in the directory from which oas_core is started the variables from there will be used. To customize the configuration, copy [`.env.default`](`oas_core/.env.default`) in the `oas_core` folder to `.env` and adjust the values.
+
+|variable|default|description|
+|-|-|-|
+|`STORAGE_PATH`|`./data/oas`|Storage path for models, cached files and other assets|
+|`FRONTEND_PATH`|`./frontend/dist`|Path to the built frontend that will be served at `/`|
+|`HOST`|`0.0.0.0`|Interface for the HTTP server to bind to|
+|`PORT`|`8080`|Port for HTTP server to listen on|
+|`REDIS_URL`|`redis://localhost:6379/0`|URL to Redis server|
+|`ELASTIC_URL`|`http://localhost:9200/`|URL to Elastic server (trailing slash is required)|
+|`ELASTIC_INDEX`|`oas`|Name of the Elastic Search index to be created and used|
+|`OAS_DEV`||If set to `1`: Enable development mode (see [Development guide](./docs/development.md)|
 
 
 ## License

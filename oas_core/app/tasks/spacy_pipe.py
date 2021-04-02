@@ -5,7 +5,11 @@ from spacy.lang.de import German
 class SpacyPipe():
     def __init__(self, pipeline):
         self.pipeline = pipeline
-        self.nlp = spacy.load("de_core_news_lg")
+        try:
+            self.nlp = spacy.load("de_core_news_lg")
+        except Exception:
+            self.nlp = None
+            pass
     
     def run(self, transcript):
         """
@@ -16,6 +20,9 @@ class SpacyPipe():
         >>> print(res["pos"])
         [('Samantha', 'PROPN', 'pnc'), ('Bachfischer', 'PROPN', 'sb'), ('heute', 'ADV', 'mo'), ('ist', 'AUX', 'ROOT'), ('ein', 'DET', 'nk'), ('schöner', 'ADJ', 'nk'), ('Tag', 'NOUN', 'pd'), ('in', 'ADP', 'mnr'), ('Budapest', 'PROPN', 'nk')]
         """
+        if self.nlp is None:
+            return {}
+
         doc = self.nlp(transcript)
         ner = []
         pos = []

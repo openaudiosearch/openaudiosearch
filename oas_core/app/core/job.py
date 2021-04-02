@@ -39,10 +39,8 @@ class TaskSpec(BaseModel):
 
 
 class Client(object):
-    def __init__(self, redis_pool=None, redis_host='localhost', redis_port=6379, redis_db=0):
-        self.pool = redis_pool or ConnectionPool(
-            port=redis_port, host=redis_host, db=redis_db)
-        self.redis = Redis(connection_pool=redis_pool)
+    def __init__(self, redis_url=config.redis_url):
+        self.redis = Redis.from_url(redis_url)
         self.prefix = 'oas.queue.'
         self.key_results = self.key(RESULTS)
         self.key_tasks = self.key(TASKS)
