@@ -2,7 +2,6 @@ import os
 import json
 import typing as T
 from pathlib import Path
-import logging
 import traceback
 import sys
 import tempfile
@@ -16,6 +15,7 @@ from typing import Any, Dict
 
 from app.core.util import uuid, get_typed_signature
 from app.config import config
+from app.logging import logger
 
 
 class State(Enum):
@@ -215,7 +215,7 @@ class Job(object):
         return task
 
     def log(self, message):
-        logging.info(f'JOB LOG ({self.id}): {message}')
+        logger.debug(f'JOB LOG ({self.id}): {message}')
 
     def set_state(self, state: State):
         self.state = state
@@ -241,7 +241,7 @@ class Job(object):
                 self.queue.task_done()
             else:
                 self.log(f'error {task.error}')
-                logging.exception(task.error)
+                logger.exception(task.error)
                 # traceback.print_tb(task.error.__traceback__)
                 self.set_state(State.error)
                 return

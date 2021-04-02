@@ -24,6 +24,7 @@ pydub = "^0.25"
 python-dotenv = "^0.15.0"
 aiofiles = "^0.6.0"
 vosk = "^0.3.21"
+loguru = "^0.5.3"
 
 [tool.poetry.dev-dependencies]
 rope = "^0.18.0"

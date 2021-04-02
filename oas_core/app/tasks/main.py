@@ -91,6 +91,7 @@ def prepare(task: Task, args: DownloadResult, opts: PrepareOpts) -> PrepareResul
     # sound.export(dst, format="wav")
     subprocess.call(['ffmpeg', '-i',
                      args.file_path,
+                     '-hide_banner', '-loglevel', 'error',
                      '-ar', str(opts.samplerate), '-ac', '1', dst],
                     stdout=subprocess.PIPE)
     return PrepareResult(file_path=dst)
