@@ -1,0 +1,37 @@
+version: "3.9"
+   
+services:
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./data/oas:/data"
+    environment:
+      REDIS_URL: "redis://redis:6379/0"
+      ELASTIC_URL: "http://elasticsearch:9200/"
+
+  worker:
+    build: .
+    command: ["python", "worker.py"]
+    volumes:
+      - "./data/oas:/data"
+    environment:
+      REDIS_URL: "redis://redis:6379/0"
+      ELASTIC_URL: "http://elasticsearch:9200/"
+
+  redis:
+    image: "redis:alpine"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - "./data/redis:/data"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.11.2
+    volumes:
+      - "./data/elastic:/usr/share/elasticsearch/data"
+    environment:
+      http.host: 0.0.0.0
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms500m -Xmx500m"
+      TAKE_FILE_OWNERSHIP: 1

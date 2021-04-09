@@ -6,9 +6,10 @@ import os
 
 from app.server.api import router as api_router
 from app.config import config
+from app.logging import logger
 
 api_v1_prefix = '/oas/v1'
-static_path = os.path.abspath('../frontend/dist')
+static_path = config.frontend_path
 
 app = FastAPI(
     title="Open Audio Search API",

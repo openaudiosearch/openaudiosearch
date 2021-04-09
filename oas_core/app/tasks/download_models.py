@@ -1,10 +1,13 @@
 import os
 import wget
 import zipfile
+import shutil
+import tempfile
 
 from app.config import config
 from app.worker import worker, Task
 
+from app.tasks.spacy_pipe import get_spacy_path, spacy_model
 
 def download(url, path):
     file = wget.download(url, path)
@@ -19,6 +22,31 @@ def extract(filepath):
 
 @worker.task("download_models")
 def download_all_models(task: Task, args, opts):
+    download_vosk_models()
+    download_spacy_models()
+
+
+def download_spacy_models():
+    # spacy models are python pip packages.
+    # this downloads the model to a tempdir, and then copies the path
+    # to storage_path/models/spacy. this path is added to sys.path in the
+    # spacy constructor at runtime.
+
+    spacy_path = get_spacy_path()
+    os.makedirs(spacy_path, exist_ok=True)
+    pip_options = f'--prefix="{spacy_path}"'
+    command = f'python -m spacy download {spacy_model} {pip_options}'
+    os.system(command)
+    #  spa
+    #  ls = os.listdir(os.path.join(tempdir, 'lib'))
+    #  #  path = os.path.join(tempdir, f'lib/{ls[0]}/site-packages')
+    #  path = tempdir
+    #  target = os.path.join(config.storage_path, 'models', 'spacy')
+    #  shutil.copytree(path, target)
+    #  shutil.rmtree(tempdir)
+
+
+def download_vosk_models():
     models = {
         "vosk-model-de-0.6": "https://alphacephei.com/vosk/models/vosk-model-de-0.6.zip",
         "vosk-model-spk-0.4": "https://alphacephei.com/vosk/models/vosk-model-spk-0.4.zip"
@@ -29,5 +57,10 @@ def download_all_models(task: Task, args, opts):
         os.makedirs(models_path)
 
     for model in models:
-        filepath = download(models[model], models_path)
-        extract(filepath)
+        target_dir = os.path.join(models_path, model)
+        if not os.path.isdir(target_dir):
+            print(f'Downloading {models[model]}')
+            filepath = download(models[model], models_path)
+            extract(filepath)
+        else:
+            print(f'Skipping {models[model]}')

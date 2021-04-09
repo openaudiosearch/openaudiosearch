@@ -1,38 +1,45 @@
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from pprint import pprint
-from configs.index_configs import index_configs
-#from app.core.job import Worker
+import requests
+import time
 import json
+#from app.core.job import Worker
 
-#from app.config import config
-config = {"es_host": "localhost",
-            "es_port": "9200",
-            "index_name": "oas111"}
+from app.elastic.configs.index_configs import index_configs
+from app.config import config
+
 index_confs = index_configs()
+
+def wait_for_elastic():
+    url = config.elastic_url + '_cat/health'
+    while True:
+        try:
+            res = requests.get(url)
+            return
+        except Exception as e:
+            print(f'Elastic cannot be reached at {url}, retrying in 1 second')
+            time.sleep(1)
 
 
 class SearchIndex:
     instance = None
-    def __init__(self, host=config["es_host"],
-                    port=config["es_port"],
-                    index_name=config["index_name"],
+    def __init__(self, elastic_url=config.elastic_url,
+                    index_name=config.elastic_index,
                     ssl=False,
                     check_certs=False,
                     certs="",
-                    delete_old_index=True,
+                    delete_old_index=False,
                     index_config='prefix'):
         if delete_old_index or not SearchIndex.instance:
-            SearchIndex.instance = SearchIndex.__SearchIndex(host,
-                port,
+            SearchIndex.instance = SearchIndex.__SearchIndex(elastic_url,
                 index_name,
                 ssl,
                 check_certs,
                 certs,
                 index_config)
         else:
-            SearchIndex.instance.host = host
-            SearchIndex.instance.port = port
+            SearchIndex.instance.elastic_url = elastic_url
             SearchIndex.instance.index_name = index_name
             SearchIndex.instance.ssl = ssl
             SearchIndex.instance.check_certs = check_certs
@@ -43,14 +50,13 @@ class SearchIndex:
 
     class __SearchIndex:
         def __init__(self,
-                    host,
-                    port,
+                    elastic_url,
                     index_name,
                     ssl,
                     check_certs,
                     certs,
                     index_config):
-            self.connection = Elasticsearch([host + ":"+port])
+            self.connection = Elasticsearch([elastic_url])
             self.index_name = index_name
             self.certs = certs
             self.ssl = ssl
