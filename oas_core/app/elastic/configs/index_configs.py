@@ -31,6 +31,11 @@ def index_configs():
         "type": "text",
         "analyzer": "autocomplete",
         "search_analyzer": "autocomplete_search"
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "autocomplete",
+        "search_analyzer": "autocomplete_search"
       }
     }
   }

@@ -78,14 +78,17 @@ class SearchIndex:
             return self.connection
 
         def search(self, search_term):
-            search_param = {"query": {
-                "match": {
-                    "text":  {
-                        "query": search_term, 
-                        "operator": "and"
+            search_param = \
+                {"query": {
+                    "bool": {
+                        "should": [
+                            {"match": {"text": {"query": search_term,
+                                                "operator": "and"}}},
+                            {"match": {"title": {"query": search_term}}}
+                        ]
                     }
                 }
-            }}
+            }
             response = self.connection.search(index=self.index_name, body=search_param, doc_type="_doc")
             return response
         
@@ -104,14 +107,15 @@ class Document:
         self.text = asr_result["text"]
         self.path_to_audio = path_to_audio
         self.created_at = datetime.now()
-       
+        self.title = asr_result["title"]
 
 
     def reprJSON(self):        
         return dict(results=[result.reprJSON() for result in self.results],
                     text=self.text,
                     path_to_audio=self.path_to_audio,
-                    created_at=self.created_at
+                    created_at=self.created_at,
+                    title=self.title
                     )
 
 
@@ -152,7 +156,8 @@ if __name__ == "__main__":
     #     "start": 1.4,
     #     "word": "hello"}],
     #     "text": "transcript"}
-    asr_result = {'text': ' fünfundzwanzig jahren leipziger geschichte mit perspektiven als waren zum beispiel erinnerung es kommt',
+    asr_result = {'title': 'WDR aktuell',
+                  'text': ' fünfundzwanzig jahren leipziger geschichte mit perspektiven als waren zum beispiel erinnerung es kommt',
                   'parts': [
                       {'result': [
                           {'conf': 0.983098, 'end': 1.41, 'start': 0.27, 'word': 'fünfundzwanzig'},
@@ -181,4 +186,4 @@ if __name__ == "__main__":
     pprint(search_index.put(doc, "1"))
     #SEARCH the Word "transcript" in index
     pprint("SEARCH")
-    pprint(search_index.search("leip"))
+    pprint(search_index.search("leipz"))
