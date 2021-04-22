@@ -6,8 +6,11 @@ import time
 import json
 #from app.core.job import Worker
 
-from app.elastic.configs.index_configs import index_configs
-from app.config import config
+from configs.index_configs import index_configs
+# from app.config import config
+
+elastic_url: str = 'http://localhost:9200/'
+elastic_index: str = 'oas_n'
 
 index_confs = index_configs()
 
@@ -24,8 +27,8 @@ def wait_for_elastic():
 
 class SearchIndex:
     instance = None
-    def __init__(self, elastic_url=config.elastic_url,
-                    index_name=config.elastic_index,
+    def __init__(self, elastic_url=elastic_url,
+                    index_name=elastic_index,
                     ssl=False,
                     check_certs=False,
                     certs="",
@@ -83,18 +86,42 @@ class SearchIndex:
         def get_con(self):
             return self.connection
 
-        def search(self, search_term):
-            search_param = \
-                {"query": {
+        def search(self, search_term, range_queries=None):
+            search_param = {"query": {
                     "bool": {
                         "should": [
-                            {"match": {"text": {"query": search_term,
+                            {"match": {"description": {"query": search_term,
                                                 "operator": "and"}}},
-                            {"match": {"title": {"query": search_term}}}
+                            {"match": {"headline": {"query": search_term}}}
                         ]
                     }
-                }
+                },
+                "aggs": {
+                    "publisher_agg": {
+                        "terms": {
+                            "field": "publisher.keyword",
+                            "size": 10
+                        }
+                    }
             }
+            }
+            
+                        #     {"query": {
+            #         "bool": {
+            #             "should": [
+            #                 {"match": {"description": {"query": search_term,
+            #                                     "operator": "and"}}},
+            #                 {"match": {"headline": {"query": search_term}}}
+            #             ]
+            #         # },
+            #         # "range": {
+            #         #     "date_production": {
+            #         #         "gte": '2020-04-01',
+            #         #         "lte": '2021-05-02'
+            #         #     }
+            #         }
+            #     }
+            # }
             response = self.connection.search(index=self.index_name, body=search_param, doc_type="_doc")
             return response
         
@@ -103,41 +130,43 @@ class SearchIndex:
 
 
 class Document:
-    def __init__(self, asr_result, path_to_audio="to-do.mp3"):
-        self.results = []
-        for part in asr_result["parts"]:
-            for word_result in part["result"]:
-                res = AsrInnerResult(
-                    word_result["conf"], word_result["start"], word_result["end"], word_result["word"])
-                self.results.append(res)
-        self.text = asr_result["text"]
-        self.path_to_audio = path_to_audio
-        self.created_at = datetime.now()
-        self.title = asr_result["title"]
+    def __init__(self, feed_entry):
+        self.headline = feed_entry['headline']
+        self.identifier = feed_entry['identifier']
+        self.url = feed_entry['url']
+        self.contentUrl = feed_entry['contentUrl']
+        self.encodingFormat = feed_entry['encodingFormat']
+        self.abstract = feed_entry['abstract']
+        self.description = feed_entry['description']
+        self.creator = feed_entry['creator']
+        self.contributor = feed_entry['contributor']
+        self.genre = feed_entry['genre']
+        self.datePublished = feed_entry['datePublished']
+        self.duration = feed_entry['duration']
+        self.inLanguage = feed_entry['inLanguage']
+        self.dateModified = feed_entry['dateModified']
+        self.licence = feed_entry['licence']
+        self.publisher = feed_entry['publisher']
 
 
     def reprJSON(self):        
-        return dict(results=[result.reprJSON() for result in self.results],
-                    text=self.text,
-                    path_to_audio=self.path_to_audio,
-                    created_at=self.created_at,
-                    title=self.title
-                    )
-
-
-class AsrInnerResult():
-    def __init__(self, conf, start, end, word):
-        self.conf = conf
-        self.start = start
-        self.end = end
-        self.word = word
-
-    def reprJSON(self):
-        return dict(conf=self.conf,
-                    start=self.start,
-                    end=self.end,
-                    word=self.word
-                    )
+        return dict(headline=self.headline,
+            identifier = self.identifier,
+            url = self.url,
+            contentUrl = self.contentUrl,
+            encodingFormat = self.encodingFormat,
+            abstract = self.abstract,
+            description = self.description,
+            creator = self.creator,
+            contributor = self.contributor,
+            genre = self.genre,
+            datePublished = self.datePublished,
+            duration = self.duration,
+            inLanguage = self.inLanguage,
+            dateModified = self.dateModified,
+            licence = self.licence,
+            publisher = self.publisher
+        )
 
 
 class Encoder(json.JSONEncoder):
@@ -151,45 +180,30 @@ class Encoder(json.JSONEncoder):
 
 
 if __name__ == "__main__":
-    # asr_result = {"result": [{
-    #     "conf": 0.49457,
-    #     "end": 2.34,
-    #     "start": 1.35,
-    #     "word": "hello"},
-    #     {
-    #     "conf": 0.9,
-    #     "end": 2.3,
-    #     "start": 1.4,
-    #     "word": "hello"}],
-    #     "text": "transcript"}
-    asr_result = {'title': 'WDR aktuell',
-                  'text': ' fünfundzwanzig jahren leipziger geschichte mit perspektiven als waren zum beispiel erinnerung es kommt',
-                  'parts': [
-                      {'result': [
-                          {'conf': 0.983098, 'end': 1.41, 'start': 0.27, 'word': 'fünfundzwanzig'},
-                          {'conf': 0.42963, 'end': 2.034147, 'start': 1.41, 'word': 'jahren'},
-                          {'conf': 0.956407, 'end': 2.669977, 'start': 2.1, 'word': 'leipziger'},
-                          {'conf': 0.997978, 'end': 3.27, 'start': 2.67082, 'word': 'geschichte'},
-                          {'conf': 0.674975, 'end': 3.48, 'start': 3.33, 'word': 'mit'},
-                          {'conf': 0.998419, 'end': 4.5, 'start': 3.48, 'word': 'perspektiven'},
-                          {'conf': 1.0, 'end': 5.5798, 'start': 5.34, 'word': 'als'},
-                          {'conf': 0.829022, 'end': 5.97, 'start': 5.58, 'word': 'waren'},
-                          {'conf': 1.0, 'end': 6.48, 'start': 6.33, 'word': 'zum'},
-                          {'conf': 1.0, 'end': 6.904158, 'start': 6.48, 'word': 'beispiel'},
-                          {'conf': 0.678397, 'end': 7.411906, 'start': 6.904158, 'word': 'erinnerung'},
-                          {'conf': 0.898544, 'end': 7.92, 'start': 7.74, 'word': 'es'},
-                          {'conf': 0.999274, 'end': 8.43, 'start': 7.920014, 'word': 'kommt'}
-                      ],
-                          'text': 'fünfundzwanzig jahren leipziger geschichte mit perspektiven als waren zum beispiel erinnerung es kommt'}
-                  ]}
 
-    path_to_audio = "path/to/audio"
+    feed_entry = {
+        'abstract': 'Tobias Pfüger, MdB die Linke, berichtet aus dem "Verteidigungs"ausschuss des Bundestags am 21.April',
+        'contentUrl': 'https://www.freie-radios.net/mp3/20210421-abzugderbund-108544.mp3',
+        'contributor': ['Reinhard grenzenlos (bermuda.funk - Freies Radio Rhein-Neckar)'],
+        'creator': ['Reinhard grenzenlos (bermuda.funk - Freies Radio Rhein-Neckar)'],
+        'dateModified': 'Wed, 21 Apr 2021 16:22:58 +0200',
+        'datePublished': ['Wed, 21 Apr 2021 16:22:58 +0200'],
+        'description': 'Tobias Pfüger, MdB die Linke, berichtet aus dem "Verteidigungs"ausschuss des Bundestags am 21.April 2021',
+        'duration': '3:90',
+        'encodingFormat': 'audio/mpeg',
+        'genre': 'Reportage',
+        'headline': 'Abzug der Bundeswehr aus Afghanistan (Serie 323: Grenzenlos)',
+        'identifier': 'https://www.freie-radios.net/108544',
+        'inLanguage': ['deutsch'],
+        'licence': 'by-nc-sa',
+        'publisher': 'bermuda.funk - Freies Radio Rhein-Neckar',
+        'url': 'https://www.freie-radios.net/108544'
+    }
     
-    search_index = SearchIndex()
-    doc = Document(asr_result, path_to_audio)
+    search_index = SearchIndex(delete_old_index=True)
+    doc = Document(feed_entry)
     #PUT Document in index
     pprint("INDEX")
     pprint(search_index.put(doc, "1"))
-    #SEARCH the Word "transcript" in index
     pprint("SEARCH")
-    pprint(search_index.search("leipz"))
+    pprint(search_index.search("Linke"))

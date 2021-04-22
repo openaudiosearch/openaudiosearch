@@ -21,22 +21,38 @@ def index_configs():
           "token_chars": [
             "letter"
           ]
-        }
+        },
+        "keyword_tokenizer": {
+          "type": "custom",
+          "filter": [
+          "lowercase",
+          "asciifolding"
+          ],
+          "tokenizer": "keyword"
+          }
       }
     }
   },
   "mappings": {
     "properties": {
-      "text": {
+      "description": {
         "type": "text",
         "analyzer": "autocomplete",
         "search_analyzer": "autocomplete_search"
       },
-      "title": {
+      "headline": {
         "type": "text",
         "analyzer": "autocomplete",
         "search_analyzer": "autocomplete_search"
+      },
+      "publisher": {
+        "type": "keyword",
+        "analyzer": "keyword_tokenizer"
       }
+      # "date_production": {
+      #   "type": "date",
+      #   "format": "YYYY-MM-dd HH:mm:ss||YYY-MM-dd"
+      
     }
   }
 }
