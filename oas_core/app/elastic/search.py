@@ -5,14 +5,12 @@ import requests
 import time
 import json
 from app.core.job import Worker
-
-from configs.index_configs import index_configs
+from app.elastic.configs import index_configs
 from app.config import config
 
 #elastic_url: str = 'http://localhost:9200/'
 #elastic_index: str = 'oas_feed2'
 
-index_confs = index_configs()
 
 def wait_for_elastic():
     url = config.elastic_url + '_cat/health'
@@ -27,8 +25,8 @@ def wait_for_elastic():
 
 class SearchIndex:
     instance = None
-    def __init__(self, elastic_url=elastic_url,
-                    index_name=elastic_index,
+    def __init__(self, elastic_url=config.elastic_url,
+                    index_name=config.elastic_index,
                     ssl=False,
                     check_certs=False,
                     certs="",
@@ -131,23 +129,23 @@ class SearchIndex:
 
 
 class Document:
-    def __init__(self, feed_entry):
-        self.headline = feed_entry['headline']
-        self.identifier = feed_entry['identifier']
-        self.url = feed_entry['url']
-        self.contentUrl = feed_entry['contentUrl']
-        self.encodingFormat = feed_entry['encodingFormat']
-        self.abstract = feed_entry['abstract']
-        self.description = feed_entry['description']
-        self.creator = feed_entry['creator']
-        self.contributor = feed_entry['contributor']
-        self.genre = feed_entry['genre']
-        self.datePublished = feed_entry['datePublished']
-        self.duration = feed_entry['duration']
-        self.inLanguage = feed_entry['inLanguage']
-        self.dateModified = feed_entry['dateModified']
-        self.licence = feed_entry['licence']
-        self.publisher = feed_entry['publisher']
+    def __init__(self, document):
+        self.headline = document['headline']
+        self.identifier = document['identifier']
+        self.url = document['url']
+        self.contentUrl = document['contentUrl']
+        self.encodingFormat = document['encodingFormat']
+        self.abstract = document['abstract']
+        self.description = document['description']
+        self.creator = document['creator']
+        self.contributor = document['contributor']
+        self.genre = document['genre']
+        self.datePublished = document['datePublished']
+        self.duration = document['duration']
+        self.inLanguage = document['inLanguage']
+        self.dateModified = document['dateModified']
+        self.licence = document['licence']
+        self.publisher = document['publisher']
 
 
     def reprJSON(self):        
@@ -182,7 +180,7 @@ class Encoder(json.JSONEncoder):
 
 if __name__ == "__main__":
 
-    # feed_entry = {
+    # document = {
     #     'abstract': 'Tobias Pfüger, MdB die Linke, berichtet aus dem "Verteidigungs"ausschuss des Bundestags am 21.April',
     #     'contentUrl': 'https://www.freie-radios.net/mp3/20210421-abzugderbund-108544.mp3',
     #     'contributor': ['Reinhard grenzenlos (bermuda.funk - Freies Radio Rhein-Neckar)'],
@@ -202,7 +200,7 @@ if __name__ == "__main__":
     # }
     
     search_index = SearchIndex(delete_old_index=False)
-    # doc = Document(feed_entry)
+    # doc = Document(document)
     # #PUT Document in index
     # pprint("INDEX")
     # pprint(search_index.put(doc, "1"))
