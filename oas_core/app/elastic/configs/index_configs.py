@@ -10,7 +10,7 @@ def index_configs():
           ]
         },
         "autocomplete_search": {
-          "tokenizer": "lowercase"
+          "tokenizer": "autocomplete"
         }
       },
       "tokenizer": {
