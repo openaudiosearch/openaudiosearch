@@ -15,7 +15,8 @@ from app.tasks.models import *
 from app.core.util import download_file, pretty_bytes
 from app.tasks.spacy_pipe import SpacyPipe
 from app.tasks.transcribe_vosk import transcribe_vosk
-from app.elastic.search import SearchIndex, AsrInnerResult, Document
+from app.elastic.search_new import AudioObject
+from elasticsearch_dsl.connections import connections
 
 import app.tasks.download_models
 
@@ -104,7 +105,6 @@ def asr(task: Task, args: PrepareResult, opts: AsrOpts) -> AsrResult:
     model_path = os.path.join(model_base_path, config.model)
     if opts.engine == "vosk":
         result = transcribe_vosk(args.file_path, model_path)
-        print(f'ASR RESULT: {result}')
         return AsrResult(**result)
     elif opts.engine == "deepspeech":
         raise NotImplementedError("ASR using deepspeech is not available yet")
@@ -144,17 +144,16 @@ def index(task: Task, args: NlpResult, opts: ElasticIndexOpts):
     # all results of previous tasks are stored as records with the same
     # id as the job. job.get_record(type) is the same as client.get_record(job.id, type)
     asr_result = job.get_record('asr')
-
-    search_index = SearchIndex()
-    doc = Document(asr_result)
-    res = search_index.put(doc, job.id)
-
+    audio = AudioObject(
+        transcript = asr_result["text"]
+    )
+    res = audio.save()
+    print(res)
     return res
 
 
 @worker.task('search')
 def search(task: Task, args: ElasticSearchArgs, opts: ElasticSearchOpts):
-    search_index = SearchIndex()
-    resp = search_index.search(args.search_term)
-
-    return resp['hits']
+   print(args.search_term)
+   
+   """  Is defined in server """

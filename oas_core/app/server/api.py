@@ -13,9 +13,9 @@ from app.server.models import (
 )
 from app.tasks.models import TranscribeArgs, TranscribeOpts
 
-from app.elastic.search import SearchIndex
+from elasticsearch import Elasticsearch
+from elasticsearch_dsl import Search
 
-search_index = SearchIndex()
 router = APIRouter()
 
 
@@ -56,8 +56,12 @@ def get_jobs():
 
 @router.get("/search")
 def search(query: str = ''):
-    response = search_index.search(query)
-    return response
+    client=Elasticsearch()
+    s = Search(index='audio_objects').using(client).query("match", transcript=query)
+    resp = s.execute()
+    return resp.to_dict()
+    
+    
 
 #  from app.queue import queue
 #  @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
