@@ -8,7 +8,6 @@ elastic_url: str = 'http://localhost:9200/'
 elastic_index: str = 'oas_feed2'
 connection = Elasticsearch([elastic_url])
 
-
 Feed = feedparser.parse("https://www.freie-radios.net/portal/podcast.php?rss")
 results = []
 
@@ -41,7 +40,7 @@ def put_feeds():
         # results.append(mapping)
         put(connection, mapping, id)
 
-if name == "__main__":
+if __name__ == "__main__":
     put_feeds()
     # print(results)
     # pprint(mapping)

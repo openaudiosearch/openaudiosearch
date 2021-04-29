@@ -11,6 +11,7 @@ import {
 import { Player } from './player'
 import JobsPage from './jobs'
 import SearchPage from './search'
+import SearchPage2 from './new_search'
 
 export default function Layout (props = {}) {
   const playerHeight = '6rem'
@@ -40,6 +41,7 @@ function Navbar () {
       <Flex>
         <NavLink to='/search'>Search</NavLink>
         <NavLink to='/jobs'>Jobs</NavLink>
+        <NavLink to='/new_search'>Jobs</NavLink>
       </Flex>
     </nav>
   )
@@ -78,6 +80,9 @@ function Routes () {
       </Route>
       <Route path='/search'>
         <SearchPage />
+      </Route>
+      <Route path='/new_search'>
+        <SearchPage2 />
       </Route>
     </Switch>
   )

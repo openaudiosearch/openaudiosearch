@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3.3"
    
 services:
   redis:
@@ -20,3 +20,7 @@ services:
       discovery.type: single-node
       ES_JAVA_OPTS: "-Xms500m -Xmx500m"
       TAKE_FILE_OWNERSHIP: 1
+      http.cors.enabled: "true"
+      http.cors.allow-credentials: "true"
+      http.cors.allow-origin: "http://localhost:4000"
+      http.cors.allow-headers: X-Requested-With, X-Auth-Token, Content-Type, Content-Length, Authorization, Access-Control-Allow-Headers, Accept
