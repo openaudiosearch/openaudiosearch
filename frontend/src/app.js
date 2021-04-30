@@ -1,5 +1,5 @@
 import React from 'react'
-import { ChakraProvider } from '@chakra-ui/core'
+import { ChakraProvider } from '@chakra-ui/react'
 import { SWRConfig } from 'swr'
 import {
   HashRouter as Router

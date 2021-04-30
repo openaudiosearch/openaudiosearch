@@ -1,5 +1,5 @@
 import React, { useState, useContext, useMemo } from 'react'
-import { Flex, Stack, Box, Text, Heading, IconButton, Input, Button, useDisclosure } from '@chakra-ui/core'
+import { Flex, Stack, Box, Text, Heading, IconButton, Input, Button, useDisclosure } from '@chakra-ui/react'
 import {
   FaPlay as PlayIcon,
   FaHeart as HeartIcon,
