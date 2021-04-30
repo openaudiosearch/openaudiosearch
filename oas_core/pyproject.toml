@@ -25,6 +25,7 @@ python-dotenv = "^0.15.0"
 aiofiles = "^0.6.0"
 vosk = "^0.3.21"
 loguru = "^0.5.3"
+elasticsearch-dsl = "^7.3.0"
 
 [tool.poetry.dev-dependencies]
 rope = "^0.18.0"
