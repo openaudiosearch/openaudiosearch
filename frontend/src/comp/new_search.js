@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { DataSearch, ResultList, CategorySearch, ReactiveBase, ReactiveList} from '@appbaseio/reactivesearch';
-import { Flex, Stack, Box, Text, Heading, IconButton, Input, Button, useDisclosure, Link, FormControl, Select, FormLabel, Spinner, AlertIcon, Alert } from '@chakra-ui/core'
+import { Flex, Stack, Box, Text, Heading, IconButton, Input, Button, useDisclosure, Link, FormControl, Select, FormLabel, Spinner, AlertIcon, Alert } from '@chakra-ui/react'
 
 
 const { ResultListWrapper } = ReactiveList;
