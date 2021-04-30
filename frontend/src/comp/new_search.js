@@ -13,61 +13,59 @@ class SearchPage2 extends Component {
                 app="oas_feed2"
                 url="http://localhost:9200"
             >
-                <Heading mb='2'>Search</Heading>
+                <Heading mb='2'>Search now</Heading>
                 <DataSearch
-                componentId="headline/description"
-                dataField={["headline", "description"]}
-                title="Search"
-                fieldWeights={[3, 1]}
-                placeholder="Search for feeds"
-                autosuggest={true}
-                highlight={true}
-                highlightField="headline"
-                queryFormat="or"
-                fuzziness={1}
+                    componentId="headline/description"
+                    dataField={["headline", "description"]}
+                    title="Search"
+                    fieldWeights={[5, 1]}
+                    placeholder="Search for feeds"
+                    autosuggest
+                    highlight
+                    highlightField="headline"
+                    queryFormat="and"
+                    fuzziness={0}
                 />
-                
+                <ReactiveList
+                    // dataField="dateModified"
+                    componentId="SearchResults"
+                    // pagination
+                    react={{
+                        "and": 'headline/description'
+                    }}
+                >
+                    {({ data, error, loading, ...args }) => (
+                        <ResultListWrapper>
+                            {
+                                data.map(item => (
+                                    <ResultList key={item.identifier}>
+                                        <ResultList.Content>
+                                            {/* <ResultList.Image src={item.image} /> */}
+                                            <ResultList.Title
+                                                dangerouslySetInnerHTML={{
+                                                    __html: item.headline
+                                                }}
+                                            />
+                                            <ResultList.Description>
+                                                <div>
+                                                    <div>von {item.creator}</div>
+                                                    <div>{item.publisher}</div>
+                                                </div>
+                                                <span>
+                                                    gesendet am: {item.datePublished}
+                                                </span>
+                                            </ResultList.Description>
+                                        </ResultList.Content>
+                                    </ResultList>
+                                ))
+                            }
+                        </ResultListWrapper>
+                    )}
+                </ReactiveList>
             </ReactiveBase>
         );
     }
 }
 
-function Results ( props ) { 
-return (
-<ReactiveList
-    // dataField="dateModified"
-    componentId="SearchResult"
-    // pagination
-    react={{
-        "and": 'headline/description'
-    }}
->
-    {({ data, error, loading, ... }) => (
-        <ResultListWrapper>
-            {
-                data.map(item => (
-                    <ResultList key={item.identifier}>
-                        <ResultList.Content>
-                            <ResultList.Title
-                                dangerouslySetInnerHTML={{
-                                    __html: item.headline
-                                }}
-                            />
-                            <ResultList.Description>
-                                <div>
-                                    <div>von {item.creator}</div>
-                                </div>
-                                <span>
-                                    Pub {item.datePublished}
-                                </span>
-                            </ResultList.Description>
-                        </ResultList.Content>
-                    </ResultList>
-                ))
-            }
-        </ResultListWrapper>
-    )}
-</ReactiveList>
-)}
 
 export default SearchPage2
