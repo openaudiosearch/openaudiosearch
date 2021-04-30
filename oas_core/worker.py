@@ -16,6 +16,7 @@ if __name__ == '__main__':
 
 
     while True:
+        # this blocks if no task is in the queue.
         task = client.dequeue_task()
         if task:
             logging.info(f'START task {task.job_id}: {task.task_name}')

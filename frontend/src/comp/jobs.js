@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import ReactJson from 'react-json-view'
 import useSWR from 'swr'
-import { Flex, Stack, Box, Text, Heading, IconButton, Input, Button, useDisclosure, Link, FormControl, Select, FormLabel, Spinner, AlertIcon, Alert } from '@chakra-ui/core'
+import { Flex, Stack, Box, Text, Heading, IconButton, Input, Button, useDisclosure, Link, FormControl, Select, FormLabel, Spinner, AlertIcon, Alert } from '@chakra-ui/react'
 import {
   FaEdit as EditIcon,
   FaCheck as SaveIcon

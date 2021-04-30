@@ -1,5 +1,5 @@
 import React from 'react'
-import { Flex, Stack, Box, Heading } from '@chakra-ui/core'
+import { Flex, Stack, Box, Heading } from '@chakra-ui/react'
 import {
   BrowserRouter as Router,
   Switch,
