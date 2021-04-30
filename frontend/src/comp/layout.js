@@ -41,7 +41,7 @@ function Navbar () {
       <Flex>
         <NavLink to='/search'>Search</NavLink>
         <NavLink to='/jobs'>Jobs</NavLink>
-        <NavLink to='/new_search'>Jobs</NavLink>
+        <NavLink to='/new_search'>Search2</NavLink>
       </Flex>
     </nav>
   )
