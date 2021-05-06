@@ -27,6 +27,7 @@ vosk = "^0.3.21"
 loguru = "^0.5.3"
 elasticsearch-dsl = "^7.3.0"
 feedparser = "^6.0.2"
+httpx = "^0.18.1"
 
 [tool.poetry.dev-dependencies]
 rope = "^0.18.0"

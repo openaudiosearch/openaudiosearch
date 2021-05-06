@@ -9,9 +9,8 @@ const { ResultListWrapper } = ReactiveList;
 
 
 export default function SearchPage2(){
-    const url = "http://localhost:9200"
-    //const url = API_ENDPOINT + "/search"
     const {track, setTrack} = usePlayer();
+    const url = API_ENDPOINT + "/search"
         return (
             <ReactiveBase
                 app="oas_feed2"
@@ -59,7 +58,6 @@ export default function SearchPage2(){
                                                     gesendet am: {item.datePublished}
                                                 </span>
                                                 <div>
-                                                    {/* <button onClick={startPlayer(item.contentUrl)}> */}
                                                     <button onClick={() => {
                                                         setTrack(item)
                                                     }}>

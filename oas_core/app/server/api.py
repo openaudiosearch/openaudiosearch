@@ -1,6 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.encoders import jsonable_encoder
-
+from app.logging import logger
 from app.core.util import uuid
 from app.server.jobs import jobs
 from app.server.models import (
@@ -12,6 +12,10 @@ from app.server.models import (
     JobResponse
 )
 from app.tasks.models import TranscribeArgs, TranscribeOpts
+from app.config import config
+import requests
+import httpx
+import asyncio
 
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search
@@ -54,14 +58,18 @@ def get_jobs():
     return list
 
 
-@router.get("/search")
-def search(query: str = ''):
-    client=Elasticsearch()
-    s = Search(index='audio_objects').using(client).query("match", transcript=query)
-    resp = s.execute()
-    return resp.to_dict()
-    
-    
+@router.post("/search/{index_name}/{search_method}")
+async def search(index_name: str, search_method: str, request : Request):
+    body = await request.body()
+    headers = {"content-type": "application/x-ndjson"}
+    url = f'{config.elastic_url}{index_name}/{search_method}'
+    logger.debug("Elastic-URL: " + url)
+    async with httpx.AsyncClient() as client:
+        r = await client.post(url, headers=headers, data = body)
+        assert r.status_code == 200
+        logger.debug("search result: " + r.text)
+        return r.json()
+
 
 #  from app.queue import queue
 #  @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
