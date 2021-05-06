@@ -36,7 +36,13 @@ export function Player (props = {}) {
   return (
     <Box>
       {track && (
-        <Box>Currently playing: {track.title}</Box>
+        // <Box>Currently playing: {track.title}</Box>
+        <Box>Currently playing: {track.headline}
+          <audio controls="controls" key={track.headline}>
+          <source src={track.contentUrl} type="audio/mpeg" />
+          Your browser does not support the audio element.
+          </audio>
+        </Box>
       )}
       {!track && (
         <Box>Not playing anything</Box>

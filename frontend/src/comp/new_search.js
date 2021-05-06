@@ -1,17 +1,21 @@
 import React, { Component } from 'react';
 import { DataSearch, ResultList, CategorySearch, ReactiveBase, ReactiveList} from '@appbaseio/reactivesearch';
 import { Flex, Stack, Box, Text, Heading, IconButton, Input, Button, useDisclosure, Link, FormControl, Select, FormLabel, Spinner, AlertIcon, Alert } from '@chakra-ui/react'
+import { API_ENDPOINT } from '../lib/config'
+import { usePlayer } from './player'
 
 
 const { ResultListWrapper } = ReactiveList;
 
 
-class SearchPage2 extends Component {
-    render() {
+export default function SearchPage2(){
+    const url = "http://localhost:9200"
+    //const url = API_ENDPOINT + "/search"
+    const {track, setTrack} = usePlayer();
         return (
             <ReactiveBase
                 app="oas_feed2"
-                url="http://localhost:9200"
+                url= {url}
             >
                 <Heading mb='2'>Search now</Heading>
                 <DataSearch
@@ -27,7 +31,7 @@ class SearchPage2 extends Component {
                     fuzziness={0}
                 />
                 <ReactiveList
-                    // dataField="dateModified"
+                    dataField="dateModified"
                     componentId="SearchResults"
                     // pagination
                     react={{
@@ -54,6 +58,14 @@ class SearchPage2 extends Component {
                                                 <span>
                                                     gesendet am: {item.datePublished}
                                                 </span>
+                                                <div>
+                                                    {/* <button onClick={startPlayer(item.contentUrl)}> */}
+                                                    <button onClick={() => {
+                                                        setTrack(item)
+                                                    }}>
+                                                        Zum Abspielen Klicken
+                                                    </button>
+                                                </div>
                                             </ResultList.Description>
                                         </ResultList.Content>
                                     </ResultList>
@@ -65,7 +77,3 @@ class SearchPage2 extends Component {
             </ReactiveBase>
         );
     }
-}
-
-
-export default SearchPage2
