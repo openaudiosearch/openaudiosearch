@@ -36,8 +36,8 @@ export function Player (props = {}) {
   return (
     <Box>
       {track && (
-        // <Box>Currently playing: {track.title}</Box>
-        <Box>Currently playing: {track.headline}
+        // Remove html highlighting tags from title display in player
+        <Box>Currently playing: {track.headline.replace(/(<([^>]+)>)/gi, "")};
           <audio controls="controls" key={track.headline}>
           <source src={track.contentUrl} type="audio/mpeg" />
           Your browser does not support the audio element.
