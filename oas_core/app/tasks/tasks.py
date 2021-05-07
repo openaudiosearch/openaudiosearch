@@ -1,15 +1,40 @@
 import os
+from pathlib import Path
+from urllib.parse import urlparse
+from base64 import b32encode
+
+import requests
+from hashlib import sha256
+from mimetypes import guess_extension
 from celery import Celery
 from celery.utils.log import get_task_logger
 from app.tasks.models import *
+from app.config import config
+from app.core.util import download_file, pretty_bytes
 
 app = Celery('tasks', broker='redis://localhost')
 
 logger = get_task_logger(__name__)
+cache_path = os.path.join(config.storage_path, 'cache')
 
-@app.task
-def add(x, y):
-    return x + y
+def file_path(filename):
+    path = os.path.join(config.storage_path, filename)
+    ensure_dir(path)
+    return path
+
+def ensure_dir(path: str):
+    path = Path(path)
+    os.makedirs(path.parent, exist_ok=True)
+
+def url_to_path(url: str) -> str:
+    parsed_url = urlparse(url)
+
+    url_hash = sha256(url.encode('utf-8')).digest()
+    url_hash = b32encode(url_hash)
+    url_hash = url_hash.lower().decode('utf-8')
+
+    target_name = f'{parsed_url.netloc}/{url_hash[:2]}/{url_hash[2:]}'
+    return target_name
 
 @app.task
 def download(media_url) -> DownloadResult:
@@ -21,10 +46,11 @@ def download(media_url) -> DownloadResult:
     url = media_url
     target_name = url_to_path(url)
     target_path = file_path(
-        f'download/{target_name}', root=True)
+        f'download/{target_name}')
     # target_path = task.file_path(
         # f'download/{target_name}', root=True)
-    temp_path = file_path('download.tmp')
+    # temp_path = file_path('download.tmp')
+    temp_path = file_path(f'{download.request.id}/download.tmp')
     # chunk size to write
     chunk_size = 1024*64
 
@@ -57,21 +83,7 @@ def download(media_url) -> DownloadResult:
                 # if chunk:
                 f.write(chunk)
                 f.flush()
-                percent = download_size / total_size
-                task.report_progress(percent)
 
         os.rename(temp_path, target_path)
         return DownloadResult(file_path=target_path, source_url=url)
 
-def file_path(self, filename, scope=True) -> str:
-    # if not scope:
-    #     path = os.path.join(self.cache_path, 'shared', filename)
-    # else:
-    #     path = os.path.join(self.cache_path, 'job', self.id, filename)
-    path = os.path.join(self.cache_path, filename)
-    ensure_dir(path)
-    return path
-
-def ensure_dir(path: str):
-    path = Path(path)
-    os.makedirs(path.parent, exist_ok=True)
