@@ -17,9 +17,9 @@ export default function Layout (props = {}) {
   const playerHeight = '6rem'
   return (
     <>
-      <Stack minHeight='100vh' bg='bg.screen'>
+      <Stack minHeight='100vh' bg='bg.screen'  mb={playerHeight}>
         <Header />
-        <Main flex='1' mb={playerHeight} />
+        <Main flex='1' />
       </Stack>
       <Footer height={playerHeight} />
     </>
@@ -41,7 +41,7 @@ function Navbar () {
       <Flex>
         <NavLink to='/search'>Search</NavLink>
         <NavLink to='/jobs'>Jobs</NavLink>
-        <NavLink to='/new_search'>Search2</NavLink>
+        <NavLink to='/new_search'>Jobs</NavLink>
       </Flex>
     </nav>
   )
