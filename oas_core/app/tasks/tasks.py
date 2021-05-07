@@ -1,4 +1,5 @@
 import os
+import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
 from base64 import b32encode
@@ -11,8 +12,11 @@ from celery.utils.log import get_task_logger
 from app.tasks.models import *
 from app.config import config
 from app.core.util import download_file, pretty_bytes
+from app.tasks.spacy_pipe import SpacyPipe
+from app.tasks.transcribe_vosk import transcribe_vosk
+from app.elastic.search_new import AudioObject
 
-app = Celery('tasks', broker='redis://localhost')
+app = Celery('tasks', broker='redis://localhost', backend='redis://localhost')
 
 logger = get_task_logger(__name__)
 cache_path = os.path.join(config.storage_path, 'cache')
@@ -37,7 +41,7 @@ def url_to_path(url: str) -> str:
     return target_name
 
 @app.task
-def download(media_url) -> DownloadResult:
+def download(media_url):
     # todo: maybe cache downloads globally by url hash
     # instead of locally per job
     # target_filename = task.file_path('download/' + url_hash, root=True)
@@ -68,7 +72,8 @@ def download(media_url) -> DownloadResult:
         if os.path.isfile(target_path):
             logger.info(
                 f'File exists, skipping download of {media_url} to {target_path} ({pretty_bytes(total_size)})')
-            return DownloadResult(file_path=target_path, source_url=url)
+            # return DownloadResult(file_path=target_path, source_url=url)
+            return {"file_path": target_path, "source_url": url}
 
         logger.info(
             f'Downloading {url} to {target_path} ({pretty_bytes(total_size)})')
@@ -85,5 +90,58 @@ def download(media_url) -> DownloadResult:
                 f.flush()
 
         os.rename(temp_path, target_path)
-        return DownloadResult(file_path=target_path, source_url=url)
+        # return DownloadResult(file_path=target_path, source_url=url)
+        return {"file_path": target_path, "source_url": url}
 
+@app.task
+def prepare(args, samplerate):
+    dst = file_path(f'{prepare.request.id}/processed.wav')
+    # TODO: Find out why this pydub segment does not work.
+    # sound = AudioSegment.from_file(args.file_path)
+    # sound.set_frame_rate(opts.samplerate)
+    # sound.set_channels(1)
+    # sound.export(dst, format="wav")
+    subprocess.call(['ffmpeg', '-i',
+                     args["file_path"],
+                     '-hide_banner', '-loglevel', 'error',
+                     '-ar', str(samplerate), '-ac', '1', dst],
+                    stdout=subprocess.PIPE)
+    # return PrepareResult(file_path=dst)
+    return {"file_path": dst}
+
+@app.task
+def asr(args, engine):
+    model_base_path = config.model_path or os.path.join(
+        config.storage_path, 'models')
+    model_path = os.path.join(model_base_path, config.model)
+    if engine == "vosk":
+        result = transcribe_vosk(args["file_path"], model_path)
+        # return AsrResult(**result)
+        return result
+    elif engine == "deepspeech":
+        raise NotImplementedError("ASR using deepspeech is not available yet")
+    elif engine == "torch":
+        raise NotImplementedError("ASR using torch is not available yet")
+    else:
+        raise RuntimeError("ASR engine not specified")
+
+@app.task
+def nlp(args, opts):
+    spacy = SpacyPipe(opts['pipeline'])
+    res = spacy.run(args['text'])
+    # print(f'NLP RESULT {res}')
+    # return NlpResult(result=res)
+    return {'nlp': res, 'asr': args}
+
+@app.task
+def index(args):
+    # job = task.job
+    # all results of previous tasks are stored as records with the same
+    # id as the job. job.get_record(type) is the same as client.get_record(job.id, type)
+    asr_result = args['asr']
+    audio = AudioObject(
+        transcript = asr_result["text"]
+    )
+    res = audio.save()
+    print(res)
+    return res
