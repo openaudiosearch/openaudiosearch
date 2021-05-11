@@ -18,6 +18,8 @@ from app.tasks.models import TranscribeArgs, TranscribeOpts
 from app.config import config
 import httpx
 import json
+from celery import chain
+from app.tasks.tasks import download, prepare, asr, nlp, index
 
 router = APIRouter()
 feed_manager = FeedManager()
@@ -33,10 +35,20 @@ def debug():
 
 @router.post("/transcript", response_model=TranscriptResponse)
 def post_transcript(item: TranscriptRequest):
-    args = TranscribeArgs(**item.dict())
-    opts = TranscribeOpts(**item.dict())
-    id = jobs.queue_job('transcribe', args, opts)
-    return TranscriptResponse(id=id, status=TranscriptStatus.queued)
+    # args = TranscribeArgs(**item.dict())
+    # opts = TranscribeOpts(**item.dict())
+    # id = jobs.queue_job('transcribe', args, opts)
+    media_url = item.dict()["media_url"]
+
+    nlp_opts = {'pipeline': 'ner'}
+    result = chain(
+            download.s(media_url),
+            prepare.s(16000),
+            asr.s('vosk'),
+            nlp.s(nlp_opts),
+            index.s()
+            )()
+    return TranscriptResponse(id=result.id, status=TranscriptStatus.queued)
 
 
 @router.get("/transcript/{id}", response_model=StatusResponse)
