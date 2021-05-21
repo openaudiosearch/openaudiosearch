@@ -1,5 +1,5 @@
 import React from 'react'
-import { DataSearch, ResultList, MultiList, CategorySearch, ReactiveBase, ReactiveList } from '@appbaseio/reactivesearch'
+import { DataSearch, ResultList, MultiList, DateRange, ReactiveBase, ReactiveList } from '@appbaseio/reactivesearch'
 import { Heading, Flex, Spacer, Box } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { usePlayer } from './player'
@@ -23,7 +23,7 @@ export default function SearchPage2 () {
                 componentId='publisher'
                 dataField='publisher.keyword'
                 react={{
-                  and: ['searchbox', 'genre']
+                  and: ['searchbox', 'genre', 'datePublished']
                 }}
               />
             </Box>
@@ -33,75 +33,84 @@ export default function SearchPage2 () {
                 componentId='genre'
                 dataField='genre.keyword'
                 react={{
-                  and: ['searchbox', 'publisher']
+                  and: ['searchbox', 'publisher', 'datePublished']
+                }}
+              />
+              <DateRange
+                componentId='datePublished'
+                dataField='datePublished'
+                title='Publishing Date'
+                queryFormat='basic_date_time_no_millis'
+                react={{
+                  and: ['searchbox', 'publisher', 'genre']
                 }}
               />
             </Box>
           </Flex>
           <Flex direction='column'>
             <Box w='800px'>
-            <Heading mb='2'>Search now</Heading>
-            <Box w='300px'>
-            <DataSearch
-              componentId='searchbox'
-              dataField={['headline', 'description']}
-              title='Search'
-              fieldWeights={[5, 1]}
-              placeholder='Search for feeds'
-              autosuggest
-              highlight
-              highlightField='headline'
-              queryFormat='and'
-              fuzziness={0}
-              react={{
-                and: ['publisher', 'genre']
-              }}
-            />
-            </Box>
-            <ReactiveList
-              dataField='dateModified'
-              componentId='SearchResults'
-              pagination
-              react={{
-                and: ['publisher', 'searchbox', 'genre']
-              }}
-            >
-              {({ data, error, loading, ...args }) => (
-                <ResultListWrapper>
-                  {
-                    data.map(item => (
-                      <ResultList key={item.identifier}>
-                        <ResultList.Content>
-                          {/* <ResultList.Image src={item.image} /> */}
-                          <ResultList.Title
-                            dangerouslySetInnerHTML={{
-                              __html: item.headline
-                            }}
-                          />
-                          <ResultList.Description>
-                            <div>
-                              <div>von {item.creator}</div>
-                              <div>{item.publisher}</div>
-                            </div>
-                            <span>
-                                gesendet am: {item.datePublished}
-                            </span>
-                            <div>
-                              <button onClick={() => {
-                                setTrack(item)
+              <Heading mb='2'>Search now</Heading>
+              <Box w='300px'>
+                <DataSearch
+                  componentId='searchbox'
+                  dataField={['headline', 'description']}
+                  title='Search'
+                  fieldWeights={[5, 1]}
+                  placeholder='Search for feeds'
+                  autosuggest
+                  highlight
+                  highlightField='headline'
+                  queryFormat='and'
+                  fuzziness={0}
+                  react={{
+                    and: ['publisher', 'genre', 'datePublished']
+                  }}
+                />
+              </Box>
+              <ReactiveList
+                dataField='dateModified'
+                componentId='SearchResults'
+                pagination
+                react={{
+                  and: ['publisher', 'searchbox', 'genre', 'datePublished']
+                }}
+              >
+                {({ data, error, loading, ...args }) => (
+                  <ResultListWrapper>
+                    {
+                      data.map(item => (
+                        <ResultList key={item.identifier}>
+                          <ResultList.Content>
+                            {/* <ResultList.Image src={item.image} /> */}
+                            <ResultList.Title
+                              dangerouslySetInnerHTML={{
+                                __html: item.headline
                               }}
-                              >
+                            />
+                            <ResultList.Description>
+                              <div>
+                                <div>von {item.creator}</div>
+                                <div>{item.publisher}</div>
+                              </div>
+                              <span>
+                                gesendet am: {item.datePublished}
+                              </span>
+                              <div>
+                                <button onClick={() => {
+                                  setTrack(item)
+                                }}
+                                >
                             Zum Abspielen Klicken
-                              </button>
-                            </div>
-                          </ResultList.Description>
-                        </ResultList.Content>
-                      </ResultList>
-                    ))
-                  }
-                </ResultListWrapper>
-              )}
-            </ReactiveList>
+                                </button>
+                              </div>
+                            </ResultList.Description>
+                          </ResultList.Content>
+                        </ResultList>
+                      ))
+                    }
+                  </ResultListWrapper>
+                )}
+              </ReactiveList>
             </Box>
           </Flex>
         </Flex>

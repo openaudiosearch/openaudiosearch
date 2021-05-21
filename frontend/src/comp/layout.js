@@ -12,6 +12,7 @@ import { Player } from './player'
 import JobsPage from './jobs'
 import SearchPage from './search'
 import SearchPage2 from './new_search'
+import ImporterPage from './importer'
 
 export default function Layout (props = {}) {
   const playerHeight = '6rem'
@@ -41,7 +42,8 @@ function Navbar () {
       <Flex>
         <NavLink to='/search'>Search</NavLink>
         <NavLink to='/jobs'>Jobs</NavLink>
-        <NavLink to='/new_search'>Jobs</NavLink>
+        <NavLink to='/new_search'>reactive Search</NavLink>
+        <NavLink to='/importer'>Importer</NavLink>
       </Flex>
     </nav>
   )
@@ -83,6 +85,9 @@ function Routes () {
       </Route>
       <Route path='/new_search'>
         <SearchPage2 />
+      </Route>
+      <Route path='/importer'>
+        <ImporterPage />
       </Route>
     </Switch>
   )

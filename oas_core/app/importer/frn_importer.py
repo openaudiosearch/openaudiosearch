@@ -11,10 +11,13 @@ connection = Elasticsearch([elastic_url])
 Feed = feedparser.parse("https://www.freie-radios.net/portal/podcast.php?rss")
 results = []
 
+
 def put(connection, doc, id):
     doc = json.dumps(doc)
-    res = connection.index(index=elastic_index, id=id, body=doc, doc_type="_doc")
+    res = connection.index(index=elastic_index, id=id,
+                           body=doc, doc_type="_doc")
     return res
+
 
 def put_feeds():
     for id, entry in enumerate(Feed.entries):
@@ -29,16 +32,18 @@ def put_feeds():
             'creator': [entry.author],
             'contributor': list(set([author.name for author in entry.authors])),
             'genre': entry.frn_art,
-            'datePublished': [entry.published], #time.struct_time-object TODO: change to date format
+            # time.struct_time-object TODO: change to date format
+            'datePublished': [entry.published],
             'duration': entry.frn_laenge,
             'inLanguage': [entry.frn_language],
             'dateModified': entry.frn_last_update,
             'licence': entry.frn_licence,
-            'publisher': entry.frn_radio, # TODO: check if publisher is correct category
+            'publisher': entry.frn_radio,  # TODO: check if publisher is correct category
             # TODO: frn_serie refers to the number of a radio series. Needs relations implemented
         }
         # results.append(mapping)
         put(connection, mapping, id)
+
 
 if __name__ == "__main__":
     put_feeds()
