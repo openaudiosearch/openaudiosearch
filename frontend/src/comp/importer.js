@@ -54,18 +54,23 @@ function ImportUrl (props) {
           </Flex>
         </Flex>
       </form>
-      {schemaFields && schemaFields.map((field, i) => (
-        <Flex key={i}>
-          <Box w='10em' m='0.5em' background='blue' color='white' p='1em' key={i}> {field} </Box>
-          <Box key={i} m='0.5em'>
-            <Select key={i} placeholder='Select Feed field'>
-              {feedFields && feedFields.map((field, k) => (
-                <option key={k} background='red' color='white' p='1em'> {field} </option>
-              ))}
-            </Select>
-          </Box>
-        </Flex>
-      ))}
+      <form onSubmit={handleSubmit(onMappingSubmit)}>
+        {schemaFields && schemaFields.map((field, i) => (
+          <Flex key={i}>
+            <Box w='10em' m='0.5em' background='blue' color='white' p='1em'> {field} </Box>
+            <Box m='0.5em'>
+              <Select name={field} ref={register()} placeholder='Select Feed field'>
+                {feedFields && feedFields.map((field, k) => (
+                  <option key={k} background='red' color='white' p='1em'> {field} </option>
+                ))}
+              </Select>
+            </Box>
+
+          </Flex>
+
+        ))}
+        <Button type='submit' isLoading={isSubmitting}>save mapping</Button>
+      </form>
 
     </Box>
   )
@@ -79,6 +84,21 @@ function ImportUrl (props) {
       })
       setSchemaFields(res[0])
       setFeedFields(res[1])
+      setIsSubmitting(false)
+      console.log('RES', res)
+    } catch (err) {
+      setIsSubmitting(false)
+      setError(err)
+      console.log('ERR', err.data)
+    }
+  }
+  async function onMappingSubmit (values) {
+    setIsSubmitting(true)
+    try {
+      const res = await fetch('/set_mapping', {
+        method: 'POST',
+        body: values
+      })
       setIsSubmitting(false)
       console.log('RES', res)
     } catch (err) {
