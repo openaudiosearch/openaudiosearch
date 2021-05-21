@@ -2,7 +2,18 @@ import React, { useState } from 'react'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 
 import useSWR from 'swr'
-import { Flex, Stack, Box, Text, Spacer, Heading, SimpleGrid, IconButton, Input, Button, useDisclosure, Link, FormControl, Select, FormLabel, Spinner, AlertIcon, Alert, Container } from '@chakra-ui/react'
+import {
+  Flex, Stack, Box, Text, Spacer, Heading, SimpleGrid, IconButton, Input, Button, useDisclosure, Link, FormControl, Select, FormLabel, Spinner, AlertIcon, Alert, Container,
+  Table,
+  Thead,
+  Tbody,
+  Tfoot,
+  Tr,
+  Th,
+  Td,
+  TableCaption
+} from '@chakra-ui/react'
+
 import {
   FaEdit as EditIcon,
   FaCheck as SaveIcon
@@ -27,8 +38,8 @@ function ImportUrl (props) {
   const { handleSubmit, errors, register } = useForm()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
-  const [fields, setFields] = useState(null)
-
+  const [schemaFields, setSchemaFields] = useState(null)
+  const [feedFields, setFeedFields] = useState(null)
   return (
     <Box p='4' border='1px solid black'>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -43,6 +54,19 @@ function ImportUrl (props) {
           </Flex>
         </Flex>
       </form>
+      {schemaFields && schemaFields.map((field, i) => (
+        <Flex key={i}>
+          <Box w='10em' m='0.5em' background='blue' color='white' p='1em' key={i}> {field} </Box>
+          <Box key={i} m='0.5em'>
+            <Select key={i} placeholder='Select Feed field'>
+              {feedFields && feedFields.map((field, k) => (
+                <option key={k} background='red' color='white' p='1em'> {field} </option>
+              ))}
+            </Select>
+          </Box>
+        </Flex>
+      ))}
+
     </Box>
   )
 
@@ -53,7 +77,8 @@ function ImportUrl (props) {
         method: 'POST',
         body: values
       })
-      setFields(res)
+      setSchemaFields(res[0])
+      setFeedFields(res[1])
       setIsSubmitting(false)
       console.log('RES', res)
     } catch (err) {

@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.encoders import jsonable_encoder
+from app.elastic.search_new import AudioObject
+
 from app.logging import logger
 from app.core.util import uuid
 from app.server.jobs import jobs
@@ -63,12 +65,10 @@ async def post_rss(request: Request):
     url = json.loads(body)["media_url"]
     logger.debug(url)
     x = RSSImport(url)
-    logger.debug(2)
     x.pullFeed()
-    logger.debug(url)
-
-    keys = x.getKeys()
-    return keys
+    feedKeys = x.getKeys()
+    schemaKeys = AudioObject.get_keys()
+    return (schemaKeys, feedKeys)
 
 
 @router.post("/search/{index_name}/{search_method}")
