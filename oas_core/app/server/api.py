@@ -64,7 +64,7 @@ def get_jobs():
 async def post_rss(request: Request):
     logger.debug("IMPORT RSS")
     body = await request.body()
-    url = json.loads(body)["rss_url"]
+    url = json.loads(body)["media_url"]
     feed = feed_manager.put(url)
     await feed.pull()
     feed_keys = feed.get_keys()
