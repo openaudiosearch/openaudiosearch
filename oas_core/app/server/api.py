@@ -62,13 +62,20 @@ def get_jobs():
 
 @router.post("/importrss")
 async def post_rss(request: Request):
+    logger.debug("IMPORT RSS")
     body = await request.body()
     url = json.loads(body)["rss_url"]
     feed = feed_manager.put(url)
     await feed.pull()
     feed_keys = feed.get_keys()
+    logger.debug(feed_keys)
+    example_item = feed.get_example()
+    logger.debug(example_item)
     schema_keys = AudioObject.get_keys()
-    result = {"url": url, "schema": schema_keys, "feed_keys": feed_keys}
+    result = {"example": example_item,
+              "url": url,
+              "schema": schema_keys,
+              "feed_keys": feed_keys}
     return result
 
 
@@ -78,11 +85,8 @@ async def set_mapping(request: Request):
     body = json.loads(body)
     mapping = body["mapping"]
     url = body["rss_url"]
-    logger.debug(url)
     feed_manager.set_mapping(url, mapping)
     feed = feed_manager.get(url)
-    logger.debug(feed_manager)
-    logger.debug(feed)
     pulled = await feed.pull()
     return pulled
 

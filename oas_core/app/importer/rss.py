@@ -43,12 +43,20 @@ class RSSImport:
                 self.items = self.feed.entries
                 return True
 
+    def get_example(self):
+        return self.items[0]
+
     def get_keys(self):
-        if self.keys:
+        if self.keys is not None:
             return self.keys
         else:
-            # here should no error happen
-            raise Exception("no keys")
+            self.keys = set()
+            for item in self.items:
+                item_keys = item.keys
+                for key in item_keys:
+                    if key not in self.keys:
+                        self.keys.add(key)
+            return self.keys
 
     def map_fields(self, mapping):
         for entry in self.feed.entries:
