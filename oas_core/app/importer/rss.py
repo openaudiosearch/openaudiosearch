@@ -1,6 +1,7 @@
 import httpx
 import asyncio
 import feedparser
+from app.logging import logger
 import json
 
 
@@ -26,7 +27,6 @@ class FeedManager:
         self.mappings[feed_url] = mapping
 
 
-
 class RSSImport:
     def __init__(self, url):
         self.url = url
@@ -35,14 +35,24 @@ class RSSImport:
         self.keys = None
         self.items = None
 
-
     async def pull(self):
         async with httpx.AsyncClient() as client:
-            response = await client.get(self.url)
-            raw_feed = response.text
-            self.feed = feedparser.parse(raw_feed)
-            self.keys = list(self.feed.entries[0].keys())
-            self.items = self.feed.entries
+            try:
+                response = await client.get(self.url)
+                raw_feed = response.text
+                self.feed = feedparser.parse(raw_feed)
+                if not self.feed.get("entries"):
+                    raise Exception(f"URL {self.url} can not be parsed as feed or feed is empty.")
+                self.keys = list(self.feed.entries[0].keys())
+                self.items = self.feed.entries
+                return True
+            except httpx.RequestError as exc:
+                raise Exception(f"An error occurred while requesting {exc.request.url!r}.")
+            except httpx.HTTPStatusError as exc:
+                raise Exception(f"Error response {exc.response.status_code} while requesting {exc.request.url!r}.")
+            except Exception as exc:
+                raise exc
+
 
     def get_keys(self):
         if self.keys:
