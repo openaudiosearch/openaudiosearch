@@ -26,7 +26,6 @@ class FeedManager:
         self.mappings[feed_url] = mapping
 
 
-
 class RSSImport:
     def __init__(self, url):
         self.url = url
@@ -35,7 +34,6 @@ class RSSImport:
         self.keys = None
         self.items = None
 
-
     async def pull(self):
         async with aiohttp.ClientSession() as session:
             async with session.get(self.url) as response:
@@ -43,6 +41,7 @@ class RSSImport:
                 self.feed = feedparser.parse(raw_feed)
                 self.keys = list(self.feed.entries[0].keys())
                 self.items = self.feed.entries
+                return True
 
     def get_keys(self):
         if self.keys:

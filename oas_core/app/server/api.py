@@ -63,7 +63,7 @@ def get_jobs():
 @router.post("/importrss")
 async def post_rss(request: Request):
     body = await request.body()
-    url = json.loads(body)["media_url"]
+    url = json.loads(body)["rss_url"]
     feed = feed_manager.put(url)
     await feed.pull()
     feed_keys = feed.get_keys()
@@ -81,8 +81,10 @@ async def set_mapping(request: Request):
     logger.debug(url)
     feed_manager.set_mapping(url, mapping)
     feed = feed_manager.get(url)
-    items = await feed.pull()
-    return items
+    logger.debug(feed_manager)
+    logger.debug(feed)
+    pulled = await feed.pull()
+    return pulled
 
 
 @router.post("/search/{index_name}/{search_method}")
