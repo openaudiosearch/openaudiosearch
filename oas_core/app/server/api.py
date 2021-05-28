@@ -5,7 +5,7 @@ from app.elastic.search_new import AudioObject
 from app.logging import logger
 from app.core.util import uuid
 from app.server.jobs import jobs
-from app.importer.rss import RSSImport
+from app.importer.rss import FeedManager
 from app.server.models import (
     TranscriptStatus,
     TranscriptResponse,
@@ -22,6 +22,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search
 
 router = APIRouter()
+feed_manager = FeedManager()
 
 
 @router.post("/transcript", response_model=TranscriptResponse)
@@ -62,13 +63,27 @@ def get_jobs():
 @router.post("/importrss")
 async def post_rss(request: Request):
     body = await request.body()
-    url = json.loads(body)["media_url"]
+    url = json.loads(body)["rss_url"]
+    feed = feed_manager.put(url)
+    logger.debug(feed)
+    feed.pull()
+    feed_keys = feed.get_keys()
+    logger.debug(feed_keys)
+    schema_keys = AudioObject.get_keys()
+    return ({"url": url, "schema": schema_keys, "feed_keys": feed_keys})
+
+
+@router.post("/set_mapping")
+async def set_mapping(request: Request):
+    body = await request.body()
+    body = json.loads(body)
+    mapping = body["mapping"]
+    url = body["rss_url"]
     logger.debug(url)
-    x = RSSImport(url)
-    x.pullFeed()
-    feedKeys = x.getKeys()
-    schemaKeys = AudioObject.get_keys()
-    return (schemaKeys, feedKeys)
+    feed_manager.set_mapping(url, mapping)
+    feed = feed_manager.get(url)
+    items = feed.pull()
+    return items
 
 
 @router.post("/search/{index_name}/{search_method}")
