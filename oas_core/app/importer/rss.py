@@ -1,3 +1,5 @@
+import aiohttp
+import asyncio
 import feedparser
 import json
 
@@ -26,14 +28,17 @@ class RSSImport:
         self.keys = None
         self.items = None
 
-    # This should be async
-    def pull_feed(self):
-        self.feed = feedparser.parse(self.url)
-        self.keys = list(self.feed.entries[0].keys())
-        self.items = self.feed.entries
+
+    async def pull_feed(self):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.url) as response:
+                raw_feed = await response.text()
+                self.feed = feedparser.parse(raw_feed)
+                self.keys = list(self.feed.entries[0].keys())
+                self.items = self.feed.entries
 
     def get_keys(self):
-        if self.keys is not None:
+        if self.keys:
             return self.keys
         else:
             # here should no error happen

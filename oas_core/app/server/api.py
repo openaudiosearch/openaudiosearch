@@ -65,10 +65,11 @@ async def post_rss(request: Request):
     url = json.loads(body)["media_url"]
     logger.debug(url)
     x = RSSImport(url)
-    x.pullFeed()
-    feedKeys = x.getKeys()
-    schemaKeys = AudioObject.get_keys()
-    return (schemaKeys, feedKeys)
+    await x.pull_feed()
+    logger.debug(x)
+    feed_keys = x.get_keys()
+    schema_keys = AudioObject.get_keys()
+    return (schema_keys, feed_keys)
 
 
 @router.post("/search/{index_name}/{search_method}")
