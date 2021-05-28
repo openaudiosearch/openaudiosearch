@@ -16,7 +16,7 @@ from app.tasks.spacy_pipe import SpacyPipe
 from app.tasks.transcribe_vosk import transcribe_vosk
 from app.elastic.search_new import AudioObject
 
-app = Celery('tasks', broker='redis://localhost', backend='redis://localhost')
+from app.core.celery import app
 
 logger = get_task_logger(__name__)
 cache_path = os.path.join(config.storage_path, 'cache')

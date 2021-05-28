@@ -4,8 +4,9 @@ from app.elastic.search import AudioObject
 
 from app.logging import logger
 from app.core.util import uuid
-from app.server.jobs import jobs
 from app.importer.feed import FeedManager
+from app.server.jobs import Jobs
+
 from app.server.models import (
     TranscriptStatus,
     TranscriptResponse,
@@ -15,6 +16,7 @@ from app.server.models import (
     JobResponse
 )
 from app.tasks.models import TranscribeArgs, TranscribeOpts
+<<<<<<< HEAD
 from app.config import config
 import httpx
 import json
@@ -32,6 +34,13 @@ def debug():
     audio.contentUrl = "foo"
     audio.transcript = "bar"
     print(audio.to_dict())
+=======
+from elasticsearch import Elasticsearch
+from elasticsearch_dsl import Search
+
+router = APIRouter()
+jobs = Jobs()
+>>>>>>> 97778c6 (Changed api to use celery)
 
 @router.post("/transcript", response_model=TranscriptResponse)
 def post_transcript(item: TranscriptRequest):
@@ -39,43 +48,29 @@ def post_transcript(item: TranscriptRequest):
     # opts = TranscribeOpts(**item.dict())
     # id = jobs.queue_job('transcribe', args, opts)
     media_url = item.dict()["media_url"]
+    result = jobs.create_transcript_job(media_url)
 
-    nlp_opts = {'pipeline': 'ner'}
-    result = chain(
-            download.s(media_url),
-            prepare.s(16000),
-            asr.s('vosk'),
-            nlp.s(nlp_opts),
-            index.s()
-            )()
     return TranscriptResponse(id=result.id, status=TranscriptStatus.queued)
 
 
 @router.get("/transcript/{id}", response_model=StatusResponse)
 def get_status(id: str):
-    result = jobs.get_result(id)
-    if not result:
+    result = jobs.get_job(id)
+    if not result.status == 'SUCCESS':
         return StatusResponse(id=id, status=TranscriptStatus.queued)
-    # print('RESULT', result)
     return StatusResponse(id=id, status=TranscriptStatus.completed, result=result)
 
 
-@router.get("/job/{id}", response_model=JobResponse)
+@router.get("/job/{id}")
 def get_job(id: str):
-    result = jobs.get_records(id)
-    # print(f'RESULT {result}')
-    result = JobResponse(**result)
+    result = jobs.get_job(id)
     return result
-    # if not result:
-    #     return StatusResponse(id=id, status=TranscriptStatus.queued)
-    # print('RESULT', result)
-    # return StatusResponse(id=id, status=TranscriptStatus.completed, result=result)
 
 
 @router.get("/jobs")
 def get_jobs():
-    list = jobs.list_jobs()
-    return list
+    jobs_list = jobs.get_jobs()
+    return jobs_list
 
 @router.post("/feed/import")
 async def import_feed(request: Request):
@@ -145,6 +140,7 @@ async def search(index_name: str, search_method: str, request: Request):
         logger.debug("search result: " + r.text)
         return r.json()
 
+<<<<<<< HEAD
 
 #  from app.queue import queue
 #  @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
@@ -162,3 +158,11 @@ async def search(index_name: str, search_method: str, request: Request):
 #  @router.get("/search/{id}", response_model=StatusResponse)
 #  def get_status(id: str):
 #      return {"id": id, "status":"completed", "foo": "asdf"}
+=======
+@router.get("/search")
+def search(query: str = ''):
+    client=Elasticsearch()
+    s = Search(index='audio_objects').using(client).query("match", transcript=query)
+    resp = s.execute()
+    return resp.to_dict()
+>>>>>>> 97778c6 (Changed api to use celery)
