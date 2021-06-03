@@ -1,17 +1,43 @@
 from datetime import datetime
-from elasticsearch import Elasticsearch
-from pprint import pprint
+from elasticsearch_dsl import Document, Date, Integer, Keyword, Text
+from elasticsearch_dsl.connections import connections
 import requests
 import time
-import json
-#from app.core.job import Worker
+
 from app.elastic.configs import index_configs
 from app.config import config
 
-#elastic_url: str = 'http://localhost:9200/'
-#elastic_index: str = 'oas_feed2'
+connections.create_connection(hosts=[config.elastic_url])
 
-index_confs = index_configs.index_configs()
+
+class AudioObject(Document):
+    headline = Text(fields={'raw': Keyword()})
+    identifier = Keyword()
+    url = Keyword()
+    contentUrl = Keyword()
+    encodingFormat = Keyword()
+    abstract = Text()
+    description = Text(fields={'raw': Keyword()})
+    creator = Text(fields={'raw': Keyword()})
+    contributor = Text(fields={'raw': Keyword()})
+    genre = Keyword()
+    datePublished = Date()
+    duration = Keyword()  # TODO: change to float?
+    inLanguage = Keyword()
+    dateModified = Date()
+    licence = Keyword()
+    publisher = Text(fields={'raw': Keyword()})
+    transcript = Text()
+
+    class Index:
+        name = 'audio_objects'
+        settings = {
+        }
+
+    @classmethod
+    def get_keys(cls):
+        return list(cls.__dict__["_doc_type"].__dict__["mapping"].to_dict()["properties"].keys())
+
 
 def wait_for_elastic():
     url = config.elastic_url + '_cat/health'
@@ -22,188 +48,3 @@ def wait_for_elastic():
         except Exception as e:
             print(f'Elastic cannot be reached at {url}, retrying in 1 second')
             time.sleep(1)
-
-
-class SearchIndex:
-    instance = None
-    def __init__(self, elastic_url=config.elastic_url,
-                    index_name=config.elastic_index,
-                    ssl=False,
-                    check_certs=False,
-                    certs="",
-                    delete_old_index=False,
-                    index_config='prefix'):
-        if delete_old_index or not SearchIndex.instance:
-            SearchIndex.instance = SearchIndex.__SearchIndex(elastic_url,
-                index_name,
-                ssl,
-                check_certs,
-                certs,
-                index_config)
-        else:
-            SearchIndex.instance.elastic_url = elastic_url
-            SearchIndex.instance.index_name = index_name
-            SearchIndex.instance.ssl = ssl
-            SearchIndex.instance.check_certs = check_certs
-            SearchIndex.instance.certs = certs
-    
-    def __getattr__(self, name):
-        return getattr(self.instance, name)
-
-    class __SearchIndex:
-        def __init__(self,
-                    elastic_url,
-                    index_name,
-                    ssl,
-                    check_certs,
-                    certs,
-                    index_config):
-            self.connection = Elasticsearch([elastic_url])
-            self.index_name = index_name
-            self.certs = certs
-            self.ssl = ssl
-            self.index_config = index_config
-            self.index = self.connection.indices.create(
-                index=index_name,
-                body=index_confs[self.index_config], 
-                ignore=400)
-
-        def is_connected(self, host, port):
-            if self.connection != host + ":" + port:
-                return False
-            else:
-                return True
-
-        def put(self, doc, id):
-            doc = json.dumps(doc.reprJSON(), cls=Encoder)
-            res = self.connection.index(index=self.index_name, id=id, body=doc, doc_type="_doc")
-            return res
-
-        def get(self, id):
-            self.connection.get(index=self.index_name, id=id, doc_type="_doc")
-        
-        def get_con(self):
-            return self.connection
-
-        def search(self, search_term, range_queries=None):
-            search_param = { "query": {"match": {"message": {"query": search_term}}}}
-            
-                        #     {"query": {
-            #         "bool": {
-            #             "should": [
-            #                 {"match": {"description": {"query": search_term,
-            #                                     "operator": "and"}}},
-            #                 {"match": {"headline": {"query": search_term}}}
-            #             ]
-            #         # },
-            #         # "range": {
-            #         #     "date_production": {
-            #         #         "gte": '2020-04-01',
-            #         #         "lte": '2021-05-02'
-            #         #     }
-            #         }
-            #     }
-            # }
-            response = self.connection.search(index=self.index_name, body=search_param, doc_type="_doc")
-            return response
-        
-        def refresh(self):
-            self.connection.indices.refresh(index=self.index_name)
-
-
-class Document:
-    def __init__(self, 
-    abstract, 
-    contentUrl,
-    contributor ,
-    creator ,
-    dateModified ,
-    datePublished,
-    description ,
-    duration,
-    encodingFormat,
-    genre,
-    headline,
-    identifier, 
-    inLanguage,
-    licence,
-    publisher,
-    url,
-    transcript):
-        self.headline = headline
-        self.identifier = identifier
-        self.url = url
-        self.contentUrl = contentUrl
-        self.encodingFormat = encodingFormat
-        self.abstract = abstract
-        self.description = description
-        self.creator = creator
-        self.contributor = contributor
-        self.genre = genre
-        self.datePublished = datePublished
-        self.duration = duration
-        self.inLanguage = inLanguage
-        self.dateModified = dateModified
-        self.licence = licence
-        self.publisher = publisher
-        self.transcript = transcript
-
-
-    def reprJSON(self):        
-        return dict(headline=self.headline,
-            identifier = self.identifier,
-            url = self.url,
-            contentUrl = self.contentUrl,
-            encodingFormat = self.encodingFormat,
-            abstract = self.abstract,
-            description = self.description,
-            creator = self.creator,
-            contributor = self.contributor,
-            genre = self.genre,
-            datePublished = self.datePublished,
-            duration = self.duration,
-            inLanguage = self.inLanguage,
-            dateModified = self.dateModified,
-            licence = self.licence,
-            publisher = self.publisher
-        )
-
-
-class Encoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, datetime):
-            return obj.__str__()
-        elif hasattr(obj, 'reprJSON'):
-            return obj.reprJSON()
-        else:
-            return json.JSONEncoder.default(self, obj)
-
-
-if __name__ == "__main__":
-
-    # feed_entry = {
-    #     'abstract': 'Tobias Pfüger, MdB die Linke, berichtet aus dem "Verteidigungs"ausschuss des Bundestags am 21.April',
-    #     'contentUrl': 'https://www.freie-radios.net/mp3/20210421-abzugderbund-108544.mp3',
-    #     'contributor': ['Reinhard grenzenlos (bermuda.funk - Freies Radio Rhein-Neckar),
-    #     'creator': ['Reinhard grenzenlos (bermuda.funk - Freies Radio Rhein-Neckar),
-    #     'dateModified': 'Wed, 21 Apr 2021 16:22:58 +0200',
-    #     'datePublished': ['Wed, 21 Apr 2021 16:22:58 +0200,
-    #     'description': 'Tobias Pfüger, MdB die Linke, berichtet aus dem "Verteidigungs"ausschuss des Bundestags am 21.April 2021',
-    #     'duration': '3:90',
-    #     'encodingFormat': 'audio/mpeg',
-    #     'genre': 'Reportage',
-    #     'headline': 'Abzug der Bundeswehr aus Afghanistan (Serie 323: Grenzenlos)',
-    #     'identifier': 'https://www.freie-radios.net/108544',
-    #     'inLanguage': ['deutsch,
-    #     'licence': 'by-nc-sa',
-    #     'publisher': 'bermuda.funk - Freies Radio Rhein-Neckar',
-    #     'url': 'https://www.freie-radios.net/108544'
-    # }
-    
-    search_index = SearchIndex(delete_old_index=False)
-    # doc = Document(feed_entry)
-    # #PUT Document in index
-    # pprint("INDEX")
-    # pprint(search_index.put(doc, "1"))
-    pprint("SEARCH")
-    pprint(search_index.search("polizei"))

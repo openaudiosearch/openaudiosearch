@@ -2,6 +2,7 @@ import httpx
 import asyncio
 import feedparser
 from app.logging import logger
+from app.elastic.search import AudioObject
 import json
 
 
@@ -15,7 +16,7 @@ class FeedManager:
     def put(self, feed_url):
         feed = self.store.get(feed_url)
         if not feed:
-            feed = RSSImport(feed_url)
+            feed = Feed(feed_url)
             self.store[feed_url] = feed
         return feed
 
@@ -26,8 +27,12 @@ class FeedManager:
         # TODO: Check mapping
         self.mappings[feed_url] = mapping
 
+    def get_mapping(self, feed_url):
+        mapping = self.mappings.get(feed_url)
+        return mapping
 
-class RSSImport:
+
+class Feed:
     def __init__(self, url):
         self.url = url
         self.mapping = None
@@ -42,17 +47,18 @@ class RSSImport:
                 raw_feed = response.text
                 self.feed = feedparser.parse(raw_feed)
                 if not self.feed.get("entries"):
-                    raise Exception(f"URL {self.url} can not be parsed as feed or feed is empty.")
-                self.keys = list(self.feed.entries[0].keys())
+                    raise Exception(
+                        f"URL {self.url} can not be parsed as feed or feed is empty.")
                 self.items = self.feed.entries
                 return True
             except httpx.RequestError as exc:
-                raise Exception(f"An error occurred while requesting {exc.request.url!r}.")
+                raise Exception(
+                    f"An error occurred while requesting {exc.request.url!r}.")
             except httpx.HTTPStatusError as exc:
-                raise Exception(f"Error response {exc.response.status_code} while requesting {exc.request.url!r}.")
+                raise Exception(
+                    f"Error response {exc.response.status_code} while requesting {exc.request.url!r}.")
             except Exception as exc:
                 raise exc
-
 
     def get_example(self):
         return self.items[0]
@@ -62,16 +68,19 @@ class RSSImport:
             return self.keys
         else:
             self.keys = set()
-            for item in self.items:
-                item_keys = item.keys
+            for item in self.feed.entries:
+                item_keys = item.keys()
                 for key in item_keys:
                     if key not in self.keys:
                         self.keys.add(key)
             return self.keys
 
-    def map_fields(self, mapping):
+    def transform(self, mapping):
+        docs = []
+        logger.debug(mapping)
         for entry in self.feed.entries:
-            {
-                "headline": entry[json.loads(mapping)["headline"]],
-            }
-            print()
+            doc = AudioObject()
+            for key in mapping.keys():
+                setattr(doc, key, entry.get(mapping[key]))
+            docs.append(doc)
+        return docs

@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.encoders import jsonable_encoder
-from app.elastic.search_new import AudioObject
+from app.elastic.search import AudioObject
 
 from app.logging import logger
 from app.core.util import uuid
 from app.server.jobs import jobs
-from app.importer.rss import FeedManager
+from app.importer.feed import FeedManager
 from app.server.models import (
     TranscriptStatus,
     TranscriptResponse,
@@ -18,8 +18,6 @@ from app.tasks.models import TranscribeArgs, TranscribeOpts
 from app.config import config
 import httpx
 import json
-from elasticsearch import Elasticsearch
-from elasticsearch_dsl import Search
 
 router = APIRouter()
 feed_manager = FeedManager()
@@ -60,22 +58,30 @@ def get_jobs():
     return list
 
 
-@router.post("/importrss")
+@router.post("/add_new_feed")
 async def post_rss(request: Request):
-    logger.debug("IMPORT RSS")
     body = await request.body()
     url = json.loads(body)["rss_url"]
+    feed = feed_manager.get(url)
+    # if feed:
+    #    raise HTTPException(detail="Feed exists",status_code=400)
+
     feed = feed_manager.put(url)
     await feed.pull()
     feed_keys = feed.get_keys()
-    logger.debug(feed_keys)
     example_item = feed.get_example()
-    logger.debug(example_item)
     schema_keys = AudioObject.get_keys()
-    result = {"example": example_item,
-              "url": url,
-              "schema": schema_keys,
-              "feed_keys": feed_keys}
+    result = {
+        "example": example_item,
+        "url": url,
+        "schema": schema_keys,
+        "feed_keys": feed_keys,
+        "mapping": None
+    }
+
+    mapping = feed_manager.get_mapping(url)
+    if mapping:
+        result["mapping"] = mapping
     return result
 
 
@@ -85,10 +91,10 @@ async def set_mapping(request: Request):
     body = json.loads(body)
     mapping = body["mapping"]
     url = body["rss_url"]
+    logger.debug(mapping)
     feed_manager.set_mapping(url, mapping)
-    feed = feed_manager.get(url)
-    pulled = await feed.pull()
-    return pulled
+    mapping = feed_manager.get_mapping(url)
+    return mapping
 
 
 @router.post("/search/{index_name}/{search_method}")

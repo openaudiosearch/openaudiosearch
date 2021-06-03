@@ -63,7 +63,7 @@ function ImportUrl (props) {
   async function onSubmit (values) {
     setIsSubmitting(true)
     try {
-      const res = await fetch('/importrss', {
+      const res = await fetch('/add_new_feed', {
         method: 'POST',
         body: values
       })
