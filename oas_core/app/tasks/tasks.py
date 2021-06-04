@@ -129,8 +129,6 @@ def asr(args, engine):
 def nlp(args, opts):
     spacy = SpacyPipe(opts['pipeline'])
     res = spacy.run(args['text'])
-    # print(f'NLP RESULT {res}')
-    # return NlpResult(result=res)
     return {'nlp': res, 'asr': args}
 
 @app.task
@@ -145,3 +143,14 @@ def index(args):
     res = audio.save()
     print(res)
     return res
+
+#  @app.task
+#  def debug_long(seconds, message):
+#      print("start long debug task")
+#      print("message", message)
+#      time.sleep(seconds)
+#      return {
+#          "message": message,
+#          "waited_for": seconds
+#      }
+

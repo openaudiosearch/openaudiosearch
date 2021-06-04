@@ -56,7 +56,7 @@ def post_transcript(item: TranscriptRequest):
 @router.get("/transcript/{id}", response_model=StatusResponse)
 def get_status(id: str):
     result = jobs.get_job(id)
-    if not result.status == 'SUCCESS':
+    if not result["status"] != 'SUCCESS':
         return StatusResponse(id=id, status=TranscriptStatus.queued)
     return StatusResponse(id=id, status=TranscriptStatus.completed, result=result)
 
