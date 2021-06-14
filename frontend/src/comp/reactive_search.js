@@ -12,7 +12,7 @@ export default function SearchPage2 () {
   return (
     <Flex color='white'>
       <ReactiveBase
-        app='oas_feed2'
+        app='oas'
         url={url}
       >
         <Flex direction='row' justify-content='flex-start'>

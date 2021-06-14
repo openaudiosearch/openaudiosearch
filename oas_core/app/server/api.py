@@ -99,9 +99,14 @@ async def set_mapping(request: Request):
 
 @router.post("/search/{index_name}/{search_method}")
 async def search(index_name: str, search_method: str, request: Request):
+    if index_name is not 'OAS':
+        raise HTTPException(detail="Invalid index name",status_code=404)
+
+    real_index_name = config.elastic_index
+
     body = await request.body()
     headers = {"content-type": "application/x-ndjson"}
-    url = f'{config.elastic_url}{index_name}/{search_method}'
+    url = f'{config.elastic_url}{real_index_name}/{search_method}'
     logger.debug("Elastic-URL: " + url)
     async with httpx.AsyncClient() as client:
         r = await client.post(url, headers=headers, data=body)

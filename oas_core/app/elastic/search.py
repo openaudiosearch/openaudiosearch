@@ -30,7 +30,7 @@ class AudioObject(Document):
     transcript = Text()
 
     class Index:
-        name = 'audio_objects'
+        name = config.elastic_index
         settings = {
         }
 
