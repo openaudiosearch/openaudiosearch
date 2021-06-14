@@ -93,6 +93,7 @@ def prepare(task: Task, args: DownloadResult, opts: PrepareOpts) -> PrepareResul
     subprocess.call(['ffmpeg', '-i',
                      args.file_path,
                      '-hide_banner', '-loglevel', 'error',
+                     '-ss', '00', '-t', '00:59', # TODO: Remove this line ;-) it cuts all audios to 10 seconds
                      '-ar', str(opts.samplerate), '-ac', '1', dst],
                     stdout=subprocess.PIPE)
     return PrepareResult(file_path=dst)
@@ -124,11 +125,13 @@ def nlp(task: Task, args: AsrResult, opts: NlpOpts) -> NlpResult:
 
 @worker.task('transcribe')
 def transcribe(task: Task, args: TranscribeArgs, opts: TranscribeOpts):
+    job = task.job
 
     nlp_opts = NlpOpts(pipeline='ner')
     elastic_opts = ElasticIndexOpts()
 
-    job = task.job
+    job.add_record("transcribe_args", args)
+
     job.add_task(download, opts=DownloadOpts())
     job.add_task(prepare, opts=opts)
     job.add_task(asr, opts=opts)
@@ -143,10 +146,24 @@ def index(task: Task, args: NlpResult, opts: ElasticIndexOpts):
     job = task.job
     # all results of previous tasks are stored as records with the same
     # id as the job. job.get_record(type) is the same as client.get_record(job.id, type)
+    transcribe_args = job.get_record('transcribe_args')
     asr_result = job.get_record('asr')
-    audio = AudioObject(
-        transcript = asr_result["text"]
-    )
+    download_result = job.get_record('download')
+    audio = None
+    doc_id = transcribe_args["doc_id"]
+    #  print("DOC ID", doc_id)
+    try:
+        audio = AudioObject.get(id=doc_id)
+        #  print("GOT elastic audio object", audio, audio.to_dict())
+        audio.contentUrl = download_result["source_url"],
+        audio.transcript = asr_result["text"]
+        #  print("DID SET fields")
+    except Exception:
+        #  print("NEW elastic audio object")
+        audio = AudioObject(
+            contentUrl = download_result["source_url"],
+            transcript = asr_result["text"]
+        )
     res = audio.save()
     print(res)
     return res

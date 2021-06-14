@@ -32,21 +32,22 @@ export function usePlayer () {
 
 export function Player (props = {}) {
   const { track } = usePlayer()
+  if (!track || !track.contentUrl) return (
+    <Box>Not playing anything</Box>
+  )
   console.log('player', track)
+  let headline = track.headline || track.contentUrl || 'no title'
+  // Remove html highlighting tags from title display in player
+  headline = headline.replace(/(<([^>]+)>)/gi, "")
   return (
     <Box>
-      {track && (
-        // Remove html highlighting tags from title display in player
-        <Box>Currently playing: {track.headline.replace(/(<([^>]+)>)/gi, "")};
-          <audio controls="controls" key={track.headline}>
-          <source src={track.contentUrl} type="audio/mpeg" />
-          Your browser does not support the audio element.
+        <Box>
+          Currently playing: {headline}
+          <audio controls="controls">
+            <source src={track.contentUrl} type="audio/mpeg" />
+            Your browser does not support the audio element.
           </audio>
         </Box>
-      )}
-      {!track && (
-        <Box>Not playing anything</Box>
-      )}
     </Box>
   )
 }

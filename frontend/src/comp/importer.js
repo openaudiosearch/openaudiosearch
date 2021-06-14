@@ -5,6 +5,11 @@ import useSWR from 'swr'
 import {
   Flex, Stack, Box, Text, Spacer, Heading, SimpleGrid, IconButton, Input, Button, useDisclosure, Link, FormControl, Select, FormLabel, Spinner, AlertIcon, Alert, Container,
   Table,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
   Thead,
   Tbody,
   Tfoot,
@@ -41,11 +46,12 @@ function ImportUrl (props) {
   const [error, setError] = useState(null)
   const [schemaFields, setSchemaFields] = useState(null)
   const [feedFields, setFeedFields] = useState(null)
+  const [mapping, setMapping] = useState({})
   const [url, setUrl] = useState(null)
   return (
-    <Box p='4' border='1px solid black'>
+    <Box>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Heading fontSize='lg'>Import RSS-Feed</Heading>
+        <Heading fontSize='lg'>Import RSS feed</Heading>
         <Flex alignContent='end'>
           <FormControl>
             <FormLabel>Media URL</FormLabel>
@@ -56,7 +62,14 @@ function ImportUrl (props) {
           </Flex>
         </Flex>
       </form>
-      <Mapper url={url} schemaFields={schemaFields} feedFields={feedFields} />
+      {url && (
+        <>
+          <Collapsible title='Field mapping'>
+            <Mapper url={url} schemaFields={schemaFields} feedFields={feedFields} mapping={mapping} />
+          </Collapsible>
+          <Button mt={4} isLoading={isSubmitting} onClick={onImportFeed}>Import feed</Button>
+        </>
+      )}
     </Box>
   )
 
@@ -70,6 +83,7 @@ function ImportUrl (props) {
       setSchemaFields(res.schema)
       setFeedFields(res.feed_keys)
       setUrl(res.url)
+      setMapping(res.mapping)
       setIsSubmitting(false)
       console.log('RES', res)
     } catch (err) {
@@ -78,15 +92,33 @@ function ImportUrl (props) {
       console.log('ERR', err.data)
     }
   }
+
+  async function onImportFeed () {
+    try {
+      setIsSubmitting(true)
+      const res = await fetch('/feed/import', {
+        method: 'POST',
+        body: {
+          rss_url: url
+        }
+      })
+      console.log('import res', res)
+    } catch (err) {
+      setError(err)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 }
 
 function Mapper (props) {
-  const { url, schemaFields, feedFields } = props
+  const { url, schemaFields, feedFields, mapping } = props
   const { handleSubmit, errors, register } = useForm()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
+  console.log('Mapper', { url, schemaFields, feedFields, mapping })
   return (
-    <Box p='4' border='1px solid black'>
+    <Box>
       <p>{url}</p>
       <form onSubmit={handleSubmit(onMappingSubmit)}>
         {schemaFields && schemaFields.map((field, i) => (
@@ -94,8 +126,8 @@ function Mapper (props) {
             <Box w='10em' m='0.5em' background='blue' color='white' p='1em'> {field} </Box>
             <Box m='0.5em'>
               <Select name={field} ref={register()} placeholder='Select Feed field'>
-                {feedFields && feedFields.map((field, k) => (
-                  <option key={k} background='red' color='white' p='1em'> {field} </option>
+                {feedFields && feedFields.map((feedField, k) => (
+                  <option key={k} background='red' color='white' p='1em' selected={mapping[field] === feedField} value={feedField}>{feedField}</option>
                 ))}
               </Select>
             </Box>
@@ -137,4 +169,25 @@ function Error (props) {
 
 function Loading (props) {
   return <Spinner />
+}
+
+function Collapsible (props) {
+  const { title, children } = props
+  return (
+    <Accordion allowMultiple>
+      <AccordionItem>
+        <h2>
+          <AccordionButton>
+            <Box flex="1" textAlign="left">
+              {title}
+            </Box>
+            <AccordionIcon />
+          </AccordionButton>
+        </h2>
+        <AccordionPanel pb={4}>
+          {children}
+        </AccordionPanel>
+      </AccordionItem>
+    </Accordion>
+  )
 }

@@ -22,6 +22,14 @@ import json
 router = APIRouter()
 feed_manager = FeedManager()
 
+@router.get("/debug")
+def debug():
+    doc_id = "peoqCnoBuZ7gsAZn9Zof"
+    audio = AudioObject.get(id=doc_id)
+    print(audio.to_dict())
+    audio.contentUrl = "foo"
+    audio.transcript = "bar"
+    print(audio.to_dict())
 
 @router.post("/transcript", response_model=TranscriptResponse)
 def post_transcript(item: TranscriptRequest):
@@ -57,6 +65,15 @@ def get_jobs():
     list = jobs.list_jobs()
     return list
 
+@router.post("/feed/import")
+async def import_feed(request: Request):
+    body = await request.body()
+    url = json.loads(body)["rss_url"]
+    feed = feed_manager.get(url)
+    if feed is None:
+      raise HTTPException(detail="Feed exists",status_code=400)
+    ids = await feed.index_and_create_tasks()
+    return ids 
 
 @router.post("/add_new_feed")
 async def post_rss(request: Request):
@@ -82,6 +99,7 @@ async def post_rss(request: Request):
     mapping = feed_manager.get_mapping(url)
     if mapping:
         result["mapping"] = mapping
+        
     return result
 
 
@@ -94,12 +112,13 @@ async def set_mapping(request: Request):
     logger.debug(mapping)
     feed_manager.set_mapping(url, mapping)
     mapping = feed_manager.get_mapping(url)
+
     return mapping
 
 
 @router.post("/search/{index_name}/{search_method}")
 async def search(index_name: str, search_method: str, request: Request):
-    if index_name is not 'OAS':
+    if index_name != 'oas':
         raise HTTPException(detail="Invalid index name",status_code=404)
 
     real_index_name = config.elastic_index

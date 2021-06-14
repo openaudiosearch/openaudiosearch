@@ -223,6 +223,9 @@ class Job(object):
     def get_record(self, type):
         return self.client.get_record(self.id, type)
 
+    def add_record(self, type, args):
+        return self.client.add_record(self.id, type, args)
+
     def run(self):
         # input = self.args
         input = None

@@ -40,9 +40,9 @@ function Navbar () {
   return (
     <nav>
       <Flex>
-        <NavLink to='/search'>Search</NavLink>
+        <NavLink to='/reactive_search'>Search</NavLink>
+        {/* <NavLink to='/search'>Search</NavLink> */}
         <NavLink to='/jobs'>Jobs</NavLink>
-        <NavLink to='/reactive_search'>reactive Search</NavLink>
         <NavLink to='/importer'>Importer</NavLink>
       </Flex>
     </nav>
