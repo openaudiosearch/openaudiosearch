@@ -5,7 +5,6 @@ import shutil
 import tempfile
 
 from app.config import config
-from app.worker import worker, Task
 
 from app.tasks.spacy_pipe import get_spacy_path, spacy_model
 
@@ -20,8 +19,7 @@ def extract(filepath):
         zip_ref.extractall(path)
 
 
-@worker.task("download_models")
-def download_all_models(task: Task, args, opts):
+def download_all_models():
     download_vosk_models()
     download_spacy_models()
 
@@ -64,3 +62,7 @@ def download_vosk_models():
             extract(filepath)
         else:
             print(f'Skipping {models[model]}')
+
+
+if __name__ == "__main__":
+    download_all_models()
