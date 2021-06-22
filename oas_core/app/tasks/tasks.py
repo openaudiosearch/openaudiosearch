@@ -144,7 +144,6 @@ def index(args):
         transcript = asr_result["text"]
     )
     res = audio.save()
-    print(res)
     return res
 
 #  @app.task
