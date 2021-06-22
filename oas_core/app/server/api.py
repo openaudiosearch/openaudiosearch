@@ -47,7 +47,7 @@ def post_transcript(item: TranscriptRequest):
     # args = TranscribeArgs(**item.dict())
     # opts = TranscribeOpts(**item.dict())
     # id = jobs.queue_job('transcribe', args, opts)
-    media_url = item.dict()["media_url"]
+    media_url = item.media_url
     result = jobs.create_transcript_job(media_url)
 
     return TranscriptResponse(id=result.id, status=TranscriptStatus.queued)
