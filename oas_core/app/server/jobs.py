@@ -67,9 +67,9 @@ class Jobs(object):
     def create_transcript_job(self, media_url):
         nlp_opts = {'pipeline': 'ner'}
         result = chain(
-            download.s(media_url),
-            prepare.s(16000),
-            asr.s('vosk'),
+            download.s({'media_url': media_url}),
+            prepare.s({'samplerate': 16000}),
+            asr.s({'engine': 'vosk'}),
             nlp.s(nlp_opts),
             index.s()
             )()

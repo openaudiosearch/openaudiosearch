@@ -41,20 +41,20 @@ def url_to_path(url: str) -> str:
     return target_name
 
 @app.task
-def download(media_url):
+def download(opts):
     # todo: maybe cache downloads globally by url hash
     # instead of locally per job
     # target_filename = task.file_path('download/' + url_hash, root=True)
     #  if os.path.exists(destination_file):
 
-    url = media_url
+    url = opts['media_url']
     target_name = url_to_path(url)
     target_path = file_path(
         f'download/{target_name}')
     # target_path = task.file_path(
         # f'download/{target_name}', root=True)
     # temp_path = file_path('download.tmp')
-    temp_path = file_path(f'{download.request.id}/download.tmp')
+    temp_path = file_path(f'task/download/{download.request.id}/download.tmp')
     # chunk size to write
     chunk_size = 1024*64
 
@@ -71,7 +71,7 @@ def download(media_url):
         # if os.path.isfile(target_path) and not opts.refresh:
         if os.path.isfile(target_path):
             logger.info(
-                f'File exists, skipping download of {media_url} to {target_path} ({pretty_bytes(total_size)})')
+                f'File exists, skipping download of {url} to {target_path} ({pretty_bytes(total_size)})')
             # return DownloadResult(file_path=target_path, source_url=url)
             return {"file_path": target_path, "source_url": url}
 
@@ -94,8 +94,9 @@ def download(media_url):
         return {"file_path": target_path, "source_url": url}
 
 @app.task
-def prepare(args, samplerate):
-    dst = file_path(f'{prepare.request.id}/processed.wav')
+def prepare(args, opts):
+    samplerate = opts['samplerate']
+    dst = file_path(f'task/prepare/{prepare.request.id}/processed.wav')
     # TODO: Find out why this pydub segment does not work.
     # sound = AudioSegment.from_file(args.file_path)
     # sound.set_frame_rate(opts.samplerate)
@@ -110,7 +111,9 @@ def prepare(args, samplerate):
     return {"file_path": dst}
 
 @app.task
-def asr(args, engine):
+def asr(args, opts):
+    engine = opts['engine']
+
     model_base_path = config.model_path or os.path.join(
         config.storage_path, 'models')
     model_path = os.path.join(model_base_path, config.model)
