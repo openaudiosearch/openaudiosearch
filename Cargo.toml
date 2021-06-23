@@ -1,0 +1,2 @@
+[workspace]
+members = ["oas-core", "oas-common"]

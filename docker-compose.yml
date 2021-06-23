@@ -1,0 +1,36 @@
+version: '3'
+services:
+  couchdb:
+    image: couchdb:3
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+      - COUCHDB_SECRET=secret
+      - NODENAME=192.168.0.1
+      - ERL_FLAGS=-setcookie "brumbrum"
+    ports:
+      - "5984:5984"
+      - "4369:4369"
+      - "9100:9100"
+    volumes:
+      - ./data/couch:/opt/couchdb/data
+
+  redis:
+    image: "redis:alpine"
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - 6379:6379
+    volumes:
+      - "./data/redis:/data"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.11.2
+    ports:
+      - 9200:9200
+    volumes:
+      - "./data/elastic:/usr/share/elasticsearch/data"
+    environment:
+      http.host: 0.0.0.0
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms500m -Xmx500m"
+      TAKE_FILE_OWNERSHIP: 1

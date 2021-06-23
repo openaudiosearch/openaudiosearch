@@ -1,0 +1,18 @@
+[package]
+name = "oas-common"
+version = "0.1.0"
+authors = ["Franz Heinzmann (Frando) <frando@unbiskant.org>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0.40"
+serde = "1.0.126"
+serde_json = "1.0.64"
+surf = "2.2.0"
+dotenv = "0.15.0"
+env_logger = "0.8.3"
+thiserror = "1.0.25"
+clap = "2.33.3"
+url = "2.2.2"
+sha2 = "0.9.5"
+base32 = "0.4.0"
