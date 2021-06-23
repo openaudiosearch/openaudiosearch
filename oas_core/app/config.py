@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     elastic_url: str = 'http://localhost:9200/'
     elastic_index: str = 'oas'
 
+    # couch settings
+    couch_url: str = 'http://localhost:5984/'
+    couch_user: str = 'admin'
+    couch_password: str = 'password'
+
     # set to 1 to enable development mode
     # (hot reload code on changes)
     oas_dev: bool = False
