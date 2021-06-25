@@ -2,10 +2,12 @@ import httpx
 import asyncio
 import feedparser
 import json
+import uuid
 
 from app.logging import logger
 from app.elastic.search import AudioObject
 from app.server.jobs import jobs
+from app.store.couch import store
 from app.tasks.models import TranscribeArgs, TranscribeOpts
 
 
@@ -13,25 +15,51 @@ class FeedManager:
 
     def __init__(self):
         # TODO load store from db
-        self.store = {}
+        self.store = None
         self.mappings = {}
 
-    def put(self, feed_url):
-        feed = self.store.get(feed_url)
+    async def put(self, feed_url):
+        if self.store is None:
+            await store.open()
+            self.store = store
+
+        doc_id = hash_url(feed_url)
+        feed = await self.store.get(doc_id)
         if not feed:
             mapping = self.get_mapping(feed_url)
             feed = Feed(feed_url, mapping=mapping)
-            self.store[feed_url] = feed
+            data = json.dumps(feed)
+            await self.store.put("Feed", value=data)
         return feed
 
-    def get(self, feed_url):
-        return self.store.get(feed_url)
+    async def get(self, feed_url):
+        if self.store is None:
+            await store.open()
+            self.store = store
+        # create hash of feed_url:
+        doc_id = hash_url(feed_url)
+        return await self.store.get(doc_id)
 
-    def set_mapping(self, feed_url, mapping):
+    async def set_mapping(self, feed_url, mapping):
+        if self.store is None:
+            await store.open()
+            self.store = store
         # TODO: Check mapping
+
+        # Save mappings locally in FeedManager
         self.mappings[feed_url] = mapping
-        if self.store.get(feed_url) is not None:
-            self.store[feed_url].mapping = mapping
+
+        # Check if feed is already saved. Overwrite mapping in couch db
+        doc_id = hash_url(feed_url)
+        feed = self.store.get(doc_id)
+        if feed is not None:
+            try:
+                feed_obj = json.loads(feed)
+                feed_obj.mapping = mapping
+                await self.store.put("Feed", value=json.dumps(feed_obj))
+            except Exception as e:
+                print(f"Putting a mapping to feed with id {doc_id} failed.")
+                raise e
 
     def get_mapping(self, feed_url):
         mapping = self.mappings.get(feed_url)
@@ -53,6 +81,7 @@ class FeedManager:
 class Feed:
     def __init__(self, url, mapping=None):
         self.url = url
+        self.id = hash_url(url)
         self.mapping = mapping
         self.feed = None
         self.keys = None
@@ -129,3 +158,6 @@ class Feed:
             print("TRANSFORMED", doc)
             docs.append(doc)
         return docs
+
+def hash_url(url):
+    return uuid.uuid3(uuid.NAMESPACE_URL, url)
