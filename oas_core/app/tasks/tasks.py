@@ -11,7 +11,7 @@ from celery import Celery
 from celery.utils.log import get_task_logger
 from app.tasks.models import *
 from app.config import config
-from app.core.util import download_file, pretty_bytes
+from app.core.util import pretty_bytes
 from app.tasks.spacy_pipe import SpacyPipe
 from app.tasks.transcribe_vosk import transcribe_vosk
 from app.elastic.search_new import AudioObject
