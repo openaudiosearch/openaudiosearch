@@ -11,6 +11,8 @@ from app.logging import logger
 api_v1_prefix = '/oas/v1'
 static_path = config.frontend_path
 
+print(static_path)
+
 app = FastAPI(
     title="Open Audio Search API",
     version="1.0",

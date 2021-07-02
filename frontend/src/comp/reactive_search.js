@@ -10,6 +10,7 @@ const { ResultListWrapper } = ReactiveList
 export default function SearchPage2 () {
   const { track, setTrack } = usePlayer()
   const url = API_ENDPOINT + '/search'
+  console.log(url)
   const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator']
   return (
     <Flex color='white'>

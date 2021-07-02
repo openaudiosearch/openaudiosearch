@@ -28,6 +28,7 @@ loguru = "^0.5.3"
 elasticsearch-dsl = "^7.3.0"
 feedparser = "^6.0.2"
 httpx = "^0.18.1"
+celery = {extras = ["redis"], version = "^5.0.5"}
 
 [tool.poetry.dev-dependencies]
 rope = "^0.18.0"

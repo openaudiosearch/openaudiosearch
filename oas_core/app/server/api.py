@@ -4,8 +4,9 @@ from app.elastic.search import AudioObject
 
 from app.logging import logger
 from app.core.util import uuid
-from app.server.jobs import jobs
 from app.importer.feed import FeedManager
+from app.server.jobs import jobs
+
 from app.server.models import (
     TranscriptStatus,
     TranscriptResponse,
@@ -18,6 +19,8 @@ from app.tasks.models import TranscribeArgs, TranscribeOpts
 from app.config import config
 import httpx
 import json
+from celery import chain
+from app.tasks.tasks import download, prepare, asr, nlp, index
 
 router = APIRouter()
 feed_manager = FeedManager()
@@ -31,39 +34,36 @@ def debug():
     audio.transcript = "bar"
     print(audio.to_dict())
 
+
 @router.post("/transcript", response_model=TranscriptResponse)
 def post_transcript(item: TranscriptRequest):
-    args = TranscribeArgs(**item.dict())
-    opts = TranscribeOpts(**item.dict())
-    id = jobs.queue_job('transcribe', args, opts)
-    return TranscriptResponse(id=id, status=TranscriptStatus.queued)
+    # args = TranscribeArgs(**item.dict())
+    # opts = TranscribeOpts(**item.dict())
+    # id = jobs.queue_job('transcribe', args, opts)
+    media_url = item.media_url
+    result = jobs.create_transcript_job(media_url)
+
+    return TranscriptResponse(id=result.id, status=TranscriptStatus.queued)
 
 
 @router.get("/transcript/{id}", response_model=StatusResponse)
 def get_status(id: str):
-    result = jobs.get_result(id)
-    if not result:
+    result = jobs.get_job(id)
+    if not result["status"] != 'SUCCESS':
         return StatusResponse(id=id, status=TranscriptStatus.queued)
-    # print('RESULT', result)
     return StatusResponse(id=id, status=TranscriptStatus.completed, result=result)
 
 
-@router.get("/job/{id}", response_model=JobResponse)
+@router.get("/job/{id}")
 def get_job(id: str):
-    result = jobs.get_records(id)
-    # print(f'RESULT {result}')
-    result = JobResponse(**result)
+    result = jobs.get_job(id)
     return result
-    # if not result:
-    #     return StatusResponse(id=id, status=TranscriptStatus.queued)
-    # print('RESULT', result)
-    # return StatusResponse(id=id, status=TranscriptStatus.completed, result=result)
 
 
 @router.get("/jobs")
 def get_jobs():
-    list = jobs.list_jobs()
-    return list
+    jobs_list = jobs.get_jobs()
+    return jobs_list
 
 @router.post("/feed/import")
 async def import_feed(request: Request):
@@ -133,7 +133,6 @@ async def search(index_name: str, search_method: str, request: Request):
         logger.debug("search result: " + r.text)
         return r.json()
 
-
 #  from app.queue import queue
 #  @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
 #  def test_celery(
@@ -150,3 +149,10 @@ async def search(index_name: str, search_method: str, request: Request):
 #  @router.get("/search/{id}", response_model=StatusResponse)
 #  def get_status(id: str):
 #      return {"id": id, "status":"completed", "foo": "asdf"}
+
+@router.get("/search")
+def search(query: str = ''):
+    client=Elasticsearch()
+    s = Search(index='audio_objects').using(client).query("match", transcript=query)
+    resp = s.execute()
+    return resp.to_dict()

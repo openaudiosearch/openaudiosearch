@@ -13,7 +13,7 @@ services:
 
   worker:
     build: .
-    command: ["python", "worker.py"]
+    command: ["celery", "-A", "app.tasks.tasks", "worker", "--loglevel=INFO"]
     volumes:
       - "./data/oas:/data"
     environment:

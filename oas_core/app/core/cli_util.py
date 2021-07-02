@@ -1,8 +1,5 @@
-from app.worker import worker
 from pydantic import BaseModel
 from pydantic_cli import SubParser, run_sp_and_exit, FailedExecutionException
-
-from app.tasks.models import TASKS
 
 VERSION = '0.1.0'
 

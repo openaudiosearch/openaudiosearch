@@ -37,11 +37,11 @@ def spacy_load(model):
         except Exception as err:
             logger.warning(f"disabling spaCy: missing model `{model}`")
             #  logger.exception(err)
-            logger.warning("run `python task-run.py download_models` to download the models.")
+            logger.warning("run `python download_models.py` to download the models.")
             return None
     else:
         logger.warning("disabling spaCy: missing models")
-        logger.warning("run `python task-run.py download_models` to download the models.")
+        logger.warning("run `python download_models.py` to download the models.")
         return None
 
 class SpacyPipe():

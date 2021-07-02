@@ -4,20 +4,22 @@
 Add a task to the work queue
 """
 
-import logging
-import sys
-import typing as T
+import argparse
+from app.server.jobs import Jobs
 
-from app.core.cli_util import run_task_cli
-from app.server.jobs import jobs
+jobs = Jobs()
 
-
-def runner(task_name, args, opts):
-    print(f'Queuing task "{task_name}" with args: {args}')
-    id = jobs.queue_job(task_name, args, opts)
-    print(f'job id: {id}')
+def runner(task_name, args):
+    if task_name == "transcribe":
+        print(f'Queuing task "{task_name}" with args: {args}')
+        result = jobs.create_transcript_job(args.media_url)
+        print(f'job id: {result.id}')
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    run_task_cli(runner, description=__doc__)
+    parser = argparse.ArgumentParser(description='Add a task to the work queue')
+    parser.add_argument("task_name", type=str, help="queue task_name, e.g. transcribe")
+    parser.add_argument("media_url", type=str, help="URL to transcribe, if task_name = transcribe")
+    args = parser.parse_args()
+    
+    runner(args.task_name, args)
