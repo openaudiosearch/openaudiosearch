@@ -6,6 +6,8 @@ use url::{ParseError, Url};
 use crate::types::AudioObject;
 use crate::Record;
 
+mod runner;
+
 pub struct Feed {
     url: Url,
     client: surf::Client,

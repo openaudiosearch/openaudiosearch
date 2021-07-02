@@ -11,28 +11,29 @@ name = "oas"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-oas-common = { path = "../oas-common" }
-async-std = { version = "1.9.0", features = ["attributes", "tokio1"] }
-surf = "2.2.0"
-anyhow = "1.0.40"
-serde = "1.0.126"
-serde_json = "1.0.64"
-base64 = "0.13.0"
-futures = "0.3.15"
-clap = "3.0.0-beta.2"
-thiserror = "1.0.25"
-log = "0.4.14"
-elasticsearch = { version = "7.12.0-alpha.1", features = ["rustls-tls"] }
-url = "2.2.2"
-http = "0.2.4"
-env_logger = "0.8.3"
-# celery = { git = "https://github.com/rusty-celery/rusty-celery.git", branch = "main" }
-celery = { path = "../../rusty-celery" }
-async-trait = "0.1.50"
 # elastic = "0.21.0-pre.5"
 # elastic_derive = "0.21.0-pre.5"
-tokio = { version = "1.0.0", features = ["full"]}
-faktory = "0.11.1"
-rss = "1.10.0"
+actix-web = "^4.0.0-beta.8"
+anyhow = "1"
+async-std = { version = "1.9.0", features = ["attributes", "tokio1"] }
+async-trait = "0.1.50"
 base32 = "0.4.0"
+base64 = "0.13.0"
+# celery = { git = "https://github.com/rusty-celery/rusty-celery.git", branch = "main" }
+# celery = { path = "../../rusty-celery", default_features = false, features = ["redis", "codegen"] }
+clap = "3.0.0-beta.2"
+elasticsearch = { version = "7.12.0-alpha.1", features = ["rustls-tls"] }
+env_logger = "0.8.3"
+faktory = "0.11.1"
+futures = "0.3.15"
+http = "0.2.4"
+log = "0.4.14"
+oas-common = { path = "../oas-common" }
+rss = "1.10.0"
+serde = "1.0.126"
+serde_json = "1.0.64"
 sha2 = "0.9.5"
+surf = "2.2.0"
+thiserror = "1.0.25"
+tokio = { version = "1", features = ["rt", "macros"]}
+url = "2.2.2"

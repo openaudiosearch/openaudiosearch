@@ -43,7 +43,6 @@ pub struct Config {
 #[derive(Debug, Clone)]
 pub struct CouchDB {
     config: Config,
-    client
     client: Arc<surf::Client>,
 }
 

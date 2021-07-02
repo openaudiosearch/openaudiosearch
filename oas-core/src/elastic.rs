@@ -1,3 +1,4 @@
+use elasticsearch::SearchParts;
 use serde::Serialize;
 use serde_json::json;
 
@@ -15,7 +16,7 @@ use serde_json::Value;
 use std::time::Instant;
 use url::Url;
 
-use oas_common::{Record, TypedValue};
+use oas_common::{Record, TypedValue, UntypedRecord};
 
 pub async fn ensure_index(
     client: &Elasticsearch,
@@ -24,6 +25,35 @@ pub async fn ensure_index(
 ) -> Result<(), Error> {
     create_index_if_not_exists(&client, index_name, delete, get_default_mapping()).await?;
     Ok(())
+}
+
+pub async fn find_records(
+    client: &Elasticsearch,
+    index_name: &str,
+    query: &str,
+) -> Result<Vec<UntypedRecord>, Error> {
+    let query = json!({
+         "query": { "query_string": { "query": query } }
+    });
+    let mut response = client
+        .search(SearchParts::Index(&[index_name]))
+        .body(query)
+        .pretty(true)
+        .send()
+        .await?;
+
+    // turn the response into an Error if status code is unsuccessful
+    response = response.error_for_status_code()?;
+
+    let json: Value = response.json().await?;
+    let records: Vec<UntypedRecord> = json["hits"]["hits"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|h| serde_json::from_value(h["_source"].clone()).unwrap())
+        .collect();
+
+    Ok(records)
 }
 
 pub async fn index_records<T>(

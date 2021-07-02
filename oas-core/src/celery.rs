@@ -1,7 +1,8 @@
-use anyhow::Result;
 use async_trait::async_trait;
 use celery::broker::RedisBroker;
-use celery::prelude::*;
+// use celery::TaskResult
+// use celery::prelude::;
+use celery::task::{TaskResult, TaskResultExt};
 use serde::{Deserialize, Serialize};
 
 use crate::tasks::*;
