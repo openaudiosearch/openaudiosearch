@@ -14,7 +14,7 @@ from app.config import config
 from app.core.util import pretty_bytes
 from app.tasks.spacy_pipe import SpacyPipe
 from app.tasks.transcribe_vosk import transcribe_vosk
-from app.elastic.search_new import AudioObject
+from app.elastic.search import AudioObject
 
 from app.core.celery import app
 
@@ -42,6 +42,7 @@ def url_to_path(url: str) -> str:
 
 @app.task
 def download(opts):
+    args = {"opts": opts}
     # todo: maybe cache downloads globally by url hash
     # instead of locally per job
     # target_filename = task.file_path('download/' + url_hash, root=True)
@@ -73,7 +74,8 @@ def download(opts):
             logger.info(
                 f'File exists, skipping download of {url} to {target_path} ({pretty_bytes(total_size)})')
             # return DownloadResult(file_path=target_path, source_url=url)
-            return {"file_path": target_path, "source_url": url}
+            args["download"] = {"file_path": target_path, "source_url": url}
+            return args
 
         logger.info(
             f'Downloading {url} to {target_path} ({pretty_bytes(total_size)})')
@@ -91,7 +93,8 @@ def download(opts):
 
         os.rename(temp_path, target_path)
         # return DownloadResult(file_path=target_path, source_url=url)
-        return {"file_path": target_path, "source_url": url}
+        args['download'] = {"file_path": target_path, "source_url": url}
+        return args
 
 @app.task
 def prepare(args, opts):
@@ -103,12 +106,13 @@ def prepare(args, opts):
     # sound.set_channels(1)
     # sound.export(dst, format="wav")
     subprocess.call(['ffmpeg', '-i',
-                     args["file_path"],
+                     args["download"]["file_path"],
                      '-hide_banner', '-loglevel', 'error',
                      '-ar', str(samplerate), '-ac', '1', dst],
                     stdout=subprocess.PIPE)
     # return PrepareResult(file_path=dst)
-    return {"file_path": dst}
+    args['prepare'] = {'file_path': dst}
+    return args
 
 @app.task
 def asr(args, opts):
@@ -118,9 +122,10 @@ def asr(args, opts):
         config.storage_path, 'models')
     model_path = os.path.join(model_base_path, config.model)
     if engine == "vosk":
-        result = transcribe_vosk(args["file_path"], model_path)
+        result = transcribe_vosk(args["prepare"]["file_path"], model_path)
         # return AsrResult(**result)
-        return result
+        args["asr"] = result
+        return args
     elif engine == "deepspeech":
         raise NotImplementedError("ASR using deepspeech is not available yet")
     elif engine == "torch":
@@ -131,8 +136,9 @@ def asr(args, opts):
 @app.task
 def nlp(args, opts):
     spacy = SpacyPipe(opts['pipeline'])
-    res = spacy.run(args['text'])
-    return {'nlp': res, 'asr': args}
+    res = spacy.run(args['asr']['text'])
+    args['nlp'] = res
+    return args
 
 @app.task
 def index(args):
@@ -144,6 +150,28 @@ def index(args):
         transcript = asr_result["text"]
     )
     res = audio.save()
+    return res
+
+
+@app.task
+def index(args):
+    doc_id = args["opts"]['doc_id']
+    audio = None
+    #  print("DOC ID", doc_id)
+    try:
+        audio = AudioObject.get(id=doc_id)
+        #  print("GOT elastic audio object", audio, audio.to_dict())
+        audio.contentUrl = args["download"]["source_url"]
+        audio.transcript = args["asr"]["text"]
+        #  print("DID SET fields")
+    except Exception:
+        #  print("NEW elastic audio object")
+        audio = AudioObject(
+            contentUrl = args["download"]["source_url"],
+            transcript = args["asr"]["text"]
+        )
+    res = audio.save()
+    print(res)
     return res
 
 #  @app.task

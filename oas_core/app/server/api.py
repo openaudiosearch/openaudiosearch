@@ -5,7 +5,7 @@ from app.elastic.search import AudioObject
 from app.logging import logger
 from app.core.util import uuid
 from app.importer.feed import FeedManager
-from app.server.jobs import Jobs
+from app.server.jobs import jobs
 
 from app.server.models import (
     TranscriptStatus,
@@ -16,7 +16,6 @@ from app.server.models import (
     JobResponse
 )
 from app.tasks.models import TranscribeArgs, TranscribeOpts
-<<<<<<< HEAD
 from app.config import config
 import httpx
 import json
@@ -34,13 +33,7 @@ def debug():
     audio.contentUrl = "foo"
     audio.transcript = "bar"
     print(audio.to_dict())
-=======
-from elasticsearch import Elasticsearch
-from elasticsearch_dsl import Search
 
-router = APIRouter()
-jobs = Jobs()
->>>>>>> 97778c6 (Changed api to use celery)
 
 @router.post("/transcript", response_model=TranscriptResponse)
 def post_transcript(item: TranscriptRequest):
@@ -140,8 +133,6 @@ async def search(index_name: str, search_method: str, request: Request):
         logger.debug("search result: " + r.text)
         return r.json()
 
-<<<<<<< HEAD
-
 #  from app.queue import queue
 #  @router.post("/test-celery/", response_model=schemas.Msg, status_code=201)
 #  def test_celery(
@@ -158,11 +149,10 @@ async def search(index_name: str, search_method: str, request: Request):
 #  @router.get("/search/{id}", response_model=StatusResponse)
 #  def get_status(id: str):
 #      return {"id": id, "status":"completed", "foo": "asdf"}
-=======
+
 @router.get("/search")
 def search(query: str = ''):
     client=Elasticsearch()
     s = Search(index='audio_objects').using(client).query("match", transcript=query)
     resp = s.execute()
     return resp.to_dict()
->>>>>>> 97778c6 (Changed api to use celery)

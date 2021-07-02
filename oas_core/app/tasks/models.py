@@ -50,7 +50,7 @@ class NlpResult(BaseModel):
 
 class TranscribeArgs(BaseModel):
     media_url: str
-    doc_id: str
+    doc_id: Optional[str] = None
 
 
 class TranscribeOpts(PrepareOpts, AsrOpts, NlpOpts):

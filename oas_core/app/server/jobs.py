@@ -64,13 +64,15 @@ class Jobs(object):
             'args': state.args
         }
 
-    def create_transcript_job(self, media_url):
+    def create_transcript_job(self, media_url, doc_id = None):
         nlp_opts = {'pipeline': 'ner'}
         result = chain(
-            download.s({'media_url': media_url}),
+            download.s({'media_url': media_url, 'doc_id': doc_id }),
             prepare.s({'samplerate': 16000}),
             asr.s({'engine': 'vosk'}),
             nlp.s(nlp_opts),
             index.s()
             )()
         return result
+
+jobs = Jobs()

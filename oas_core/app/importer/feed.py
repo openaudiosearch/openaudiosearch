@@ -89,11 +89,11 @@ class Feed:
             result = audio_object.save()
             print("saved doc", result, audio_object.meta.id)
             doc_id = audio_object.meta.id
-            args = TranscribeArgs(media_url=audio_object.contentUrl, doc_id=doc_id)
-            opts = TranscribeOpts(engine='vosk')
-            job_id = jobs.queue_job('transcribe', args, opts)
+            #  args = TranscribeArgs(media_url=audio_object.contentUrl, doc_id=doc_id)
+            #  opts = TranscribeOpts(engine='vosk')
+            job_id = jobs.create_transcript_job(audio_object.contentUrl, doc_id)
             print("created job:", job_id)
-            ids.append({ "job": job_id, "doc": doc_id })
+            ids.append({ "job": str(job_id), "doc": doc_id })
 
         return ids
             
