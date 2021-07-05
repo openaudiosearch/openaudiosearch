@@ -1,4 +1,3 @@
-pub mod celery;
 pub mod couch;
 pub mod elastic;
 pub mod rss;

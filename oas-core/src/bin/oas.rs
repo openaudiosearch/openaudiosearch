@@ -15,7 +15,7 @@ use oas_core::rss::Feed;
 use oas_core::server::{run_server, ServerOpts};
 use oas_core::util::*;
 use oas_core::State;
-use oas_core::{celery, couch, elastic};
+use oas_core::{couch, elastic, tasks};
 
 const DEFAULT_HOST: &str = "http://localhost:5984";
 const DEFAULT_DB: &str = "oas_test2";
@@ -103,24 +103,26 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn run_task() -> anyhow::Result<()> {
-    celery::run_celery().await?;
+    tasks::run_celery().await?;
     // faktory::run_faktory().await?;
     Ok(())
 }
 
 async fn run_list(state: State) -> anyhow::Result<()> {
     let db = state.db;
-    let mut params = HashMap::new();
-    params.insert("include_docs".into(), "true".into());
-    let docs: couch::DocList = db
-        .get("_all_docs", Some(params))
-        .await
-        .map_err(|e| anyhow::anyhow!(e))?;
-    eprintln!("docs: {:?}", docs);
-    eprintln!(
-        "typed docs: {:#?}",
-        docs.clone().into_typed_docs::<Record<AudioObject>>()
-    );
+    // let docs = db.get_all::<serde_json::Value>().await?;
+    // eprintln!("docs {:#?}", &docs);
+    // let mut params = HashMap::new();
+    // params.insert("include_docs".into(), "true".into());
+    // let docs: couch::DocList = db
+    //     .get("_all_docs", Some(params))
+    //     .await
+    //     .map_err(|e| anyhow::anyhow!(e))?;
+    // eprintln!("docs: {:?}", docs);
+    // eprintln!(
+    //     "typed docs: {:#?}",
+    //     docs.clone().into_typed_docs::<Record<AudioObject>>()
+    // );
     Ok(())
 }
 
@@ -157,7 +159,7 @@ async fn run_debug(state: State) -> anyhow::Result<()> {
 
 async fn run_watch(state: State, opts: WatchOpts) -> anyhow::Result<()> {
     let db = state.db;
-    let mut stream = db.changes_stream(opts.since);
+    let mut stream = db.changes(opts.since);
     stream.set_infinite(true);
     while let Some(event) = stream.next().await {
         let event = event?;
@@ -182,7 +184,7 @@ async fn run_index(state: State) -> anyhow::Result<()> {
     let batch_size = 1000;
     let mut batch = vec![];
     let mut count = 0;
-    let mut stream = db.changes_stream(None);
+    let mut stream = db.changes(None);
     // stream.set_infinite(true);
     while let Some(event) = stream.next().await {
         let event = event?;
