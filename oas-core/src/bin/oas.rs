@@ -1,10 +1,10 @@
 use anyhow::anyhow;
 use async_std::stream::StreamExt;
-use async_std::task;
+
 use clap::Clap;
-use serde::{Deserialize, Serialize};
+
 use std::future::Future;
-use std::task::{Context, Poll};
+
 use std::{collections::HashMap, time};
 use url::Url;
 
@@ -109,7 +109,7 @@ async fn run_task() -> anyhow::Result<()> {
 }
 
 async fn run_list(state: State) -> anyhow::Result<()> {
-    let db = state.db;
+    let _db = state.db;
     // let docs = db.get_all::<serde_json::Value>().await?;
     // eprintln!("docs {:#?}", &docs);
     // let mut params = HashMap::new();

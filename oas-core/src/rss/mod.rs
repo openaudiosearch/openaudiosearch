@@ -1,5 +1,5 @@
 use rss::Channel;
-use sha2::{Digest, Sha256, Sha512};
+use sha2::{Digest};
 use thiserror::Error;
 use url::{ParseError, Url};
 

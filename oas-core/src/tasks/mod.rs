@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use celery::broker::RedisBroker;
-use celery::task::{TaskResult, TaskResultExt};
+use celery::task::{TaskResult};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -33,7 +33,7 @@ pub struct AsrResult {
 // }
 
 #[celery::task()]
-pub fn asr(args: AsrArgs, opts: AsrOpts) -> TaskResult<AsrResult> {
+pub fn asr(_args: AsrArgs, _opts: AsrOpts) -> TaskResult<AsrResult> {
     Ok(Default::default())
 }
 

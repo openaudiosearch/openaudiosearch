@@ -1,5 +1,5 @@
 use elasticsearch::SearchParts;
-use serde::Serialize;
+
 use serde_json::json;
 
 use elasticsearch::cert::CertificateValidation;
@@ -71,7 +71,7 @@ where
     let duration = now.elapsed();
     let secs = duration.as_secs_f64();
 
-    let taken = if secs >= 60f64 {
+    let _taken = if secs >= 60f64 {
         format!("{}m", secs / 60f64)
     } else {
         format!("{:?}", duration)

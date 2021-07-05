@@ -7,16 +7,16 @@ use futures::Stream;
 use futures::StreamExt;
 use std::collections::HashMap;
 use std::pin::Pin;
-use std::str::FromStr;
+
 use std::sync::Arc;
 use std::task::Context;
 use std::task::Poll;
-use std::time;
-use surf::http::Mime;
-use surf::http::{headers, mime, Method};
-use surf::middleware::{Middleware, Next};
+
+
+
+
 use surf::{Body, Client, Request, RequestBuilder, Response, Url};
-use thiserror::Error;
+
 
 use super::types::*;
 use super::CouchResult;

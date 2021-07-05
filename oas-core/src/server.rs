@@ -1,10 +1,10 @@
 use clap::Clap;
-use std::net::{Ipv4Addr, SocketAddr};
-use tokio::runtime::*;
+use std::net::{SocketAddr};
 
-use crate::*;
+
+
 use actix_web::middleware::Logger;
-use actix_web::{get, web, App, HttpRequest, HttpServer, Responder};
+use actix_web::{get, web, App, HttpRequest, HttpServer};
 
 const DEFAULT_PORT: u16 = 8080;
 const DEFAULT_HOST: &'static str = "127.0.0.1";

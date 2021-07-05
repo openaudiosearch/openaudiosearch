@@ -1,30 +1,30 @@
 use base64::write::EncoderWriter as Base64Encoder;
-use futures::io::AsyncBufReadExt;
-use futures::io::Lines;
-use futures::ready;
-use futures::Future;
+
+
+
+
 use futures::FutureExt;
-use futures::Stream;
+
 use futures::StreamExt;
-use log::*;
+
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::{Serialize};
 use serde_json::json;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::fmt;
+
 use std::io::Write;
-use std::pin::Pin;
-use std::str::FromStr;
+
+
 use std::sync::Arc;
-use std::task::Context;
-use std::task::Poll;
+
+
 use std::time;
-use surf::http::Mime;
+
 use surf::http::{headers, mime, Method};
 use surf::middleware::{Middleware, Next};
 use surf::{Body, Client, Request, RequestBuilder, Response, Url};
-use thiserror::Error;
+
 
 // use oas_common::{DecodingError, Record, TypedValue, UntypedRecord};
 
@@ -255,7 +255,7 @@ pub struct Logger;
 impl Middleware for Logger {
     async fn handle(
         &self,
-        mut req: Request,
+        req: Request,
         client: Client,
         next: Next<'_>,
     ) -> surf::Result<Response> {
