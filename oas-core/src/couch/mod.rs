@@ -1,30 +1,15 @@
 use base64::write::EncoderWriter as Base64Encoder;
-
-
-
-
-use futures::FutureExt;
-
-use futures::StreamExt;
-
 use serde::de::DeserializeOwned;
-use serde::{Serialize};
+use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
 use std::collections::HashMap;
-
 use std::io::Write;
-
-
 use std::sync::Arc;
-
-
 use std::time;
-
 use surf::http::{headers, mime, Method};
 use surf::middleware::{Middleware, Next};
 use surf::{Body, Client, Request, RequestBuilder, Response, Url};
-
 
 // use oas_common::{DecodingError, Record, TypedValue, UntypedRecord};
 
@@ -253,12 +238,7 @@ pub struct Logger;
 
 #[surf::utils::async_trait]
 impl Middleware for Logger {
-    async fn handle(
-        &self,
-        req: Request,
-        client: Client,
-        next: Next<'_>,
-    ) -> surf::Result<Response> {
+    async fn handle(&self, req: Request, client: Client, next: Next<'_>) -> surf::Result<Response> {
         log::debug!("[req] {} {}", req.method(), req.url().path());
         // let body = req.take_body();
         // let string = body.into_string().await?;

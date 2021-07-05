@@ -2,16 +2,14 @@ use anyhow::anyhow;
 use async_std::stream::StreamExt;
 use clap::Clap;
 use oas_common::types::AudioObject;
-use oas_common::{mapping, Record, TypedValue};
+use oas_common::Record;
 use oas_core::couch::{Doc, DocMeta};
 use oas_core::rss;
-use oas_core::rss::Feed;
 use oas_core::server::{run_server, ServerOpts};
 use oas_core::util::*;
 use oas_core::State;
 use oas_core::{couch, elastic, tasks};
-use std::future::Future;
-use std::{collections::HashMap, time};
+use std::time;
 use url::Url;
 
 const DEFAULT_HOST: &str = "http://localhost:5984";

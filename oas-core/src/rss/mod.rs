@@ -5,11 +5,14 @@ use url::{ParseError, Url};
 use crate::types::AudioObject;
 use crate::Record;
 
+pub mod crawlers;
 mod error;
 pub mod ops;
 
 pub use error::{RssError, RssResult};
+pub use ops::{Crawler, Next, FetchedFeedPage};
 
+#[derive(Debug, Clone)]
 pub struct Feed {
     url: Url,
     client: surf::Client,
