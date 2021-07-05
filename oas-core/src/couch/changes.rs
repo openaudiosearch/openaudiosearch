@@ -7,16 +7,10 @@ use futures::Stream;
 use futures::StreamExt;
 use std::collections::HashMap;
 use std::pin::Pin;
-
 use std::sync::Arc;
 use std::task::Context;
 use std::task::Poll;
-
-
-
-
-use surf::{Body, Client, Request, RequestBuilder, Response, Url};
-
+use surf::{Client, Response};
 
 use super::types::*;
 use super::CouchResult;

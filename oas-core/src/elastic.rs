@@ -18,6 +18,19 @@ use url::Url;
 
 use oas_common::{Record, TypedValue, UntypedRecord};
 
+// struct ElasticClient {
+//     client: Elasticsearch,
+//     index: String,
+// }
+
+// impl ElasticClient {
+//     pub async fn ensure_index(&self, delete: bool) -> Result<(), Error> {
+//         let mapping = get_default_mapping();
+//         create_index_if_not_exists(&self.client, &self.index, delete, mapping).await?;
+//         Ok(())
+//     }
+// }
+
 pub async fn ensure_index(
     client: &Elasticsearch,
     index_name: &str,

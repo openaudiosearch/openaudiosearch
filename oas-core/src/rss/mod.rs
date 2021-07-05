@@ -1,41 +1,19 @@
 use rss::Channel;
-use sha2::{Digest};
-use thiserror::Error;
+use sha2::Digest;
 use url::{ParseError, Url};
 
 use crate::types::AudioObject;
 use crate::Record;
 
-mod runner;
+mod error;
+pub mod ops;
+
+pub use error::{RssError, RssResult};
 
 pub struct Feed {
     url: Url,
     client: surf::Client,
     channel: Option<Channel>,
-}
-
-#[derive(Error, Debug)]
-pub enum RssError {
-    #[error("HTTP error: {0}")]
-    Http(surf::Error),
-    #[error("Serialization error")]
-    Json(#[from] serde_json::Error),
-    #[error("Remote error: {}", .0.status())]
-    RemoteHttpError(surf::Response),
-    // #[error("IO error")]
-    // IO(#[from] std::io::Error),
-    #[error("RSS error")]
-    RSS(#[from] rss::Error),
-    #[error("Feed must be loaded first or was invalid")]
-    NoChannel,
-    #[error("Error: {0}")]
-    Other(String),
-}
-
-impl From<surf::Error> for RssError {
-    fn from(err: surf::Error) -> Self {
-        Self::Http(err)
-    }
 }
 
 impl Feed {
@@ -58,7 +36,6 @@ impl Feed {
         let bytes = res.body_bytes().await?;
         let channel = Channel::read_from(&bytes[..])?;
         self.channel = Some(channel);
-        // let bytes = res.
         Ok(())
     }
 
