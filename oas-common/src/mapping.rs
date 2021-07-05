@@ -30,30 +30,74 @@ pub trait Mappable: Sized + DeserializeOwned {
     }
 
     fn from_value(value: Value, fieldmap: &FieldMap) -> Result<Self, MappingError> {
-        if let Value::Object(value) = value {
-            Self::from_object(value, fieldmap)
-        } else {
-            Err(MappingError::NotAnObject)
-        }
+        let target = fieldmap.apply_json_value(value)?;
+        let result: Self = serde_json::from_value(target)?;
+        Ok(result)
     }
 
     fn from_object(object: Object, fieldmap: &FieldMap) -> Result<Self, MappingError> {
-        let mut target = Object::new();
-        for (key, value) in object.into_iter() {
-            if let Some(field_mapping) = fieldmap.get(&key) {
-                let target_value = field_mapping.apply(value)?;
-                let target_key = field_mapping.target_key().to_string();
-                target.insert(target_key, target_value);
-            }
-        }
-        let result = serde_json::from_value(serde_json::Value::Object(target))?;
+        let target = fieldmap.apply_json_object(object)?;
+        let result: Self = serde_json::from_value(serde_json::Value::Object(target))?;
         Ok(result)
     }
 }
 
 impl Mappable for Value {}
 
-pub type FieldMap = HashMap<String, FieldMapping>;
+// pub type FieldMap = HashMap<String, FieldMapping>;
+
+#[derive(Default, Serialize, Debug, Deserialize)]
+pub struct FieldMap {
+    #[serde(flatten)]
+    pub(crate) inner: HashMap<String, FieldMapping>,
+}
+
+impl FieldMap {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn insert(&mut self, key: String, field_mapping: FieldMapping) {
+        self.inner.insert(key, field_mapping);
+    }
+
+    pub fn inner(&self) -> &HashMap<String, FieldMapping> {
+        &self.inner
+    }
+
+    pub fn get(&self, key: &str) -> Option<&FieldMapping> {
+        self.inner.get(key)
+    }
+
+    pub fn apply_json_value(&self, source: Value) -> Result<Value, MappingError> {
+        if let Value::Object(source) = source {
+            Ok(Value::Object(self.apply_json_object(source)?))
+        } else {
+            Err(MappingError::NotAnObject)
+        }
+    }
+
+    pub fn apply_json_object(&self, source: Object) -> Result<Object, MappingError> {
+        let mut target = Object::new();
+        for (key, value) in source.into_iter() {
+            if let Some(field_mapping) = self.get(&key) {
+                let target_value = field_mapping.apply(value)?;
+                let target_key = field_mapping.target_key().to_string();
+                target.insert(target_key, target_value);
+            }
+        }
+        Ok(target)
+    }
+
+    pub fn reverse(self) -> Self {
+        let mut target_map = FieldMap::new();
+        for (source_key, field_mapping) in self.inner.into_iter() {
+            let (target_key, reveresed_field_mapping) = field_mapping.reverse(source_key);
+            target_map.insert(target_key, reveresed_field_mapping);
+        }
+        target_map
+    }
+}
 
 // pub struct FieldMap {
 //     source_type: String,
@@ -61,14 +105,14 @@ pub type FieldMap = HashMap<String, FieldMapping>;
 //     field_map: HashMap<String, FieldMapping>
 // }
 
-pub fn reverse_field_map(field_map: FieldMap) -> FieldMap {
-    let mut target_map = FieldMap::new();
-    for (source_key, field_mapping) in field_map.into_iter() {
-        let (target_key, reveresed_field_mapping) = field_mapping.reverse(source_key);
-        target_map.insert(target_key, reveresed_field_mapping);
-    }
-    target_map
-}
+// pub fn reverse_field_map(field_map: FieldMap) -> FieldMap {
+//     let mut target_map = FieldMap::new();
+//     for (source_key, field_mapping) in field_map.into_iter() {
+//         let (target_key, reveresed_field_mapping) = field_mapping.reverse(source_key);
+//         target_map.insert(target_key, reveresed_field_mapping);
+//     }
+//     target_map
+// }
 
 #[derive(Default, Serialize, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -182,7 +226,7 @@ mod tests {
 
         assert!(target == expected);
 
-        let reversed_map = reverse_field_map(field_map);
+        let reversed_map = field_map.reverse();
         eprintln!("reversed map: {:?}", reversed_map);
         let reversed_target: Value = Value::from_json(&expected, &reversed_map).unwrap();
         let reversed_target = serde_json::to_string(&reversed_target).unwrap();
