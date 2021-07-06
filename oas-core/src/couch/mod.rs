@@ -1,4 +1,6 @@
 use base64::write::EncoderWriter as Base64Encoder;
+use clap::Clap;
+use oas_common::{Record, TypedValue};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::json;
@@ -26,11 +28,19 @@ pub use error::CouchError;
 pub use types::*;
 
 /// CouchDB config.
-#[derive(Debug, Clone)]
+#[derive(Clap, Debug, Clone)]
 pub struct Config {
+    /// CouchDB hostname
+    #[clap(long, env = "COUCHDB_HOST", default_value = "http://localhost:5984")]
     pub host: String,
+    /// CouchDB database
+    #[clap(long, env = "COUCHDB_DATABASE", default_value = "oas")]
     pub database: String,
+    /// CouchDB username
+    #[clap(long, env = "COUCHDB_USERNAME")]
     pub user: Option<String>,
+    /// CouchDB password
+    #[clap(long, env = "COUCHDB_PASSWORD")]
     pub password: Option<String>,
 }
 
@@ -43,11 +53,11 @@ pub struct CouchDB {
 
 impl CouchDB {
     pub fn with_config(config: Config) -> anyhow::Result<Self> {
-        let logger = Logger {};
+        // let logger = Logger {};
         let auth = Auth::new(config.clone());
         let base_url = format!("{}/{}/", config.host, config.database);
         let base_url = Url::parse(&base_url)?;
-        let mut client = surf::Client::new().with(logger).with(auth);
+        let mut client = surf::Client::new().with(auth);
         client.set_base_url(base_url);
 
         Ok(Self {
@@ -76,15 +86,22 @@ impl CouchDB {
     pub async fn get_all_with_prefix(&self, prefix: &str) -> Result<DocList> {
         let mut params = HashMap::new();
         params.insert("include_docs", "true".to_string());
-        params.insert("startkey", prefix.to_string());
-        params.insert("endkey", format!("{}{}", prefix, char::MAX));
+        if prefix.contains("\"") {
+            return Err(CouchError::Other("Prefix may not contain quotes".into()));
+        }
+        params.insert("startkey", format!("\"{}\"", prefix));
+        params.insert("endkey", format!("\"{}{}\"", prefix, "\u{ffff}"));
         self.get_all_with_params(&params).await
     }
 
     pub async fn get_all_with_params(&self, params: &impl Serialize) -> Result<DocList> {
+        // let start = Instant::now();
         let docs: DocList = self
             .send(self.request(Method::Get, "_all_docs").query(params)?)
             .await?;
+        // eprintln!("request took: {}", start.elapsed().as_secs_f32());
+        // let docs: DocList = serde_json::from_value(docs)?;
+        // eprintln!("finalizing took: {}", start.elapsed().as_secs_f32());
         Ok(docs)
     }
 
@@ -114,7 +131,17 @@ impl CouchDB {
             .request(Method::Post, "_bulk_docs")
             .body(Body::from_json(&body)?)
             .build();
-        self.send(req).await
+        let res: Vec<PutResult> = self.send(req).await?;
+        let mut errors = 0;
+        let mut ok = 0;
+        for res in res.iter() {
+            match res {
+                PutResult::Ok(_) => ok += 1,
+                PutResult::Err(_) => errors += 1,
+            }
+        }
+        log::debug!("put {} ({} ok, {} err)", res.len(), ok, errors);
+        Ok(res)
     }
 
     pub async fn put_bulk_update<T>(&self, docs: Vec<T>) -> Result<Vec<PutResult>>
@@ -148,9 +175,9 @@ impl CouchDB {
                     }
                 }
                 _ => {
-                    return Err(
-                        CouchError::Other("Response does not match request".to_string()).into(),
-                    );
+                    return Err(CouchError::Other(
+                        "Response does not match request".to_string(),
+                    ));
                 }
             };
             if let Some(rev) = rev {
@@ -193,6 +220,25 @@ impl CouchDB {
             true => Ok(res.body_json::<T>().await?),
             false => Err(res.body_json::<ErrorDetails>().await?.into()),
         }
+    }
+}
+
+/// Impls that use Record and TypedValue structs.
+impl CouchDB {
+    pub async fn get_all_records<T: TypedValue>(&self) -> Result<Vec<Record<T>>> {
+        let prefix = format!("{}_", T::NAME);
+        let docs = self.get_all_with_prefix(&prefix).await?;
+        let records = docs
+            .rows
+            .into_iter()
+            .filter_map(|doc| doc.doc.into_typed_record::<T>().ok())
+            .collect();
+        Ok(records)
+    }
+
+    pub async fn put_record<T: TypedValue>(&self, record: Record<T>) -> Result<PutResponse> {
+        let doc = Doc::from_typed_record(record);
+        self.put_doc(doc).await
     }
 }
 

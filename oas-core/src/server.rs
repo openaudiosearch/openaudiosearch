@@ -7,7 +7,7 @@ use actix_web::middleware::Logger;
 use actix_web::{get, web, App, HttpRequest, HttpServer};
 
 const DEFAULT_PORT: u16 = 8080;
-const DEFAULT_HOST: &'static str = "127.0.0.1";
+const DEFAULT_HOST: &str = "127.0.0.1";
 
 #[derive(Clap, Default, Clone, Debug)]
 pub struct ServerOpts {

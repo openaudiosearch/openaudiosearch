@@ -9,7 +9,7 @@ pub use oas_common::*;
 
 pub struct State {
     pub db: couch::CouchDB,
-    pub elastic_index: String,
+    pub index: elastic::Index,
 }
 
 impl State {

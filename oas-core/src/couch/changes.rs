@@ -114,7 +114,7 @@ impl Stream for ChangesStream {
                     match line {
                         None => ChangesStreamState::Idle,
                         Some(Err(e)) => return Poll::Ready(Some(Err(e.into()))),
-                        Some(Ok(line)) if line.len() == 0 => continue,
+                        Some(Ok(line)) if line.is_empty() => continue,
                         Some(Ok(line)) => match serde_json::from_str::<Event>(&line) {
                             Ok(Event::Change(event)) => {
                                 self.last_seq = Some(event.seq.clone());

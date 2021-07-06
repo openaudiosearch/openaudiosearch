@@ -1,15 +1,10 @@
 use clap::Clap;
 use serde::{Deserialize, Serialize};
-
-
-
-use std::{time::Instant};
-
-use crate::couch::{CouchDB, Doc};
+use std::time::Instant;
 
 use super::crawlers::default_crawlers;
-
 use super::*;
+use crate::couch::{CouchDB, Doc, PutResult};
 
 pub enum Next {
     Finished,
@@ -35,6 +30,10 @@ pub struct CrawlOpts {
     #[clap(short, long)]
     crawl: bool,
 
+    /// Stop on first existing post.
+    #[clap(long)]
+    update: bool,
+
     /// Max number of pages to crawl.
     #[clap(long)]
     max_pages: Option<usize>,
@@ -46,14 +45,16 @@ impl CrawlOpts {
             url,
             crawl: true,
             max_pages: None,
+            update: false,
         }
     }
 
-    pub fn crawl(url: Url, max_pages: Option<usize>) -> Self {
+    pub fn crawl(url: Url, max_pages: Option<usize>, update: bool) -> Self {
         Self {
             url,
             crawl: true,
             max_pages,
+            update,
         }
     }
 }
@@ -78,6 +79,7 @@ pub struct FetchedFeedPage {
     pub url: Url,
     pub items: Vec<Record<AudioObject>>,
     pub feed: Feed,
+    pub put_result: Vec<PutResult>,
 }
 
 pub async fn crawler_loop(
@@ -91,6 +93,22 @@ pub async fn crawler_loop(
     let start = Instant::now();
     for _i in 0..max_pages {
         let feed_page = fetch_and_save(&db, &url).await?;
+
+        // Check if the batch put to db contained any errors.
+        // An error should occur when putting an existing ID
+        // (i.e. existing URL).
+        // TODO: Actually check the error.
+        if !opts.update {
+            let contains_existing = feed_page.put_result.iter().find_map(|result| match result {
+                PutResult::Err(err) => Some(err),
+                _ => None,
+            });
+            if let Some(err) = contains_existing {
+                log::debug!("breaking crawl loop on {}", err);
+                break;
+            }
+        }
+
         total += feed_page.items.len();
         let next = crawler.next(feed_page).await?;
         url = match next {
@@ -115,11 +133,12 @@ pub async fn fetch_and_save(db: &CouchDB, url: &Url) -> RssResult<FetchedFeedPag
     feed.load().await?;
     let items = feed.into_audio_objects()?;
     let docs: Vec<Doc> = items.iter().map(|r| r.clone().into()).collect();
-    let _put_result = db.put_bulk(docs).await?;
+    let put_result = db.put_bulk(docs).await?;
     let feed_page = FetchedFeedPage {
         url: url.clone(),
         feed,
         items,
+        put_result,
     };
     Ok(feed_page)
 }

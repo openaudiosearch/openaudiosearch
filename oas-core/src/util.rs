@@ -12,15 +12,11 @@ pub fn debug_print_record(record: &Record<AudioObject>) {
         record.id(),
         record
             .value
-            .identifier
-            .as_ref()
-            .map(|s| s.as_str())
+            .identifier.as_deref()
             .unwrap_or("missing_id"),
         record
             .value
-            .headline
-            .as_ref()
-            .map(|s| s.as_str())
+            .headline.as_deref()
             .unwrap_or("")
     );
 }

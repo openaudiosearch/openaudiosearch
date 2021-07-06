@@ -128,14 +128,14 @@ where
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum Event {
     Change(ChangeEvent),
     Finished(FinishedEvent),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ChangeEvent {
     pub seq: String,
     pub id: String,
@@ -148,50 +148,50 @@ pub struct ChangeEvent {
     pub doc: Option<Doc>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Change {
     pub rev: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FinishedEvent {
     pub last_seq: String,
     pub pending: Option<u64>, // not available on CouchDB 1.0
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PutResponse {
     pub id: String,
     pub ok: bool,
     pub rev: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ErrorDetails {
     pub error: String,
     pub id: Option<String>,
     pub reason: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum PutResult {
     Ok(PutResponse),
     Err(ErrorDetails),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BulkGetResponse {
     pub results: Vec<BulkGetItem>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BulkGetItem {
     pub id: String,
     pub docs: Vec<DocResult>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum DocResult {
     #[serde(rename = "ok")]
     Ok(Doc),
