@@ -1,14 +1,13 @@
-use oas_common::types::{AudioObject, Feed};
-use oas_common::{DecodingError, Record, TypedValue, UntypedRecord};
+use oas_common::DecodingError;
 use rocket::http::Status;
 use rocket::response::status::Custom;
-use rocket::response::{status, Responder};
+use rocket::response::Responder;
 use rocket::{get, post, put, response, response::content, routes, Request, Route};
-use serde::Serialize;
-use serde_json::{json, Value};
+
+use serde_json::json;
 use thiserror::Error;
 
-use crate::couch::{CouchError, Doc};
+use crate::couch::CouchError;
 pub type Result<T> = std::result::Result<rocket::serde::json::Json<T>, AppError>;
 
 #[derive(Error, Debug)]

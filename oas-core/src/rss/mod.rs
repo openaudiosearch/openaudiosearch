@@ -10,7 +10,7 @@ mod error;
 pub mod ops;
 
 pub use error::{RssError, RssResult};
-pub use ops::{Crawler, Next, FetchedFeedPage};
+pub use ops::{Crawler, FetchedFeedPage, Next};
 
 #[derive(Debug, Clone)]
 pub struct Feed {

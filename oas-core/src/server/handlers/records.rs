@@ -1,14 +1,11 @@
 use oas_common::types::{AudioObject, Feed};
-use oas_common::{DecodingError, Record, TypedValue, UntypedRecord};
-use rocket::http::Status;
-use rocket::response::status::Custom;
-use rocket::response::{status, Responder};
-use rocket::{get, post, put, response, response::content, routes, Request, Route};
-use serde::Serialize;
-use serde_json::{json, Value};
-use thiserror::Error;
+use oas_common::{Record, TypedValue, UntypedRecord};
 
-use crate::couch::{CouchError, Doc};
+use rocket::{get, post, put, response, response::content, routes, Request, Route};
+
+use serde_json::Value;
+
+use crate::couch::Doc;
 use crate::server::error::{AppError, Result};
 
 pub fn routes() -> Vec<Route> {

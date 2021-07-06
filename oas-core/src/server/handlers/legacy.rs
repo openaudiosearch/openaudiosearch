@@ -1,8 +1,6 @@
 // use rocket::response::status::InternalServerError;
-use rocket::response::Responder;
-use rocket::{get, post, response::content::Json, routes, Route};
-use serde::Serialize;
-use serde_json::{json, Value};
+
+use rocket::{post, response::content::Json, routes, Route};
 
 mod types {
     use serde::{Deserialize, Serialize};

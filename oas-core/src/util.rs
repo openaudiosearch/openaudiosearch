@@ -10,13 +10,7 @@ pub fn debug_print_record(record: &Record<AudioObject>) {
     eprintln!(
         r#"<Record {} [{}] "{}">"#,
         record.id(),
-        record
-            .value
-            .identifier.as_deref()
-            .unwrap_or("missing_id"),
-        record
-            .value
-            .headline.as_deref()
-            .unwrap_or("")
+        record.value.identifier.as_deref().unwrap_or("missing_id"),
+        record.value.headline.as_deref().unwrap_or("")
     );
 }

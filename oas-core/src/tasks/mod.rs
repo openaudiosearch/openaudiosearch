@@ -34,7 +34,7 @@ pub struct AsrResult {
 // }
 
 #[celery::task()]
-pub fn asr(args: AsrArgs, opts: AsrOpts) -> TaskResult<AsrResult> {
+pub fn asr(_args: AsrArgs, _opts: AsrOpts) -> TaskResult<AsrResult> {
     Ok(Default::default())
 }
 

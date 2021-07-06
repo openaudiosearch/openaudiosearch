@@ -1,5 +1,5 @@
 use thiserror::Error;
-use url::{ParseError};
+use url::ParseError;
 
 pub type RssResult<T> = Result<T, RssError>;
 

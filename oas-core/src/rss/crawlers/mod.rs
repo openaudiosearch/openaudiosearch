@@ -30,7 +30,7 @@ pub mod util {
 
 pub mod frn {
     use super::util::{insert_or_add, query_map, set_query_map};
-    use crate::rss::{Crawler, Next, FetchedFeedPage};
+    use crate::rss::{Crawler, FetchedFeedPage, Next};
 
     pub struct FrnCrawler {}
 
@@ -61,7 +61,7 @@ pub mod frn {
 
 pub mod cba {
     use super::util::{insert_or_add, query_map, set_query_map};
-    use crate::rss::{Crawler, Next, FetchedFeedPage};
+    use crate::rss::{Crawler, FetchedFeedPage, Next};
 
     pub struct CbaCrawler {}
 
