@@ -1,13 +1,12 @@
+use crate::couch::CouchError;
 use oas_common::DecodingError;
 use rocket::http::Status;
 use rocket::response::status::Custom;
 use rocket::response::Responder;
-use rocket::{get, post, put, response, response::content, routes, Request, Route};
-
+use rocket::{response, response::content, Request};
 use serde_json::json;
 use thiserror::Error;
 
-use crate::couch::CouchError;
 pub type Result<T> = std::result::Result<rocket::serde::json::Json<T>, AppError>;
 
 #[derive(Error, Debug)]

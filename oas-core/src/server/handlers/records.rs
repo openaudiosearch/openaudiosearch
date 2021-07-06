@@ -1,8 +1,7 @@
 use oas_common::types::{AudioObject, Feed};
 use oas_common::{Record, TypedValue, UntypedRecord};
-
-use rocket::{get, post, put, response, response::content, routes, Request, Route};
-
+use rocket::serde::json::Json;
+use rocket::{get, post, put, routes, Route};
 use serde_json::Value;
 
 use crate::couch::Doc;
@@ -12,6 +11,17 @@ pub fn routes() -> Vec<Route> {
     routes![get_record, post_record, put_media]
 }
 
+#[put("/media/<id>", data = "<value>")]
+async fn put_media(
+    state: &rocket::State<crate::State>,
+    id: String,
+    value: Json<AudioObject>,
+) -> Result<serde_json::Value> {
+    let record = Record::from_id_and_value(id, value.into_inner());
+    state.db.put_record(record).await?;
+    Ok(Value::Bool(true).into())
+}
+
 #[get("/<guid>")]
 async fn get_record(state: &rocket::State<crate::State>, guid: String) -> Result<Doc> {
     let db = &state.db;
@@ -19,21 +29,10 @@ async fn get_record(state: &rocket::State<crate::State>, guid: String) -> Result
     Ok(doc.into())
 }
 
-#[put("/media/<id>", data = "<value>")]
-async fn put_media(
-    state: &rocket::State<crate::State>,
-    id: String,
-    value: rocket::serde::json::Json<AudioObject>,
-) -> Result<serde_json::Value> {
-    let record = Record::from_id_and_value(id, value.into_inner());
-    state.db.put_record(record).await?;
-    Ok(Value::Bool(true).into())
-}
-
 #[post("/", data = "<record>")]
 async fn post_record(
     state: &rocket::State<crate::State>,
-    record: rocket::serde::json::Json<UntypedRecord>,
+    record: Json<UntypedRecord>,
 ) -> Result<serde_json::Value> {
     let db = &state.db;
 
