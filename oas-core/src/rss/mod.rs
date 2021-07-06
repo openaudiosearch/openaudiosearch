@@ -30,6 +30,20 @@ impl Feed {
         Ok(feed)
     }
 
+    pub fn with_client(client: surf::Client, url: impl AsRef<str>) -> Result<Self, ParseError> {
+        let url = url.as_ref().parse()?;
+        let feed = Self {
+            url,
+            client,
+            channel: None,
+        };
+        Ok(feed)
+    }
+
+    pub fn url(&self) -> &Url {
+        &self.url
+    }
+
     pub async fn load(&mut self) -> Result<(), RssError> {
         let req = surf::get(&self.url);
         let mut res = self.client.send(req).await?;

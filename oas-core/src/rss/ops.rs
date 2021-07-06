@@ -87,12 +87,13 @@ pub async fn crawler_loop(
     opts: &CrawlOpts,
     crawler: &dyn Crawler, // crawler: T,
 ) -> RssResult<()> {
+    let client = surf::Client::new();
     let mut url = opts.url.clone();
     let mut total = 0;
     let max_pages = opts.max_pages.unwrap_or(usize::MAX);
     let start = Instant::now();
     for _i in 0..max_pages {
-        let feed_page = fetch_and_save(&db, &url).await?;
+        let feed_page = fetch_and_save_with_client(client.clone(), &db, &url).await?;
 
         // Check if the batch put to db contained any errors.
         // An error should occur when putting an existing ID
@@ -108,6 +109,12 @@ pub async fn crawler_loop(
                 break;
             }
         }
+
+        log::debug!(
+            "imported {} items from {}",
+            feed_page.items.len(),
+            feed_page.url
+        );
 
         total += feed_page.items.len();
         let next = crawler.next(feed_page).await?;
@@ -128,14 +135,28 @@ pub async fn crawler_loop(
     Ok(())
 }
 
+pub async fn fetch_and_save_with_client(
+    client: surf::Client,
+    db: &CouchDB,
+    url: &Url,
+) -> RssResult<FetchedFeedPage> {
+    let mut feed = Feed::with_client(client, &url).unwrap();
+    feed.load().await?;
+    save_feed_to_db(db, feed).await
+}
+
 pub async fn fetch_and_save(db: &CouchDB, url: &Url) -> RssResult<FetchedFeedPage> {
     let mut feed = Feed::new(&url).unwrap();
     feed.load().await?;
+    save_feed_to_db(db, feed).await
+}
+
+async fn save_feed_to_db(db: &CouchDB, feed: Feed) -> RssResult<FetchedFeedPage> {
     let items = feed.into_audio_objects()?;
     let docs: Vec<Doc> = items.iter().map(|r| r.clone().into()).collect();
     let put_result = db.put_bulk(docs).await?;
     let feed_page = FetchedFeedPage {
-        url: url.clone(),
+        url: feed.url.clone(),
         feed,
         items,
         put_result,
