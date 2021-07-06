@@ -126,7 +126,7 @@ async fn main() -> anyhow::Result<()> {
         Command::Search(opts) => run_search(state, opts).await,
         Command::Feed(opts) => run_feed(state, opts.command).await,
         Command::Task => run_task().await,
-        Command::Server(opts) => run_server(opts).await,
+        Command::Server(opts) => run_server(state, opts).await,
     };
     result
 }
@@ -281,6 +281,7 @@ async fn run_search(state: State, opts: SearchOpts) -> anyhow::Result<()> {
 }
 
 async fn run_feed(state: State, command: FeedCommand) -> anyhow::Result<()> {
+    state.db.init().await?;
     match command {
         FeedCommand::Fetch(opts) => {
             rss::ops::fetch_and_save(&state.db, &opts.url).await?;
