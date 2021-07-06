@@ -34,3 +34,10 @@ services:
       discovery.type: single-node
       ES_JAVA_OPTS: "-Xms500m -Xmx500m"
       TAKE_FILE_OWNERSHIP: 1
+
+  rabbitmq:
+    image: rabbitmq:3
+    ports:
+      - 5672:5672
+    environment:
+      RABBITMQ_DEFAULT_VHOST: oas

@@ -13,8 +13,8 @@ from .models import Engine, AsrArgs, AsrOpts, AsrResult
 
 from celery import Celery
 from celery.bin.celery import main as _main
-#  broker_address = os.environ.get("AMQP_ADDR", "amqp://127.0.0.1:5672/oas")
-broker_address = os.environ.get("REDIS_ADDRESS", "redis://127.0.0.1:6379/0")
+broker_address = os.environ.get("AMQP_ADDR", "amqp://127.0.0.1:5672/oas")
+#  broker_address = os.environ.get("REDIS_ADDRESS", "redis://127.0.0.1:6379/0")
 
 app = Celery("celery", broker=broker_address)
 

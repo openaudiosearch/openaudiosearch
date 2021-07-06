@@ -1,6 +1,7 @@
 use async_trait::async_trait;
-use celery::broker::RedisBroker;
-use celery::task::{TaskResult};
+// use celery::broker::RedisBroker;
+use celery::broker::AMQPBroker;
+use celery::task::TaskResult;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -33,7 +34,7 @@ pub struct AsrResult {
 // }
 
 #[celery::task()]
-pub fn asr(_args: AsrArgs, _opts: AsrOpts) -> TaskResult<AsrResult> {
+pub fn asr(args: AsrArgs, opts: AsrOpts) -> TaskResult<AsrResult> {
     Ok(Default::default())
 }
 
@@ -44,10 +45,12 @@ async fn add(a: i32, b: i32) -> TaskResult<i32> {
 }
 
 pub async fn run_celery() -> anyhow::Result<()> {
+    // broker = RedisBroker { std::env::var("REDIS_ADDR").unwrap_or_else(|_| "redis://127.0.0.1:6379/".into()) },
     let app = celery::app!(
-        broker = RedisBroker { std::env::var("REDIS_ADDR").unwrap_or_else(|_| "redis://127.0.0.1:6379/".into()) },
+        broker = AMQPBroker { std::env::var("AMQP_ADDR").unwrap_or("amqp://127.0.0.1:5672/oas".to_string()) },
         tasks = [
-            add
+            add,
+            asr
         ],
         task_routes = [
             "*" => "celery",
