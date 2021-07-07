@@ -11,14 +11,16 @@ use super::Media;
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Post {
+    pub identifier: Option<String>,
     pub headline: Option<String>,
     pub url: Option<String>,
     pub date_published: Option<String>,
     #[serde(default)]
     pub genre: Vec<String>,
+    pub media: Vec<Reference<Media>>,
+
     #[serde(flatten)]
     pub other: serde_json::Map<String, serde_json::Value>,
-    pub media: Vec<Reference<Media>>,
 }
 
 impl TypedValue for Post {

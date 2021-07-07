@@ -174,33 +174,30 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
 async fn run_debug(state: State) -> anyhow::Result<()> {
     let db = state.db;
     let media1 = Media {
-        content_url: Some("http://foo.bar/m1.mp3".to_string()),
+        content_url: "http://foo.bar/m1.mp3".to_string(),
         ..Default::default()
     };
     let media2 = Media {
-        content_url: Some("http://foo.bar/m2.mp3".to_string()),
+        content_url: "http://foo.bar/m2.mp3".to_string(),
         duration: Some(300.),
         ..Default::default()
     };
-    let media1 = Record::from_id_and_value(
-        util::id_from_hashed_string(media1.content_url.clone().unwrap()),
-        media1,
-    );
-    let media2 = Record::from_id_and_value(
-        util::id_from_hashed_string(media2.content_url.clone().unwrap()),
-        media2,
-    );
+    let media1 =
+        Record::from_id_and_value(util::id_from_hashed_string(&media1.content_url), media1);
+    let media2 =
+        Record::from_id_and_value(util::id_from_hashed_string(&media2.content_url), media2);
     let medias = vec![media1, media2];
     let res = db.put_record_bulk_update(medias).await?;
     let media_refs = res
         .into_iter()
         .filter_map(|r| match r {
             PutResult::Ok(r) => Some(Reference::Id(r.id)),
-            _ => None,
+            PutResult::Err(_err) => None,
         })
         .collect();
     let post = Post {
         headline: Some("Hello world".into()),
+        // media: vec![Reference::Id("id1"), Reference::Id("id2")],
         media: media_refs,
         ..Default::default()
     };

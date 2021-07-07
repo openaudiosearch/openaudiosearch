@@ -1,16 +1,22 @@
 use crate::types::Media;
-use crate::Record;
+use crate::{Record, TypedValue};
 
-pub fn debug_print_records(records: &[Record<Media>]) {
+pub fn debug_print_records<T>(records: &[Record<T>])
+where
+    T: TypedValue,
+{
     for record in records {
         debug_print_record(record)
     }
 }
-pub fn debug_print_record(record: &Record<Media>) {
+pub fn debug_print_record<T>(record: &Record<T>)
+where
+    T: TypedValue,
+{
     eprintln!(
-        r#"<Record {} [{}] "{}">"#,
+        r#"<Record {}_{} [{}]>"#,
         record.id(),
-        record.value.identifier.as_deref().unwrap_or("missing_id"),
-        record.value.headline.as_deref().unwrap_or("")
+        record.typ(),
+        record.value.label().unwrap_or_default()
     );
 }

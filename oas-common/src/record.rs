@@ -39,6 +39,10 @@ pub struct RecordMeta {
 
 pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clone::Clone {
     const NAME: &'static str;
+
+    fn label(&self) -> Option<&'_ str> {
+        None
+    }
     // fn get_name(self) -> &str;
 }
 

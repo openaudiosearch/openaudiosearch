@@ -1,9 +1,9 @@
-use oas_common::util;
+use oas_common::{types::Post, util};
 use rss::Channel;
 use url::{ParseError, Url};
 
 use crate::types::Media;
-use crate::Record;
+use crate::{Record, Reference};
 
 pub mod crawlers;
 mod error;
@@ -56,6 +56,19 @@ impl Feed {
         Ok(())
     }
 
+    pub fn into_posts(&self) -> Result<Vec<Record<Post>>, RssError> {
+        if self.channel.is_none() {
+            return Err(RssError::NoChannel);
+        }
+        let channel = self.channel.as_ref().unwrap();
+        let mut records = vec![];
+        for item in channel.items() {
+            let record = item_into_post(item.clone());
+            records.push(record);
+        }
+        Ok(records)
+    }
+
     pub fn into_medias(&self) -> Result<Vec<Record<Media>>, RssError> {
         if let Some(channel) = &self.channel {
             let mut records = vec![];
@@ -70,16 +83,47 @@ impl Feed {
     }
 }
 
-fn item_into_record(item: rss::Item) -> Record<Media> {
+fn item_into_post(item: rss::Item) -> Record<Post> {
+    let media = if let Some(enclosure) = item.enclosure {
+        let media = Media {
+            content_url: enclosure.url,
+            encoding_format: Some(enclosure.mime_type),
+            ..Default::default()
+        };
+        let media =
+            Record::from_id_and_value(util::id_from_hashed_string(&media.content_url), media);
+        let media_ref = Reference::Resolved(media);
+        vec![media_ref]
+    } else {
+        vec![]
+    };
+
     let guid = item.guid.clone();
-    let mut value = Media {
+    let mut value = Post {
         headline: item.title,
         url: item.link,
         identifier: guid.as_ref().map(|guid| guid.value().to_string()),
+        media,
+        ..Default::default()
+    };
+
+    // TODO: What to do with items without GUID?
+    let guid = guid.unwrap();
+    let id = util::id_from_hashed_string(guid.value().to_string());
+    let record = Record::from_id_and_value(id, value);
+    record
+}
+
+fn item_into_record(item: rss::Item) -> Record<Media> {
+    let guid = item.guid.clone();
+    let mut value = Media {
+        // headline: item.title,
+        // url: item.link,
+        // identifier: guid.as_ref().map(|guid| guid.value().to_string()),
         ..Default::default()
     };
     if let Some(enclosure) = item.enclosure {
-        value.content_url = Some(enclosure.url);
+        value.content_url = enclosure.url;
         value.encoding_format = Some(enclosure.mime_type);
     }
 

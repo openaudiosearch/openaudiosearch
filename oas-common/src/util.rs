@@ -1,9 +1,9 @@
 use sha2::Digest;
 use uuid::Uuid;
 
-pub fn id_from_hashed_string(string: String) -> String {
+pub fn id_from_hashed_string(string: impl AsRef<str>) -> String {
     let mut hasher = sha2::Sha256::new();
-    hasher.update(string.as_bytes());
+    hasher.update(string.as_ref().as_bytes());
     let result = hasher.finalize();
     let encoded = base32::encode(base32::Alphabet::Crockford, &result[0..16]);
     encoded.to_lowercase()
