@@ -1,3 +1,4 @@
+use oas_common::DecodingError;
 use std::fmt;
 use thiserror::Error;
 
@@ -13,7 +14,9 @@ pub enum CouchError {
     Json(#[from] serde_json::Error),
     #[error("IO: {0}")]
     IO(#[from] std::io::Error),
-    #[error("Error: {0}")]
+    #[error("Other: {0}")]
+    DecodingError(#[from] DecodingError),
+    #[error("{0}")]
     Other(String),
 }
 

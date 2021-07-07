@@ -205,32 +205,3 @@ where
     //         None
     //     }
 }
-
-// #[derive(Serialize, Deserialize, Debug)]
-// pub enum Value {
-//     Untyped(JsValue),
-//     Typed(Box<dyn TypedValue>),
-// }
-
-// #[derive(Serialize, Deserialize, Debug, Clone)]
-// pub struct AudioObject {
-//     duration: u32,
-//     encoding_format: String,
-// }
-// impl TypedValue for AudioObject {
-//     const NAME: &'static str = "oas.AudioObject";
-//     // fn get_name(&self) -> &str {
-//     //     "oas.Audio"
-//     // }
-// }
-
-// #[derive(Serialize, Deserialize, Debug, Clone)]
-// pub struct FileObject {
-//     content_url: String,
-// }
-// impl TypedValue for FileObject {
-//     const NAME: &'static str = "oas.FileObject";
-//     // fn get_name(&self) -> &str {
-//     //     "oas.File"
-//     // }
-// }

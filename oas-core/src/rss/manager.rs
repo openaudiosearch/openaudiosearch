@@ -31,7 +31,7 @@ impl FeedManager {
 pub async fn feed_task_loop(db: &CouchDB, feed: Feed) -> Result<(), RssError> {
     loop {
         feed.load().await?;
-        let items = feed.into_audio_objects()?;
+        let items = feed.into_medias()?;
         let docs: Vec<Doc> = items.iter().map(|r| r.clone().into()).collect();
         let res = db.put_bulk(docs).await?;
     }

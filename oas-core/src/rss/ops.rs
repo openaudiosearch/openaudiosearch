@@ -77,7 +77,7 @@ pub async fn crawl_and_save(db: &CouchDB, opts: &CrawlOpts) -> RssResult<()> {
 #[derive(Debug, Clone)]
 pub struct FetchedFeedPage {
     pub url: Url,
-    pub items: Vec<Record<AudioObject>>,
+    pub items: Vec<Record<Media>>,
     pub feed: Feed,
     pub put_result: Vec<PutResult>,
 }
@@ -152,7 +152,7 @@ pub async fn fetch_and_save(db: &CouchDB, url: &Url) -> RssResult<FetchedFeedPag
 }
 
 async fn save_feed_to_db(db: &CouchDB, feed: Feed) -> RssResult<FetchedFeedPage> {
-    let items = feed.into_audio_objects()?;
+    let items = feed.into_medias()?;
     let docs: Vec<Doc> = items.iter().map(|r| r.clone().into()).collect();
     let put_result = db.put_bulk(docs).await?;
     let feed_page = FetchedFeedPage {
@@ -173,7 +173,7 @@ async fn save_feed_to_db(db: &CouchDB, feed: Feed) -> RssResult<FetchedFeedPage>
 // pub async fn fetch_and_save(db: &CouchDB, url: &Url) -> RssResult<(Feed, Vec<PutResult>)> {
 //     let mut feed = Feed::new(url)?;
 //     feed.load().await?;
-//     let records = feed.into_audio_objects()?;
+//     let records = feed.into_medias()?;
 //     let res = db.put_bulk_update(records.into()).await?;
 //     Ok((feed, res))
 // }

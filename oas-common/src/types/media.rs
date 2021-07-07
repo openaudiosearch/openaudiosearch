@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
-pub struct AudioObject {
+pub struct Media {
     pub identifier: Option<String>,
     pub headline: Option<String>,
     pub url: Option<String>,
@@ -19,8 +19,8 @@ pub struct AudioObject {
     pub other: serde_json::Map<String, serde_json::Value>,
 }
 
-impl TypedValue for AudioObject {
-    const NAME: &'static str = "oas.AudioObject";
+impl TypedValue for Media {
+    const NAME: &'static str = "oas.Media";
 }
 
-impl Mappable for AudioObject {}
+impl Mappable for Media {}

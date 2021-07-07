@@ -2,7 +2,7 @@ use rss::Channel;
 use sha2::Digest;
 use url::{ParseError, Url};
 
-use crate::types::AudioObject;
+use crate::types::Media;
 use crate::Record;
 
 pub mod crawlers;
@@ -56,7 +56,7 @@ impl Feed {
         Ok(())
     }
 
-    pub fn into_audio_objects(&self) -> Result<Vec<Record<AudioObject>>, RssError> {
+    pub fn into_medias(&self) -> Result<Vec<Record<Media>>, RssError> {
         if let Some(channel) = &self.channel {
             let mut records = vec![];
             for item in channel.items() {
@@ -70,9 +70,9 @@ impl Feed {
     }
 }
 
-fn item_into_record(item: rss::Item) -> Record<AudioObject> {
+fn item_into_record(item: rss::Item) -> Record<Media> {
     let guid = item.guid.clone();
-    let mut value = AudioObject {
+    let mut value = Media {
         headline: item.title,
         url: item.link,
         identifier: guid.as_ref().map(|guid| guid.value().to_string()),

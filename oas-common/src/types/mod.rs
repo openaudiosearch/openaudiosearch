@@ -1,5 +1,5 @@
-mod audio_object;
 mod feed;
+mod media;
 
-pub use audio_object::AudioObject;
 pub use feed::Feed;
+pub use media::Media;

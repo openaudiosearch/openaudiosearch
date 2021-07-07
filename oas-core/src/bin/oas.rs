@@ -1,11 +1,14 @@
 use anyhow::anyhow;
 use async_std::stream::StreamExt;
 use clap::Clap;
-use oas_common::types::AudioObject;
+use oas_common::types::Media;
+use oas_common::util;
 use oas_common::Record;
+use oas_core::couch::PutResult;
 use oas_core::couch::{Doc, DocMeta};
 use oas_core::rss;
 use oas_core::server::{run_server, ServerOpts};
+use oas_core::types::Post;
 use oas_core::util::*;
 use oas_core::State;
 use oas_core::{couch, elastic, tasks};
@@ -164,7 +167,7 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
     // eprintln!("docs: {:?}", docs);
     // eprintln!(
     //     "typed docs: {:#?}",
-    //     docs.clone().into_typed_docs::<Record<AudioObject>>()
+    //     docs.clone().into_typed_docs::<Record<Media>>()
     // );
     Ok(())
 }
@@ -177,7 +180,7 @@ async fn run_debug(state: State) -> anyhow::Result<()> {
     let per_batch = 10.min(iter);
     let mut batch = vec![];
     for i in 0..iter {
-        let doc = AudioObject {
+        let doc = Media {
             headline: Some(format!("hello {}", i)),
             ..Default::default()
         };
@@ -207,7 +210,7 @@ async fn run_watch(state: State, opts: WatchOpts) -> anyhow::Result<()> {
     while let Some(event) = stream.next().await {
         let event = event?;
         if let Some(doc) = event.doc {
-            let record = doc.into_typed_record::<AudioObject>();
+            let record = doc.into_typed_record::<Media>();
             eprintln!("record: {:#?}", record);
         }
     }
@@ -232,16 +235,12 @@ async fn run_index(state: State) -> anyhow::Result<()> {
         let event = event?;
         if let Some(doc) = event.doc {
             let id = doc.id().to_string();
-            let record = doc.into_typed_record::<AudioObject>();
+            let record = doc.into_typed_record::<Media>();
 
             match record {
                 Ok(record) => batch.push(record),
                 Err(e) => {
-                    log::debug!(
-                        "failed to convert doc to Record<AudioObject>: {} - {}",
-                        id,
-                        e
-                    );
+                    log::debug!("failed to convert doc to Record<Media>: {} - {}", id, e);
                 }
             }
 
@@ -272,9 +271,9 @@ async fn run_index(state: State) -> anyhow::Result<()> {
 async fn run_search(state: State, opts: SearchOpts) -> anyhow::Result<()> {
     let index = state.index;
     let records = index.find_records_with_text_query(&opts.query).await?;
-    let records: Vec<Record<AudioObject>> = records
+    let records: Vec<Record<Media>> = records
         .into_iter()
-        .filter_map(|r| r.into_typed_record::<AudioObject>().ok())
+        .filter_map(|r| r.into_typed_record::<Media>().ok())
         .collect();
     debug_print_records(&records[..]);
     Ok(())
