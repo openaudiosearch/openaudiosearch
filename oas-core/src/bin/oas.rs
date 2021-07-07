@@ -1,11 +1,10 @@
-use anyhow::anyhow;
 use async_std::stream::StreamExt;
 use clap::Clap;
+use oas_common::reference::Reference;
 use oas_common::types::Media;
 use oas_common::util;
 use oas_common::Record;
 use oas_core::couch::PutResult;
-use oas_core::couch::{Doc, DocMeta};
 use oas_core::rss;
 use oas_core::server::{run_server, ServerOpts};
 use oas_core::types::Post;
@@ -174,33 +173,78 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
 
 async fn run_debug(state: State) -> anyhow::Result<()> {
     let db = state.db;
-    let iter = 10_000;
-    // let iter = 3;
-    let start = time::Instant::now();
-    let per_batch = 10.min(iter);
-    let mut batch = vec![];
-    for i in 0..iter {
-        let doc = Media {
-            headline: Some(format!("hello {}", i)),
-            ..Default::default()
-        };
-        let id = format!("test{}", i);
-        let meta = DocMeta::with_id(id.to_string());
-        let doc = Doc::from_typed(meta, doc)?;
-        batch.push(doc);
-        if batch.len() >= per_batch {
-            let res = db
-                .put_bulk_update(batch.clone())
-                .await
-                .map_err(|e| anyhow!(e))?;
-            eprintln!("res: {:?}", res);
-            batch.clear();
-        }
-    }
-    let elapsed = start.elapsed();
-    eprintln!("took {:?}", elapsed);
-    eprintln!("per second: {}", iter as f32 / elapsed.as_secs_f32());
+    let media1 = Media {
+        content_url: Some("http://foo.bar/m1.mp3".to_string()),
+        ..Default::default()
+    };
+    let media2 = Media {
+        content_url: Some("http://foo.bar/m2.mp3".to_string()),
+        duration: Some(300.),
+        ..Default::default()
+    };
+    let media1 = Record::from_id_and_value(
+        util::id_from_hashed_string(media1.content_url.clone().unwrap()),
+        media1,
+    );
+    let media2 = Record::from_id_and_value(
+        util::id_from_hashed_string(media2.content_url.clone().unwrap()),
+        media2,
+    );
+    let medias = vec![media1, media2];
+    let res = db.put_record_bulk_update(medias).await?;
+    let media_refs = res
+        .into_iter()
+        .filter_map(|r| match r {
+            PutResult::Ok(r) => Some(Reference::Id(r.id)),
+            _ => None,
+        })
+        .collect();
+    let post = Post {
+        headline: Some("Hello world".into()),
+        media: media_refs,
+        ..Default::default()
+    };
+    let post = Record::from_id_and_value("testpost".to_string(), post);
+    let id = post.guid().to_string();
+    let res = db.put_record(post).await?;
+    eprintln!("put res {:#?}", res);
+
+    let mut post = db.get_record::<Post>(&id).await?;
+    eprintln!("get post {:#?}", post);
+    post.value.resolve_refs(&db).await?;
+    eprintln!("resolved post {:#?}", post);
+    let extracted_refs = post.value.extract_refs();
+    eprintln!("extracted refs {:#?}", extracted_refs);
+    eprintln!("post after extract {:#?}", post);
     Ok(())
+    // let db = state.db;
+    // let iter = 10_000;
+    // // let iter = 3;
+    // let start = time::Instant::now();
+    // let per_batch = 10.min(iter);
+    // let mut batch = vec![];
+    // for i in 0..iter {
+    //     let doc = Media {
+    //         headline: Some(format!("hello {}", i)),
+    //         ..Default::default()
+    //     };
+    //     let id = format!("test{}", i);
+    //     let meta = DocMeta::with_id(id.to_string());
+    //     let doc = Doc::from_typed(meta, doc)?;
+    //     batch.push(doc);
+    //     if batch.len() >= per_batch {
+    //         let res = db
+    //             .put_bulk_update(batch.clone())
+    //             .await
+    //             .map_err(|e| anyhow!(e))?;
+    //         eprintln!("res: {:?}", res);
+    //         batch.clear();
+    //     }
+    // }
+    // let elapsed = start.elapsed();
+    // eprintln!("took {:?}", elapsed);
+    // eprintln!("per second: {}", iter as f32 / elapsed.as_secs_f32());
+    // Ok(())
 }
 
 async fn run_watch(state: State, opts: WatchOpts) -> anyhow::Result<()> {

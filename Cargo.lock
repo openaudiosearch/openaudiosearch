@@ -1937,13 +1937,16 @@ name = "oas-common"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "base32",
  "dotenv",
+ "futures-util",
  "serde",
  "serde_json",
  "sha2",
  "thiserror",
  "url",
+ "uuid",
 ]
 
 [[package]]

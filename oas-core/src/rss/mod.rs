@@ -1,5 +1,5 @@
+use oas_common::util;
 use rss::Channel;
-use sha2::Digest;
 use url::{ParseError, Url};
 
 use crate::types::Media;
@@ -85,16 +85,7 @@ fn item_into_record(item: rss::Item) -> Record<Media> {
 
     // TODO: What to do with items without GUID?
     let guid = guid.unwrap();
-    let id = string_to_id(guid.value().to_string());
+    let id = util::id_from_hashed_string(guid.value().to_string());
     let record = Record::from_id_and_value(id, value);
     record
-}
-
-fn string_to_id(url: String) -> String {
-    let mut hasher = sha2::Sha256::new();
-    hasher.update(url.as_bytes());
-    let result = hasher.finalize();
-    let encoded = base32::encode(base32::Alphabet::Crockford, &result[0..16]);
-    encoded.to_lowercase()
-    // String::from_utf8(encoded).unwrap()
 }

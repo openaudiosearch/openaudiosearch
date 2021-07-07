@@ -21,6 +21,7 @@ pub type Result<T> = std::result::Result<T, CouchError>;
 
 pub(crate) mod changes;
 pub(crate) mod error;
+pub mod resolver;
 pub(crate) mod types;
 
 pub use changes::ChangesStream;
@@ -236,9 +237,37 @@ impl CouchDB {
         Ok(records)
     }
 
+    pub async fn get_record<T: TypedValue>(&self, id: &str) -> Result<Record<T>> {
+        let doc = self.get_doc(id).await?;
+        let record = doc.into_typed_record::<T>()?;
+        Ok(record)
+    }
+
     pub async fn put_record<T: TypedValue>(&self, record: Record<T>) -> Result<PutResponse> {
         let doc = Doc::from_typed_record(record);
         self.put_doc(doc).await
+    }
+
+    pub async fn put_record_bulk<T: TypedValue>(
+        &self,
+        records: Vec<Record<T>>,
+    ) -> Result<Vec<PutResult>> {
+        let docs = records
+            .into_iter()
+            .map(|r| Doc::from_typed_record(r))
+            .collect();
+        self.put_bulk(docs).await
+    }
+
+    pub async fn put_record_bulk_update<T: TypedValue>(
+        &self,
+        records: Vec<Record<T>>,
+    ) -> Result<Vec<PutResult>> {
+        let docs = records
+            .into_iter()
+            .map(|r| Doc::from_typed_record(r))
+            .collect();
+        self.put_bulk_update(docs).await
     }
 }
 
