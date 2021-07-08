@@ -19,17 +19,32 @@ pub enum AppError {
     Serde(#[from] serde_json::Error),
     #[error("{0}")]
     Other(String),
+    #[error("{0}")]
+    Elastic(#[from] elasticsearch::Error),
+    #[error("HTTP error: {0} {1}")]
+    Http(Status, String),
 }
 
 impl<'r> Responder<'r, 'static> for AppError {
     fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
-        let json = json!({ "error": format!("{}", self) });
-        let string = serde_json::to_string(&json).unwrap();
-        let code = match self {
+        let code = match &self {
             // TODO: Change to 500
             AppError::Couch(_err) => Status::BadGateway,
+            AppError::Http(code, _) => *code,
+            AppError::Elastic(err) => err
+                .status_code()
+                .map(|code| Status::from_code(code.as_u16()).unwrap())
+                .unwrap_or(Status::InternalServerError),
             _ => Status::InternalServerError,
         };
-        Custom(code, content::Json(string)).respond_to(req)
+
+        let message = match self {
+            AppError::Http(_code, message) => message,
+            _ => format!("{}", self),
+        };
+
+        let json = json!({ "error": message });
+        let json_string = serde_json::to_string(&json).unwrap();
+        Custom(code, content::Json(json_string)).respond_to(req)
     }
 }

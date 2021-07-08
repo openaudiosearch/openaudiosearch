@@ -24,10 +24,18 @@ pub async fn run_server(state: State, opts: ServerOpts) -> anyhow::Result<()> {
         .merge(("port", opts.port.unwrap_or(DEFAULT_PORT)))
         .merge(("address", opts.host.unwrap_or(DEFAULT_HOST.to_string())));
 
+    let cors = rocket_cors::CorsOptions::default().to_cors()?;
     let app = rocket::custom(figment)
         .manage(state)
+        //.attach(cors::Cors)
+        .attach(cors)
+        // debug routes
         .mount("/hello", routes![world])
+        // api routes
         .mount("/api/v1/record", handlers::records::routes())
+        // .mount("/api/v1/search", handlers::search::routes())
+        // legacy routes
+        .mount("/oas/v1/search", handlers::search::routes())
         .mount("/oas/v1", handlers::legacy::routes());
 
     app.launch().await?;
