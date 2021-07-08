@@ -90,7 +90,7 @@ impl Doc {
         Self { meta, doc }
     }
 
-    pub fn into_untyped_record<T>(self) -> serde_json::Result<UntypedRecord> {
+    pub fn into_untyped_record(self) -> serde_json::Result<UntypedRecord> {
         let record: UntypedRecord = serde_json::from_value(serde_json::Value::Object(self.doc))?;
         Ok(record)
     }

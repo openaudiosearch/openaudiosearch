@@ -4,7 +4,9 @@ use oas_common::reference::Reference;
 use oas_common::types::Media;
 use oas_common::util;
 use oas_common::Record;
-use oas_core::couch::PutResult;
+use oas_common::Resolvable;
+use oas_common::TypedValue;
+use oas_core::couch::{Doc, PutResult};
 use oas_core::rss;
 use oas_core::server::{run_server, ServerOpts};
 use oas_core::types::Post;
@@ -258,6 +260,8 @@ async fn run_watch(state: State, opts: WatchOpts) -> anyhow::Result<()> {
     Ok(())
 }
 
+async fn index_docs(state: &State, docs: Vec<Doc>) {}
+
 async fn run_index(state: State) -> anyhow::Result<()> {
     let db = state.db;
     let index = state.index;
@@ -276,25 +280,51 @@ async fn run_index(state: State) -> anyhow::Result<()> {
         let event = event?;
         if let Some(doc) = event.doc {
             let id = doc.id().to_string();
-            let record = doc.into_typed_record::<Media>();
-
+            let record = doc.into_untyped_record();
             match record {
-                Ok(record) => batch.push(record),
-                Err(e) => {
-                    log::debug!("failed to convert doc to Record<Media>: {} - {}", id, e);
-                }
+                Err(_err) => {}
+                Ok(record) => match record.typ() {
+                    Media::NAME => {
+                        // let record = record.into_typed_record::<Media>()?;
+                        // let id = record.id();
+                        // let json = serde_json.to_string(record);
+                        // index.find_all("media._id", id).update("find subdoc where media._id == id, replace with {record.into_json()");
+                    }
+                    Post::NAME => {
+                        let record = record.into_typed_record::<Post>();
+                        match record {
+                            Ok(mut record) => {
+                                record.resolve_refs(&db).await;
+                                batch.push(record);
+                            }
+                            Err(e) => log::debug!("{}", e),
+                        }
+                        // batch.push(record);
+                        // record.value.resolve_all(&state.db);
+                        // index.put_record(record);
+                    }
+                    _ => {}
+                },
             }
+            // let record = doc.into_typed_record::<Media>();
 
-            if batch.len() == batch_size {
-                let _res = index.put_typed_records(&batch).await?;
-                total += batch.len();
-                batch.clear()
-            }
+            // match record {
+            //     Ok(record) => batch.push(record),
+            //     Err(e) => {
+            //         log::debug!("failed to convert doc to Record<Media>: {} - {}", id, e);
+            //     }
+            // }
+
+            // if batch.len() == batch_size {
+            //     let _res = index.put_typed_records(&batch).await?;
+            //     total += batch.len();
+            //     batch.clear()
+            // }
         }
     }
 
     if !batch.is_empty() {
-        let _res = index.put_typed_records(&batch).await?;
+        // let _res = index.put_typed_records(&batch).await?;
         total += batch.len();
         batch.clear()
     }

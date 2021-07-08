@@ -1,6 +1,20 @@
 use crate::reference::Reference;
-use crate::{Record, TypedValue};
+use crate::{Record, TypedValue, UntypedRecord};
 use std::{fmt, marker::PhantomData};
+
+#[async_trait::async_trait]
+pub trait Resolvable: TypedValue {
+    async fn resolve_refs<R: Resolver + Send + Sync>(
+        &mut self,
+        _resolver: &R,
+    ) -> Result<(), MissingRefsError> {
+        Ok(())
+    }
+
+    fn extract_refs(&mut self) -> Vec<UntypedRecord> {
+        vec![]
+    }
+}
 
 #[async_trait::async_trait]
 pub trait Resolver {
@@ -20,7 +34,7 @@ pub trait Resolver {
     async fn resolve_refs<T: TypedValue + Send>(
         &self,
         references: &mut [Reference<T>],
-    ) -> Option<Vec<ResolveError<T>>> {
+    ) -> Result<(), MissingRefsError> {
         let unresolved_refs: Vec<(usize, String)> = references
             .iter()
             .enumerate()
@@ -31,7 +45,7 @@ pub trait Resolver {
             .collect();
         let unresolved_ids: Vec<&str> = unresolved_refs.iter().map(|(_, id)| id.as_str()).collect();
         let results = self.resolve_all(&unresolved_ids).await;
-        let mut errs: Vec<ResolveError<T>> = vec![];
+        let mut errs: Vec<ResolveError> = vec![];
         for (i, result) in results.into_iter().enumerate() {
             match result {
                 Ok(record) => references.get_mut(i).unwrap().set_resolved(record),
@@ -42,41 +56,58 @@ pub trait Resolver {
             }
         }
         match errs.len() {
-            0 => None,
-            _ => Some(errs),
+            0 => Ok(()),
+            _ => Err(MissingRefsError(errs)),
         }
     }
 }
 
 #[derive(Debug)]
-pub struct ResolveError<T> {
+pub struct ResolveError {
     id: String,
     error: anyhow::Error,
-    typ: PhantomData<T>,
+    // typ: String,
+}
+// pub struct ResolveError {
+//     id: String,
+//     error: anyhow::Error,
+//     typ: PhantomData<T>,
+// }
+//
+
+#[derive(Debug)]
+pub struct MissingRefsError(pub Vec<ResolveError>);
+
+impl fmt::Display for MissingRefsError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Failed to resolve {} refs", self.0.len())
+    }
 }
 
-impl<T: Clone> ResolveError<T> {
+impl std::error::Error for MissingRefsError {}
+
+impl ResolveError {
     pub fn new(id: &str, error: anyhow::Error) -> Self {
         Self {
             id: id.to_string(),
             error,
-            typ: PhantomData,
+            // typ: PhantomData
         }
     }
 
-    pub fn into_reference(self) -> Reference<T> {
+    pub fn into_reference<T: Clone>(self) -> Reference<T> {
         Reference::Id(self.id)
     }
 }
 
-impl<T: TypedValue> From<ResolveError<T>> for Reference<T> {
-    fn from(err: ResolveError<T>) -> Self {
+impl<T: TypedValue> From<ResolveError> for Reference<T> {
+    fn from(err: ResolveError) -> Self {
         Reference::Id(err.id)
     }
 }
 
-impl<T: TypedValue> std::error::Error for ResolveError<T> {}
-impl<T: TypedValue> fmt::Display for ResolveError<T> {
+impl std::error::Error for ResolveError {}
+impl fmt::Display for ResolveError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Failed to resolve {}: {}", self.id, self.error)
     }

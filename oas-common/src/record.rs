@@ -6,6 +6,8 @@ use std::convert::TryFrom;
 use std::fmt;
 use thiserror::Error;
 
+use crate::{MissingRefsError, Resolvable, Resolver};
+
 pub type Object = serde_json::Map<String, serde_json::Value>;
 pub type Record<T> = TypedRecord<T>;
 
@@ -48,8 +50,9 @@ pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clo
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UntypedRecord {
-    #[serde(flatten)]
+    #[serde(rename = "_meta")]
     meta: RecordMeta,
+    #[serde(flatten)]
     value: Object,
 }
 
@@ -109,8 +112,9 @@ pub struct TypedRecord<T>
 where
     T: Clone,
 {
-    #[serde(flatten)]
+    #[serde(rename = "_meta")]
     pub meta: RecordMeta,
+    #[serde(flatten)]
     pub value: T,
 }
 
@@ -208,4 +212,20 @@ where
     //     } else {
     //         None
     //     }
+}
+
+impl<T> TypedRecord<T>
+where
+    T: Resolvable + Send,
+{
+    pub async fn resolve_refs<R: Resolver + Send + Sync>(
+        &mut self,
+        resolver: &R,
+    ) -> Result<(), MissingRefsError> {
+        self.value.resolve_refs(resolver).await
+    }
+
+    pub fn extract_refs(&mut self) -> Vec<UntypedRecord> {
+        self.value.extract_refs()
+    }
 }

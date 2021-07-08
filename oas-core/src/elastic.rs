@@ -66,6 +66,12 @@ impl Index {
         Ok(())
     }
 
+    // pub async fn put_top_level(&self, records: &[UntypedRecord]) {
+    //     for record in records {
+    //         let value_json = record.value;
+    //     }
+    // }
+
     pub async fn put_typed_records<T: TypedValue>(&self, docs: &[Record<T>]) -> Result<(), Error> {
         let docs: Vec<UntypedRecord> = docs
             .iter()
@@ -159,6 +165,7 @@ impl Index {
 //     query: &str,
 // ) -> Result<Vec<UntypedRecord>, Error> {
 // }
+//
 
 pub async fn index_records(
     client: &Elasticsearch,
