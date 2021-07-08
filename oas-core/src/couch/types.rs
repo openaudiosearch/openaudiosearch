@@ -86,6 +86,14 @@ impl Doc {
         T: TypedValue,
     {
         let meta = DocMeta::with_id(record.guid().to_string());
+        // TODO: Remove unwrap
+        let doc = record.into_json_object().unwrap();
+        Self { meta, doc }
+    }
+
+    pub fn from_untyped_record(record: UntypedRecord) -> Self {
+        let meta = DocMeta::with_id(record.guid().to_string());
+        // TODO: Remove unwrap
         let doc = record.into_json_object().unwrap();
         Self { meta, doc }
     }
@@ -116,6 +124,13 @@ impl Doc {
     }
     pub fn set_rev(&mut self, rev: Option<String>) {
         self.meta.rev = rev;
+    }
+
+    pub fn is_first_rev(&self) -> Option<bool> {
+        match self.rev() {
+            None => None,
+            Some(rev) => Some(rev.starts_with("1-")),
+        }
     }
 }
 

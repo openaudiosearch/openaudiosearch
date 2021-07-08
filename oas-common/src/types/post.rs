@@ -4,7 +4,7 @@ use crate::mapping::Mappable;
 use crate::record::TypedValue;
 use crate::reference::{self, Reference};
 use crate::Resolvable;
-use crate::ResolveError;
+
 use crate::Resolver;
 use crate::UntypedRecord;
 use crate::{ElasticMapping, MissingRefsError};

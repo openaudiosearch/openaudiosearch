@@ -50,7 +50,7 @@ pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clo
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UntypedRecord {
-    #[serde(rename = "_meta")]
+    #[serde(rename = "$meta")]
     meta: RecordMeta,
     #[serde(flatten)]
     value: Object,
@@ -72,6 +72,15 @@ impl UntypedRecord {
             value,
         };
         Ok(record)
+    }
+
+    pub fn into_json_object(self) -> Result<Object, EncodingError> {
+        let value = serde_json::to_value(self)?;
+        if let Value::Object(value) = value {
+            Ok(value)
+        } else {
+            Err(EncodingError::NotAnObject)
+        }
     }
 
     pub fn guid(&self) -> &str {
@@ -112,7 +121,7 @@ pub struct TypedRecord<T>
 where
     T: Clone,
 {
-    #[serde(rename = "_meta")]
+    #[serde(rename = "$meta")]
     pub meta: RecordMeta,
     #[serde(flatten)]
     pub value: T,
@@ -171,47 +180,6 @@ where
             Err(EncodingError::NotAnObject)
         }
     }
-    //     fn downcast<T: 'static>(&self) -> Option<&T> {
-    //         let value: &dyn Any = &self.value;
-    //         if let Some(value) = value.downcast_ref::<T>() {
-    //             Some(value)
-    //         } else {
-    //             None
-    //         }
-    //     }
-
-    //     fn downcast_mut<T: 'static>(&mut self) -> Option<&mut T> {
-    //         let value: &mut dyn Any = &mut self.value;
-    //         if let Some(mut value) = value.downcast_mut::<T>() {
-    //             Some(value)
-    //         } else {
-    //             None
-    //         }
-    //     }
-
-    // fn into_downcast<T>(self) -> Option<T> {
-    //     // let value: Box<dyn Any> = self.value.downcast();
-    //     downcast_box::<T>(self.value)
-    //     // let value = *self.value;
-    //     // let value: dyn Any = self.value;
-    //     // let value: Box<dyn Any> = self.value;
-    //     // if let Ok(value) = Box<Any>::downcast::<T>(self.value) {
-    //     //     Some(*value)
-    //     // } else {
-    //     //     None
-    //     // }
-    //     // None
-    // }
-
-    // fn downcast_box<T>(value: Box<dyn Any>) -> Option<T>
-    // where
-    //     T: 'static,
-    // {
-    //     if let Ok(value) = value.downcast::<T>() {
-    //         Some(*value)
-    //     } else {
-    //         None
-    //     }
 }
 
 impl<T> TypedRecord<T>
@@ -229,3 +197,51 @@ where
         self.value.extract_refs()
     }
 }
+
+// impl<T> TypedRecord<T>
+// where
+//     T: TypedValue,
+// {
+//     fn downcast<T: 'static>(&self) -> Option<&T> {
+//         let value: &dyn Any = &self.value;
+//         if let Some(value) = value.downcast_ref::<T>() {
+//             Some(value)
+//         } else {
+//             None
+//         }
+//     }
+
+//     fn downcast_mut<T: 'static>(&mut self) -> Option<&mut T> {
+//         let value: &mut dyn Any = &mut self.value;
+//         if let Some(mut value) = value.downcast_mut::<T>() {
+//             Some(value)
+//         } else {
+//             None
+//         }
+//     }
+
+//     fn into_downcast<T>(self) -> Option<T> {
+//         // let value: Box<dyn Any> = self.value.downcast();
+//         downcast_box::<T>(self.value)
+//         // let value = *self.value;
+//         // let value: dyn Any = self.value;
+//         // let value: Box<dyn Any> = self.value;
+//         // if let Ok(value) = Box<Any>::downcast::<T>(self.value) {
+//         //     Some(*value)
+//         // } else {
+//         //     None
+//         // }
+//         // None
+//     }
+
+//     fn downcast_box<T>(value: Box<dyn Any>) -> Option<T>
+//     where
+//         T: 'static,
+//     {
+//         if let Ok(value) = value.downcast::<T>() {
+//             Some(*value)
+//         } else {
+//             None
+//         }
+//     }
+// }

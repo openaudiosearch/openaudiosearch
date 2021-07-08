@@ -1,6 +1,5 @@
 use clap::Clap;
 use elasticsearch::cert::CertificateValidation;
-use elasticsearch::SearchParts;
 use elasticsearch::{
     auth::Credentials,
     http::transport::{SingleNodeConnectionPool, TransportBuilder},
@@ -9,12 +8,14 @@ use elasticsearch::{
     },
     BulkOperation, BulkParts, Elasticsearch, Error, DEFAULT_ADDRESS,
 };
+use elasticsearch::{SearchParts, UpdateByQueryParts};
 use http::StatusCode;
+use oas_common::types::Post;
 use serde_json::{json, Value};
 use std::time::Instant;
 use url::Url;
 
-use oas_common::{Record, TypedValue, UntypedRecord};
+use oas_common::{ElasticMapping, Record, TypedValue, UntypedRecord};
 
 #[derive(Clap, Debug, Clone)]
 pub struct Config {
@@ -66,12 +67,6 @@ impl Index {
         Ok(())
     }
 
-    // pub async fn put_top_level(&self, records: &[UntypedRecord]) {
-    //     for record in records {
-    //         let value_json = record.value;
-    //     }
-    // }
-
     pub async fn put_typed_records<T: TypedValue>(&self, docs: &[Record<T>]) -> Result<(), Error> {
         let docs: Vec<UntypedRecord> = docs
             .iter()
@@ -100,6 +95,48 @@ impl Index {
         Ok(())
     }
 
+    pub async fn update_nested_record(
+        &self,
+        field: &str,
+        record: &UntypedRecord,
+    ) -> Result<(), Error> {
+        let script = r#"
+def nested_docs = ctx._source[params.field].findAll(nested_doc -> nested_doc['$meta'].guid == params.guid);
+for (nested_doc in nested_docs) {
+    for (change in params.changes.entrySet()) {
+        nested_doc[change.getKey()] = change.getValue() 
+    } 
+}"#;
+        let match_field = format!("{}.$meta.guid", field);
+        let match_value = record.guid();
+        let body = json!({
+          "query": {
+            "match": {
+              match_field: match_value
+            }
+          },
+          "script": {
+              "source": script,
+              "params": {
+                  "field": field,
+                  "guid": record.guid(),
+                  "changes": serde_json::to_value(record)?
+              }
+          }
+        });
+
+        let response = self
+            .client
+            .update_by_query(UpdateByQueryParts::Index(&[&self.index]))
+            .body(body)
+            .send()
+            .await?;
+
+        eprintln!("response {:?}", response);
+
+        Ok(())
+    }
+
     async fn set_refresh_interval(&self, interval: Value) -> Result<(), Error> {
         let response = self
             .client
@@ -114,7 +151,6 @@ impl Index {
             .await?;
 
         if !response.status_code().is_success() {
-            println!("Failed to update refresh interval");
             log::error!("Failed to update refresh interval");
         }
         Ok(())
@@ -149,23 +185,6 @@ impl Index {
         Ok(records)
     }
 }
-
-// pub async fn ensure_index(
-//     client: &Elasticsearch,
-//     index_name: &str,
-//     delete: bool,
-// ) -> Result<(), Error> {
-//     create_index_if_not_exists(&client, index_name, delete, get_default_mapping()).await?;
-//     Ok(())
-// }
-
-// pub async fn find_records(
-//     client: &Elasticsearch,
-//     index_name: &str,
-//     query: &str,
-// ) -> Result<Vec<UntypedRecord>, Error> {
-// }
-//
 
 pub async fn index_records(
     client: &Elasticsearch,
@@ -301,9 +320,11 @@ pub fn create_client(addr: Option<String>) -> Result<Elasticsearch, Error> {
 }
 
 pub fn get_default_mapping() -> serde_json::Value {
+    let post_mapping = Post::elastic_mapping();
     json!({
         "mappings": {
-            "properties": {
+            "properties": post_mapping
+            // {
                 // "type": {
                 //     "type": "keyword"
                 // },
@@ -414,7 +435,7 @@ pub fn get_default_mapping() -> serde_json::Value {
         //                 "type": "mapping"
         //             }
         //         }
-            }
+            // }
         }
     })
 }
