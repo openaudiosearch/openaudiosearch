@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Feed {
-    url: String,
+    pub url: String,
 }
 
 impl TypedValue for Feed {

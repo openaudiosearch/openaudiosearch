@@ -9,7 +9,6 @@ async fn search(
     search_method: String,
     body: String,
 ) -> Result<String, AppError> {
-    let db = &state.db;
     if &index_name != "oas" {
         return Err(AppError::Http(
             Status::BadRequest,

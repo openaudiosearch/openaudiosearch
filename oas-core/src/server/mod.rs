@@ -36,6 +36,7 @@ pub async fn run_server(state: State, opts: ServerOpts) -> anyhow::Result<()> {
         // .mount("/api/v1/search", handlers::search::routes())
         // legacy routes
         .mount("/oas/v1/search", handlers::search::routes())
+        .mount("/oas/v1/feed", handlers::feed::routes())
         .mount("/oas/v1", handlers::legacy::routes());
 
     app.launch().await?;
