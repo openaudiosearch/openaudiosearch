@@ -6,6 +6,8 @@ use std::convert::TryFrom;
 use std::fmt;
 use thiserror::Error;
 
+use crate::{MissingRefsError, Resolvable, Resolver};
+
 pub type Object = serde_json::Map<String, serde_json::Value>;
 pub type Record<T> = TypedRecord<T>;
 
@@ -48,8 +50,9 @@ pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clo
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UntypedRecord {
-    #[serde(flatten)]
+    #[serde(rename = "$meta")]
     meta: RecordMeta,
+    #[serde(flatten)]
     value: Object,
 }
 
@@ -69,6 +72,15 @@ impl UntypedRecord {
             value,
         };
         Ok(record)
+    }
+
+    pub fn into_json_object(self) -> Result<Object, EncodingError> {
+        let value = serde_json::to_value(self)?;
+        if let Value::Object(value) = value {
+            Ok(value)
+        } else {
+            Err(EncodingError::NotAnObject)
+        }
     }
 
     pub fn guid(&self) -> &str {
@@ -109,8 +121,9 @@ pub struct TypedRecord<T>
 where
     T: Clone,
 {
-    #[serde(flatten)]
+    #[serde(rename = "$meta")]
     pub meta: RecordMeta,
+    #[serde(flatten)]
     pub value: T,
 }
 
@@ -167,45 +180,68 @@ where
             Err(EncodingError::NotAnObject)
         }
     }
-    //     fn downcast<T: 'static>(&self) -> Option<&T> {
-    //         let value: &dyn Any = &self.value;
-    //         if let Some(value) = value.downcast_ref::<T>() {
-    //             Some(value)
-    //         } else {
-    //             None
-    //         }
-    //     }
-
-    //     fn downcast_mut<T: 'static>(&mut self) -> Option<&mut T> {
-    //         let value: &mut dyn Any = &mut self.value;
-    //         if let Some(mut value) = value.downcast_mut::<T>() {
-    //             Some(value)
-    //         } else {
-    //             None
-    //         }
-    //     }
-
-    // fn into_downcast<T>(self) -> Option<T> {
-    //     // let value: Box<dyn Any> = self.value.downcast();
-    //     downcast_box::<T>(self.value)
-    //     // let value = *self.value;
-    //     // let value: dyn Any = self.value;
-    //     // let value: Box<dyn Any> = self.value;
-    //     // if let Ok(value) = Box<Any>::downcast::<T>(self.value) {
-    //     //     Some(*value)
-    //     // } else {
-    //     //     None
-    //     // }
-    //     // None
-    // }
-
-    // fn downcast_box<T>(value: Box<dyn Any>) -> Option<T>
-    // where
-    //     T: 'static,
-    // {
-    //     if let Ok(value) = value.downcast::<T>() {
-    //         Some(*value)
-    //     } else {
-    //         None
-    //     }
 }
+
+impl<T> TypedRecord<T>
+where
+    T: Resolvable + Send,
+{
+    pub async fn resolve_refs<R: Resolver + Send + Sync>(
+        &mut self,
+        resolver: &R,
+    ) -> Result<(), MissingRefsError> {
+        self.value.resolve_refs(resolver).await
+    }
+
+    pub fn extract_refs(&mut self) -> Vec<UntypedRecord> {
+        self.value.extract_refs()
+    }
+}
+
+// impl<T> TypedRecord<T>
+// where
+//     T: TypedValue,
+// {
+//     fn downcast<T: 'static>(&self) -> Option<&T> {
+//         let value: &dyn Any = &self.value;
+//         if let Some(value) = value.downcast_ref::<T>() {
+//             Some(value)
+//         } else {
+//             None
+//         }
+//     }
+
+//     fn downcast_mut<T: 'static>(&mut self) -> Option<&mut T> {
+//         let value: &mut dyn Any = &mut self.value;
+//         if let Some(mut value) = value.downcast_mut::<T>() {
+//             Some(value)
+//         } else {
+//             None
+//         }
+//     }
+
+//     fn into_downcast<T>(self) -> Option<T> {
+//         // let value: Box<dyn Any> = self.value.downcast();
+//         downcast_box::<T>(self.value)
+//         // let value = *self.value;
+//         // let value: dyn Any = self.value;
+//         // let value: Box<dyn Any> = self.value;
+//         // if let Ok(value) = Box<Any>::downcast::<T>(self.value) {
+//         //     Some(*value)
+//         // } else {
+//         //     None
+//         // }
+//         // None
+//     }
+
+//     fn downcast_box<T>(value: Box<dyn Any>) -> Option<T>
+//     where
+//         T: 'static,
+//     {
+//         if let Ok(value) = value.downcast::<T>() {
+//             Some(*value)
+//         } else {
+//             None
+//         }
+//     }
+// }

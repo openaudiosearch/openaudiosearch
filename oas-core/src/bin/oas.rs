@@ -4,6 +4,8 @@ use oas_common::reference::Reference;
 use oas_common::types::Media;
 use oas_common::util;
 use oas_common::Record;
+use oas_common::Resolvable;
+use oas_common::TypedValue;
 use oas_core::couch::PutResult;
 use oas_core::rss;
 use oas_core::server::{run_server, ServerOpts};
@@ -36,7 +38,7 @@ enum Command {
     List(ListOpts),
     Debug,
     /// Run the indexing pipeline
-    Index,
+    Index(IndexOpts),
     /// Search for records
     Search(SearchOpts),
     /// Fetch a RSS feed
@@ -65,6 +67,17 @@ enum FeedCommand {
 struct FeedFetchOpts {
     /// Feed URL
     url: Url,
+}
+
+#[derive(Clap)]
+struct IndexOpts {
+    /// Run forever in daemon mode
+    #[clap(short, long)]
+    daemon: bool,
+
+    /// Delete and recreate the index
+    #[clap(long)]
+    recreate: bool,
 }
 
 #[derive(Clap)]
@@ -124,7 +137,7 @@ async fn main() -> anyhow::Result<()> {
         Command::Watch(opts) => run_watch(state, opts).await,
         Command::List(opts) => run_list(state, opts).await,
         Command::Debug => run_debug(state).await,
-        Command::Index => run_index(state).await,
+        Command::Index(opts) => run_index(state, opts).await,
         Command::Search(opts) => run_search(state, opts).await,
         Command::Feed(opts) => run_feed(state, opts.command).await,
         Command::Task => run_task().await,
@@ -147,7 +160,7 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
     };
     let len = docs.rows.len();
     for doc in docs.rows() {
-        eprintln!("{}", serde_json::to_string(&doc).unwrap());
+        println!("{}", serde_json::to_string(&doc).unwrap());
         // eprintln!("{}", serde_json::to_string_pretty(&doc).unwrap());
         // match opts.json {
         //     true =>
@@ -258,12 +271,11 @@ async fn run_watch(state: State, opts: WatchOpts) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn run_index(state: State) -> anyhow::Result<()> {
+async fn run_index(state: State, opts: IndexOpts) -> anyhow::Result<()> {
     let db = state.db;
     let index = state.index;
 
-    // This deletes and recreates the index.
-    index.ensure_index(true).await?;
+    index.ensure_index(opts.recreate).await?;
 
     let start = time::Instant::now();
 
@@ -271,18 +283,46 @@ async fn run_index(state: State) -> anyhow::Result<()> {
     let mut batch = vec![];
     let mut total = 0;
     let mut stream = db.changes(None);
-    // stream.set_infinite(true);
+    stream.set_infinite(opts.daemon);
     while let Some(event) = stream.next().await {
         let event = event?;
         if let Some(doc) = event.doc {
-            let id = doc.id().to_string();
-            let record = doc.into_typed_record::<Media>();
-
+            let is_first_rev = doc.is_first_rev();
+            // eprintln!(
+            //     "incoming couch doc: {} (first? {:?})",
+            //     doc.id(),
+            //     is_first_rev
+            // );
+            let _id = doc.id().to_string();
+            let record = doc.into_untyped_record();
             match record {
-                Ok(record) => batch.push(record),
-                Err(e) => {
-                    log::debug!("failed to convert doc to Record<Media>: {} - {}", id, e);
-                }
+                Err(_err) => {}
+                Ok(record) => match record.typ() {
+                    Media::NAME => {
+                        match is_first_rev {
+                            Some(true) | None => {
+                                // Do nothing for first revs of media recors.
+                            }
+                            Some(false) => {
+                                match index.update_nested_record("media", &record).await {
+                                    Err(e) => log::debug!("{}", e),
+                                    Ok(_) => {}
+                                };
+                            }
+                        }
+                    }
+                    Post::NAME => {
+                        let record = record.into_typed_record::<Post>();
+                        match record {
+                            Ok(mut record) => {
+                                let _res = record.resolve_refs(&db).await;
+                                batch.push(record);
+                            }
+                            Err(e) => log::debug!("{}", e),
+                        }
+                    }
+                    _ => {}
+                },
             }
 
             if batch.len() == batch_size {
@@ -294,6 +334,7 @@ async fn run_index(state: State) -> anyhow::Result<()> {
     }
 
     if !batch.is_empty() {
+        eprintln!("BATCH {:#?}", batch);
         let _res = index.put_typed_records(&batch).await?;
         total += batch.len();
         batch.clear()

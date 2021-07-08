@@ -1,6 +1,13 @@
 # Open Audio Search - Rust core
 
+License: AGPL v3
+
 *Work in progress*
+
+Open Audio Search uses automatic speech recognition to extract text from audio, which is then indexed in a search engine to enable recommendation of similiar broadcasts to users.
+With Open Audio Search, we want to make the archives of community media, radio stations, podcasts searchable and discoverable, through open source tech and APIs.
+
+This is the new core for Open Audio Search written in [Rust](https://www.rust-lang.org/).
 
 ## Getting started
 

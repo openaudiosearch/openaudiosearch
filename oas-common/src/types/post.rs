@@ -3,8 +3,12 @@ use serde::{Deserialize, Serialize};
 use crate::mapping::Mappable;
 use crate::record::TypedValue;
 use crate::reference::{self, Reference};
-use crate::resolver::Resolver;
+use crate::Resolvable;
+
+use crate::Resolver;
 use crate::UntypedRecord;
+use crate::{ElasticMapping, MissingRefsError};
+use serde_json::json;
 
 use super::Media;
 
@@ -29,16 +33,29 @@ impl TypedValue for Post {
 
 impl Mappable for Post {}
 
-impl Post {
-    pub async fn resolve_refs<R: Resolver + Send + Sync>(
+#[async_trait::async_trait]
+impl Resolvable for Post {
+    async fn resolve_refs<R: Resolver + Send + Sync>(
         &mut self,
         resolver: &R,
-    ) -> Result<(), R::Error> {
-        resolver.resolve_refs(&mut self.media).await;
-        Ok(())
+    ) -> Result<(), MissingRefsError> {
+        resolver.resolve_refs(&mut self.media).await
     }
 
-    pub fn extract_refs(&mut self) -> Vec<UntypedRecord> {
+    fn extract_refs(&mut self) -> Vec<UntypedRecord> {
         reference::extract_refs(&mut self.media)
+    }
+}
+
+impl ElasticMapping for Post {
+    fn elastic_mapping() -> Option<serde_json::Value> {
+        Some(json!({
+            "media": {
+                "type": "nested"
+            },
+            "datePublished": {
+                "type": "date"
+            }
+        }))
     }
 }

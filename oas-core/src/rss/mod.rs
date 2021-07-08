@@ -99,7 +99,7 @@ fn item_into_post(item: rss::Item) -> Record<Post> {
     };
 
     let guid = item.guid.clone();
-    let mut value = Post {
+    let value = Post {
         headline: item.title,
         url: item.link,
         identifier: guid.as_ref().map(|guid| guid.value().to_string()),

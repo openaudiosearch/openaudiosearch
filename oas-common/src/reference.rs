@@ -65,17 +65,14 @@ impl<T: TypedValue> Reference<T> {
         matches!(self, Self::Resolved(_))
     }
 
-    pub async fn resolve<R: Resolver>(&mut self, resolver: &R) -> Result<(), ResolveError<T>> {
+    pub async fn resolve<R: Resolver>(&mut self, resolver: &R) -> Result<(), ResolveError> {
         if !self.resolved() {
             self.force_resolve(resolver).await?;
         }
         Ok(())
     }
 
-    pub async fn force_resolve<R: Resolver>(
-        &mut self,
-        resolver: &R,
-    ) -> Result<(), ResolveError<T>> {
+    pub async fn force_resolve<R: Resolver>(&mut self, resolver: &R) -> Result<(), ResolveError> {
         let record = resolver
             .resolve(self.id())
             .await
@@ -84,10 +81,7 @@ impl<T: TypedValue> Reference<T> {
         Ok(())
     }
 
-    pub async fn into_resolved<R: Resolver>(
-        mut self,
-        resolver: &R,
-    ) -> Result<Self, ResolveError<T>> {
+    pub async fn into_resolved<R: Resolver>(mut self, resolver: &R) -> Result<Self, ResolveError> {
         self.resolve(resolver).await?;
         Ok(self)
     }
