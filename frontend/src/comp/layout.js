@@ -13,6 +13,7 @@ import JobsPage from './jobs'
 import SearchPage from './search'
 import SearchPage2 from './reactive_search'
 import ImporterPage from './importer'
+import LandingPage from './landing_page'
 
 export default function Layout (props = {}) {
   const playerHeight = '15rem'
@@ -88,6 +89,9 @@ function Routes () {
       </Route>
       <Route path='/importer'>
         <ImporterPage />
+      </Route>
+      <Route path='/'>
+        <LandingPage />
       </Route>
     </Switch>
   )
