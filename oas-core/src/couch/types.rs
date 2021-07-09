@@ -38,6 +38,16 @@ impl DocList {
         self.rows[..].iter().map(|row| &row.doc)
     }
 
+    pub fn into_typed_records<T>(self) -> Vec<std::result::Result<Record<T>, DecodingError>>
+    where
+        T: TypedValue,
+    {
+        self.rows
+            .into_iter()
+            .map(|row| row.doc.into_typed_record())
+            .collect()
+    }
+
     pub fn into_typed_docs<T: DeserializeOwned>(self) -> serde_json::Result<Vec<T>> {
         let results: serde_json::Result<Vec<T>> = self
             .rows

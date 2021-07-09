@@ -32,8 +32,10 @@ pub async fn run_server(state: State, opts: ServerOpts) -> anyhow::Result<()> {
         // debug routes
         .mount("/hello", routes![world])
         // api routes
-        .mount("/api/v1/record", handlers::records::routes())
-        // .mount("/api/v1/search", handlers::search::routes())
+        .mount("/api/v1/record", handlers::record::routes())
+        .mount("/api/v1/media", handlers::media::routes())
+        .mount("/api/v1/feed", handlers::feed::routes())
+        .mount("/api/v1/search", handlers::search::routes())
         // legacy routes
         .mount("/oas/v1/search", handlers::search::routes())
         .mount("/oas/v1/feed", handlers::feed::routes())

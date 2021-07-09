@@ -5,7 +5,12 @@ use rocket::{post, response::content::Json, routes, Route};
 mod types {
     use serde::{Deserialize, Serialize};
 
-    use crate::tasks::Engine;
+    #[derive(Serialize, Deserialize, Clone, Debug)]
+    #[serde(rename_all = "lowercase")]
+    pub enum Engine {
+        Vosk,
+        Pytorch,
+    }
 
     #[derive(Debug, Serialize, Deserialize)]
     pub struct TranscriptRequest {

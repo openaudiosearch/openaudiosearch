@@ -1,5 +1,5 @@
 use crate::couch::CouchError;
-use oas_common::DecodingError;
+use oas_common::{DecodingError, EncodingError};
 use rocket::http::Status;
 use rocket::response::status::Custom;
 use rocket::response::Responder;
@@ -13,6 +13,8 @@ pub type Result<T> = std::result::Result<rocket::serde::json::Json<T>, AppError>
 pub enum AppError {
     #[error("{0}")]
     DecodingError(#[from] DecodingError),
+    #[error("{0}")]
+    EncodingError(#[from] EncodingError),
     #[error("{0}")]
     Couch(#[from] CouchError),
     #[error("{0}")]
@@ -31,6 +33,7 @@ impl<'r> Responder<'r, 'static> for AppError {
             // TODO: Change to 500
             AppError::Couch(_err) => Status::BadGateway,
             AppError::Http(code, _) => *code,
+            AppError::EncodingError(_) => Status::BadRequest,
             AppError::Elastic(err) => err
                 .status_code()
                 .map(|code| Status::from_code(code.as_u16()).unwrap())

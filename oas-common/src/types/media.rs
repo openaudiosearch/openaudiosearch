@@ -7,8 +7,9 @@ use serde::{Deserialize, Serialize};
 pub struct Media {
     pub content_url: String,
     pub encoding_format: Option<String>,
-    pub transcript: Option<String>,
     pub duration: Option<f32>,
+    pub transcript: Option<serde_json::Value>,
+    pub nlp: Option<serde_json::Value>,
 
     #[serde(flatten)]
     pub other: serde_json::Map<String, serde_json::Value>,

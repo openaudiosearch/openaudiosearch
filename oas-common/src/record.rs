@@ -45,6 +45,10 @@ pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clo
     fn label(&self) -> Option<&'_ str> {
         None
     }
+
+    fn guid(id: &str) -> String {
+        format!("{}_{}", Self::NAME, id)
+    }
     // fn get_name(self) -> &str;
 }
 
@@ -93,6 +97,23 @@ impl UntypedRecord {
 
     pub fn typ(&self) -> &str {
         &self.meta.typ
+    }
+
+    pub fn merge_json_value(
+        &mut self,
+        value_to_merge: serde_json::Value,
+    ) -> Result<(), EncodingError> {
+        // TODO: Get rid of this clone?
+        let mut value = Value::Object(self.value.clone());
+        json_patch::merge(&mut value, &value_to_merge);
+        // TODO: Validate the result?
+        match value {
+            Value::Object(value) => {
+                self.value = value;
+                Ok(())
+            }
+            _ => Err(EncodingError::NotAnObject),
+        }
     }
 }
 

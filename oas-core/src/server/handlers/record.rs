@@ -1,4 +1,4 @@
-use oas_common::types::{Media, Feed};
+use oas_common::types::{Feed, Media};
 use oas_common::{Record, TypedValue, UntypedRecord};
 use rocket::serde::json::Json;
 use rocket::{get, post, put, routes, Route};
@@ -8,18 +8,7 @@ use crate::couch::Doc;
 use crate::server::error::{AppError, Result};
 
 pub fn routes() -> Vec<Route> {
-    routes![get_record, post_record, put_media]
-}
-
-#[put("/media/<id>", data = "<value>")]
-async fn put_media(
-    state: &rocket::State<crate::State>,
-    id: String,
-    value: Json<Media>,
-) -> Result<serde_json::Value> {
-    let record = Record::from_id_and_value(id, value.into_inner());
-    state.db.put_record(record).await?;
-    Ok(Value::Bool(true).into())
+    routes![get_record, post_record]
 }
 
 #[get("/<guid>")]
