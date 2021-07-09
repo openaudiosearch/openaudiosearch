@@ -167,6 +167,19 @@ async fn save_feed_to_db(db: &CouchDB, feed: Feed) -> RssResult<FetchedFeedPage>
     }
 
     let put_result = db.put_bulk(docs).await?;
+    // eprintln!("res {:#?}", put_result);
+
+    let (success, error): (Vec<_>, Vec<_>) = put_result
+        .iter()
+        .partition(|r| matches!(r, PutResult::Ok(_)));
+
+    log::info!(
+        "saved {} docs from feed {} ({} success, {} error)",
+        put_result.len(),
+        feed.url,
+        success.len(),
+        error.len()
+    );
     let feed_page = FetchedFeedPage {
         url: feed.url.clone(),
         feed,
