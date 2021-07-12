@@ -106,7 +106,7 @@ export function Player (props = {}) {
         </Flex>
       }
       <WaveSurfer onMount={handleWSMount}>
-        <WaveForm id="waveform">
+        <WaveForm id="waveform" barWidth="3" barHeight="1">
         </WaveForm>
       </WaveSurfer>
       {loadingProgress == 100 && ready &&
