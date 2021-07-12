@@ -1,10 +1,5 @@
 import React, { useState, useContext, useMemo, useRef, useCallback, useEffect } from 'react'
-import { Flex, Stack, Box, Text, Heading, IconButton, Input, Icon, useDisclosure } from '@chakra-ui/react'
-import {
-  FaPlay as PlayIcon,
-  FaHeart as HeartIcon,
-  FaSkull as HateIcon
-} from 'react-icons/fa'
+import { Box, Flex, IconButton, CircularProgress } from '@chakra-ui/react'
 import { WaveSurfer, WaveForm } from 'wavesurfer-react'
 import { FaPlay, FaPause } from 'react-icons/fa'
 
@@ -42,6 +37,8 @@ function useRerender() {
 export function Player (props = {}) {
   const { track } = usePlayer()
   const rerender = useRerender();
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [ready, setReady] = useState(false)
 
   const wavesurferRef = useRef()
   const handleWSMount = useCallback(
@@ -50,6 +47,7 @@ export function Player (props = {}) {
 
       wavesurferRef.current.on("ready", () => {
         console.log("WaveSurfer is ready")
+        setReady(true)
       })
 
       wavesurferRef.current.on("region-removed", region => {
@@ -58,13 +56,14 @@ export function Player (props = {}) {
 
       wavesurferRef.current.on("loading", data => {
         console.log("loading --> ", data)
+        setLoadingProgress(data)
       })
 
-      wavesurferRef.current.on("play", data => {
+      wavesurferRef.current.on("play", () => {
         rerender()
       })
 
-      wavesurferRef.current.on("pause", data => {
+      wavesurferRef.current.on("pause", () => {
         rerender()
       })
 
@@ -83,6 +82,7 @@ export function Player (props = {}) {
 
   useEffect(() => {
     if (wavesurferRef.current && track.contentUrl) {
+      setReady(false)
       wavesurferRef.current.load(track.contentUrl)
       console.log('WaveSurfer loading file')
     }
@@ -96,20 +96,29 @@ export function Player (props = {}) {
   // Remove html highlighting tags from title display in player
   headline = headline.replace(/(<([^>]+)>)/gi, "")
   return (
-    <Box>
-        <Box>
-          Currently playing: {headline}
-          <WaveSurfer onMount={handleWSMount}>
-            <WaveForm id="waveform">
-            </WaveForm>
-          </WaveSurfer>
+    <Flex direction="column">
+      <Box>
+        Currently playing: {headline}
+      </Box>
+      {loadingProgress < 100 && !ready && 
+        <Flex align="center" justify="center">
+          <CircularProgress value={loadingProgress} color="violet" />
+        </Flex>
+      }
+      <WaveSurfer onMount={handleWSMount}>
+        <WaveForm id="waveform">
+        </WaveForm>
+      </WaveSurfer>
+      {loadingProgress == 100 && ready &&
+        <Flex direction="row">
           <IconButton 
             aria-label="Play/Pause"
             color="violet"
             onClick={togglePlay} 
             icon={isPlaying ? <FaPause /> : <FaPlay />}
           />
-        </Box>
-    </Box>
+        </Flex>
+      }
+    </Flex>
   )
 }
