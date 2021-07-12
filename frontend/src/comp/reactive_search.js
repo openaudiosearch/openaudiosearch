@@ -8,7 +8,6 @@ import { usePlayer } from './player'
 const { ResultListWrapper } = ReactiveList
 
 export default function SearchPage2 () {
-  const { track, setTrack } = usePlayer()
   const url = API_ENDPOINT + '/search'
   console.log(url)
   const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator']
@@ -110,6 +109,7 @@ export default function SearchPage2 () {
 
 function ResultItem (props) {
   const { item } = props
+  const { track, setTrack } = usePlayer()
   const highlights = Object.entries(item.highlight).map(([key, value]) => {
     return (
       <Box p={2}>
