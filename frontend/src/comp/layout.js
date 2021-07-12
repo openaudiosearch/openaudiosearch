@@ -15,7 +15,7 @@ import SearchPage2 from './reactive_search'
 import ImporterPage from './importer'
 
 export default function Layout (props = {}) {
-  const playerHeight = '6rem'
+  const playerHeight = '15rem'
   return (
     <>
       <Stack minHeight='100vh' bg='bg.screen'  mb={playerHeight}>
