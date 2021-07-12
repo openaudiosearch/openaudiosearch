@@ -34,6 +34,7 @@ async fn put_media(
     id: String,
     value: Json<Media>,
 ) -> Result<PutResponse> {
+    let (typ, id) = util::split_and_check_guid::<Media>(&id)?;
     let record = Record::from_id_and_value(id, value.into_inner());
     let res = state.db.put_record(record).await?;
     Ok(Json(res))
