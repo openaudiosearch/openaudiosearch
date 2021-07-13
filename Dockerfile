@@ -10,8 +10,8 @@ RUN yarn && yarn run build
 FROM python:3.9.0-slim as poetry-build
 RUN python -m pip install -U pip poetry
 WORKDIR /build
-COPY oas_core/pyproject.toml pyproject.toml
-COPY oas_core/poetry.lock poetry.lock
+COPY oas_worker/pyproject.toml pyproject.toml
+COPY oas_worker/poetry.lock poetry.lock
 RUN poetry export -f requirements.txt --without-hashes -o /build/requirements.txt
 
 # backend-build: install all python deps from requirements.txt to /build/pip
@@ -37,7 +37,7 @@ FROM python-base
 COPY --from=backend-build /build/pip/ /usr/local
 COPY --from=ffmpeg-build /build/ffmpeg /usr/local/bin/ffmpeg
 COPY --from=frontend-build /build/dist /app/frontend/dist
-COPY /oas_core /app/oas_core
-WORKDIR /app/oas_core
+COPY /oas_worker /app/oas_worker
+WORKDIR /app/oas_worker
 ENV STORAGE_PATH="/data"
 CMD ["python", "server.py"]

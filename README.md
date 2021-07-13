@@ -37,7 +37,7 @@ For the speech recognition to work, you'll need to download the models. Run this
 docker-compose exec backend python download_models.py
 ```
 
-Elastic Search wants quite a lot of free disc space. If the threshold is not met, it refuses to do anything. Run the script at `oas_core/scripts/elastic-disable-threshold.sh` to disable the disc threshold (does not persist across Elastic restarts):
+Elastic Search wants quite a lot of free disc space. If the threshold is not met, it refuses to do anything. Run the script at `oas_worker/scripts/elastic-disable-threshold.sh` to disable the disc threshold (does not persist across Elastic restarts):
 ``` sh
 docker-compose exec backend bash scripts/elastic-disable-threshold.sh
 ```
@@ -63,7 +63,7 @@ yarn build
 
 *Prepare and build backend*
 ```sh
-cd oas_core
+cd oas_worker
 poetry install
 ```
 
@@ -74,7 +74,7 @@ docker-compose -f docker-compose.dev.yml up
 
 *Start OAS server and worker*
 ```sh
-cd oas_core
+cd oas_worker
 poetry run python server.py
 # in another terminal:
 poetry run celery -A app.tasks.tasks worker --loglevel=INFO
@@ -88,7 +88,7 @@ Have a look at the [development guide](./docs/development.md).
 
 ## Configuration
 
-OAS is configured through environment variables. If a `.env` file is present in the directory from which oas_core is started the variables from there will be used. To customize the configuration, copy [`.env.default`](`oas_core/.env.default`) in the `oas_core` folder to `.env` and adjust the values.
+OAS is configured through environment variables. If a `.env` file is present in the directory from which oas_worker is started the variables from there will be used. To customize the configuration, copy [`.env.default`](`oas_worker/.env.default`) in the `oas_worker` folder to `.env` and adjust the values.
 
 |variable|default|description|
 |-|-|-|

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "oas_core"
+name = "oas_worker"
 version = "0.1.0"
 description = "Open Audio Search core engine and server"
 authors = ["Open Audio Search team"]
