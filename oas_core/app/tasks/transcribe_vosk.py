@@ -4,13 +4,14 @@ import json
 
 model = None
 
-
 def transcribe_vosk(audio_file_path, model_path):
     global model
     if not model:
         model = Model(model_path)
 
     rec = KaldiRecognizer(model, 16000)
+    rec.SetMaxAlternatives(0)
+    rec.SetWords(True)
     results = []
     transcript = ""
 
@@ -26,6 +27,7 @@ def transcribe_vosk(audio_file_path, model_path):
             break
         if rec.AcceptWaveform(data):
             result = json.loads(rec.Result())
+            print("RESULT", result)
             text = result['text']
             # print(f'RESULT: {text}')
             transcript = transcript + ' ' + result['text']

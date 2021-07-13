@@ -1,4 +1,6 @@
 import os
+import json
+import httpx
 import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
@@ -7,14 +9,13 @@ from base64 import b32encode
 import requests
 from hashlib import sha256
 from mimetypes import guess_extension
-from celery import Celery
+from celery import Celery, chain
 from celery.utils.log import get_task_logger
 from app.tasks.models import *
 from app.config import config
 from app.core.util import pretty_bytes
 from app.tasks.spacy_pipe import SpacyPipe
 from app.tasks.transcribe_vosk import transcribe_vosk
-from app.elastic.search import AudioObject
 
 from app.core.celery import app
 
@@ -40,7 +41,23 @@ def url_to_path(url: str) -> str:
     target_name = f'{parsed_url.netloc}/{url_hash[:2]}/{url_hash[2:]}'
     return target_name
 
-@app.task
+@app.task(name="transcribe")
+def transcribe(args: dict, opts: dict):
+    print("start transcribe task with args", args, "opts", opts)
+    media_url = args['media_url']
+    media_id = args['media_id']
+    nlp_opts = {'pipeline': 'ner'}
+    result = chain(
+        download.s({'media_url': media_url, 'media_id': media_id }),
+        prepare.s({'samplerate': 16000}),
+        asr.s({'engine': 'vosk'}),
+        nlp.s(nlp_opts),
+        index.s()
+        )()
+    return result
+    
+
+@app.task(name="download")
 def download(opts):
     args = {"opts": opts}
     # todo: maybe cache downloads globally by url hash
@@ -65,6 +82,8 @@ def download(opts):
         headers = res.headers
         extension = guess_extension(
             headers['content-type'].partition(';')[0].strip())
+        if extension is None:
+            extension = "bin"
         target_path += extension
         total_size = int(headers.get('content-length', 0))
 
@@ -96,7 +115,7 @@ def download(opts):
         args['download'] = {"file_path": target_path, "source_url": url}
         return args
 
-@app.task
+@app.task(name="prepare")
 def prepare(args, opts):
     samplerate = opts['samplerate']
     dst = file_path(f'task/prepare/{prepare.request.id}/processed.wav')
@@ -114,7 +133,7 @@ def prepare(args, opts):
     args['prepare'] = {'file_path': dst}
     return args
 
-@app.task
+@app.task(name="asr")
 def asr(args, opts):
     engine = opts['engine']
 
@@ -133,46 +152,58 @@ def asr(args, opts):
     else:
         raise RuntimeError("ASR engine not specified")
 
-@app.task
+@app.task(name="nlp")
 def nlp(args, opts):
     spacy = SpacyPipe(opts['pipeline'])
     res = spacy.run(args['asr']['text'])
     args['nlp'] = res
     return args
 
-@app.task
-def index(args):
-    # job = task.job
-    # all results of previous tasks are stored as records with the same
-    # id as the job. job.get_record(type) is the same as client.get_record(job.id, type)
-    asr_result = args['asr']
-    audio = AudioObject(
-        transcript = asr_result["text"]
-    )
-    res = audio.save()
-    return res
+#  @app.task(name="index")
+#  def index(args):
+#      # job = task.job
+#      # all results of previous tasks are stored as records with the same
+#      # id as the job. job.get_record(type) is the same as client.get_record(job.id, type)
+#      asr_result = args['asr']
+#      audio = AudioObject(
+#          transcript = asr_result["text"]
+#      )
+#      res = audio.save()
+#      return res
 
 
-@app.task
+@app.task(name="index")
 def index(args):
-    doc_id = args["opts"]['doc_id']
-    audio = None
-    #  print("DOC ID", doc_id)
-    try:
-        audio = AudioObject.get(id=doc_id)
-        #  print("GOT elastic audio object", audio, audio.to_dict())
-        audio.contentUrl = args["download"]["source_url"]
-        audio.transcript = args["asr"]["text"]
-        #  print("DID SET fields")
-    except Exception:
-        #  print("NEW elastic audio object")
-        audio = AudioObject(
-            contentUrl = args["download"]["source_url"],
-            transcript = args["asr"]["text"]
-        )
-    res = audio.save()
-    print(res)
+    media_id = args["opts"]['media_id']
+    base_url = "http://localhost:8080/api/v1/media"
+    url = f"{base_url}/{media_id}"
+    data = {
+        "transcript": args['asr'],
+        "nlp": args['nlp']
+    };
+    res = httpx.patch(url, json=data)
+    res = res.json()
+    print("res", res)
     return res
+    #  media_id = args["opts"]['media_id']
+    #  audio = None
+    #  #  print("DOC ID", media_id)
+    #  try:
+    #      audio = AudioObject.get(id=media_id)
+    #      #  print("GOT elastic audio object", audio, audio.to_dict())
+    #      audio.contentUrl = args["download"]["source_url"]
+    #      audio.transcript = args["asr"]["text"]
+    #      #  print("DID SET fields")
+    #  except Exception:
+    #      #  print("NEW elastic audio object")
+    #      audio = AudioObject(
+    #          contentUrl = args["download"]["source_url"],
+    #          transcript = args["asr"]["text"]
+    #      )
+    #  print("save: ", audio)
+    #  res = audio.save()
+    #  print(res)
+    #  return {"ok": True} 
 
 #  @app.task
 #  def debug_long(seconds, message):
