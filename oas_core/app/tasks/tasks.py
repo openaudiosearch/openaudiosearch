@@ -12,12 +12,13 @@ from mimetypes import guess_extension
 from celery import Celery, chain
 from celery.utils.log import get_task_logger
 from app.tasks.models import *
+
 from app.config import config
-from app.core.util import pretty_bytes
+from app.util import pretty_bytes
+from app.celery import app
+
 from app.tasks.spacy_pipe import SpacyPipe
 from app.tasks.transcribe_vosk import transcribe_vosk
-
-from app.core.celery import app
 
 logger = get_task_logger(__name__)
 cache_path = os.path.join(config.storage_path, 'cache')
