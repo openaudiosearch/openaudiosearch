@@ -44,7 +44,8 @@ enum Command {
     /// Fetch a RSS feed
     Feed(FeedCommands),
     /// Create a test task
-    Task,
+    Task(tasks::TaskOpts),
+    /// Run the HTTP API server
     Server(ServerOpts),
 }
 
@@ -140,14 +141,14 @@ async fn main() -> anyhow::Result<()> {
         Command::Index(opts) => run_index(state, opts).await,
         Command::Search(opts) => run_search(state, opts).await,
         Command::Feed(opts) => run_feed(state, opts.command).await,
-        Command::Task => run_task().await,
+        Command::Task(opts) => run_task(state, opts).await,
         Command::Server(opts) => run_server(state, opts).await,
     };
     result
 }
 
-async fn run_task() -> anyhow::Result<()> {
-    tasks::run_celery().await?;
+async fn run_task(state: State, opts: tasks::TaskOpts) -> anyhow::Result<()> {
+    tasks::run_celery(state, opts).await?;
     // faktory::run_faktory().await?;
     Ok(())
 }
@@ -353,9 +354,10 @@ async fn run_index(state: State, opts: IndexOpts) -> anyhow::Result<()> {
 async fn run_search(state: State, opts: SearchOpts) -> anyhow::Result<()> {
     let index = state.index;
     let records = index.find_records_with_text_query(&opts.query).await?;
-    let records: Vec<Record<Media>> = records
+    eprintln!("res: {:?}", records);
+    let records: Vec<Record<Post>> = records
         .into_iter()
-        .filter_map(|r| r.into_typed_record::<Media>().ok())
+        .filter_map(|r| r.into_typed_record::<Post>().ok())
         .collect();
     debug_print_records(&records[..]);
     Ok(())

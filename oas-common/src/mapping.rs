@@ -70,11 +70,15 @@ impl FieldMap {
     }
 
     pub fn apply_json_value(&self, source: Value) -> Result<Value, MappingError> {
-        if let Value::Object(source) = source {
-            Ok(Value::Object(self.apply_json_object(source)?))
-        } else {
-            Err(MappingError::NotAnObject)
+        match source {
+            Value::Object(object) => self.apply_json_object(object).map(Value::Object),
+            _ => Err(MappingError::NotAnObject),
         }
+        // if let Value::Object(source) = source {
+        //     Ok(Value::Object(self.apply_json_object(source)?))
+        // } else {
+        //     Err(MappingError::NotAnObject)
+        // }
     }
 
     pub fn apply_json_object(&self, source: Object) -> Result<Object, MappingError> {

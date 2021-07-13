@@ -6,7 +6,6 @@ services:
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD=password
       - COUCHDB_SECRET=secret
-      - NODENAME=192.168.0.1
       - ERL_FLAGS=-setcookie "brumbrum"
     ports:
       - "5984:5984"
@@ -41,9 +40,10 @@ services:
       http.cors.allow-credentials: "true"
       discovery.type: "single-node"
 
-  rabbitmq:
-    image: rabbitmq:3
-    ports:
-      - 5672:5672
-    environment:
-      RABBITMQ_DEFAULT_VHOST: oas
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   ports:
+  #     - 5672:5672
+  #     - 15672:15672
+  #   environment:
+  #     RABBITMQ_DEFAULT_VHOST: oas

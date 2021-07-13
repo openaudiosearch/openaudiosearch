@@ -25,6 +25,8 @@ pub enum DecodingError {
     SerdeJson(#[from] serde_json::Error),
     #[error("Type mismatch: expected {0}, got {1}")]
     TypeMismatch(String, String),
+    #[error("Deserialization did not return an object")]
+    NotAnObject,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -61,6 +63,19 @@ pub struct UntypedRecord {
 }
 
 impl UntypedRecord {
+    pub fn with_typ_id_value(typ: &str, id: &str, value: Value) -> Result<Self, DecodingError> {
+        let meta = RecordMeta {
+            typ: typ.into(),
+            id: id.into(),
+            ..Default::default()
+        };
+        let value = match value {
+            Value::Object(object) => object,
+            _ => return Err(DecodingError::NotAnObject),
+        };
+        Ok(Self { meta, value })
+    }
+
     pub fn into_typed_record<T: TypedValue + DeserializeOwned + Clone + 'static>(
         self,
     ) -> Result<TypedRecord<T>, DecodingError> {
