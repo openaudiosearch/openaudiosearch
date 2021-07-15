@@ -17,7 +17,7 @@ use url::Url;
 
 use oas_common::{ElasticMapping, Record, TypedValue, UntypedRecord};
 
-// ElasticSearch config.
+/// ElasticSearch config.
 #[derive(Clap, Debug, Clone)]
 pub struct Config {
     /// Elasticsearch server URL
@@ -30,11 +30,11 @@ pub struct Config {
 }
 
 impl Config {
-    // creates a new config with <url> and <index>
+    /// Creates a new config with server URL and index name.
     pub fn new(url: Option<String>, index: String) -> Self {
         Self { url, index }
     }
-    // creates default config
+    /// Creates config with index name and default values.
     pub fn with_default_url(index: String) -> Self {
         Self { url: None, index }
     }
@@ -42,9 +42,10 @@ impl Config {
 
 /// ElasticSearch client.
 ///
-/// The client is stateless. It only contains a HTTP client and the config on how to connect to a
-/// ElasticSearch. We use [elasticsearch-rs](https://github.com/elastic/elasticsearch-rs), 
-/// you can find the documentation on [docs.rs](https://docs.rs/elasticsearch/7.12.1-alpha.1/elasticsearch/)
+/// The client is stateless. It only contains a HTTP client, the index name and the config on how to connect to ElasticSearch.
+///
+/// We use [elasticsearch-rs](https://github.com/elastic/elasticsearch-rs),
+/// you can find the documentation on [docs.rs](https://docs.rs/elasticsearch/7.12.1-alpha.1/elasticsearch/).
 #[derive(Debug, Clone)]
 pub struct Index {
     client: Elasticsearch,
@@ -52,7 +53,7 @@ pub struct Index {
 }
 
 impl Index {
-    /// Create a new client with config.
+    /// Creates a new client with config.
     pub fn with_config(config: Config) -> Result<Self, Error> {
         let client = create_client(config.url)?;
         Ok(Self {
@@ -60,11 +61,13 @@ impl Index {
             index: config.index,
         })
     }
-    /// Get the index name
+
+    /// Get the index name.
     pub fn index(&self) -> &str {
         &self.index
     }
-    /// Get the reference to the client
+
+    /// Get the reference to the client.
     pub fn client(&self) -> &Elasticsearch {
         &self.client
     }
@@ -79,8 +82,10 @@ impl Index {
         Ok(())
     }
 
-    /// Put a list of [Record]s to the ElasticSearch index.
-    /// Internally the [Record]s a transformed to [UntypedRecord]s.
+    /// Put a list of [Record]s to the index.
+    ///
+    /// Internally the [Record]s are transformed to [UntypedRecord]s, serialized and saved in a
+    /// single bulk operation.
     pub async fn put_typed_records<T: TypedValue>(&self, docs: &[Record<T>]) -> Result<(), Error> {
         let docs: Vec<UntypedRecord> = docs
             .iter()
@@ -89,7 +94,8 @@ impl Index {
         self.put_untyped_records(&docs).await?;
         Ok(())
     }
-    /// Put a list of [UntypedRecord]s to the elasticsearch index
+
+    /// Put a list of [UntypedRecord]s to the index
     pub async fn put_untyped_records(&self, docs: &[UntypedRecord]) -> Result<(), Error> {
         self.set_refresh_interval(json!("-1")).await?;
         let now = Instant::now();
@@ -109,11 +115,14 @@ impl Index {
         Ok(())
     }
 
-    /// We have a relation from [Post] to [oas_common::types::Media]
-    /// Because of this data model we have a nested field on the 
+    /// Update all nested documents on a top-level field with the value from an [UntypedRecord].
+    ///
+    /// We have a relation from [Post] to [Media](oas_common::types::Media)
+    /// Because of this data model we have a nested field on the
     /// elasticsearch level which we have to update as soon as the data arrives.
-    /// This function will called from the [crate::couch::changes::ChangesStream]. 
-    /// We adapt this mostly from the example in this [Article](https://iridakos.com/programming/2019/05/02/add-update-delete-elasticsearch-nested-objects) from [iridakos](https://iridakos.com/) 
+    /// This function will usually be called with update from a [ChangesStream](crate::couch::changes::ChangesStream).
+    ///
+    /// See this [Article](https://iridakos.com/programming/2019/05/02/add-update-delete-elasticsearch-nested-objects) for details on working with nested documents in ElasticSearch.
     pub async fn update_nested_record(
         &self,
         field: &str,
@@ -175,7 +184,7 @@ for (nested_doc in nested_docs) {
         Ok(())
     }
 
-    /// Simple string query on the ElasticSearch index 
+    /// Simple string query on the index.
     pub async fn find_records_with_text_query(
         &self,
         query: &str,
