@@ -1,7 +1,7 @@
 import React, { useState, useContext, useMemo, useRef, useCallback, useEffect } from 'react'
 import { Box, Flex, IconButton, CircularProgress } from '@chakra-ui/react'
 import { WaveSurfer, WaveForm } from 'wavesurfer-react'
-import { FaPlay, FaPause } from 'react-icons/fa'
+import { FaPlay, FaPause, FaUndoAlt, FaRedoAlt } from 'react-icons/fa'
 
 const PlayerContext = React.createContext(null)
 
@@ -73,12 +73,22 @@ export function Player (props = {}) {
     }, []
   )
 
-  const togglePlay = useCallback(() => {
+  const togglePlay = () => {
     if (!wavesurferRef.current) return
     wavesurferRef.current.playPause()
-  }, [])
+  }
 
   const isPlaying = wavesurferRef.current && wavesurferRef.current.isPlaying() 
+
+  const skipBackward = () => {
+    if (!wavesurferRef.current) return
+    wavesurferRef.current.skipBackward(30)
+  }
+
+  const skipForward = () => {
+    if (!wavesurferRef.current) return
+    wavesurferRef.current.skipForward(30)
+  }
 
   useEffect(() => {
     if (wavesurferRef.current && track.contentUrl) {
@@ -112,10 +122,24 @@ export function Player (props = {}) {
       {loadingProgress == 100 && ready &&
         <Flex direction="row">
           <IconButton 
+            aria-label="Skip backward"
+            color="violet"
+            onClick={skipBackward} 
+            icon={<FaUndoAlt />}
+            mr="2"
+          />
+          <IconButton 
             aria-label="Play/Pause"
             color="violet"
             onClick={togglePlay} 
             icon={isPlaying ? <FaPause /> : <FaPlay />}
+            mr="2"
+          />
+          <IconButton 
+            aria-label="Skip forward"
+            color="violet"
+            onClick={skipForward} 
+            icon={<FaRedoAlt />}
           />
         </Flex>
       }
