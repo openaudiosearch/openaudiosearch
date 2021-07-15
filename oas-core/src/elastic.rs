@@ -17,6 +17,7 @@ use url::Url;
 
 use oas_common::{ElasticMapping, Record, TypedValue, UntypedRecord};
 
+/// ElasticSearch config.
 #[derive(Clap, Debug, Clone)]
 pub struct Config {
     /// Elasticsearch server URL
@@ -29,15 +30,22 @@ pub struct Config {
 }
 
 impl Config {
+    /// Creates a new config with server URL and index name.
     pub fn new(url: Option<String>, index: String) -> Self {
         Self { url, index }
     }
-
+    /// Creates config with index name and default values.
     pub fn with_default_url(index: String) -> Self {
         Self { url: None, index }
     }
 }
 
+/// ElasticSearch client.
+///
+/// The client is stateless. It only contains a HTTP client, the index name and the config on how to connect to ElasticSearch.
+///
+/// We use [elasticsearch-rs](https://github.com/elastic/elasticsearch-rs),
+/// you can find the documentation on [docs.rs](https://docs.rs/elasticsearch/7.12.1-alpha.1/elasticsearch/).
 #[derive(Debug, Clone)]
 pub struct Index {
     client: Elasticsearch,
@@ -45,6 +53,7 @@ pub struct Index {
 }
 
 impl Index {
+    /// Creates a new client with config.
     pub fn with_config(config: Config) -> Result<Self, Error> {
         let client = create_client(config.url)?;
         Ok(Self {
@@ -53,20 +62,30 @@ impl Index {
         })
     }
 
+    /// Get the index name.
     pub fn index(&self) -> &str {
         &self.index
     }
 
+    /// Get the reference to the client.
     pub fn client(&self) -> &Elasticsearch {
         &self.client
     }
 
+    /// Inititialize ElasticSearch.
+    ///
+    /// This creates the elasticsearch index with the default index mapping if it does not exists. It should be called before calling other
+    /// methods on the client.
     pub async fn ensure_index(&self, delete: bool) -> Result<(), Error> {
         let mapping = get_default_mapping();
         create_index_if_not_exists(&self.client, &self.index, delete, mapping).await?;
         Ok(())
     }
 
+    /// Put a list of [Record]s to the index.
+    ///
+    /// Internally the [Record]s are transformed to [UntypedRecord]s, serialized and saved in a
+    /// single bulk operation.
     pub async fn put_typed_records<T: TypedValue>(&self, docs: &[Record<T>]) -> Result<(), Error> {
         let docs: Vec<UntypedRecord> = docs
             .iter()
@@ -76,6 +95,7 @@ impl Index {
         Ok(())
     }
 
+    /// Put a list of [UntypedRecord]s to the index
     pub async fn put_untyped_records(&self, docs: &[UntypedRecord]) -> Result<(), Error> {
         self.set_refresh_interval(json!("-1")).await?;
         let now = Instant::now();
@@ -95,6 +115,14 @@ impl Index {
         Ok(())
     }
 
+    /// Update all nested documents on a top-level field with the value from an [UntypedRecord].
+    ///
+    /// We have a relation from [Post] to [Media](oas_common::types::Media)
+    /// Because of this data model we have a nested field on the
+    /// elasticsearch level which we have to update as soon as the data arrives.
+    /// This function will usually be called with update from a [ChangesStream](crate::couch::changes::ChangesStream).
+    ///
+    /// See this [Article](https://iridakos.com/programming/2019/05/02/add-update-delete-elasticsearch-nested-objects) for details on working with nested documents in ElasticSearch.
     pub async fn update_nested_record(
         &self,
         field: &str,
@@ -156,6 +184,7 @@ for (nested_doc in nested_docs) {
         Ok(())
     }
 
+    /// Simple string query on the index.
     pub async fn find_records_with_text_query(
         &self,
         query: &str,
@@ -186,7 +215,7 @@ for (nested_doc in nested_docs) {
     }
 }
 
-pub async fn index_records(
+async fn index_records(
     client: &Elasticsearch,
     index_name: &str,
     posts: &[UntypedRecord],
@@ -269,7 +298,7 @@ async fn create_index_if_not_exists(
     Ok(())
 }
 
-pub fn create_client(addr: Option<String>) -> Result<Elasticsearch, Error> {
+fn create_client(addr: Option<String>) -> Result<Elasticsearch, Error> {
     fn default_addr() -> String {
         match std::env::var("ELASTICSEARCH_URL") {
             Ok(server) => server,
@@ -319,7 +348,7 @@ pub fn create_client(addr: Option<String>) -> Result<Elasticsearch, Error> {
     Ok(Elasticsearch::new(transport))
 }
 
-pub fn get_default_mapping() -> serde_json::Value {
+fn get_default_mapping() -> serde_json::Value {
     let post_mapping = Post::elastic_mapping();
     json!({
         "mappings": {
