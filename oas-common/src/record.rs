@@ -11,6 +11,7 @@ use crate::{MissingRefsError, Resolvable, Resolver};
 pub type Object = serde_json::Map<String, serde_json::Value>;
 pub type Record<T> = TypedRecord<T>;
 
+/// An error that occurs while encoding a record.
 #[derive(Error, Debug)]
 pub enum EncodingError {
     #[error("Serialization failed")]
@@ -19,6 +20,7 @@ pub enum EncodingError {
     NotAnObject,
 }
 
+/// An error that occurs while decoding a record.
 #[derive(Error, Debug)]
 pub enum DecodingError {
     #[error("Deserialization failed")]
@@ -29,6 +31,7 @@ pub enum DecodingError {
     NotAnObject,
 }
 
+/// Record metadata.
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct RecordMeta {
     guid: String,
@@ -41,19 +44,26 @@ pub struct RecordMeta {
     timestamp: u32,
 }
 
+/// A trait to implement on value structs for typed [Record]s.
 pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clone::Clone {
+    /// A string to uniquely identify this record type.
     const NAME: &'static str;
 
+    /// Get a human-readable label for this record.
+    ///
+    /// This method is optional and returns None by default. Record types may implement this method
+    /// to return a title or headline.
     fn label(&self) -> Option<&'_ str> {
         None
     }
 
+    /// Get the guid string for this record type and an id string.
     fn guid(id: &str) -> String {
         format!("{}_{}", Self::NAME, id)
     }
-    // fn get_name(self) -> &str;
 }
 
+/// An untyped record is a record without static typing. The value is encoded as a JSON object.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UntypedRecord {
     #[serde(rename = "$meta")]
@@ -63,6 +73,10 @@ pub struct UntypedRecord {
 }
 
 impl UntypedRecord {
+    /// Create an untyped record from type and id strings and a [serde_json::Value].
+    ///
+    /// The value should be a [serde_json::Map], otherwise this method will return an
+    /// [DecodingError::NotAnObject].
     pub fn with_typ_id_value(typ: &str, id: &str, value: Value) -> Result<Self, DecodingError> {
         let meta = RecordMeta {
             typ: typ.into(),
@@ -76,6 +90,7 @@ impl UntypedRecord {
         Ok(Self { meta, value })
     }
 
+    /// Convert this untyped record into a typed [Record].
     pub fn into_typed_record<T: TypedValue + DeserializeOwned + Clone + 'static>(
         self,
     ) -> Result<TypedRecord<T>, DecodingError> {
@@ -93,6 +108,7 @@ impl UntypedRecord {
         Ok(record)
     }
 
+    /// Convert the untyped record into a JSON [Object].
     pub fn into_json_object(self) -> Result<Object, EncodingError> {
         let value = serde_json::to_value(self)?;
         if let Value::Object(value) = value {
@@ -102,18 +118,22 @@ impl UntypedRecord {
         }
     }
 
+    /// Get the guid of the record.
     pub fn guid(&self) -> &str {
         &self.meta.guid
     }
 
+    /// Get the id of the record.
     pub fn id(&self) -> &str {
         &self.meta.id
     }
 
+    /// Get the type of the record.
     pub fn typ(&self) -> &str {
         &self.meta.typ
     }
 
+    /// Merge this record's value with another JSON value.
     pub fn merge_json_value(
         &mut self,
         value_to_merge: serde_json::Value,
@@ -152,6 +172,9 @@ where
     }
 }
 
+/// A record with a strongly typed value.
+///
+/// All values should implement [TypedValue].
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TypedRecord<T>
 where
@@ -167,19 +190,24 @@ impl<T> TypedRecord<T>
 where
     T: TypedValue,
 {
+    /// Get the guid of the record.
     pub fn guid(&self) -> &str {
         &self.meta.guid
     }
 
+    /// Get the id of the record.
     pub fn id(&self) -> &str {
         &self.meta.id
     }
 
+    /// Get the typ of the record.
     pub fn typ(&self) -> &str {
         &self.meta.typ
     }
 
-    pub fn from_id_and_value(id: String, value: T) -> Self {
+    /// Create a new record from an id and a value.
+    pub fn from_id_and_value(id: impl ToString, value: T) -> Self {
+        let id = id.to_string();
         let typ = T::NAME.to_string();
         let guid = format!("{}_{}", typ, id);
         let meta = RecordMeta {
@@ -191,6 +219,10 @@ where
         Self { meta, value }
     }
 
+    /// Convert this record into an [UntypedRecord].
+    ///
+    /// This can be unwrapped by default as it only fails if the record value would not serialize
+    /// to an object (which should be treated as a bug).
     pub fn into_untyped_record(self) -> Result<UntypedRecord, EncodingError>
     where
         T: Serialize,
@@ -208,6 +240,7 @@ where
         Ok(record)
     }
 
+    /// Convert this record into a JSON [Object].
     pub fn into_json_object(self) -> Result<Object, EncodingError> {
         let value = serde_json::to_value(self)?;
         if let Value::Object(value) = value {
@@ -222,6 +255,7 @@ impl<T> TypedRecord<T>
 where
     T: Resolvable + Send,
 {
+    /// Resolve all references within this record into loaded records.
     pub async fn resolve_refs<R: Resolver + Send + Sync>(
         &mut self,
         resolver: &R,
@@ -229,6 +263,8 @@ where
         self.value.resolve_refs(resolver).await
     }
 
+    /// Extract all loaded referenced records from within the record, converting the references
+    /// back to IDs.
     pub fn extract_refs(&mut self) -> Vec<UntypedRecord> {
         self.value.extract_refs()
     }

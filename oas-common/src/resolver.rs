@@ -2,8 +2,10 @@ use crate::reference::Reference;
 use crate::{Record, TypedValue, UntypedRecord};
 use std::fmt;
 
+/// A trait to be implemented on [TypedValue] structs that contain reference fields.
 #[async_trait::async_trait]
 pub trait Resolvable: TypedValue {
+    /// Resolve all reference with the passed resolver.
     async fn resolve_refs<R: Resolver + Send + Sync>(
         &mut self,
         _resolver: &R,
@@ -11,17 +13,24 @@ pub trait Resolvable: TypedValue {
         Ok(())
     }
 
+    /// Extract all loaded records from resolved references, resetting them to their id state.
     fn extract_refs(&mut self) -> Vec<UntypedRecord> {
         vec![]
     }
 }
 
+/// A trait to be implemented on data stores that can resolve records by their type and id strings.
 #[async_trait::async_trait]
 pub trait Resolver {
     type Error: std::error::Error + Send + Sync + 'static;
 
+    /// Resolve (load) a single record by its id.
     async fn resolve<T: TypedValue>(&self, id: &str) -> Result<Record<T>, Self::Error>;
 
+    /// Resolve (load) all records with their ids.
+    ///
+    /// The method is generic over the record type, thus only supports loading records of a single
+    /// type.
     async fn resolve_all<T: TypedValue + Send>(
         &self,
         ids: &[&str],
@@ -31,6 +40,7 @@ pub trait Resolver {
         results
     }
 
+    /// Resolve a list of references.
     async fn resolve_refs<T: TypedValue + Send>(
         &self,
         references: &mut [Reference<T>],
@@ -62,6 +72,7 @@ pub trait Resolver {
     }
 }
 
+/// An error that occurs while resolving (loading) records.
 #[derive(Debug)]
 pub struct ResolveError {
     id: String,
@@ -75,6 +86,9 @@ pub struct ResolveError {
 // }
 //
 
+/// Error type for records that failed to resolve.
+///
+/// Contains a list of [ResolveError]s that map record ids to errors.
 #[derive(Debug)]
 pub struct MissingRefsError(pub Vec<ResolveError>);
 
@@ -95,6 +109,7 @@ impl ResolveError {
         }
     }
 
+    /// Convert the error into a unresolved [Reference].
     pub fn into_reference<T: Clone>(self) -> Reference<T> {
         Reference::Id(self.id)
     }
