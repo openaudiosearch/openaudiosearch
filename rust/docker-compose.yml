@@ -1,0 +1,49 @@
+version: '3'
+services:
+  couchdb:
+    image: couchdb:3
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+      - COUCHDB_SECRET=secret
+      - ERL_FLAGS=-setcookie "brumbrum"
+    ports:
+      - "5984:5984"
+      - "4369:4369"
+      - "9100:9100"
+    volumes:
+      - ./data/couch:/opt/couchdb/data
+
+  redis:
+    image: "redis:alpine"
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - 6379:6379
+    volumes:
+      - "./data/redis:/data"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.11.2
+    ports:
+      - 9200:9200
+    volumes:
+      - "./data/elastic:/usr/share/elasticsearch/data"
+    environment:
+      ES_JAVA_OPTS: "-Xms500m -Xmx500m"
+      TAKE_FILE_OWNERSHIP: 1
+      # http.host: 0.0.0.0
+      # http.host: 127.0.0.1
+      http.port: 9200
+      http.cors.allow-origin: "http://localhost:1358,http://127.0.0.1:1358"
+      http.cors.enabled: "true"
+      http.cors.allow-headers : "X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization"
+      http.cors.allow-credentials: "true"
+      discovery.type: "single-node"
+
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   ports:
+  #     - 5672:5672
+  #     - 15672:15672
+  #   environment:
+  #     RABBITMQ_DEFAULT_VHOST: oas

@@ -1,0 +1,19 @@
+[package]
+name = "oas-common"
+version = "0.1.0"
+authors = ["Franz Heinzmann (Frando) <frando@unbiskant.org>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0.40"
+serde = { version = "1.0.126", features = ["derive"] }
+serde_json = "1.0.64"
+dotenv = "0.15.0"
+thiserror = "1.0.25"
+url = "2.2.2"
+sha2 = "0.9.5"
+base32 = "0.4.0"
+async-trait = "0.1.50"
+futures-util = "0.3.15"
+uuid = { version = "0.8.2", features = ["v4"] }
+json-patch = "0.2.6"
