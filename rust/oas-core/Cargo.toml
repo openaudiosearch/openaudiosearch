@@ -1,0 +1,37 @@
+[package]
+name = "oas-core"
+version = "0.1.0"
+authors = ["Franz Heinzmann (Frando) <frando@unbiskant.org>"]
+edition = "2018"
+default-run = "oas"
+
+[[bin]]
+name = "oas"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1"
+async-std = { version = "1.9.0", features = ["attributes", "tokio1"] }
+async-trait = "0.1.50"
+base32 = "0.4.0"
+base64 = "0.13.0"
+celery = { git = "https://github.com/openaudiosearch/rusty-celery.git", branch = "oas", default_features = false, features = ["broker_redis", "codegen"] }
+clap = "3.0.0-beta.2"
+elasticsearch = { version = "7.12.0-alpha.1", features = ["rustls-tls"] }
+env_logger = "0.8.3"
+futures = "0.3.15"
+http = "0.2.4"
+log = "0.4.14"
+oas-common = { path = "../oas-common" }
+rocket = { version = "0.5.0-rc.1", features = ["json"] }
+rocket_cors = { git = "https://github.com/lawliet89/rocket_cors.git" }
+rss = "1.10.0"
+serde = "1.0.126"
+serde_json = "1.0.64"
+sha2 = "0.9.5"
+surf = "2.2.0"
+thiserror = "1.0.25"
+tokio = { version = "1", features = ["rt", "macros"]}
+url = "2.2.2"
+reqwest = "0.11.4"
