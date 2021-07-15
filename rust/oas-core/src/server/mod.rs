@@ -35,11 +35,11 @@ pub async fn run_server(state: State, opts: ServerOpts) -> anyhow::Result<()> {
         .mount("/api/v1/record", handlers::record::routes())
         .mount("/api/v1/media", handlers::media::routes())
         .mount("/api/v1/feed", handlers::feed::routes())
-        .mount("/api/v1/search", handlers::search::routes())
-        // legacy routes
-        .mount("/oas/v1/search", handlers::search::routes())
-        .mount("/oas/v1/feed", handlers::feed::routes())
-        .mount("/oas/v1", handlers::legacy::routes());
+        .mount("/api/v1/search", handlers::search::routes());
+    // legacy routes
+    // .mount("/oas/v1/search", handlers::search::routes())
+    // .mount("/oas/v1/feed", handlers::feed::routes())
+    // .mount("/oas/v1", handlers::legacy::routes());
 
     app.launch().await?;
 

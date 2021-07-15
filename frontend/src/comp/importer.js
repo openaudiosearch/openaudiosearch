@@ -55,7 +55,7 @@ function ImportUrl (props) {
         <Flex alignContent='end'>
           <FormControl>
             <FormLabel>Media URL</FormLabel>
-            <Input name='rss_url' ref={register()} placeholder='https://...' minW='40rem' />
+            <Input name='url' ref={register()} placeholder='https://...' minW='40rem' />
           </FormControl>
           <Flex direction='column' justifyContent='end'>
             <Button type='submit' isLoading={isSubmitting}>Start</Button>
@@ -76,7 +76,7 @@ function ImportUrl (props) {
   async function onSubmit (values) {
     setIsSubmitting(true)
     try {
-      const res = await fetch('/add_new_feed', {
+      const res = await fetch('/feed', {
         method: 'POST',
         body: values
       })

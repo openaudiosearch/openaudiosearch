@@ -146,7 +146,10 @@ async fn main() -> anyhow::Result<()> {
         Command::Search(opts) => run_search(state, opts).await,
         Command::Feed(opts) => run_feed(state, opts.command).await,
         Command::Task(opts) => run_task(state, opts).await,
-        Command::Server(opts) => run_server(state, opts).await,
+        Command::Server(opts) => {
+            state.init_all().await?;
+            run_server(state, opts).await
+        }
     };
     result
 }
