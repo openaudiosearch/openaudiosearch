@@ -53,7 +53,7 @@ def transcribe(args: dict, opts: dict):
         prepare.s({'samplerate': 16000}),
         asr.s({'engine': 'vosk'}),
         nlp.s(nlp_opts),
-        index.s()
+        save_media.s()
         )()
     return result
     
@@ -130,7 +130,6 @@ def prepare(args, opts):
                      '-hide_banner', '-loglevel', 'error',
                      '-ar', str(samplerate), '-ac', '1', dst],
                     stdout=subprocess.PIPE)
-    # return PrepareResult(file_path=dst)
     args['prepare'] = {'file_path': dst}
     return args
 
@@ -143,7 +142,6 @@ def asr(args, opts):
     model_path = os.path.join(model_base_path, config.model)
     if engine == "vosk":
         result = transcribe_vosk(args["prepare"]["file_path"], model_path)
-        # return AsrResult(**result)
         args["asr"] = result
         return args
     elif engine == "deepspeech":
@@ -160,24 +158,11 @@ def nlp(args, opts):
     args['nlp'] = res
     return args
 
-#  @app.task(name="index")
-#  def index(args):
-#      # job = task.job
-#      # all results of previous tasks are stored as records with the same
-#      # id as the job. job.get_record(type) is the same as client.get_record(job.id, type)
-#      asr_result = args['asr']
-#      audio = AudioObject(
-#          transcript = asr_result["text"]
-#      )
-#      res = audio.save()
-#      return res
 
-
-@app.task(name="index")
-def index(args):
-    media_id = args["opts"]['media_id']
-    base_url = "http://localhost:8080/api/v1/media"
-    url = f"{base_url}/{media_id}"
+@app.task(name="save_media")
+def save_media(args):
+    media_id = args['opts']['media_id']
+    url = f"{config.oas_url}/media/{media_id}"
     data = {
         "transcript": args['asr'],
         "nlp": args['nlp']
@@ -186,33 +171,3 @@ def index(args):
     res = res.json()
     print("res", res)
     return res
-    #  media_id = args["opts"]['media_id']
-    #  audio = None
-    #  #  print("DOC ID", media_id)
-    #  try:
-    #      audio = AudioObject.get(id=media_id)
-    #      #  print("GOT elastic audio object", audio, audio.to_dict())
-    #      audio.contentUrl = args["download"]["source_url"]
-    #      audio.transcript = args["asr"]["text"]
-    #      #  print("DID SET fields")
-    #  except Exception:
-    #      #  print("NEW elastic audio object")
-    #      audio = AudioObject(
-    #          contentUrl = args["download"]["source_url"],
-    #          transcript = args["asr"]["text"]
-    #      )
-    #  print("save: ", audio)
-    #  res = audio.save()
-    #  print(res)
-    #  return {"ok": True} 
-
-#  @app.task
-#  def debug_long(seconds, message):
-#      print("start long debug task")
-#      print("message", message)
-#      time.sleep(seconds)
-#      return {
-#          "message": message,
-#          "waited_for": seconds
-#      }
-
