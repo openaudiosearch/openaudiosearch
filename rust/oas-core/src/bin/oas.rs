@@ -115,16 +115,20 @@ struct ListOpts {
     // json: bool,
 }
 
+fn env_or(env: &str, default: &str) -> String {
+    std::env::var(env).unwrap_or_else(|_| default.to_string())
+}
+
 #[async_std::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
     let args = Args::parse();
 
     let couch_config = couch::Config {
-        host: COUCHDB_HOST.to_string(),
+        host: env_or("COUCHDB_URL", COUCHDB_HOST),
         database: COUCHDB_DATABASE.to_string(),
-        user: Some("admin".to_string()),
-        password: Some("password".to_string()),
+        user: Some(env_or("COUCHDB_USER", "admin")),
+        password: Some(env_or("COUCHDB_PASSWORD", "password")),
     };
 
     let elastic_config = elastic::Config::with_default_url(ELASTICSEARCH_INDEX.to_string());

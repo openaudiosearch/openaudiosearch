@@ -4,7 +4,7 @@ use rocket::{get, routes};
 use crate::State;
 
 const DEFAULT_PORT: u16 = 8080;
-const DEFAULT_HOST: &str = "127.0.0.1";
+const DEFAULT_HOST: &str = "0.0.0.0";
 
 pub mod error;
 mod handlers;
@@ -12,10 +12,10 @@ mod handlers;
 #[derive(Clap, Default, Clone, Debug)]
 pub struct ServerOpts {
     /// Hostname to bind HTTP server to
-    #[clap(long)]
+    #[clap(long, env = "HTTP_HOSTNAME")]
     host: Option<String>,
     /// Hostname to bind server to
-    #[clap(long)]
+    #[clap(long, env = "HTTP_PORT")]
     port: Option<u16>,
 }
 

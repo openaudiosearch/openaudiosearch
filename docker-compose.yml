@@ -2,17 +2,24 @@ version: "3.9"
    
 services:
   backend:
-    build: rust
+    build: 
+      context: .
+      dockerfile: Dockerfile-core
     ports:
-      - "8080:8080"
+      - 8080:8080
     volumes:
       - "./data/oas:/data"
     environment:
       REDIS_URL: "redis://redis:6379/0"
-      ELASTIC_URL: "http://elasticsearch:9200/"
+      ELASTICSEARCH_URL: "http://elasticsearch:9200/"
+      COUCHDB_URL: "http://couchdb:5984"
+      COUCHDB_USER: "admin"
+      COUCHDB_PASSWORD: "password"
 
   worker:
-    build: oas_worker
+    build: 
+      context: .
+      dockerfile: Dockerfile-worker
     volumes:
       - "./data/oas:/data"
     environment:
@@ -24,6 +31,16 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - "./data/redis:/data"
+
+  couchdb:
+    image: couchdb:3
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+      - COUCHDB_SECRET=secret
+      - ERL_FLAGS=-setcookie "brumbrum"
+    volumes:
+      - ./data/couch:/opt/couchdb/data
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.11.2
