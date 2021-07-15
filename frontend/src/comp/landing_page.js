@@ -4,12 +4,15 @@ import { DataSearch, ResultList, ResultCard, MultiList, DateRange, ReactiveBase,
 import { Heading, Flex, Spacer, Box, Button, Spinner, Center } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { usePlayer } from './player'
+import { useHistory } from 'react-router-dom'
 
 const { ResultCardsWrapper } = ReactiveList
 
 
 export default function LandingPage() {
   const url = API_ENDPOINT + '/search'
+  const [value, setValue] = React.useState("")
+  const history = useHistory()
   console.log(url)
   return (
     <Flex color='white' align='center'>
@@ -25,17 +28,23 @@ export default function LandingPage() {
             </Center>
             <Center>
             <Box w='600px'>
-            {/* TODO: Searchbar als Form nachbauen mit handleSubmit mit redirect auf reactive_search Route mit String als default value*/}
-              {/* <DataSearch
+              <DataSearch
                 componentId='searchbox'
                 dataField={['headline', 'description', 'transcript']}
-                fieldWeights={[5, 1]}
+                fieldWeights={[5, 2, 1]}
                 placeholder='Search for radio broadcasts'
                 autosuggest
-                highlight
                 queryFormat='and'
                 fuzziness={0}
-              /> */}
+                value={value}
+                onChange={(value, triggerQuery, event) => {
+                  setValue(value)
+                }}
+                onValueSelected={(value, cause, source) => {
+                    const encoded = encodeURIComponent(value)
+                    history.push('/search/' + encoded)
+                }}
+              />
             </Box>
             </Center>
             <Box>
@@ -45,6 +54,8 @@ export default function LandingPage() {
                 dataField='dateModified'
                 componentId='DiscoverItems'
                 pagination
+                showResultStats={false}
+                size={6}
               >
                 {({ data, error, loading, ...args }) => {
                   if (loading) return <Spinner size='xl' />
