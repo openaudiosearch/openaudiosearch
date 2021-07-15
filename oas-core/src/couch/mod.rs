@@ -45,7 +45,21 @@ pub struct Config {
     pub password: Option<String>,
 }
 
+impl Config {
+    pub fn with_defaults(database: String) -> Self {
+        Self {
+            host: "http://localhost:5984".into(),
+            database,
+            user: None,
+            password: None,
+        }
+    }
+}
+
 /// CouchDB client.
+///
+/// The client is stateless. It only contains a HTTP client and the config on how to connect to a
+/// database.
 #[derive(Debug, Clone)]
 pub struct CouchDB {
     config: Config,
@@ -53,6 +67,7 @@ pub struct CouchDB {
 }
 
 impl CouchDB {
+    /// Create a new client with config.
     pub fn with_config(config: Config) -> anyhow::Result<Self> {
         // let logger = Logger {};
         let auth = Auth::new(config.clone());
@@ -67,6 +82,10 @@ impl CouchDB {
         })
     }
 
+    /// Init the database.
+    ///
+    /// This creates the database if it does not exists. It should be called before calling other
+    /// methods on the client.
     pub async fn init(&self) -> Result<()> {
         let res: Result<Value> = self.send(self.request(Method::Get, "")).await;
         match res {
@@ -78,12 +97,17 @@ impl CouchDB {
         }
     }
 
+    /// Get all docs from the database.
     pub async fn get_all(&self) -> Result<DocList> {
         let mut params = HashMap::new();
         params.insert("include_docs", "true");
         self.get_all_with_params(&params).await
     }
 
+    /// Get all docs where the couch id starts with a prefix.
+    ///
+    /// When the ids contain a type prefix (e.g. "oas.Media_someidstring", then
+    /// this method can be used to get all docs with a type.
     pub async fn get_all_with_prefix(&self, prefix: &str) -> Result<DocList> {
         let mut params = HashMap::new();
         params.insert("include_docs", "true".to_string());
@@ -95,23 +119,22 @@ impl CouchDB {
         self.get_all_with_params(&params).await
     }
 
+    /// Get all docs while passing a map of params.
     pub async fn get_all_with_params(&self, params: &impl Serialize) -> Result<DocList> {
-        // let start = Instant::now();
         let docs: DocList = self
             .send(self.request(Method::Get, "_all_docs").query(params)?)
             .await?;
-        // eprintln!("request took: {}", start.elapsed().as_secs_f32());
-        // let docs: DocList = serde_json::from_value(docs)?;
-        // eprintln!("finalizing took: {}", start.elapsed().as_secs_f32());
         Ok(docs)
     }
 
+    /// Get a doc from the id by its id.
     pub async fn get_doc(&self, id: &str) -> Result<Doc> {
         let req = self.request(Method::Get, id).build();
         let doc: Doc = self.send(req).await?;
         Ok(doc)
     }
 
+    /// Put a doc into the database.
     pub async fn put_doc(&self, mut doc: Doc) -> Result<PutResponse> {
         let id = doc.id().to_string();
         if doc.rev().is_none() {
@@ -126,6 +149,7 @@ impl CouchDB {
         self.send(req).await
     }
 
+    /// Put a list of docs into the database in a single bulk operation.
     pub async fn put_bulk(&self, docs: Vec<Doc>) -> Result<Vec<PutResult>> {
         let body = serde_json::json!({ "docs": docs });
         let req = self
@@ -145,6 +169,8 @@ impl CouchDB {
         Ok(res)
     }
 
+    /// Put a list of docs into the database in a single bulk operation, while first fetching the
+    /// latest rev for each doc.
     pub async fn put_bulk_update<T>(&self, docs: Vec<T>) -> Result<Vec<PutResult>>
     where
         T: Into<Doc>,
@@ -192,6 +218,23 @@ impl CouchDB {
         res
     }
 
+    /// Get a stream of changes from the database.
+    ///
+    /// Some options can be set on the ChangesStream, see [ChangesStream].
+    ///
+    /// Example:
+    /// ```rust
+    /// let config = Config::with_defaults("some_db".into());
+    /// let db = CouchDB::with_config(config);
+    /// db.init().await?;
+    /// let mut stream = db.changes(opts.since);
+    /// while let Some(event) = stream.next().await {
+    ///     let event = event?;
+    ///     if let Some(doc) = event.doc {
+    ///         eprintln!("new doc or rev: {:?}", doc);
+    ///     }
+    /// }
+    /// ```
     pub fn changes(&self, last_seq: Option<String>) -> ChangesStream {
         ChangesStream::new(self.client.clone(), last_seq)
     }
@@ -224,8 +267,9 @@ impl CouchDB {
     }
 }
 
-/// Impls that use Record and TypedValue structs.
+/// Methods on the CouchDB client that directly take or return [Record]s.
 impl CouchDB {
+    /// Get all records with the type from the database.
     pub async fn get_all_records<T: TypedValue>(&self) -> Result<Vec<Record<T>>> {
         let prefix = format!("{}_", T::NAME);
         let docs = self.get_all_with_prefix(&prefix).await?;
@@ -237,17 +281,24 @@ impl CouchDB {
         Ok(records)
     }
 
+    /// Get a single record by its type and id.
+    ///
+    /// ```rust
+    /// let record = db.get_record::<Media>("someidstring").await?;
+    /// ```
     pub async fn get_record<T: TypedValue>(&self, id: &str) -> Result<Record<T>> {
         let doc = self.get_doc(id).await?;
         let record = doc.into_typed_record::<T>()?;
         Ok(record)
     }
 
+    /// Put a single record into the database.
     pub async fn put_record<T: TypedValue>(&self, record: Record<T>) -> Result<PutResponse> {
         let doc = Doc::from_typed_record(record);
         self.put_doc(doc).await
     }
 
+    /// Put a vector of records into the database in a single operation.
     pub async fn put_record_bulk<T: TypedValue>(
         &self,
         records: Vec<Record<T>>,
@@ -259,6 +310,8 @@ impl CouchDB {
         self.put_bulk(docs).await
     }
 
+    /// Put a vector of records into the database in a single operation,
+    /// while first fetching the lastest rev for records that do not have a rev set.
     pub async fn put_record_bulk_update<T: TypedValue>(
         &self,
         records: Vec<Record<T>>,
@@ -272,7 +325,7 @@ impl CouchDB {
 }
 
 #[derive(Debug)]
-pub struct Auth {
+struct Auth {
     config: Config,
 }
 impl Auth {
@@ -315,13 +368,6 @@ pub struct Logger;
 impl Middleware for Logger {
     async fn handle(&self, req: Request, client: Client, next: Next<'_>) -> surf::Result<Response> {
         log::debug!("[req] {} {}", req.method(), req.url().path());
-        // let body = req.take_body();
-        // let string = body.into_string().await?;
-        // if string.len() > 0 {
-        //     eprintln!("body: {}", string);
-        //     req.body_string(string);
-        // }
-
         let now = time::Instant::now();
         let res = next.run(req, client).await?;
         log::debug!("[res] {} ({:?})", res.status(), now.elapsed());
