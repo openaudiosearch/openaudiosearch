@@ -1,6 +1,6 @@
 use crate::reference::Reference;
 use crate::{Record, TypedValue, UntypedRecord};
-use std::{fmt};
+use std::fmt;
 
 #[async_trait::async_trait]
 pub trait Resolvable: TypedValue {

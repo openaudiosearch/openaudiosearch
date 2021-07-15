@@ -1,4 +1,4 @@
-use crate::couch::types::PutResponse;
+use crate::couch::types::{Doc, PutResponse};
 use crate::server::error::AppError;
 use crate::State;
 use oas_common::Record;
@@ -6,12 +6,12 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 
 use oas_common::util;
-use rocket::{post, routes, Route};
+use rocket::{get, post, put, routes, Route};
 
 use oas_common::types;
 
 #[post("/", data = "<body>")]
-async fn feed(
+async fn post_feed(
     state: &rocket::State<State>,
     body: Json<types::Feed>,
 ) -> Result<Json<PutResponse>, AppError> {
@@ -23,6 +23,28 @@ async fn feed(
     Ok(Json(result))
 }
 
+#[put("/<id>", data = "<body>")]
+async fn put_feed(
+    state: &rocket::State<State>,
+    id: String,
+    body: Json<types::Feed>,
+) -> Result<Json<PutResponse>, AppError> {
+    let feed = body.into_inner();
+    let feed = Record::from_id_and_value(id, feed);
+    let result = state.db.put_record(feed).await?;
+
+    Ok(Json(result))
+}
+
+#[get("/<id>")]
+async fn get_feed(
+    state: &rocket::State<State>,
+    id: String,
+) -> Result<Json<Record<types::Feed>>, AppError> {
+    let feed = state.db.get_record(&id).await?;
+    Ok(Json(feed))
+}
+
 pub fn routes() -> Vec<Route> {
-    routes![feed]
+    routes![get_feed, post_feed, put_feed]
 }
