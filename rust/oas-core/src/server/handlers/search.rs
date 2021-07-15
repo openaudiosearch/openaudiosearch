@@ -1,9 +1,11 @@
 use crate::server::error::AppError;
 use rocket::http::Status;
 use rocket::{post, routes, Route};
+use rocket_okapi::openapi;
 
-#[post("/<index_name>/<search_method>", data = "<body>")]
-async fn search(
+#[openapi(skip)]
+#[post("/search/<index_name>/<search_method>", data = "<body>")]
+pub async fn search(
     state: &rocket::State<crate::State>,
     index_name: String,
     search_method: String,

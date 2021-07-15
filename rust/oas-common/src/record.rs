@@ -1,3 +1,4 @@
+use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -32,7 +33,7 @@ pub enum DecodingError {
 }
 
 /// Record metadata.
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 pub struct RecordMeta {
     guid: String,
     #[serde(rename = "type")]
@@ -64,7 +65,7 @@ pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clo
 }
 
 /// An untyped record is a record without static typing. The value is encoded as a JSON object.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct UntypedRecord {
     #[serde(rename = "$meta")]
     meta: RecordMeta,
@@ -175,7 +176,7 @@ where
 /// A record with a strongly typed value.
 ///
 /// All values should implement [TypedValue].
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct TypedRecord<T>
 where
     T: Clone,

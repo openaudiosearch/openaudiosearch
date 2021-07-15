@@ -36,3 +36,6 @@ thiserror = "1.0.25"
 tokio = { version = "1", features = ["rt", "macros"]}
 url = "2.2.2"
 reqwest = "0.11.4"
+rocket_okapi = "0.7.0-alpha-1"
+schemars = "0.8.3"
+okapi = { version = "0.6.0-alpha-1" }

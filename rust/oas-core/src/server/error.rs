@@ -1,9 +1,15 @@
 use crate::couch::CouchError;
 use oas_common::{DecodingError, EncodingError};
+use okapi::openapi3::Responses;
 use rocket::http::Status;
 use rocket::response::status::Custom;
 use rocket::response::Responder;
 use rocket::{response, response::content, Request};
+use rocket_okapi::gen::OpenApiGenerator;
+use rocket_okapi::response::OpenApiResponderInner;
+use rocket_okapi::util::add_schema_response;
+use schemars::JsonSchema;
+use serde::Serialize;
 use serde_json::json;
 use thiserror::Error;
 
@@ -46,8 +52,25 @@ impl<'r> Responder<'r, 'static> for AppError {
             _ => format!("{}", self),
         };
 
-        let json = json!({ "error": message });
-        let json_string = serde_json::to_string(&json).unwrap();
+        let response = ErrorResponse { error: message };
+
+        // let json = json!({ "error": message });
+        let json_string = serde_json::to_string(&response).unwrap();
         Custom(code, content::Json(json_string)).respond_to(req)
+    }
+}
+
+#[derive(Serialize, JsonSchema, Debug, Default)]
+struct ErrorResponse {
+    error: String,
+}
+
+impl OpenApiResponderInner for AppError {
+    fn responses(gen: &mut OpenApiGenerator) -> rocket_okapi::Result<Responses> {
+        let mut responses = Responses::default();
+        let schema = gen.json_schema::<ErrorResponse>();
+        // TODO: Find out how different codes are displayed.
+        add_schema_response(&mut responses, 500, "application/json", schema)?;
+        Ok(responses)
     }
 }

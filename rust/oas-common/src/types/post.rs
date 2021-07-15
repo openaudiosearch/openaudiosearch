@@ -1,18 +1,17 @@
-use serde::{Deserialize, Serialize};
-
 use crate::mapping::Mappable;
 use crate::record::TypedValue;
 use crate::reference::{self, Reference};
 use crate::Resolvable;
-
 use crate::Resolver;
 use crate::UntypedRecord;
 use crate::{ElasticMapping, MissingRefsError};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use super::Media;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Post {
     pub identifier: Option<String>,

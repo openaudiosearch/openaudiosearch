@@ -1,4 +1,5 @@
 use crate::{Record, TypedValue, UntypedRecord};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 pub use crate::resolver::{ResolveError, Resolver};
@@ -16,7 +17,7 @@ pub fn extract_refs<T: TypedValue>(refs: &mut [Reference<T>]) -> Vec<UntypedReco
 
 /// A reference is an enum that can be in two states: It either holds an ID to a record, or a
 /// loaded record.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(untagged)]
 pub enum Reference<T: Clone> {
     Id(String),

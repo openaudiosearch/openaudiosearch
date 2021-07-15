@@ -1,17 +1,18 @@
 use crate::mapping::Mappable;
 use crate::record::TypedValue;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 pub type Mapping = serde_json::Value;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct FeedSettings {
     check_interval: f32,
     crawl_backwards: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct FeedState {
     crawl_finished: bool,
@@ -19,14 +20,14 @@ pub struct FeedState {
     last_check: FeedCheckState,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct FeedCheckState {
     timestamp: u32,
     latest_guid: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Feed {
     pub url: String,

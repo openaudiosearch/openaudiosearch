@@ -1,8 +1,9 @@
 use crate::mapping::Mappable;
 use crate::record::TypedValue;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Media {
     pub content_url: String,

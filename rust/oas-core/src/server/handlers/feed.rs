@@ -4,14 +4,17 @@ use crate::State;
 use oas_common::Record;
 use rocket::http::Status;
 use rocket::serde::json::Json;
+use rocket_okapi::{openapi, routes_with_openapi};
 
 use oas_common::util;
 use rocket::{get, post, put, routes, Route};
 
 use oas_common::types;
 
-#[post("/", data = "<body>")]
-async fn post_feed(
+/// Create a new feed
+#[openapi(tag = "Feed")]
+#[post("/feed", data = "<body>")]
+pub async fn post_feed(
     state: &rocket::State<State>,
     body: Json<types::Feed>,
 ) -> Result<Json<PutResponse>, AppError> {
@@ -23,8 +26,10 @@ async fn post_feed(
     Ok(Json(result))
 }
 
-#[put("/<id>", data = "<body>")]
-async fn put_feed(
+/// Put feed info by feed ID
+#[openapi(tag = "Feed")]
+#[put("/feed/<id>", data = "<body>")]
+pub async fn put_feed(
     state: &rocket::State<State>,
     id: String,
     body: Json<types::Feed>,
@@ -36,15 +41,13 @@ async fn put_feed(
     Ok(Json(result))
 }
 
-#[get("/<id>")]
-async fn get_feed(
+/// Get a feed by its id
+#[openapi(tag = "Feed")]
+#[get("/feed/<id>")]
+pub async fn get_feed(
     state: &rocket::State<State>,
     id: String,
 ) -> Result<Json<Record<types::Feed>>, AppError> {
     let feed = state.db.get_record(&id).await?;
     Ok(Json(feed))
-}
-
-pub fn routes() -> Vec<Route> {
-    routes![get_feed, post_feed, put_feed]
 }

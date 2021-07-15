@@ -2,23 +2,28 @@ use oas_common::types::Media;
 use oas_common::{util, Record, TypedValue};
 use rocket::serde::json::Json;
 use rocket::{get, patch, post, put, routes, Route};
+use rocket_okapi::openapi;
 use serde_json::Value;
 
 use crate::couch::PutResponse;
 use crate::server::error::Result;
 
-pub fn routes() -> Vec<Route> {
-    routes![get_media, post_media, put_media, patch_media]
-}
+// pub fn routes() -> Vec<Route> {
+//     routes![get_media, post_media, put_media, patch_media]
+// }
 
-#[get("/<id>")]
-async fn get_media(state: &rocket::State<crate::State>, id: String) -> Result<Record<Media>> {
+/// Get a media record by id.
+#[openapi(tag = "Media")]
+#[get("/media/<id>")]
+pub async fn get_media(state: &rocket::State<crate::State>, id: String) -> Result<Record<Media>> {
     let record = state.db.get_record(&Media::guid(&id)).await?;
     Ok(Json(record))
 }
 
-#[post("/", data = "<value>")]
-async fn post_media(
+/// Create a new media record
+#[openapi(tag = "Media")]
+#[post("/media", data = "<value>")]
+pub async fn post_media(
     state: &rocket::State<crate::State>,
     value: Json<Media>,
 ) -> Result<PutResponse> {
@@ -28,8 +33,10 @@ async fn post_media(
     Ok(Json(res))
 }
 
-#[put("/<id>", data = "<value>")]
-async fn put_media(
+/// Put (update & overwrite) a media record
+#[openapi(tag = "Media")]
+#[put("/media/<id>", data = "<value>")]
+pub async fn put_media(
     state: &rocket::State<crate::State>,
     id: String,
     value: Json<Media>,
@@ -40,8 +47,10 @@ async fn put_media(
     Ok(Json(res))
 }
 
-#[patch("/<id>", data = "<value>")]
-async fn patch_media(
+/// Patch (update) a media record.
+#[openapi(tag = "Media")]
+#[patch("/media/<id>", data = "<value>")]
+pub async fn patch_media(
     state: &rocket::State<crate::State>,
     id: String,
     value: Json<Value>,

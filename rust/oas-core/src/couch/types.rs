@@ -1,3 +1,4 @@
+use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
@@ -184,7 +185,7 @@ pub struct FinishedEvent {
     pub pending: Option<u64>, // not available on CouchDB 1.0
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct PutResponse {
     pub id: String,
     pub ok: bool,

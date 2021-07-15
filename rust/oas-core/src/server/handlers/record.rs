@@ -2,24 +2,31 @@ use oas_common::types::{Feed, Media};
 use oas_common::{Record, TypedValue, UntypedRecord};
 use rocket::serde::json::Json;
 use rocket::{get, post, put, routes, Route};
+use rocket_okapi::openapi;
 use serde_json::Value;
 
 use crate::couch::Doc;
 use crate::server::error::{AppError, Result};
 
-pub fn routes() -> Vec<Route> {
-    routes![get_record, post_record]
-}
+// pub fn routes() -> Vec<Route> {
+//     routes![get_record, post_record]
+// }
 
-#[get("/<guid>")]
-async fn get_record(state: &rocket::State<crate::State>, guid: String) -> Result<Doc> {
+/// Get record by GUID
+// #[openapi(tag = "Record")]
+#[openapi(skip)]
+#[get("/record/<guid>")]
+pub async fn get_record(state: &rocket::State<crate::State>, guid: String) -> Result<Doc> {
     let db = &state.db;
     let doc = db.get_doc(&guid).await?;
     Ok(doc.into())
 }
 
-#[post("/", data = "<record>")]
-async fn post_record(
+/// Post a new record
+// #[openapi(tag = "Record")]
+#[openapi(skip)]
+#[post("/record", data = "<record>")]
+pub async fn post_record(
     state: &rocket::State<crate::State>,
     record: Json<UntypedRecord>,
 ) -> Result<serde_json::Value> {
