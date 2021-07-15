@@ -54,7 +54,7 @@ pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clo
     // fn get_name(self) -> &str;
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UntypedRecord {
     #[serde(rename = "$meta")]
     meta: RecordMeta,
