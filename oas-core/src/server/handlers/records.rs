@@ -1,4 +1,4 @@
-use oas_common::types::{Media, Feed};
+use oas_common::types::{Feed, Media};
 use oas_common::{Record, TypedValue, UntypedRecord};
 use rocket::serde::json::Json;
 use rocket::{get, post, put, routes, Route};

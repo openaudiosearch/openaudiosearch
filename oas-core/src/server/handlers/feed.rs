@@ -29,7 +29,6 @@ async fn put_feed(
     id: String,
     body: Json<types::Feed>,
 ) -> Result<Json<PutResponse>, AppError> {
-    // rocket::debug!("url: {}", body.into_inner().url);
     let feed = body.into_inner();
     let feed = Record::from_id_and_value(id, feed);
     let result = state.db.put_record(feed).await?;
@@ -42,9 +41,7 @@ async fn get_feed(
     state: &rocket::State<State>,
     id: String,
 ) -> Result<Json<Record<types::Feed>>, AppError> {
-    // rocket::debug!("url: {}", body.into_inner().url);
     let feed = state.db.get_record(&id).await?;
-
     Ok(Json(feed))
 }
 
