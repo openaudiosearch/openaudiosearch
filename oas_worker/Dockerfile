@@ -1,17 +1,11 @@
-# frontend-build: build frontend with yarn
-FROM node:14-alpine as frontend-build
-WORKDIR /build
-COPY /frontend /build
-RUN yarn && yarn run build
-
 # poetry-build: export poetry deps to requirements.txt
 # this is seperate from backend-build so that poetry deps don't end
 # among the python modules that will be copied to the final image
 FROM python:3.9.0-slim as poetry-build
 RUN python -m pip install -U pip poetry
 WORKDIR /build
-COPY oas_worker/pyproject.toml pyproject.toml
-COPY oas_worker/poetry.lock poetry.lock
+COPY ./pyproject.toml pyproject.toml
+COPY ./poetry.lock poetry.lock
 RUN poetry export -f requirements.txt --without-hashes -o /build/requirements.txt
 
 # backend-build: install all python deps from requirements.txt to /build/pip
@@ -36,8 +30,8 @@ RUN wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.t
 FROM python-base
 COPY --from=backend-build /build/pip/ /usr/local
 COPY --from=ffmpeg-build /build/ffmpeg /usr/local/bin/ffmpeg
-COPY --from=frontend-build /build/dist /app/frontend/dist
-COPY /oas_worker /app/oas_worker
-WORKDIR /app/oas_worker
+# COPY --from=frontend-build /build/dist /app/frontend/dist
+COPY . /app
+WORKDIR /app
 ENV STORAGE_PATH="/data"
-CMD ["python", "server.py"]
+CMD ["start-worker.sh"]

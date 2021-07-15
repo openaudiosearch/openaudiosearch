@@ -2,7 +2,7 @@ version: "3.9"
    
 services:
   backend:
-    build: .
+    build: rust
     ports:
       - "8080:8080"
     volumes:
@@ -12,13 +12,12 @@ services:
       ELASTIC_URL: "http://elasticsearch:9200/"
 
   worker:
-    build: .
-    command: ["celery", "-A", "app.tasks.tasks", "worker", "--loglevel=INFO"]
+    build: oas_worker
     volumes:
       - "./data/oas:/data"
     environment:
       REDIS_URL: "redis://redis:6379/0"
-      ELASTIC_URL: "http://elasticsearch:9200/"
+      OAS_URL: "http://backend:8080/api/v1"
 
   redis:
     image: "redis:alpine"
