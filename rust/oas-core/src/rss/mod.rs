@@ -7,19 +7,20 @@ use crate::{Record, Reference};
 
 pub mod crawlers;
 mod error;
+pub mod manager;
 pub mod ops;
 
 pub use error::{RssError, RssResult};
 pub use ops::{Crawler, FetchedFeedPage, Next};
 
 #[derive(Debug, Clone)]
-pub struct Feed {
+pub struct FeedWatcher {
     url: Url,
     client: surf::Client,
     channel: Option<Channel>,
 }
 
-impl Feed {
+impl FeedWatcher {
     pub fn new(url: impl AsRef<str>) -> Result<Self, ParseError> {
         let url = url.as_ref().parse()?;
         let feed = Self {
