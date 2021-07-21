@@ -185,6 +185,13 @@ pub struct FinishedEvent {
     pub pending: Option<u64>, // not available on CouchDB 1.0
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GetChangesResult {
+    pub results: Vec<ChangeEvent>,
+    pub last_seq: String,
+    pub pending: Option<i64>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct PutResponse {
     pub id: String,

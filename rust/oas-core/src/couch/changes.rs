@@ -25,7 +25,7 @@ pub struct ChangesStream {
 
 enum ChangesStreamState {
     Idle,
-    Requesting(Pin<Box<dyn Future<Output = surf::Result<Response>>>>),
+    Requesting(Pin<Box<dyn Future<Output = surf::Result<Response>> + Send + 'static>>),
     Reading(Lines<Response>),
 }
 

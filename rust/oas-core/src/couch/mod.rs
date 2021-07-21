@@ -239,6 +239,17 @@ impl CouchDB {
         ChangesStream::new(self.client.clone(), last_seq)
     }
 
+    pub async fn get_last_seq(&self) -> anyhow::Result<String> {
+        let mut params = HashMap::new();
+        params.insert("descending", "true".to_string());
+        params.insert("limit", "1".to_string());
+        let path = "_changes";
+        let req = self.request(Method::Get, path).query(&params);
+        let res: GetChangesResult = self.send(req.unwrap()).await?;
+        eprintln!("SEQ{:?}", res.last_seq);
+        Ok(res.last_seq)
+    }
+
     fn request(&self, method: Method, path: impl AsRef<str>) -> RequestBuilder {
         let url = self.path_to_url(path.as_ref());
         RequestBuilder::new(method, url).content_type(mime::JSON)

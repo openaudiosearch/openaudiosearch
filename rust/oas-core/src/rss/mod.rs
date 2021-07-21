@@ -1,3 +1,4 @@
+use crate::couch::CouchDB;
 use oas_common::{types::Post, util};
 use rss::Channel;
 use std::time::Duration;
@@ -45,13 +46,13 @@ impl FeedWatcher {
     pub fn url(&self) -> &Url {
         &self.url
     }
-    pub async fn watch(&mut self) -> Result<(), RssError> {
+    pub async fn watch(&mut self, db: CouchDB) -> Result<(), RssError> {
         let mut interval = tokio::time::interval(Duration::new(5, 0));
-
         loop {
             interval.tick().await;
             self.load().await?;
-            eprintln!("TICK {:?}", self.url)
+            let records = self.into_posts()?;
+            db.put_record_bulk(records).await?;
         }
     }
 
