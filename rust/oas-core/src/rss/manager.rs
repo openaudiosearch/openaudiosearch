@@ -1,78 +1,75 @@
-
-use crate::couch::{CouchDB};
-
-use async_std::stream::StreamExt;
-
+use super::error::RssError;
+use super::FeedWatcher;
+use crate::couch::CouchDB;
 use oas_common::types;
 use oas_common::TypedRecord;
 use oas_common::TypedValue;
 use std::collections::HashMap;
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::{Arc, Mutex};
-use std::thread::spawn;
+use tokio::task::JoinHandle;
+use tokio_stream::StreamExt;
 
+type Task<T> = JoinHandle<Result<T, RssError>>;
+type Store = HashMap<String, TypedRecord<types::Feed>>;
+
+use std::{
+    thread,
+    time::{Duration, Instant},
+};
 
 #[derive(Debug)]
 pub struct FeedManager {
-    store: FeedStore,
-}
-
-#[derive(Clone, Debug)]
-pub struct FeedStore {
-    data: Arc<Mutex<HashMap<String, TypedRecord<types::Feed>>>>,
-    sender: Sender<(String, TypedRecord<types::Feed>)>,
-}
-
-impl FeedStore {
-    pub fn new(
-        sender: Sender<(String, TypedRecord<types::Feed>)>) -> Self {
-        Self {
-            data: Arc::new(Mutex::new(HashMap::new())),
-            sender: sender,
-        }
-    }
+    store: HashMap<String, TypedRecord<types::Feed>>,
 }
 
 impl FeedManager {
-    pub fn new() -> Self {
-        let (sender, receiver) = channel();
+    fn new() -> Self {
         let manager = Self {
-            store: FeedStore::new(sender),
+            store: HashMap::new(),
         };
-        return manager
-        
+        return manager;
     }
-    pub fn print(&self) {
-        eprintln!("FeedStore: {:?}", self.store)
-    }
-
-    pub async fn init(&'static mut self, db: &CouchDB) -> anyhow::Result<()> {
+    async fn init(&mut self, db: &CouchDB) -> anyhow::Result<()> {
         let records = db.get_all_records::<types::Feed>().await?;
         for record in records {
-            self.store.sender.send((record.id().into(), record))?;
+            eprintln!("RECORD: {:?}", record);
+            self.store.insert(record.id().into(), record);
         }
         Ok(())
     }
-    
 }
-fn run(manager: FeedManager, receiver : Receiver<(String, TypedRecord<types::Feed>)> ) -> anyhow::Result<()> {
-    let data = manager.store.data.clone();
-    eprintln!("RUN METHOD");
-    spawn(move || {
-        for i in receiver {
-            let (id, value) = i;
-            let mut data = data.lock().unwrap();
-            data.insert(id, value);
-        }
-    });
 
+pub async fn run_manager(db: &CouchDB) -> anyhow::Result<()> {
+    let mut manager = FeedManager::new();
+    manager.init(db).await?;
+    //let store = Arc::new(Mutex::new(manager.store));
+    let tasks = watch_feeds(manager.store)?;
+    eprintln!("TASKS {:?}", tasks);
+    eprintln!("START  CHANGES");
+    watch_changes(db).await?;
+    for handle in tasks.into_iter() {
+        handle.await??;
+    }
     Ok(())
 }
 
+fn watch_feeds(store: Store) -> Result<Vec<Task<()>>, RssError> {
+    let mut tasks = Vec::new();
+
+    for (id, feed) in store.clone().into_iter() {
+        let mut watcher = FeedWatcher::new(feed.value.url)?;
+
+        tasks.push(tokio::spawn(async move {
+            eprintln!("Watch {}", id);
+            watcher.watch().await
+        }));
+    }
+    Ok(tasks)
+}
+
 /// Checks the CouchDB [ChangesStream] for incoming feed records.
-pub async fn watch_changes(manager: &mut FeedManager, db: &CouchDB) -> anyhow::Result<()> {
-    eprintln!("WATCHCHENGES");
+async fn watch_changes(db: &CouchDB) -> Result<Vec<Task<()>>, RssError> {
     let mut stream = db.changes(None);
+    let mut tasks = Vec::new();
     stream.set_infinite(true);
     while let Some(event) = stream.next().await {
         let event = event?;
@@ -84,21 +81,15 @@ pub async fn watch_changes(manager: &mut FeedManager, db: &CouchDB) -> anyhow::R
                 Ok(record) => match record.typ() {
                     types::Feed::NAME => {
                         let url = &record.value.url;
-                        manager.store.sender.send((url.clone(), record.clone()))?;
+                        let mut watcher = FeedWatcher::new(url)?;
+                        eprintln!("TASKS {:?}", tasks.len());
+                        tasks.push(tokio::spawn(async move { watcher.watch().await }));
                     }
                     _ => {}
                 },
             }
         }
     }
-    Ok(())
+    eprintln!("AFTER ###############################");
+    Ok(tasks)
 }
-
-// pub async fn feed_task_loop(db: &CouchDB, feed: Feed) -> Result<(), RssError> {
-//     loop {
-//         feed.load().await?;
-//         let items = feed.into_medias()?;
-//         let docs: Vec<Doc> = items.iter().map(|r| r.clone().into()).collect();
-//         let res = db.put_bulk(docs).await?;
-//     }
-// }

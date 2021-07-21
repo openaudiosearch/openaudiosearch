@@ -8,7 +8,7 @@ use oas_common::Resolvable;
 use oas_common::TypedValue;
 use oas_core::couch::PutResult;
 use oas_core::rss;
-use oas_core::rss::manager::FeedManager;
+use oas_core::rss::manager::run_manager;
 use oas_core::server::{run_server, ServerOpts};
 use oas_core::types::Post;
 use oas_core::util::*;
@@ -64,7 +64,7 @@ enum FeedCommand {
     /// Fetch and crawl a feed by URL (increasing offset param).
     Crawl(rss::ops::CrawlOpts),
     /// Watch on CouchDB Changesstream for new Feeds
-    Watch(FeedFetchOpts),
+    Watch,
 }
 
 #[derive(Clap)]
@@ -382,9 +382,8 @@ async fn run_feed(state: State, command: FeedCommand) -> anyhow::Result<()> {
         FeedCommand::Crawl(opts) => {
             rss::ops::crawl_and_save(&state.db, &opts).await?;
         }
-        FeedCommand::Watch(opts) => {
-            let mut manager = rss::manager::FeedManager::new();
-            manager.init(&state.db).await?;
+        FeedCommand::Watch => {
+            run_manager(&state.db).await?;
         }
     };
     Ok(())
