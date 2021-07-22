@@ -1,7 +1,12 @@
-# Open Audio Search
+<h1 align="center">Open Audio Search</h1>
+<div align="center">
+ <strong>
+    A full text search engine with automatic speech recognition for podcasts
+  </strong>
+</div>
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-
+[![Docs: Rust](https://img.shields.io/badge/Docs-Rust-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ## What is it?
 
@@ -11,10 +16,13 @@ With **Open Audio Search**, we want to make the archives of community media, rad
 
 ## Main Features
 
-* *Automatic Speech Recognition* using [Vosk toolkit](https://alphacephei.com/vosk/) ([Kaldi](http://kaldi-asr.org/) under the hood)
-* *Task queue engine* using [Redis](https://redis.io/)
+* *Core backend* written in [Rust](https://rust-lang.org), providing a REST API and managing the indexing pipeline
+* *Document database* using [CouchDB](https://couchdb.apache.org/)
 * *Full-text search* using [Elasticsearch Community Edition](https://www.elastic.co/downloads/elasticsearch-oss)
-* *User Interface* using [React](https://reactjs.org/)
+* *Web user interface* using [React](https://reactjs.org/)
+* *Task queue* with tasks written in [Python](https://python.org) (using [Celery](https://docs.celeryproject.org/) and [Redis](https://redis.io/))
+* *Automatic Speech Recognition* using [Vosk toolkit](https://alphacephei.com/vosk/) ([Kaldi](http://kaldi-asr.org/) under the hood)
+
 
 ## Install & run with Docker
 
@@ -44,43 +52,43 @@ docker-compose exec backend bash scripts/elastic-disable-threshold.sh
 
 ## Run locally for developing
 
-To develop locally you may want to run OAS without Docker. You should install the following requirements beforehand:
-- Python 3 and [poetry](https://python-poetry.org/docs/)
-- For building the frontend: [Node.js](https://nodejs.org/en/) and npm or yarn
-- [ffmpeg](https://www.ffmpeg.org/)
+To run OAS locally for developing or testing you should install the following requirements beforehand:
+- For the core: [Rust](https://rust-lang.org), which is most easily installed with [Rustup](https://rustup.rs/).
+- For the worker: [Python 3](https://python.org) and [poetry](https://python-poetry.org/docs/). Also requires [ffmpeg](https://www.ffmpeg.org/).
+- For the frontend: [Node.js](https://nodejs.org/en/) and npm or yarn
 
 *Clone this repository*
 ```sh
-git clone https://github.com/arso-project/open-audio-search
+git clone https://github.com/openaudiosearch/openaudiosearch
 ```
 
-*Prepare and build frontend* 
-```sh
-cd frontend
-yarn
-yarn build
-```
-
-*Prepare and build backend*
-```sh
-cd oas_worker
-poetry install
-```
-
-*Start elasticsearch and redis via Docker*
+*Start CouchDB, Elastisearch and Redis via Docker*
 ```sh
 docker-compose -f docker-compose.dev.yml up
 ```
 
-*Start OAS server and worker*
+*Build an run the core*
 ```sh
-cd oas_worker
-poetry run python server.py
-# in another terminal:
-poetry run celery -A app.tasks.tasks worker --loglevel=INFO
+cargo run -- run
 ```
 
-Open the UI in a browser at [http://localhost:8080](http://localhost:8080/).
+*Run the frontend in development mode* 
+```sh
+cd frontend
+yarn
+yarn start
+```
+
+*Run the worker*
+```sh
+cd oas_worker
+poetry install
+./start-worker.sh
+```
+
+The live-reloading UI development server serves the UI at [http://localhost:4000](http://localhost:4000).
+The OAS API is served at [http://localhost:8080](http://localhost:8080/). 
+REST API docs are automatically generated and served at [http://localhost:8080/swagger-ui](http://localhost:8080/swagger-ui)
 
 ### Development tips and tricks
 
@@ -88,7 +96,9 @@ Have a look at the [development guide](./docs/development.md).
 
 ## Configuration
 
-OAS is configured through environment variables. If a `.env` file is present in the directory from which oas_worker is started the variables from there will be used. To customize the configuration, copy [`.env.default`](`oas_worker/.env.default`) in the `oas_worker` folder to `.env` and adjust the values.
+*TODO: This is partly outdated and needs to be updated. The `oas` CLI help list supported options and their corresponding environment variables*
+
+OAS is configured through environment variables. ~~If a `.env` file is present in the directory from which oas_worker is started the variables from there will be used. To customize the configuration, copy [`.env.default`](`oas_worker/.env.default`) in the `oas_worker` folder to `.env` and adjust the values.~~
 
 |variable|default|description|
 |-|-|-|
