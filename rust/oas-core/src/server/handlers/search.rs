@@ -18,8 +18,8 @@ pub async fn search(
         ));
     }
 
-    let index = &state.index;
-    let client = index.client();
+    let index = &state.index_manager.data_index();
+    let client = &index.client();
 
     let path = format!("{}/{}", index.index(), search_method);
     let res = client

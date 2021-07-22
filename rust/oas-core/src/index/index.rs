@@ -18,23 +18,8 @@ use std::sync::Arc;
 use std::time::Instant;
 use url::Url;
 
+use super::IndexError;
 use oas_common::{ElasticMapping, Record, TypedValue, UntypedRecord};
-
-#[derive(thiserror::Error, Debug)]
-pub enum ElasticError {
-    #[error("Elasticsearch error: {0}")]
-    Elastic(#[from] elasticsearch::Error),
-    #[error("Elasticsearch exception: {:?}", .0.error())]
-    Exception(elasticsearch::http::response::Exception),
-    #[error("Other: {0}")]
-    Other(String),
-}
-
-impl From<elasticsearch::http::response::Exception> for ElasticError {
-    fn from(ex: elasticsearch::http::response::Exception) -> Self {
-        Self::Exception(ex)
-    }
-}
 
 /// ElasticSearch config.
 #[derive(Clap, Debug, Clone)]
@@ -158,7 +143,7 @@ impl Index {
     pub async fn put_typed_records<T: TypedValue>(
         &self,
         docs: &[Record<T>],
-    ) -> Result<(), ElasticError> {
+    ) -> Result<(), IndexError> {
         let docs: Vec<UntypedRecord> = docs
             .iter()
             .filter_map(|r| r.clone().into_untyped_record().ok())
@@ -168,7 +153,7 @@ impl Index {
     }
 
     /// Put a list of [UntypedRecord]s to the index
-    pub async fn put_untyped_records(&self, docs: &[UntypedRecord]) -> Result<(), ElasticError> {
+    pub async fn put_untyped_records(&self, docs: &[UntypedRecord]) -> Result<(), IndexError> {
         self.set_refresh_interval(json!("-1")).await?;
         let now = Instant::now();
 
@@ -293,7 +278,7 @@ for (nested_doc in nested_docs) {
 /// TODO: Move into an extension trait for Response
 async fn check_error(
     response: elasticsearch::http::response::Response,
-) -> Result<elasticsearch::http::response::Response, ElasticError> {
+) -> Result<elasticsearch::http::response::Response, IndexError> {
     let status_code_err = response.error_for_status_code_ref();
     if let Err(status_code_err) = status_code_err {
         let ex = response.exception().await?;
@@ -311,7 +296,7 @@ async fn index_records(
     client: &Elasticsearch,
     index_name: &str,
     posts: &[UntypedRecord],
-) -> Result<BulkPutResponse, ElasticError> {
+) -> Result<BulkPutResponse, IndexError> {
     if posts.is_empty() {
         return Ok(BulkPutResponse::default());
     }
@@ -453,118 +438,6 @@ fn get_default_mapping() -> serde_json::Value {
     json!({
         "mappings": {
             "properties": post_mapping
-            // {
-                // "type": {
-                //     "type": "keyword"
-                // },
-                // "id": {
-                //     "type": "integer"
-                // },
-        //         "parent_id": {
-        //             "relations": {
-        //                 "question": "answer"
-        //             },
-        //             "type": "join"
-        //         },
-        //         "creation_date": {
-        //             "type": "date"
-        //         },
-        //         "score": {
-        //             "type": "integer"
-        //         },
-        //         "body": {
-        //             "analyzer": "html",
-        //             "search_analyzer": "expand",
-        //             "type": "text"
-        //         },
-        //         "owner_user_id": {
-        //             "type": "integer"
-        //         },
-        //         "owner_display_name": {
-        //             "type": "keyword"
-        //         },
-        //         "last_editor_user_id": {
-        //             "type": "integer"
-        //         },
-        //         "last_edit_date": {
-        //             "type": "date"
-        //         },
-        //         "last_activity_date": {
-        //             "type": "date"
-        //         },
-        //         "comment_count": {
-        //             "type": "integer"
-        //         },
-        //         "title": {
-        //             "analyzer": "expand",
-        //             "norms": false,
-        //             "fields": {
-        //                 "raw": {
-        //                     "type": "keyword"
-        //                 }
-        //             },
-        //             "type": "text"
-        //         },
-        //         "title_suggest": {
-        //             "type": "completion"
-        //         },
-        //         "accepted_answer_id": {
-        //             "type": "integer"
-        //         },
-        //         "view_count": {
-        //             "type": "integer"
-        //         },
-        //         "last_editor_display_name": {
-        //             "type": "keyword"
-        //         },
-        //         "tags": {
-        //             "type": "keyword"
-        //         },
-        //         "answer_count": {
-        //             "type": "integer"
-        //         },
-        //         "favorite_count": {
-        //             "type": "integer"
-        //         },
-        //         "community_owned_date": {
-        //             "type": "date"
-        //         }
-        //     },
-        //     "_routing": {
-        //         "required": true
-        //     },
-        //     "_source": {
-        //         "excludes": ["title_suggest"]
-        //     }
-        // },
-        // "settings": {
-        //     "index.number_of_shards": 3,
-        //     "index.number_of_replicas": 0,
-        //     "analysis": {
-        //         "analyzer": {
-        //             "html": {
-        //                 "char_filter": ["html_strip", "programming_language"],
-        //                 "filter": ["lowercase", "stop"],
-        //                 "tokenizer": "standard",
-        //                 "type": "custom"
-        //             },
-        //             "expand": {
-        //                 "char_filter": ["programming_language"],
-        //                 "filter": ["lowercase", "stop"],
-        //                 "tokenizer": "standard",
-        //                 "type": "custom"
-        //             }
-        //         },
-        //         "char_filter": {
-        //             "programming_language": {
-        //                 "mappings": [
-        //                     "c# => csharp", "C# => csharp",
-        //                     "f# => fsharp", "F# => fsharp",
-        //                 ],
-        //                 "type": "mapping"
-        //             }
-        //         }
-            // }
         }
     })
 }
