@@ -1,7 +1,8 @@
 use crate::couch::types::{Doc, PutResponse};
 use crate::server::error::AppError;
 use crate::State;
-use oas_common::Record;
+use clap::App;
+use oas_common::{Record, TypedValue};
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket_okapi::{openapi, routes_with_openapi};
@@ -21,9 +22,13 @@ pub async fn post_feed(
     // rocket::debug!("url: {}", body.into_inner().url);
     let feed = body.into_inner();
     let feed = Record::from_id_and_value(util::id_from_hashed_string(&feed.url), feed);
-    let result = state.db.put_record(feed).await?;
-
-    Ok(Json(result))
+    if feed.value.validate().unwrap() {
+        let result = state.db.put_record(feed).await?;
+        Ok(Json(result))
+    } else {
+        let error = AppError::Other("invalid url".into());
+        Err(error)
+    }
 }
 
 /// Put feed info by feed ID

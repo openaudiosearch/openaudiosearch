@@ -2,6 +2,7 @@ use crate::mapping::Mappable;
 use crate::record::TypedValue;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use url::{ParseError, Url};
 
 pub type Mapping = serde_json::Value;
 
@@ -39,6 +40,20 @@ pub struct Feed {
 
 impl TypedValue for Feed {
     const NAME: &'static str = "oas.Feed";
+
+    fn validate(&self) -> Option<bool> {
+        let url = Url::parse(&self.url);
+        match url {
+            Ok(_url) => {
+                eprintln!("TRUE");
+                return Some(true);
+            }
+            Err(_e) => {
+                eprintln!("FALSE");
+                return Some(false);
+            }
+        }
+    }
 }
 
 impl Mappable for Feed {}

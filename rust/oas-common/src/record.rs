@@ -62,6 +62,10 @@ pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clo
     fn guid(id: &str) -> String {
         format!("{}_{}", Self::NAME, id)
     }
+
+    fn validate(&self) -> Option<bool> {
+        None
+    }
 }
 
 /// An untyped record is a record without static typing. The value is encoded as a JSON object.
