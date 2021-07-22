@@ -391,7 +391,7 @@ pub fn create_client(addr: Option<String>) -> Result<Elasticsearch, Error> {
         }
     }
 
-    let url = addr.unwrap_or(default_addr());
+    let url = addr.unwrap_or_else(default_addr);
     let mut url = Url::parse(&url)?;
 
     let credentials = if url.scheme() == "https" {

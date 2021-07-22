@@ -1,7 +1,7 @@
+mod elastic;
 mod error;
-mod index;
 mod manager;
 
+pub use elastic::{Config, Index};
 pub use error::IndexError;
-pub use index::{Config, Index};
 pub use manager::{IndexManager, InitOpts};

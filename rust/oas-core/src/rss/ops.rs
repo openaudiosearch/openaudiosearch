@@ -152,15 +152,11 @@ pub async fn fetch_and_save(db: &CouchDB, url: &Url) -> RssResult<FetchedFeedPag
 }
 
 async fn save_feed_to_db(db: &CouchDB, feed: FeedWatcher) -> RssResult<FetchedFeedPage> {
-    // let items = feed.into_medias()?;
-    let mut posts = feed.into_posts()?;
+    let mut posts = feed.to_posts()?;
     let mut docs = vec![];
     for post in posts.iter_mut() {
         let refs = post.extract_refs();
-        let mut refs: Vec<Doc> = refs
-            .into_iter()
-            .map(Doc::from_untyped_record)
-            .collect();
+        let mut refs: Vec<Doc> = refs.into_iter().map(Doc::from_untyped_record).collect();
         let post = Doc::from_typed_record(post.clone());
         docs.append(&mut refs);
         docs.push(post);

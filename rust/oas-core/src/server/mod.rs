@@ -25,7 +25,10 @@ pub struct ServerOpts {
 pub async fn run_server(state: State, opts: ServerOpts) -> anyhow::Result<()> {
     let figment = rocket::Config::figment()
         .merge(("port", opts.port.unwrap_or(DEFAULT_PORT)))
-        .merge(("address", opts.host.unwrap_or(DEFAULT_HOST.to_string())));
+        .merge((
+            "address",
+            opts.host.unwrap_or_else(|| DEFAULT_HOST.to_string()),
+        ));
 
     let cors = rocket_cors::CorsOptions::default().to_cors()?;
     let app = rocket::custom(figment)

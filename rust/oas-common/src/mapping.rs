@@ -250,7 +250,6 @@ mod tests {
 
     fn reserialize(input: &str) -> String {
         let output: Value = serde_json::from_str(input).expect("failed to parse");
-        let output = serde_json::to_string(&output).expect("failed to serialize");
-        output
+        serde_json::to_string(&output).expect("failed to serialize")
     }
 }

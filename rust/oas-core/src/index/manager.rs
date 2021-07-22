@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time;
 
-use super::index::{self as elastic, Index};
+use super::{elastic, Index};
 
 pub const DEFAULT_PREFIX: &str = "oas";
 pub const META_INDEX_NAME: &str = "_meta";
@@ -23,8 +23,6 @@ pub const META_INDEX_NAME: &str = "_meta";
 pub const DATA_INDEX_NAME: &str = "data";
 
 pub const DOC_ID_INDEX_STATE: &str = "IndexMeta.data";
-
-pub type Seq = String;
 
 #[derive(Debug, Clone)]
 pub struct IndexManager {
@@ -80,7 +78,7 @@ impl Meta {
         Self { index }
     }
 
-    pub async fn latest_indexed_seq(&self) -> anyhow::Result<Option<Seq>> {
+    pub async fn latest_indexed_seq(&self) -> anyhow::Result<Option<String>> {
         let id = DOC_ID_INDEX_STATE;
         let doc = self.index.get_doc::<IndexState>(id).await?;
         if let Some(index_state) = doc {
@@ -90,7 +88,7 @@ impl Meta {
         }
     }
 
-    pub async fn set_latest_indexed_seq(&self, seq: &Seq) -> anyhow::Result<()> {
+    pub async fn set_latest_indexed_seq(&self, seq: &str) -> anyhow::Result<()> {
         let id = DOC_ID_INDEX_STATE;
         let index_state = IndexState {
             last_seq: Some(seq.to_string()),

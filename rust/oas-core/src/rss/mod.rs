@@ -52,7 +52,7 @@ impl FeedWatcher {
         loop {
             interval.tick().await;
             self.load().await?;
-            let records = self.into_posts()?;
+            let records = self.to_posts()?;
             let put_result = db.put_record_bulk(records).await?;
 
             let (success, error): (Vec<_>, Vec<_>) = put_result
@@ -72,7 +72,7 @@ impl FeedWatcher {
         let req = surf::get(&self.url);
         let mut res = self.client.send(req).await?;
         if !res.status().is_success() {
-            return Err(RssError::RemoteHttpError(res));
+            return Err(RssError::RemoteHttpError(Box::new(res)));
         }
         let bytes = res.body_bytes().await?;
         let channel = Channel::read_from(&bytes[..])?;
@@ -80,7 +80,7 @@ impl FeedWatcher {
         Ok(())
     }
 
-    pub fn into_posts(&self) -> Result<Vec<Record<Post>>, RssError> {
+    pub fn to_posts(&self) -> Result<Vec<Record<Post>>, RssError> {
         if self.channel.is_none() {
             return Err(RssError::NoChannel);
         }
@@ -93,7 +93,7 @@ impl FeedWatcher {
         Ok(records)
     }
 
-    pub fn into_medias(&self) -> Result<Vec<Record<Media>>, RssError> {
+    pub fn to_medias(&self) -> Result<Vec<Record<Media>>, RssError> {
         if let Some(channel) = &self.channel {
             let mut records = vec![];
             for item in channel.items() {
@@ -134,8 +134,7 @@ fn item_into_post(item: rss::Item) -> Record<Post> {
     // TODO: What to do with items without GUID?
     let guid = guid.unwrap();
     let id = util::id_from_hashed_string(guid.value().to_string());
-    let record = Record::from_id_and_value(id, value);
-    record
+    Record::from_id_and_value(id, value)
 }
 
 fn item_into_record(item: rss::Item) -> Record<Media> {
@@ -154,6 +153,5 @@ fn item_into_record(item: rss::Item) -> Record<Media> {
     // TODO: What to do with items without GUID?
     let guid = guid.unwrap();
     let id = util::id_from_hashed_string(guid.value().to_string());
-    let record = Record::from_id_and_value(id, value);
-    record
+    Record::from_id_and_value(id, value)
 }

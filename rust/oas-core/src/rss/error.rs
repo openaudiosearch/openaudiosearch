@@ -10,7 +10,7 @@ pub enum RssError {
     #[error("Serialization error: {0}")]
     Json(#[from] serde_json::Error),
     #[error("Remote error: {}", .0.status())]
-    RemoteHttpError(surf::Response),
+    RemoteHttpError(Box<surf::Response>),
     // #[error("IO error")]
     // IO(#[from] std::io::Error),
     #[error("RSS error")]

@@ -65,8 +65,7 @@ impl<T: TypedValue> Reference<T> {
                 let id = self.id().to_string();
                 let next = Self::Id(id);
                 let this = std::mem::replace(self, next);
-                let record = this.into_record();
-                record
+                this.into_record()
             }
             Self::Id(_) => None,
         }

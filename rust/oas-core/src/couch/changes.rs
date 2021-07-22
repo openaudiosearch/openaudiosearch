@@ -23,6 +23,7 @@ pub struct ChangesStream {
     infinite: bool,
 }
 
+#[allow(clippy::large_enum_variant)]
 enum ChangesStreamState {
     Idle,
     Requesting(Pin<Box<dyn Future<Output = surf::Result<Response>> + Send + 'static>>),

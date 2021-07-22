@@ -18,10 +18,9 @@ struct FeedManager {
 
 impl FeedManager {
     fn new() -> Self {
-        let manager = Self {
+        Self {
             store: HashMap::new(),
-        };
-        manager
+        }
     }
     async fn init(&mut self, db: &CouchDB) -> anyhow::Result<()> {
         let records = db.get_all_records::<types::Feed>().await?;
