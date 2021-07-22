@@ -1,4 +1,4 @@
-use crate::couch::CouchDB;
+use crate::couch::{CouchDB, PutResult};
 use oas_common::{types::Post, util};
 use rss::Channel;
 use std::time::Duration;
@@ -53,8 +53,18 @@ impl FeedWatcher {
             interval.tick().await;
             self.load().await?;
             let records = self.into_posts()?;
-            eprintln!("URL: {:?}", self.url.to_string());
-            db.put_record_bulk(records).await?;
+            let put_result = db.put_record_bulk(records).await?;
+
+            let (success, error): (Vec<_>, Vec<_>) = put_result
+                .iter()
+                .partition(|r| matches!(r, PutResult::Ok(_)));
+
+            log::debug!(
+                "saved posts from feed {} ({} success, {} error)",
+                self.url,
+                success.len(),
+                error.len()
+            );
         }
     }
 

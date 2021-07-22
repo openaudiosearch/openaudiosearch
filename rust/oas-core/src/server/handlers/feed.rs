@@ -20,12 +20,12 @@ pub async fn post_feed(
     // rocket::debug!("url: {}", body.into_inner().url);
     let feed = body.into_inner();
     let feed = Record::from_id_and_value(util::id_from_hashed_string(&feed.url), feed);
-    if feed.value.validate().unwrap() {
-        let result = state.db.put_record(feed).await?;
-        Ok(Json(result))
-    } else {
-        let error = AppError::Other("invalid url".into());
-        Err(error)
+    match feed.validate() {
+        Ok(_) => {
+            let result = state.db.put_record(feed).await?;
+            Ok(Json(result))
+        }
+        Err(err) => Err(AppError::ValidationError(err)),
     }
 }
 

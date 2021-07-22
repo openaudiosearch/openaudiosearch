@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::mapping::Mappable;
-use crate::record::TypedValue;
+use crate::record::{TypedValue, ValidationError};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -63,18 +63,9 @@ impl Feed {
 impl TypedValue for Feed {
     const NAME: &'static str = "oas.Feed";
 
-    fn validate(&self) -> Option<bool> {
-        let url = Url::parse(&self.url);
-        match url {
-            Ok(_url) => {
-                eprintln!("TRUE");
-                return Some(true);
-            }
-            Err(_e) => {
-                eprintln!("FALSE");
-                return Some(false);
-            }
-        }
+    fn validate(&self) -> Result<(), ValidationError> {
+        let _url = Url::parse(&self.url)?;
+        Ok(())
     }
 }
 

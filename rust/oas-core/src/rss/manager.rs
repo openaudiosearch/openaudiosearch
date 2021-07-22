@@ -12,7 +12,7 @@ type Task<T> = JoinHandle<Result<T, RssError>>;
 type Store = HashMap<String, TypedRecord<types::Feed>>;
 
 #[derive(Debug)]
-pub struct FeedManager {
+struct FeedManager {
     store: HashMap<String, TypedRecord<types::Feed>>,
 }
 
@@ -31,9 +31,11 @@ impl FeedManager {
         Ok(())
     }
 }
-/// Starts the [Feed Manager],
-/// which loads the current feeds from [CouchDB]
-/// and then looks for incoming feeds in the [Change Stream].
+/// Opens a feed manager and start to track and watch all feeds in the database,
+/// This will load all feeds from [CouchDB]
+/// and then look for incoming feeds in the [ChangesStream].
+/// It will periodically fetch the feeds and insert new items 
+/// as [Post]s and [Media]s into the database.
 pub async fn run_manager(db: &CouchDB) -> anyhow::Result<()> {
     let mut manager = FeedManager::new();
     manager.init(db).await?;
@@ -55,10 +57,10 @@ fn watch_feeds(store: Store, db: CouchDB) -> Result<Vec<Task<()>>, RssError> {
 
     for (id, feed) in store.clone().into_iter() {
         let settings = feed.value.settings;
+        log::debug!("Start to watch feed {} [{}] for updates", id, feed.value.url);
         let mut watcher = FeedWatcher::new(feed.value.url, settings)?;
         let db = db.clone();
         tasks.push(tokio::spawn(async move {
-            eprintln!("Watch {}", id);
             watcher.watch(db).await
         }));
     }
@@ -82,7 +84,6 @@ async fn watch_changes(db: CouchDB) -> Result<(), RssError> {
                     let url = &record.value.url;
                     let settings = record.value.settings;
                     let mut watcher = FeedWatcher::with_client(client.clone(), url, settings)?;
-                    eprintln!("TASKS {:?}", tasks.len());
                     let db = db.clone();
                     tasks.push(tokio::spawn(async move { watcher.watch(db).await }));
                 }

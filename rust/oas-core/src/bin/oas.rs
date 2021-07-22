@@ -63,7 +63,7 @@ enum FeedCommand {
     Fetch(FeedFetchOpts),
     /// Fetch and crawl a feed by URL (increasing offset param).
     Crawl(rss::ops::CrawlOpts),
-    /// Watch on CouchDB Changesstream for new Feeds
+    /// Watch on CouchDB changes stream for new feeds
     Watch,
 }
 

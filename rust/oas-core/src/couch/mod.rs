@@ -246,7 +246,6 @@ impl CouchDB {
         let path = "_changes";
         let req = self.request(Method::Get, path).query(&params);
         let res: GetChangesResult = self.send(req.unwrap()).await?;
-        eprintln!("SEQ{:?}", res.last_seq);
         Ok(res.last_seq)
     }
 
