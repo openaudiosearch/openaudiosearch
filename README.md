@@ -5,8 +5,11 @@
   </strong>
 </div>
 
+<br />
+
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Docs: Rust](https://img.shields.io/badge/Docs-Rust-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
 
 ## What is it?
 
