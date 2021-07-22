@@ -160,7 +160,6 @@ async fn index_changes_stream(
         let len = batch.len();
         let latest_seq = &batch.last().unwrap().seq.to_string();
         index_changes_batch(db, index, batch).await?;
-        eprintln!("indexed {}, store latest seq {}", len, latest_seq);
         meta.set_latest_indexed_seq(latest_seq).await?;
     }
 
@@ -236,10 +235,10 @@ pub async fn index_changes_batch(
         index.update_nested_record("media", &media_record).await?;
     }
     log::debug!(
-        "indexed {} posts, {} media updates in {}",
+        "indexed {} posts, {} media updates in {}ms",
         post_batch.len(),
         media_batch.len(),
-        humantime::format_duration(start.elapsed())
+        start.elapsed().as_millis()
     );
     Ok(())
 }
