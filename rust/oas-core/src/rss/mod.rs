@@ -1,47 +1,71 @@
+use crate::couch::{CouchDB, PutResult};
 use oas_common::{types::Post, util};
 use rss::Channel;
+use std::time::Duration;
 use url::{ParseError, Url};
 
-use crate::types::Media;
+use crate::types::{FeedSettings, Media};
 use crate::{Record, Reference};
-
 pub mod crawlers;
 mod error;
+pub mod manager;
 pub mod ops;
 
 pub use error::{RssError, RssResult};
 pub use ops::{Crawler, FetchedFeedPage, Next};
 
 #[derive(Debug, Clone)]
-pub struct Feed {
+pub struct FeedWatcher {
     url: Url,
     client: surf::Client,
     channel: Option<Channel>,
+    settings: FeedSettings,
 }
 
-impl Feed {
-    pub fn new(url: impl AsRef<str>) -> Result<Self, ParseError> {
-        let url = url.as_ref().parse()?;
-        let feed = Self {
-            url,
-            client: surf::Client::new(),
-            channel: None,
-        };
-        Ok(feed)
+impl FeedWatcher {
+    pub fn new(url: impl AsRef<str>, settings: Option<FeedSettings>) -> Result<Self, ParseError> {
+        let client = surf::Client::new();
+        Self::with_client(client, url, settings)
     }
 
-    pub fn with_client(client: surf::Client, url: impl AsRef<str>) -> Result<Self, ParseError> {
+    pub fn with_client(
+        client: surf::Client,
+        url: impl AsRef<str>,
+        settings: Option<FeedSettings>,
+    ) -> Result<Self, ParseError> {
         let url = url.as_ref().parse()?;
         let feed = Self {
             url,
             client,
             channel: None,
+            settings: settings.unwrap_or_default(),
         };
         Ok(feed)
     }
 
     pub fn url(&self) -> &Url {
         &self.url
+    }
+    pub async fn watch(&mut self, db: CouchDB) -> Result<(), RssError> {
+        let duration = Duration::from_secs(self.settings.check_interval);
+        let mut interval = tokio::time::interval(duration);
+        loop {
+            interval.tick().await;
+            self.load().await?;
+            let records = self.into_posts()?;
+            let put_result = db.put_record_bulk(records).await?;
+
+            let (success, error): (Vec<_>, Vec<_>) = put_result
+                .iter()
+                .partition(|r| matches!(r, PutResult::Ok(_)));
+
+            log::debug!(
+                "saved posts from feed {} ({} success, {} error)",
+                self.url,
+                success.len(),
+                error.len()
+            );
+        }
     }
 
     pub async fn load(&mut self) -> Result<(), RssError> {

@@ -36,7 +36,3 @@ pub async fn search(
     let string = res.text().await?;
     Ok(string)
 }
-
-pub fn routes() -> Vec<Route> {
-    routes![search]
-}

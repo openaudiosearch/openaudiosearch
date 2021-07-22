@@ -78,7 +78,7 @@ pub async fn crawl_and_save(db: &CouchDB, opts: &CrawlOpts) -> RssResult<()> {
 pub struct FetchedFeedPage {
     pub url: Url,
     pub items: Vec<Record<Post>>,
-    pub feed: Feed,
+    pub feed: FeedWatcher,
     pub put_result: Vec<PutResult>,
 }
 
@@ -140,18 +140,18 @@ pub async fn fetch_and_save_with_client(
     db: &CouchDB,
     url: &Url,
 ) -> RssResult<FetchedFeedPage> {
-    let mut feed = Feed::with_client(client, &url).unwrap();
+    let mut feed = FeedWatcher::with_client(client, &url, None).unwrap();
     feed.load().await?;
     save_feed_to_db(db, feed).await
 }
 
 pub async fn fetch_and_save(db: &CouchDB, url: &Url) -> RssResult<FetchedFeedPage> {
-    let mut feed = Feed::new(&url).unwrap();
+    let mut feed = FeedWatcher::new(&url, None).unwrap();
     feed.load().await?;
     save_feed_to_db(db, feed).await
 }
 
-async fn save_feed_to_db(db: &CouchDB, feed: Feed) -> RssResult<FetchedFeedPage> {
+async fn save_feed_to_db(db: &CouchDB, feed: FeedWatcher) -> RssResult<FetchedFeedPage> {
     // let items = feed.into_medias()?;
     let mut posts = feed.into_posts()?;
     let mut docs = vec![];

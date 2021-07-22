@@ -45,6 +45,40 @@ pub struct RecordMeta {
     timestamp: u32,
 }
 
+#[derive(Debug, Serialize)]
+pub struct ValidationError {
+    message: String,
+}
+
+impl<E> From<E> for ValidationError
+where
+    E: std::error::Error + Send + 'static,
+{
+    fn from(e: E) -> Self {
+        Self::from_error(e)
+    }
+}
+
+impl fmt::Display for ValidationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl ValidationError {
+    pub fn with_message(message: String) -> Self {
+        Self { message: message }
+    }
+    pub fn from_error<E>(error: E) -> Self
+    where
+        E: std::error::Error + Send + 'static,
+    {
+        Self {
+            message: format!("{}", error),
+        }
+    }
+}
+
 /// A trait to implement on value structs for typed [Record]s.
 pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clone::Clone {
     /// A string to uniquely identify this record type.
@@ -61,6 +95,10 @@ pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clo
     /// Get the guid string for this record type and an id string.
     fn guid(id: &str) -> String {
         format!("{}_{}", Self::NAME, id)
+    }
+
+    fn validate(&self) -> Result<(), ValidationError> {
+        Ok(())
     }
 }
 
@@ -249,6 +287,11 @@ where
         } else {
             Err(EncodingError::NotAnObject)
         }
+    }
+
+    /// Validate the contained value (according to the [TypedValue] implementation)
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        self.value.validate()
     }
 }
 

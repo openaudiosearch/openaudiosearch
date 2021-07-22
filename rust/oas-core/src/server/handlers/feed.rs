@@ -1,13 +1,12 @@
-use crate::couch::types::{Doc, PutResponse};
+use crate::couch::types::PutResponse;
 use crate::server::error::AppError;
 use crate::State;
-use oas_common::Record;
-use rocket::http::Status;
+use oas_common::{Record, TypedValue};
 use rocket::serde::json::Json;
-use rocket_okapi::{openapi, routes_with_openapi};
+use rocket_okapi::openapi;
 
 use oas_common::util;
-use rocket::{get, post, put, routes, Route};
+use rocket::{get, post, put};
 
 use oas_common::types;
 
@@ -21,9 +20,13 @@ pub async fn post_feed(
     // rocket::debug!("url: {}", body.into_inner().url);
     let feed = body.into_inner();
     let feed = Record::from_id_and_value(util::id_from_hashed_string(&feed.url), feed);
-    let result = state.db.put_record(feed).await?;
-
-    Ok(Json(result))
+    match feed.validate() {
+        Ok(_) => {
+            let result = state.db.put_record(feed).await?;
+            Ok(Json(result))
+        }
+        Err(err) => Err(AppError::ValidationError(err)),
+    }
 }
 
 /// Put feed info by feed ID

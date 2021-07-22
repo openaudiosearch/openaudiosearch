@@ -1,5 +1,5 @@
 use crate::couch::CouchError;
-use oas_common::{DecodingError, EncodingError};
+use oas_common::{DecodingError, EncodingError, ValidationError};
 use okapi::openapi3::Responses;
 use rocket::http::Status;
 use rocket::response::status::Custom;
@@ -31,6 +31,8 @@ pub enum AppError {
     Elastic(#[from] elasticsearch::Error),
     #[error("HTTP error: {0} {1}")]
     Http(Status, String),
+    #[error("Validation error: {0}")]
+    ValidationError(ValidationError)
 }
 
 impl<'r> Responder<'r, 'static> for AppError {
@@ -40,6 +42,7 @@ impl<'r> Responder<'r, 'static> for AppError {
             AppError::Couch(_err) => Status::BadGateway,
             AppError::Http(code, _) => *code,
             AppError::EncodingError(_) => Status::BadRequest,
+            AppError::ValidationError(_) => Status::UnprocessableEntity,
             AppError::Elastic(err) => err
                 .status_code()
                 .map(|code| Status::from_code(code.as_u16()).unwrap())
