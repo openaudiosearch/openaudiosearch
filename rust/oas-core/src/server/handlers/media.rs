@@ -1,7 +1,7 @@
 use oas_common::types::Media;
 use oas_common::{util, Record, TypedValue};
 use rocket::serde::json::Json;
-use rocket::{get, patch, post, put, routes, Route};
+use rocket::{get, patch, post, put};
 use rocket_okapi::openapi;
 use serde_json::Value;
 
@@ -41,7 +41,7 @@ pub async fn put_media(
     id: String,
     value: Json<Media>,
 ) -> Result<PutResponse> {
-    let (typ, id) = util::split_and_check_guid::<Media>(&id)?;
+    let (_typ, id) = util::split_and_check_guid::<Media>(&id)?;
     let record = Record::from_id_and_value(id, value.into_inner());
     let res = state.db.put_record(record).await?;
     Ok(Json(res))

@@ -1,6 +1,6 @@
 use crate::server::error::AppError;
 use rocket::http::Status;
-use rocket::{post, routes, Route};
+use rocket::{post};
 use rocket_okapi::openapi;
 
 #[openapi(skip)]

@@ -4,13 +4,13 @@
 //! index which stores meta information about the indexing state, most importantly the latest
 //! CouchDB seq that was indexed.
 
-use crate::couch::{self, ChangesStream, CouchDB};
-use elasticsearch::{Elasticsearch, GetParts, IndexParts};
+use crate::couch::{self, CouchDB};
+use elasticsearch::Elasticsearch;
 use futures::stream::StreamExt;
 use futures_batch::ChunksTimeoutStreamExt;
 use oas_common::types::{Media, Post};
+use oas_common::UntypedRecord;
 use oas_common::{Record, TypedValue};
-use oas_common::{Resolver, UntypedRecord};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time;
@@ -24,7 +24,6 @@ pub const DATA_INDEX_NAME: &str = "data";
 
 pub const DOC_ID_INDEX_STATE: &str = "IndexMeta.data";
 
-pub type IndexId = String;
 pub type Seq = String;
 
 #[derive(Debug, Clone)]
@@ -157,7 +156,7 @@ async fn index_changes_stream(
     while let Some(batch) = batched_changes.next().await {
         // Filter out errors for now.
         let batch: Vec<_> = batch.into_iter().filter_map(|e| e.ok()).collect();
-        let len = batch.len();
+        let _len = batch.len();
         let latest_seq = &batch.last().unwrap().seq.to_string();
         index_changes_batch(db, index, batch).await?;
         meta.set_latest_indexed_seq(latest_seq).await?;
@@ -182,7 +181,7 @@ pub async fn posts_into_resolved_posts_and_updated_media_batches(
             Post::NAME => {
                 let record = record.into_typed_record::<Post>();
                 match record {
-                    Ok(mut record) => {
+                    Ok(record) => {
                         post_batch.push(record)
                         // TODO: Resolve in parallel.
                         // let _res = record.resolve_refs(&db).await;

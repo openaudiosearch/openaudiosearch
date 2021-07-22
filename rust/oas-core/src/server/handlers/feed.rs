@@ -1,7 +1,7 @@
 use crate::couch::types::PutResponse;
 use crate::server::error::AppError;
 use crate::State;
-use oas_common::{Record, TypedValue};
+use oas_common::Record;
 use rocket::serde::json::Json;
 use rocket_okapi::openapi;
 

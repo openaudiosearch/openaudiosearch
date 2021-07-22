@@ -3,7 +3,7 @@ use super::FeedWatcher;
 use crate::couch::CouchDB;
 use oas_common::types;
 use oas_common::TypedRecord;
-use oas_common::TypedValue;
+
 use std::collections::HashMap;
 use tokio::task::JoinHandle;
 use tokio_stream::StreamExt;

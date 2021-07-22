@@ -1,5 +1,4 @@
 use clap::Clap;
-use rocket::{get, routes};
 use rocket_okapi::{
     routes_with_openapi,
     swagger_ui::{make_swagger_ui, SwaggerUIConfig},
@@ -31,7 +30,6 @@ pub async fn run_server(state: State, opts: ServerOpts) -> anyhow::Result<()> {
     let cors = rocket_cors::CorsOptions::default().to_cors()?;
     let app = rocket::custom(figment)
         .manage(state)
-        //.attach(cors::Cors)
         .attach(cors)
         .mount(
             "/api/v1",
@@ -59,24 +57,8 @@ pub async fn run_server(state: State, opts: ServerOpts) -> anyhow::Result<()> {
                 ..Default::default()
             }),
         );
-    // debug routes
-    // .mount("/hello", routes![world])
-    // api routes
-    // .mount("/api/v1/record", handlers::record::routes())
-    // .mount("/api/v1/media", handlers::media::routes())
-    // .mount("/api/v1/feed", handlers::feed::routes())
-    // .mount("/api/v1/search", handlers::search::routes());
-    // legacy routes
-    // .mount("/oas/v1/search", handlers::search::routes())
-    // .mount("/oas/v1/feed", handlers::feed::routes())
-    // .mount("/oas/v1", handlers::legacy::routes());
 
     app.launch().await?;
 
     Ok(())
-}
-
-#[get("/world")]
-fn world() -> &'static str {
-    "Hello, world!"
 }

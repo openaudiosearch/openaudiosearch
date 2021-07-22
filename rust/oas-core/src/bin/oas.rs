@@ -5,7 +5,6 @@ use oas_common::types::Media;
 use oas_common::util;
 use oas_common::Record;
 use oas_common::Resolvable;
-use oas_common::TypedValue;
 use oas_core::couch::PutResult;
 use oas_core::rss;
 use oas_core::rss::manager::run_manager;
@@ -14,7 +13,7 @@ use oas_core::types::Post;
 use oas_core::util::*;
 use oas_core::State;
 use oas_core::{couch, index, tasks};
-use std::time;
+
 use url::Url;
 
 const COUCHDB_HOST: &str = "http://localhost:5984";
@@ -282,7 +281,7 @@ async fn run_watch(state: State, opts: WatchOpts) -> anyhow::Result<()> {
 }
 
 async fn run_index(state: State, opts: IndexOpts) -> anyhow::Result<()> {
-    let mut manager = state.index_manager;
+    let manager = state.index_manager;
 
     let init_opts = match opts.recreate {
         true => index::InitOpts::delete_all(),

@@ -10,7 +10,7 @@ use rocket_okapi::response::OpenApiResponderInner;
 use rocket_okapi::util::add_schema_response;
 use schemars::JsonSchema;
 use serde::Serialize;
-use serde_json::json;
+
 use thiserror::Error;
 
 pub type Result<T> = std::result::Result<rocket::serde::json::Json<T>, AppError>;
