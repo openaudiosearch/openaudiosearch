@@ -11,3 +11,11 @@ impl Resolver for CouchDB {
         Ok(record)
     }
 }
+
+#[async_trait::async_trait]
+impl Resolver for &CouchDB {
+    type Error = CouchError;
+    async fn resolve<T: TypedValue>(&self, id: &str) -> Result<Record<T>, Self::Error> {
+        <CouchDB as Resolver>::resolve(self, id).await
+    }
+}

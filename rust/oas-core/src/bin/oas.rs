@@ -13,7 +13,7 @@ use oas_core::server::{run_server, ServerOpts};
 use oas_core::types::Post;
 use oas_core::util::*;
 use oas_core::State;
-use oas_core::{couch, elastic, tasks};
+use oas_core::{couch, index, tasks};
 use std::time;
 use url::Url;
 
@@ -133,13 +133,12 @@ async fn main() -> anyhow::Result<()> {
         user: Some(env_or("COUCHDB_USER", "admin")),
         password: Some(env_or("COUCHDB_PASSWORD", "password")),
     };
-
-    let elastic_config = elastic::Config::with_default_url(ELASTICSEARCH_INDEX.to_string());
-
     let db = couch::CouchDB::with_config(couch_config)?;
-    let index = elastic::Index::with_config(elastic_config)?;
 
-    let state = State { db, index };
+    let elastic_config = index::Config::with_default_url(ELASTICSEARCH_INDEX.to_string());
+    let index_manager = index::IndexManager::with_config(elastic_config)?;
+
+    let state = State { db, index_manager };
 
     let result = match args.command {
         Command::Watch(opts) => run_watch(state, opts).await,
@@ -283,86 +282,20 @@ async fn run_watch(state: State, opts: WatchOpts) -> anyhow::Result<()> {
 }
 
 async fn run_index(state: State, opts: IndexOpts) -> anyhow::Result<()> {
-    let db = state.db;
-    let index = state.index;
+    let mut manager = state.index_manager;
 
-    index.ensure_index(opts.recreate).await?;
+    let init_opts = match opts.recreate {
+        true => index::InitOpts::delete_all(),
+        false => index::InitOpts::default(),
+    };
 
-    let start = time::Instant::now();
-
-    let batch_size = 1000;
-    let mut batch = vec![];
-    let mut total = 0;
-    let mut stream = db.changes(None);
-    stream.set_infinite(opts.daemon);
-    while let Some(event) = stream.next().await {
-        let event = event?;
-        if let Some(doc) = event.doc {
-            let is_first_rev = doc.is_first_rev();
-            // eprintln!(
-            //     "incoming couch doc: {} (first? {:?})",
-            //     doc.id(),
-            //     is_first_rev
-            // );
-            let _id = doc.id().to_string();
-            let record = doc.into_untyped_record();
-            match record {
-                Err(_err) => {}
-                Ok(record) => match record.typ() {
-                    Media::NAME => {
-                        match is_first_rev {
-                            Some(true) | None => {
-                                // Do nothing for first revs of media recors.
-                            }
-                            Some(false) => {
-                                match index.update_nested_record("media", &record).await {
-                                    Err(e) => log::debug!("{}", e),
-                                    Ok(_) => {}
-                                };
-                            }
-                        }
-                    }
-                    Post::NAME => {
-                        let record = record.into_typed_record::<Post>();
-                        match record {
-                            Ok(mut record) => {
-                                let _res = record.resolve_refs(&db).await;
-                                batch.push(record);
-                            }
-                            Err(e) => log::debug!("{}", e),
-                        }
-                    }
-                    _ => {}
-                },
-            }
-
-            if batch.len() == batch_size {
-                let _res = index.put_typed_records(&batch).await?;
-                total += batch.len();
-                batch.clear()
-            }
-        }
-    }
-
-    if !batch.is_empty() {
-        eprintln!("BATCH {:#?}", batch);
-        let _res = index.put_typed_records(&batch).await?;
-        total += batch.len();
-        batch.clear()
-    }
-
-    let elapsed = start.elapsed().as_secs_f32();
-    log::info!(
-        "indexed {} records in {}s ({}/s)",
-        total,
-        elapsed,
-        total as f32 / elapsed
-    );
+    manager.init(init_opts).await?;
+    manager.index_changes(&state.db, opts.daemon).await?;
     Ok(())
 }
 
 async fn run_search(state: State, opts: SearchOpts) -> anyhow::Result<()> {
-    let index = state.index;
+    let index = state.index_manager.data_index();
     let records = index.find_records_with_text_query(&opts.query).await?;
     eprintln!("res: {:?}", records);
     let records: Vec<Record<Post>> = records

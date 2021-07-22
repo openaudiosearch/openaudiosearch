@@ -307,6 +307,15 @@ where
         self.value.resolve_refs(resolver).await
     }
 
+    /// Resolve all references, while consuming Self and returning it again with the resolved refs.
+    pub async fn into_resolve_refs<R: Resolver + Send + Sync>(
+        mut self,
+        resolver: &R,
+    ) -> Result<Self, MissingRefsError> {
+        let _ = self.value.resolve_refs(resolver).await?;
+        Ok(self)
+    }
+
     /// Extract all loaded referenced records from within the record, converting the references
     /// back to IDs.
     pub fn extract_refs(&mut self) -> Vec<UntypedRecord> {

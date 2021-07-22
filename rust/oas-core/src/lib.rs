@@ -1,5 +1,5 @@
 pub mod couch;
-pub mod elastic;
+pub mod index;
 pub mod rss;
 pub mod server;
 pub mod tasks;
@@ -14,7 +14,7 @@ pub use oas_common::*;
 #[derive(Clone, Debug)]
 pub struct State {
     pub db: couch::CouchDB,
-    pub index: elastic::Index,
+    pub index_manager: index::IndexManager,
 }
 
 impl State {
@@ -23,7 +23,7 @@ impl State {
     /// Currently errors on the first failing init.
     pub async fn init_all(&self) -> anyhow::Result<()> {
         self.db.init().await?;
-        self.index.ensure_index(false).await?;
+        self.index_manager.init(Default::default()).await?;
         Ok(())
     }
 }

@@ -1018,6 +1018,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures-batch"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f5c372b0c5d1023cce2a0ff7667b589ba88dae751b5f65c400b5d0803b30cbf"
+dependencies = [
+ "futures",
+ "futures-timer",
+ "pin-utils",
+]
+
+[[package]]
 name = "futures-channel"
 version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1089,6 +1100,12 @@ name = "futures-task"
 version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a16bef9fc1a4dddb5bee51c989e3fbba26569cbb0e31f5b303c184e3dd33dae"
+
+[[package]]
+name = "futures-timer"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1de7508b218029b0f01662ed8f61b1c964b3ae99d6f25462d0f55a595109df6"
 
 [[package]]
 name = "futures-util"
@@ -1756,7 +1773,9 @@ dependencies = [
  "elasticsearch",
  "env_logger",
  "futures",
+ "futures-batch",
  "http",
+ "humantime",
  "log",
  "oas-common",
  "okapi",
