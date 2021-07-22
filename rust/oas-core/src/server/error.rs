@@ -32,7 +32,7 @@ pub enum AppError {
     #[error("HTTP error: {0} {1}")]
     Http(Status, String),
     #[error("Validation error: {0}")]
-    ValidationError(ValidationError)
+    ValidationError(ValidationError),
 }
 
 impl<'r> Responder<'r, 'static> for AppError {

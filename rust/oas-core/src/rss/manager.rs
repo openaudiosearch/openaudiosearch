@@ -34,7 +34,7 @@ impl FeedManager {
 /// Opens a feed manager and start to track and watch all feeds in the database,
 /// This will load all feeds from [CouchDB]
 /// and then look for incoming feeds in the [ChangesStream].
-/// It will periodically fetch the feeds and insert new items 
+/// It will periodically fetch the feeds and insert new items
 /// as [Post]s and [Media]s into the database.
 pub async fn run_manager(db: &CouchDB) -> anyhow::Result<()> {
     let mut manager = FeedManager::new();
@@ -57,12 +57,14 @@ fn watch_feeds(store: Store, db: CouchDB) -> Result<Vec<Task<()>>, RssError> {
 
     for (id, feed) in store.clone().into_iter() {
         let settings = feed.value.settings;
-        log::debug!("Start to watch feed {} [{}] for updates", id, feed.value.url);
+        log::debug!(
+            "Start to watch feed {} [{}] for updates",
+            id,
+            feed.value.url
+        );
         let mut watcher = FeedWatcher::new(feed.value.url, settings)?;
         let db = db.clone();
-        tasks.push(tokio::spawn(async move {
-            watcher.watch(db).await
-        }));
+        tasks.push(tokio::spawn(async move { watcher.watch(db).await }));
     }
     Ok(tasks)
 }
