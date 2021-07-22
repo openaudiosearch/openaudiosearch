@@ -54,7 +54,8 @@ fn watch_feeds(store: Store, db: CouchDB) -> Result<Vec<Task<()>>, RssError> {
     let mut tasks = Vec::new();
 
     for (id, feed) in store.clone().into_iter() {
-        let mut watcher = FeedWatcher::new(feed.value.url)?;
+        let settings = feed.value.settings;
+        let mut watcher = FeedWatcher::new(feed.value.url, settings)?;
         let db = db.clone();
         tasks.push(tokio::spawn(async move {
             eprintln!("Watch {}", id);
@@ -69,6 +70,7 @@ async fn watch_changes(db: CouchDB) -> Result<(), RssError> {
     let mut stream = db.changes(Some(last_seq));
     let mut tasks = Vec::new();
     stream.set_infinite(true);
+    let client = surf::client();
     while let Some(event) = stream.next().await {
         let event = event?;
         if let Some(doc) = event.doc {
@@ -76,16 +78,14 @@ async fn watch_changes(db: CouchDB) -> Result<(), RssError> {
             let record = doc.into_typed_record::<types::Feed>();
             match record {
                 Err(_err) => {}
-                Ok(record) => match record.typ() {
-                    types::Feed::NAME => {
-                        let url = &record.value.url;
-                        let mut watcher = FeedWatcher::new(url)?;
-                        eprintln!("TASKS {:?}", tasks.len());
-                        let db = db.clone();
-                        tasks.push(tokio::spawn(async move { watcher.watch(db).await }));
-                    }
-                    _ => {}
-                },
+                Ok(record) => {
+                    let url = &record.value.url;
+                    let settings = record.value.settings;
+                    let mut watcher = FeedWatcher::with_client(client.clone(), url, settings)?;
+                    eprintln!("TASKS {:?}", tasks.len());
+                    let db = db.clone();
+                    tasks.push(tokio::spawn(async move { watcher.watch(db).await }));
+                }
             }
         }
     }

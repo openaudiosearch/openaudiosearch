@@ -4,9 +4,8 @@ use rss::Channel;
 use std::time::Duration;
 use url::{ParseError, Url};
 
-use crate::types::Media;
+use crate::types::{FeedSettings, Media};
 use crate::{Record, Reference};
-
 pub mod crawlers;
 mod error;
 pub mod manager;
@@ -20,25 +19,26 @@ pub struct FeedWatcher {
     url: Url,
     client: surf::Client,
     channel: Option<Channel>,
+    settings: FeedSettings,
 }
 
 impl FeedWatcher {
-    pub fn new(url: impl AsRef<str>) -> Result<Self, ParseError> {
-        let url = url.as_ref().parse()?;
-        let feed = Self {
-            url,
-            client: surf::Client::new(),
-            channel: None,
-        };
-        Ok(feed)
+    pub fn new(url: impl AsRef<str>, settings: Option<FeedSettings>) -> Result<Self, ParseError> {
+        let client = surf::Client::new();
+        Self::with_client(client, url, settings)
     }
 
-    pub fn with_client(client: surf::Client, url: impl AsRef<str>) -> Result<Self, ParseError> {
+    pub fn with_client(
+        client: surf::Client,
+        url: impl AsRef<str>,
+        settings: Option<FeedSettings>,
+    ) -> Result<Self, ParseError> {
         let url = url.as_ref().parse()?;
         let feed = Self {
             url,
             client,
             channel: None,
+            settings: settings.unwrap_or_default(),
         };
         Ok(feed)
     }
@@ -47,11 +47,13 @@ impl FeedWatcher {
         &self.url
     }
     pub async fn watch(&mut self, db: CouchDB) -> Result<(), RssError> {
-        let mut interval = tokio::time::interval(Duration::new(5, 0));
+        let duration = Duration::from_secs(self.settings.check_interval);
+        let mut interval = tokio::time::interval(duration);
         loop {
             interval.tick().await;
             self.load().await?;
             let records = self.into_posts()?;
+            eprintln!("URL: {:?}", self.url.to_string());
             db.put_record_bulk(records).await?;
         }
     }

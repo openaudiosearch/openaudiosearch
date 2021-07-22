@@ -140,13 +140,13 @@ pub async fn fetch_and_save_with_client(
     db: &CouchDB,
     url: &Url,
 ) -> RssResult<FetchedFeedPage> {
-    let mut feed = FeedWatcher::with_client(client, &url).unwrap();
+    let mut feed = FeedWatcher::with_client(client, &url, None).unwrap();
     feed.load().await?;
     save_feed_to_db(db, feed).await
 }
 
 pub async fn fetch_and_save(db: &CouchDB, url: &Url) -> RssResult<FetchedFeedPage> {
-    let mut feed = FeedWatcher::new(&url).unwrap();
+    let mut feed = FeedWatcher::new(&url, None).unwrap();
     feed.load().await?;
     save_feed_to_db(db, feed).await
 }

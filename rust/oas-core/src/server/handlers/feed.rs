@@ -1,14 +1,12 @@
-use crate::couch::types::{Doc, PutResponse};
+use crate::couch::types::PutResponse;
 use crate::server::error::AppError;
 use crate::State;
-use clap::App;
 use oas_common::{Record, TypedValue};
-use rocket::http::Status;
 use rocket::serde::json::Json;
-use rocket_okapi::{openapi, routes_with_openapi};
+use rocket_okapi::openapi;
 
 use oas_common::util;
-use rocket::{get, post, put, routes, Route};
+use rocket::{get, post, put};
 
 use oas_common::types;
 
