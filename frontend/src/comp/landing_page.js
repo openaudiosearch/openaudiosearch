@@ -24,10 +24,13 @@ export default function LandingPage() {
         <Flex direction='column' align='center'>
           <Box w='800px'>
             <Center>
-            <Heading as="h3" size="lg" mb='7'>Open Audio Search - <br/>the community radio search engine</Heading>
+              <Flex direction='column'>
+                <Heading as="h1" size="3xl" mb='7'>Open Audio Search</Heading>
+                <Heading as="h2" size="md">The community radio search engine</Heading>
+              </Flex>
             </Center>
             <Center>
-            <Box w='600px'>
+            <Box w='600px' mt='6'>
               <DataSearch
                 componentId='searchbox'
                 dataField={['headline', 'description', 'transcript']}
@@ -80,11 +83,11 @@ export default function LandingPage() {
 
 function DiscoverItem (props) {
   const { item } = props
-  const { track, setTrack } = usePlayer()
+  const { setTrack } = usePlayer()
   return (
     <ResultCard>
         <ResultCard.Title>
-          <div
+          <Heading as="h5" size="sm"
             className="broadcast-title"
             dangerouslySetInnerHTML={{
               __html: item.headline
