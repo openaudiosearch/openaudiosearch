@@ -21,7 +21,7 @@ impl FeedManager {
         let manager = Self {
             store: HashMap::new(),
         };
-        return manager;
+        manager
     }
     async fn init(&mut self, db: &CouchDB) -> anyhow::Result<()> {
         let records = db.get_all_records::<types::Feed>().await?;
@@ -55,7 +55,7 @@ pub async fn run_manager(db: &CouchDB) -> anyhow::Result<()> {
 fn watch_feeds(store: Store, db: CouchDB) -> Result<Vec<Task<()>>, RssError> {
     let mut tasks = Vec::new();
 
-    for (id, feed) in store.clone().into_iter() {
+    for (id, feed) in store.into_iter() {
         let settings = feed.value.settings;
         log::debug!(
             "Start to watch feed {} [{}] for updates",

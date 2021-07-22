@@ -81,7 +81,7 @@ impl Index {
 
     pub fn with_client_and_name(client: Arc<Elasticsearch>, name: impl ToString) -> Self {
         Self {
-            client: client,
+            client,
             index: name.to_string(),
         }
     }

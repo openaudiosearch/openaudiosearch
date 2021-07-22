@@ -67,7 +67,7 @@ impl fmt::Display for ValidationError {
 
 impl ValidationError {
     pub fn with_message(message: String) -> Self {
-        Self { message: message }
+        Self { message }
     }
     pub fn from_error<E>(error: E) -> Self
     where
@@ -136,7 +136,7 @@ impl UntypedRecord {
         if self.meta.typ.as_str() != T::NAME {
             return Err(DecodingError::TypeMismatch(
                 T::NAME.to_string(),
-                self.meta.typ.clone(),
+                self.meta.typ,
             ));
         }
         let value: T = serde_json::from_value(Value::Object(self.value))?;
@@ -249,12 +249,7 @@ where
         let id = id.to_string();
         let typ = T::NAME.to_string();
         let guid = format!("{}_{}", typ, id);
-        let meta = RecordMeta {
-            guid,
-            id,
-            typ,
-            ..Default::default()
-        };
+        let meta = RecordMeta { guid, typ, id, ..Default::default() };
         Self { meta, value }
     }
 

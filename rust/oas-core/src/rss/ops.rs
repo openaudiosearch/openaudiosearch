@@ -159,7 +159,7 @@ async fn save_feed_to_db(db: &CouchDB, feed: FeedWatcher) -> RssResult<FetchedFe
         let refs = post.extract_refs();
         let mut refs: Vec<Doc> = refs
             .into_iter()
-            .map(|r| Doc::from_untyped_record(r))
+            .map(Doc::from_untyped_record)
             .collect();
         let post = Doc::from_typed_record(post.clone());
         docs.append(&mut refs);

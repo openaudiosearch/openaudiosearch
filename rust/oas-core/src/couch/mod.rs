@@ -111,7 +111,7 @@ impl CouchDB {
     pub async fn get_all_with_prefix(&self, prefix: &str) -> Result<DocList> {
         let mut params = HashMap::new();
         params.insert("include_docs", "true".to_string());
-        if prefix.contains("\"") {
+        if prefix.contains('\"') {
             return Err(CouchError::Other("Prefix may not contain quotes".into()));
         }
         params.insert("startkey", format!("\"{}\"", prefix));
@@ -315,7 +315,7 @@ impl CouchDB {
     ) -> Result<Vec<PutResult>> {
         let docs = records
             .into_iter()
-            .map(|r| Doc::from_typed_record(r))
+            .map(Doc::from_typed_record)
             .collect();
         self.put_bulk(docs).await
     }
@@ -328,7 +328,7 @@ impl CouchDB {
     ) -> Result<Vec<PutResult>> {
         let docs = records
             .into_iter()
-            .map(|r| Doc::from_typed_record(r))
+            .map(Doc::from_typed_record)
             .collect();
         self.put_bulk_update(docs).await
     }

@@ -136,12 +136,12 @@ impl FieldMapping {
     }
 
     pub fn apply(&self, value: Value) -> Result<Value, MappingError> {
-        if self.into_array == true {
+        if self.into_array {
             Ok(Value::Array(vec![value]))
-        } else if self.into_single == true {
+        } else if self.into_single {
             match value {
-                Value::Array(list) if list.len() > 0 => Ok(list.into_iter().nth(0).unwrap()),
-                Value::Array(list) if list.len() == 0 => Ok(Value::Null),
+                Value::Array(list) if !list.is_empty() => Ok(list.into_iter().next().unwrap()),
+                Value::Array(list) if list.is_empty() => Ok(Value::Null),
                 _ => Err(MappingError::NotAnArray),
             }
         } else {

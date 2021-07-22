@@ -5,7 +5,7 @@ use crate::{DecodingError, TypedValue};
 
 /// Split a guid into type and id parts.
 pub fn split_guid(guid: &str) -> Option<(String, String)> {
-    let split: Vec<&str> = guid.split("_").collect();
+    let split: Vec<&str> = guid.split('_').collect();
     if split.len() != 2 {
         None
     } else {

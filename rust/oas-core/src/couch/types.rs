@@ -138,10 +138,7 @@ impl Doc {
     }
 
     pub fn is_first_rev(&self) -> Option<bool> {
-        match self.rev() {
-            None => None,
-            Some(rev) => Some(rev.starts_with("1-")),
-        }
+        self.rev().map(|rev| rev.starts_with("1-"))
     }
 }
 
