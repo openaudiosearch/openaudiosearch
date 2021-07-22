@@ -150,7 +150,13 @@ async fn main() -> anyhow::Result<()> {
     let elastic_config = index::Config::with_default_url(ELASTICSEARCH_INDEX.to_string());
     let index_manager = index::IndexManager::with_config(elastic_config)?;
 
-    let state = State { db, index_manager };
+    let tasks = tasks::CeleryManager::init().await?;
+
+    let state = State {
+        db,
+        index_manager,
+        tasks,
+    };
 
     let result = match args.command {
         Command::Watch(opts) => run_watch(state, opts).await,

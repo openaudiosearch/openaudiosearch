@@ -15,6 +15,7 @@ pub use oas_common::*;
 pub struct State {
     pub db: couch::CouchDB,
     pub index_manager: index::IndexManager,
+    pub tasks: tasks::CeleryManager,
 }
 
 impl State {

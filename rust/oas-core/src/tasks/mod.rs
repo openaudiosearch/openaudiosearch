@@ -6,11 +6,16 @@ use oas_common::{
     Record, TypedValue,
 };
 use serde_json::{json, Value};
+use std::fmt;
 use std::sync::Arc;
 // use celery::broker::AMQPBroker;
 
 use crate::couch::CouchDB;
 use crate::State;
+
+// mod manager;
+
+pub type CeleryState = Arc<Celery<RedisBroker>>;
 
 mod celery_tasks {
     #![allow(unused)]
@@ -37,7 +42,29 @@ pub struct TaskOpts {
     latest: bool,
 }
 
-pub async fn create_celery_app() -> Result<Arc<Celery<impl Broker>>, CeleryError> {
+#[derive(Clone)]
+pub struct CeleryManager {
+    celery: Arc<Celery<RedisBroker>>,
+}
+
+impl fmt::Debug for CeleryManager {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "CeleryManager")
+    }
+}
+
+impl CeleryManager {
+    pub async fn init() -> Result<Self, CeleryError> {
+        let celery = create_celery_app().await?;
+        Ok(Self { celery })
+    }
+
+    pub async fn transcribe_media(&self, media: &Record<Media>) -> anyhow::Result<String> {
+        create_transcribe_task(&self.celery, media).await
+    }
+}
+
+pub async fn create_celery_app() -> Result<Arc<Celery<RedisBroker>>, CeleryError> {
     // broker = AMQPBroker {
     //     std::env::var("AMQP_ADDR").unwrap_or("amqp://127.0.0.1:5672/oas".to_string())
     // },

@@ -51,6 +51,8 @@ pub async fn run_server(state: State, opts: ServerOpts) -> anyhow::Result<()> {
                 handlers::feed::post_feed,
                 // /search routes
                 handlers::search::search,
+                // task routes
+                handlers::task::post_transcribe_media
             ],
         )
         .mount(

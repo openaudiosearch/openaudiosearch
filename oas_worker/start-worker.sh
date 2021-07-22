@@ -1,2 +1,2 @@
 #!/bin/sh
-poetry run celery -A app.celery worker --loglevel=DEBUG
+poetry run celery -A app.tasks.tasks worker --loglevel=DEBUG
