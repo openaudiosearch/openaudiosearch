@@ -12,7 +12,7 @@ use oas_core::server::{run_server, ServerOpts};
 use oas_core::types::Post;
 use oas_core::util::*;
 use oas_core::State;
-use oas_core::{couch, elastic, tasks};
+use oas_core::{couch, elastic, index, tasks};
 use std::time;
 use url::Url;
 
@@ -134,15 +134,23 @@ async fn main() -> anyhow::Result<()> {
     let elastic_config = elastic::Config::with_default_url(ELASTICSEARCH_INDEX.to_string());
 
     let db = couch::CouchDB::with_config(couch_config)?;
-    let index = elastic::Index::with_config(elastic_config)?;
 
-    let state = State { db, index };
+    // TODO: Remove.
+    let index = elastic::Index::with_config(elastic_config.clone())?;
+
+    let index_manager = index::IndexManager::with_config(elastic_config)?;
+
+    let state = State {
+        db,
+        index,
+        index_manager,
+    };
 
     let result = match args.command {
         Command::Watch(opts) => run_watch(state, opts).await,
         Command::List(opts) => run_list(state, opts).await,
         Command::Debug => run_debug(state).await,
-        Command::Index(opts) => run_index(state, opts).await,
+        Command::Index(opts) => run_index_new(state, opts).await,
         Command::Search(opts) => run_search(state, opts).await,
         Command::Feed(opts) => run_feed(state, opts.command).await,
         Command::Task(opts) => run_task(state, opts).await,
@@ -276,6 +284,20 @@ async fn run_watch(state: State, opts: WatchOpts) -> anyhow::Result<()> {
             eprintln!("record: {:#?}", record);
         }
     }
+    Ok(())
+}
+
+async fn run_index_new(state: State, opts: IndexOpts) -> anyhow::Result<()> {
+    let mut manager = state.index_manager;
+
+    let init_opts = match opts.recreate {
+        true => index::InitOpts::delete_all(),
+        false => index::InitOpts::default(),
+    };
+
+    manager.init(init_opts).await?;
+
+    manager.index_changes(&state.db).await?;
     Ok(())
 }
 

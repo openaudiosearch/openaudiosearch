@@ -1,5 +1,6 @@
 pub mod couch;
 pub mod elastic;
+pub mod index;
 pub mod rss;
 pub mod server;
 pub mod tasks;
@@ -14,7 +15,9 @@ pub use oas_common::*;
 #[derive(Clone, Debug)]
 pub struct State {
     pub db: couch::CouchDB,
+    // todo: remove!
     pub index: elastic::Index,
+    pub index_manager: index::IndexManager,
 }
 
 impl State {

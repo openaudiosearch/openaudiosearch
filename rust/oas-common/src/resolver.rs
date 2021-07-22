@@ -35,7 +35,7 @@ pub trait Resolver {
         &self,
         ids: &[&str],
     ) -> Vec<Result<Record<T>, Self::Error>> {
-        let futs: Vec<_> = ids.iter().map(|id| self.resolve(id)).collect();
+        let futs: Vec<_> = ids.into_iter().map(|id| self.resolve(id)).collect();
         let results = futures_util::future::join_all(futs).await;
         results
     }
