@@ -43,11 +43,10 @@ pub async fn run_manager(db: &CouchDB) -> anyhow::Result<()> {
         let db = db.clone();
         async move { watch_changes(db).await }
     });
-    watch_task.await??;
-
     for handle in tasks.into_iter() {
         handle.await??;
     }
+    watch_task.await??;
     Ok(())
 }
 
@@ -81,7 +80,7 @@ async fn watch_changes(db: CouchDB) -> Result<(), RssError> {
                     types::Feed::NAME => {
                         let url = &record.value.url;
                         let mut watcher = FeedWatcher::new(url)?;
-                        //eprintln!("TASKS {:?}", tasks.len());
+                        eprintln!("TASKS {:?}", tasks.len());
                         let db = db.clone();
                         tasks.push(tokio::spawn(async move { watcher.watch(db).await }));
                     }
