@@ -1,5 +1,10 @@
 # Open Audio Search - Rust core
 
+<a href="https://openaudiosearch.github.io/openaudiosearch/doc/oas_core/">
+  <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
+    alt="Rust docs" />
+</a>
+
 License: AGPL v3
 
 *Work in progress*
