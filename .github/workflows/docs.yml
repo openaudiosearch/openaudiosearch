@@ -1,0 +1,44 @@
+name: github pages
+
+on:
+  push:
+    branches:
+      # TODO: change to main when merging into main
+      - rust2
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: Build documentation
+        run: cargo doc
+
+      - name: Deploy docs
+        uses: peaceiris/actions-gh-pages@v3.7.0-8
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./target/doc
+          destination_dir: doc
+          keep_files: true
+
+      # - name: Setup mdBook
+      #   uses: peaceiris/actions-mdbook@v1
+      #   with:
+      #     mdbook-version: '0.4.1'
+      # - name: Build book
+      #   run: cd ./docs && mdbook build
+      # - name: Deploy book
+      #   uses: peaceiris/actions-gh-pages@v3
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_dir: ./docs/book
+
