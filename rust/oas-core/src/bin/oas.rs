@@ -1,5 +1,5 @@
-use async_std::stream::StreamExt;
 use clap::Clap;
+use futures::stream::StreamExt;
 use oas_common::reference::Reference;
 use oas_common::types::Media;
 use oas_common::util;
@@ -13,6 +13,7 @@ use oas_core::types::Post;
 use oas_core::util::*;
 use oas_core::State;
 use oas_core::{couch, index, tasks};
+use tokio::task;
 
 use url::Url;
 
@@ -47,6 +48,9 @@ enum Command {
     Task(tasks::TaskOpts),
     /// Run the HTTP API server
     Server(ServerOpts),
+
+    /// Run all services
+    Run(ServerOpts),
 }
 
 #[derive(Clap)]
@@ -81,6 +85,15 @@ struct IndexOpts {
     /// Delete and recreate the index
     #[clap(long)]
     recreate: bool,
+}
+
+impl IndexOpts {
+    pub fn run_forever() -> Self {
+        Self {
+            daemon: true,
+            recreate: false,
+        }
+    }
 }
 
 #[derive(Clap)]
@@ -151,13 +164,37 @@ async fn main() -> anyhow::Result<()> {
             state.init_all().await?;
             run_server(state, opts).await
         }
+        Command::Run(server_opts) => run_all(state, server_opts).await,
     };
     result
 }
 
+async fn run_all(state: State, server_opts: ServerOpts) -> anyhow::Result<()> {
+    state.init_all().await?;
+    let server_task = task::spawn(run_server(state.clone(), server_opts));
+    let index_task = task::spawn(run_index(state.clone(), IndexOpts::run_forever()));
+    let feed_task = task::spawn(run_feed(state, FeedCommand::Watch));
+
+    // This calls std::process::exit() on ctrl_c signal.
+    // TODO: We might need cancel signals into the tasks for some tasks.
+    let exit_task = task::spawn(run_exit());
+
+    server_task.await??;
+    index_task.await??;
+    feed_task.await??;
+    exit_task.await?;
+    Ok(())
+}
+
+async fn run_exit() {
+    tokio::signal::ctrl_c()
+        .await
+        .expect("Failed to listen for cancel event");
+    std::process::exit(0)
+}
+
 async fn run_task(state: State, opts: tasks::TaskOpts) -> anyhow::Result<()> {
     tasks::run_celery(state, opts).await?;
-    // faktory::run_faktory().await?;
     Ok(())
 }
 
