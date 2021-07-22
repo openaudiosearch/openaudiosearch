@@ -30,7 +30,7 @@ services:
     image: "redis:alpine"
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
-      - "./data/redis:/data"
+      - ./data/redis:/data
 
   couchdb:
     image: couchdb:3

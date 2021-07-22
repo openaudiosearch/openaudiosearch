@@ -30,4 +30,4 @@ FROM debian:stable-slim as runtime
 RUN apt-get update && apt-get install -y libssl-dev curl
 WORKDIR app
 COPY --from=builder /app/target/release/oas /usr/local/bin
-CMD ["/usr/local/bin/oas", "server"]
+CMD ["/usr/local/bin/oas", "run"]

@@ -34,4 +34,4 @@ COPY --from=ffmpeg-build /build/ffmpeg /usr/local/bin/ffmpeg
 COPY oas_worker /app
 WORKDIR /app
 ENV STORAGE_PATH="/data"
-CMD ["celery", "-A", "app.celery", "worker", "--loglevel=DEBUG"]
+CMD ["start-worker.sh"]
