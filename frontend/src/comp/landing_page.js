@@ -5,6 +5,7 @@ import { Heading, Flex, Spacer, Box, Button, Spinner, Center } from '@chakra-ui/
 import { API_ENDPOINT } from '../lib/config'
 import { usePlayer } from './player'
 import { useHistory } from 'react-router-dom'
+import Moment from 'moment'
 
 const { ResultCardsWrapper } = ReactiveList
 
@@ -86,19 +87,16 @@ function DiscoverItem (props) {
   const { setTrack } = usePlayer()
   return (
     <ResultCard>
-        <ResultCard.Title>
-          <Heading as="h5" size="sm"
-            className="broadcast-title"
+        <ResultCard.Title
             dangerouslySetInnerHTML={{
               __html: item.headline
             }}
           />
-        </ResultCard.Title>
         <ResultCard.Description>
           <div>
             <div>by {item.publisher}</div>
           <span>
-            published on: {item.datePublished}
+            published on: {Moment(item.datePublished).format('DD.MM.YYYY')}
           </span>
           </div>
           <div>
