@@ -35,7 +35,7 @@ To get started, install [Docker](https://docs.docker.com/get-docker/) and [Docke
 
 Then, run the following commands:
 ```sh
-git clone https://github.com/arso-project/open-audio-search
+git clone https://github.com/openaudiosearch/openaudiosearch
 cd open-audio-search
 docker-compose build
 docker-compose up
@@ -45,12 +45,12 @@ It takes a little while for Elastic to start up. Then, the OAS user interface an
 
 For the speech recognition to work, you'll need to download the models. Run this command once, it will download the models into the `./data/oas` volume:
 ```sh
-docker-compose exec backend python download_models.py
+docker-compose exec worker python download_models.py
 ```
 
 Elastic Search wants quite a lot of free disc space. If the threshold is not met, it refuses to do anything. Run the script at `oas_worker/scripts/elastic-disable-threshold.sh` to disable the disc threshold (does not persist across Elastic restarts):
 ``` sh
-docker-compose exec backend bash scripts/elastic-disable-threshold.sh
+docker-compose exec worker bash scripts/elastic-disable-threshold.sh
 ```
 
 ## Run locally for developing
