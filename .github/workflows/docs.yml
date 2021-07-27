@@ -1,13 +1,13 @@
-name: github pages
+name: Deploy rust docs to GitHub Pages
 
 on:
   push:
     branches:
-      # TODO: change to main when merging into main
-      - rust2
+      - rust2 # TODO: Remove before merge
+      - main
 
 jobs:
-  deploy:
+  deploy_docs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -22,23 +22,25 @@ jobs:
       - name: Build documentation
         run: cargo doc
 
-      - name: Deploy docs
-        uses: peaceiris/actions-gh-pages@v3.7.0-8
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+
+      - name: Build book
+        working-directory: ./docs
+        run: mdbook build
+
+      - name: Copy documentation
+        run: |
+          cp -r docs/build pages/book
+          cp -r target/doc pages/rustdocs
+
+      - name: Deploy docs to GitHub pages 
+        uses: peaceiris/actions-gh-pages@v3
+        # If we decide to enable this workflow for PRs, the following line
+        # would make it not publish if not triggered by a push to main.
+        # if: ${{ github.ref == 'refs/heads/main' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./target/doc
-          destination_dir: doc
-          keep_files: true
-
-      # - name: Setup mdBook
-      #   uses: peaceiris/actions-mdbook@v1
-      #   with:
-      #     mdbook-version: '0.4.1'
-      # - name: Build book
-      #   run: cd ./docs && mdbook build
-      # - name: Deploy book
-      #   uses: peaceiris/actions-gh-pages@v3
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     publish_dir: ./docs/book
-
+          publish_dir: ./pages
+          force_orphan: true
+          # keep_files: true

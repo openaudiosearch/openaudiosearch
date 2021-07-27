@@ -3,6 +3,7 @@ name: dockerhub
 on:
   push:
     branches:
+      - rust2 # TODO: Remove before merge
       - main
 
 jobs:

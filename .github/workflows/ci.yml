@@ -1,0 +1,48 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  ci:
+    name: ${{ matrix.rust }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04]
+        rust: [stable]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+          components: rustfmt, clippy
+
+      - name: cargo build --verbose
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+
+      - name: cargo test --verbose
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+      # TODO: Decide if we want to enable fmt and clippy on push and/or pull request
+      # It can be annoying if this makes every WIP PR fail CI.
+      # - name: cargo fmt
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     command: fmt
+      #     args: --all -- --check
+
+      # - name: cargo clippy
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     command: clippy
+      #     args: -- -D warnings

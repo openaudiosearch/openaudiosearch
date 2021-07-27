@@ -1,0 +1,7 @@
+[book]
+authors = ["Open Audio Search contributors"]
+language = "en"
+multilingual = false
+src = "."
+title = "Open Audo Search"
+build-dir = "build"

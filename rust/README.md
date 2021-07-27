@@ -1,7 +1,7 @@
 # Open Audio Search - Rust core
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Docs: Rust](https://img.shields.io/badge/Docs-Rust-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Docs: Rust](https://img.shields.io/badge/Docs-Rust-blue.svg)](https://openaudiosearch.github.io/openaudiosearch/rustdocs/)
 
 This is the new core for Open Audio Search written in [Rust](https://www.rust-lang.org/).
 
