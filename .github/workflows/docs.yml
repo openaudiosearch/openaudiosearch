@@ -1,4 +1,4 @@
-name: Deploy RRust docs to GitHub Pages
+name: Docs and book
 
 on:
   push:

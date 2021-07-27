@@ -1,0 +1,52 @@
+# This docker-compose file uses the latest "nightly" image for core and worker.
+# Nightly images are pushed to hub.docker.com after each push to the main branch.
+
+version: "3.9"
+   
+services:
+  backend:
+    image: "arsoxyz/oas-core:nightly"
+    ports:
+      - 8080:8080
+    volumes:
+      - "./data/oas:/data"
+    environment:
+      REDIS_URL: "redis://redis:6379/0"
+      ELASTICSEARCH_URL: "http://elasticsearch:9200/"
+      COUCHDB_URL: "http://couchdb:5984"
+      COUCHDB_USER: "admin"
+      COUCHDB_PASSWORD: "password"
+
+  worker:
+    image: "arsoxyz/oas-worker:nightly"
+    volumes:
+      - "./data/oas:/data"
+    environment:
+      REDIS_URL: "redis://redis:6379/0"
+      OAS_URL: "http://backend:8080/api/v1"
+
+  redis:
+    image: "redis:alpine"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./data/redis:/data
+
+  couchdb:
+    image: couchdb:3
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+      - COUCHDB_SECRET=secret
+      - ERL_FLAGS=-setcookie "brumbrum"
+    volumes:
+      - ./data/couch:/opt/couchdb/data
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.11.2
+    volumes:
+      - "./data/elastic:/usr/share/elasticsearch/data"
+    environment:
+      http.host: 0.0.0.0
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms500m -Xmx500m"
+      TAKE_FILE_OWNERSHIP: 1
