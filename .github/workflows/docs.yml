@@ -1,10 +1,13 @@
-name: Deploy rust docs to GitHub Pages
+name: Deploy RRust docs to GitHub Pages
 
 on:
   push:
     branches:
       - rust2 # TODO: Remove before merge
       - main
+    paths:
+      - "rust/**"
+      - "docs/**"
 
 jobs:
   deploy_docs:

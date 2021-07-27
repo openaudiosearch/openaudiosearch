@@ -1,9 +1,17 @@
-name: CI
+name: Rust build & test
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - 'rust/**'
+    branches:
+      - main
+  pull_request:
+    paths:
+      - 'rust/**'
 
 jobs:
-  ci:
+  rust_build_test:
     name: ${{ matrix.rust }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:

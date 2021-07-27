@@ -223,17 +223,22 @@ impl CouchDB {
     /// Some options can be set on the ChangesStream, see [ChangesStream].
     ///
     /// Example:
-    /// ```rust
+    /// ```no_run
+    /// # use oas_core::couch::{Config,CouchDB};
+    /// # use futures::stream::StreamExt;
+    /// # async_std::task::block_on(run());
+    /// # async fn run() -> anyhow::Result<()> {
     /// let config = Config::with_defaults("some_db".into());
-    /// let db = CouchDB::with_config(config);
-    /// db.init().await?;
-    /// let mut stream = db.changes(opts.since);
+    /// let db = CouchDB::with_config(config)?;
+    /// let mut stream = db.changes(None);
     /// while let Some(event) = stream.next().await {
-    ///     let event = event?;
+    ///     let event = event.unwrap();
     ///     if let Some(doc) = event.doc {
     ///         eprintln!("new doc or rev: {:?}", doc);
     ///     }
     /// }
+    /// # Ok(())
+    /// # };
     /// ```
     pub fn changes(&self, last_seq: Option<String>) -> ChangesStream {
         ChangesStream::new(self.client.clone(), last_seq)
@@ -293,7 +298,7 @@ impl CouchDB {
 
     /// Get a single record by its type and id.
     ///
-    /// ```rust
+    /// ```ignore
     /// let record = db.get_record::<Media>("someidstring").await?;
     /// ```
     pub async fn get_record<T: TypedValue>(&self, id: &str) -> Result<Record<T>> {
@@ -313,10 +318,7 @@ impl CouchDB {
         &self,
         records: Vec<Record<T>>,
     ) -> Result<Vec<PutResult>> {
-        let docs = records
-            .into_iter()
-            .map(Doc::from_typed_record)
-            .collect();
+        let docs = records.into_iter().map(Doc::from_typed_record).collect();
         self.put_bulk(docs).await
     }
 
@@ -326,10 +328,7 @@ impl CouchDB {
         &self,
         records: Vec<Record<T>>,
     ) -> Result<Vec<PutResult>> {
-        let docs = records
-            .into_iter()
-            .map(Doc::from_typed_record)
-            .collect();
+        let docs = records.into_iter().map(Doc::from_typed_record).collect();
         self.put_bulk_update(docs).await
     }
 }
