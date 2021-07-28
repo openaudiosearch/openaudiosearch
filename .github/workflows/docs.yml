@@ -34,6 +34,7 @@ jobs:
 
       - name: Copy documentation
         run: |
+          mkdir -p pages
           cp -r docs/build pages/book
           cp -r target/doc pages/rustdocs
 
