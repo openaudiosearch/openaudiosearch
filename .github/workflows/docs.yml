@@ -3,7 +3,6 @@ name: Docs and book
 on:
   push:
     branches:
-      - rust2 # TODO: Remove before merge
       - main
     paths:
       - "rust/**"

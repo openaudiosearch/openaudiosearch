@@ -2,10 +2,10 @@ name: Rust CI
 
 on:
   push:
-    paths:
-      - 'rust/**'
     branches:
       - main
+    paths:
+      - 'rust/**'
   pull_request:
     paths:
       - 'rust/**'
