@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "oas_worker"
+version = "0.1.0"
+description = "Open Audio Search core engine and server"
+authors = ["Open Audio Search team"]
+license = "APGL-3.0"
+
+[tool.poetry.dependencies]
+python = "^3.7.0"
+pydantic = "=1.7.1"
+typing = "^3.7.4"
+setuptools = "^54.2.0"
+redis = "^3.5.3"
+requests = "^2.25.1"
+jiwer = "^2.2.0"
+spacy = "^3.0.5"
+Wave = "^0.0.2"
+wget = "^3.2"
+pydub = "^0.25"
+python-dotenv = "^0.15.0"
+aiofiles = "^0.6.0"
+vosk = "^0.3.30"
+loguru = "^0.5.3"
+httpx = "^0.18.1"
+celery = {extras = ["redis"], version = "^5.1"}
+
+[tool.poetry.dev-dependencies]
+rope = "^0.18.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

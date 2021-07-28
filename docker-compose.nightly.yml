@@ -1,10 +1,11 @@
+# This docker-compose file uses the latest "nightly" image for core and worker.
+# Nightly images are pushed to hub.docker.com after each push to the main branch.
+
 version: "3.9"
    
 services:
   backend:
-    build: 
-      context: .
-      dockerfile: Dockerfile-core
+    image: "arsoxyz/oas-core:nightly"
     ports:
       - 8080:8080
     volumes:
@@ -17,9 +18,7 @@ services:
       COUCHDB_PASSWORD: "password"
 
   worker:
-    build: 
-      context: .
-      dockerfile: Dockerfile-worker
+    image: "arsoxyz/oas-worker:nightly"
     volumes:
       - "./data/oas:/data"
     environment:

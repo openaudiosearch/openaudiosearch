@@ -24,3 +24,17 @@ services:
       http.cors.allow-credentials: "true"
       http.cors.allow-origin: "http://localhost:4000, http://localhost:8080"
       http.cors.allow-headers: X-Requested-With, X-Auth-Token, Content-Type, Content-Length, Authorization, Access-Control-Allow-Headers, Accept
+
+  couchdb:
+    image: couchdb:3
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+      - COUCHDB_SECRET=secret
+      - ERL_FLAGS=-setcookie "brumbrum"
+    ports:
+      - "5984:5984"
+      - "4369:4369"
+      - "9100:9100"
+    volumes:
+      - ./data/couch:/opt/couchdb/data

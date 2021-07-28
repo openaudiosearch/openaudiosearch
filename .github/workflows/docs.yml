@@ -1,0 +1,49 @@
+name: Docs and book
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "rust/**"
+      - "docs/**"
+
+jobs:
+  deploy_docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: Build documentation
+        run: cargo doc
+
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+
+      - name: Build book
+        working-directory: ./docs
+        run: mdbook build
+
+      - name: Copy documentation
+        run: |
+          mkdir -p pages
+          cp -r docs/build pages/book
+          cp -r target/doc pages/rustdocs
+
+      - name: Deploy docs to GitHub pages 
+        uses: peaceiris/actions-gh-pages@v3
+        # If we decide to enable this workflow for PRs, the following line
+        # would make it not publish if not triggered by a push to main.
+        # if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./pages
+          force_orphan: true
+          # keep_files: true
