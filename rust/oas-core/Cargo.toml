@@ -42,3 +42,4 @@ okapi = { version = "0.6.0-alpha-1" }
 tokio-stream = "0.1"
 futures-batch = "0.6.0"
 humantime = "2.1.0"
+chrono = "0.4.19"

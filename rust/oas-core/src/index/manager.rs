@@ -226,7 +226,9 @@ pub async fn index_changes_batch(
 
     let (post_batch, media_batch) =
         posts_into_resolved_posts_and_updated_media_batches(&db, records_and_is_first_rev).await;
+    // TODO: Report errors!
     let _res = index.put_typed_records(&post_batch).await?;
+
     // TODO: parallelize?
     for media_record in media_batch.iter() {
         index.update_nested_record("media", &media_record).await?;

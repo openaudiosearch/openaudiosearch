@@ -1769,6 +1769,7 @@ dependencies = [
  "base32",
  "base64 0.13.0",
  "celery",
+ "chrono",
  "clap",
  "elasticsearch",
  "env_logger",

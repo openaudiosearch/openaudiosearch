@@ -123,13 +123,24 @@ fn item_into_post(item: rss::Item) -> Record<Post> {
     };
 
     let guid = item.guid.clone();
-    let value = Post {
-        headline: item.title,
-        url: item.link,
+    let mut value = Post {
+        headline: item.title.clone(),
+        url: item.link.clone(),
         identifier: guid.as_ref().map(|guid| guid.value().to_string()),
         media,
         ..Default::default()
     };
+    if let Some(rfc_2822_date) = item.pub_date {
+        if let Ok(date) = chrono::DateTime::parse_from_rfc2822(&rfc_2822_date) {
+            value.date_published = Some(date.to_rfc3339());
+        }
+    }
+    if let Some(creator) = item.author {
+        value.creator.push(creator.to_string());
+    }
+    for category in item.categories {
+        value.genre.push(category.name);
+    }
 
     // TODO: What to do with items without GUID?
     let guid = guid.unwrap();

@@ -20,6 +20,8 @@ pub struct Post {
     pub date_published: Option<String>,
     #[serde(default)]
     pub genre: Vec<String>,
+    #[serde(default)]
+    pub creator: Vec<String>,
     pub media: Vec<Reference<Media>>,
 
     #[serde(flatten)]
