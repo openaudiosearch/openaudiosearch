@@ -6,11 +6,14 @@ use rocket_okapi::{
 
 use crate::State;
 
-const DEFAULT_PORT: u16 = 8080;
-const DEFAULT_HOST: &str = "0.0.0.0";
-
 pub mod error;
 mod handlers;
+mod proxy;
+mod static_dir;
+
+const DEFAULT_PORT: u16 = 8080;
+const DEFAULT_HOST: &str = "0.0.0.0";
+const FRONTEND_DIR: include_dir::Dir = include_dir::include_dir!("../../frontend/dist");
 
 #[derive(Clap, Default, Clone, Debug)]
 pub struct ServerOpts {
@@ -45,6 +48,7 @@ pub async fn run_server(state: State, opts: ServerOpts) -> anyhow::Result<()> {
                 handlers::media::get_media,
                 handlers::media::patch_media,
                 handlers::media::post_media,
+                handlers::media::get_media_data,
                 // /feed routes
                 handlers::feed::put_feed,
                 handlers::feed::get_feed,
@@ -62,6 +66,13 @@ pub async fn run_server(state: State, opts: ServerOpts) -> anyhow::Result<()> {
                 ..Default::default()
             }),
         );
+
+    // Mount either a proxy to a frontend dev server,
+    // or included static dir.
+    let app = match std::env::var("FRONTEND_PROXY") {
+        Ok(proxy_addr) => app.mount("/", proxy::ProxyHandler::new(proxy_addr)),
+        Err(_) => app.mount("/", static_dir::IncludedStaticDir::new(&FRONTEND_DIR)),
+    };
 
     app.launch().await?;
 

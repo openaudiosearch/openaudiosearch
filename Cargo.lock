@@ -1436,6 +1436,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "include_dir"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31a924bd335356c7622dff9ee33d06920afcf7f762a1a991236645e08c8a484b"
+dependencies = [
+ "glob",
+ "include_dir_impl",
+ "proc-macro-hack",
+]
+
+[[package]]
+name = "include_dir_impl"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afae3917f781921d7c7813992ccadff7e816f7e6ecb4b70a9ec3e740d51da3d6"
+dependencies = [
+ "anyhow",
+ "proc-macro-hack",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "indexmap"
 version = "1.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1768,6 +1792,7 @@ dependencies = [
  "async-trait",
  "base32",
  "base64 0.13.0",
+ "bytes 1.0.1",
  "celery",
  "chrono",
  "clap",
@@ -1777,6 +1802,7 @@ dependencies = [
  "futures-batch",
  "http",
  "humantime",
+ "include_dir",
  "log",
  "oas-common",
  "okapi",

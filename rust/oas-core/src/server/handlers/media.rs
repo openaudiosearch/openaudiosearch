@@ -6,7 +6,8 @@ use rocket_okapi::openapi;
 use serde_json::Value;
 
 use crate::couch::PutResponse;
-use crate::server::error::Result;
+use crate::server::error::{AppError, Result};
+use crate::server::proxy;
 
 // pub fn routes() -> Vec<Route> {
 //     routes![get_media, post_media, put_media, patch_media]
@@ -62,4 +63,27 @@ pub async fn patch_media(
     let record = existing.into_typed_record::<Media>()?;
     let res = db.put_record(record).await?;
     Ok(Json(res))
+}
+
+/// Get a media record by id.
+// #[openapi(tag = "Media")]
+#[openapi(skip)]
+#[get("/media/<id>/data")]
+pub async fn get_media_data(
+    headers: proxy::Headers<'_>,
+    state: &rocket::State<crate::State>,
+    id: String,
+) -> std::result::Result<proxy::ReqwestResponse, AppError> {
+    let record: Record<Media> = state.db.get_record(&Media::guid(&id)).await?;
+    let url = record.value.content_url;
+    let client = reqwest::Client::new();
+    let mut req = client.get(url).build().unwrap();
+    // eprintln!("rocket req headers {:#?}", &headers.0);
+    proxy::copy_request_headers(&headers, &mut req, &proxy::HEADERS_REQUEST);
+    // eprintln!("reqwest req headers {:#?}", out_req.headers());
+    let res = client.execute(req).await;
+    match res {
+        Ok(res) => Ok(res.into()),
+        Err(err) => Err(AppError::Other(format!("{}", err))),
+    }
 }
