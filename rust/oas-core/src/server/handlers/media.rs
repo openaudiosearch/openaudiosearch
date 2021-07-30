@@ -83,7 +83,7 @@ pub async fn get_media_data(
     // eprintln!("reqwest req headers {:#?}", out_req.headers());
     let res = client.execute(req).await;
     match res {
-        Ok(res) => Ok(res.into()),
+        Ok(res) => Ok(proxy::ReqwestResponse::new(res)),
         Err(err) => Err(AppError::Other(format!("{}", err))),
     }
 }

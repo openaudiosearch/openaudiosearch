@@ -149,9 +149,11 @@ function ResultItem (props) {
             ))}
           </>
           <div>
-            <Button onClick={() => setTrack(item)}>
-              Click to play
-            </Button>
+            {item.media && item.media.length && (
+              <Button onClick={() => setTrack(item.media[0])}>
+                Click to play
+              </Button>
+            )}
           </div>
           <ReactJson src={item} collapsed={true} name={false} />
         </ResultList.Description>

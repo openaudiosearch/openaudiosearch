@@ -3,6 +3,14 @@ import { Box, Flex, IconButton, CircularProgress } from '@chakra-ui/react'
 import { WaveSurfer, WaveForm } from 'wavesurfer-react'
 import { FaPlay, FaPause, FaUndoAlt, FaRedoAlt } from 'react-icons/fa'
 
+import { API_ENDPOINT } from '../lib/config'
+
+function mediaDataPath (media) {
+  if (!media) return null
+  const id = media.$meta.id
+  return `${API_ENDPOINT}/media/${id}/data`
+}
+
 const PlayerContext = React.createContext(null)
 
 export function PlayerProvider (props) {
@@ -39,6 +47,8 @@ export function Player (props = {}) {
   const rerender = useRerender();
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [ready, setReady] = useState(false)
+
+  const mediaPath = useMemo(() => mediaDataPath(track), [track])
 
   const wavesurferRef = useRef()
   const handleWSMount = useCallback(
@@ -91,17 +101,15 @@ export function Player (props = {}) {
   }
 
   useEffect(() => {
-    if (wavesurferRef.current && track.contentUrl) {
-      setReady(false)
-      wavesurferRef.current.load(track.contentUrl)
-      console.log('WaveSurfer loading file')
+    if (wavesurferRef.current && mediaPath) {
+      wavesurferRef.current.load(mediaPath)
     }
-  }, [track])
+  }, [mediaPath, wavesurferRef.current])
 
-  if (!track || !track.contentUrl) return (
+  if (!track || !mediaPath) return (
     <Box>Not playing anything</Box>
   )
-  console.log('player', track)
+  console.log('player', { track, ready, loadingProgress })
   let headline = track.headline || track.contentUrl || 'no title'
   // Remove html highlighting tags from title display in player
   headline = headline.replace(/(<([^>]+)>)/gi, "")

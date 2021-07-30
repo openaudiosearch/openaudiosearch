@@ -9,7 +9,7 @@ use rocket::Data;
 use std::ops::Deref;
 
 /// List of headers to forward on proxy requests.
-pub static HEADERS_REQUEST: [reqwest::header::HeaderName; 10] = [
+pub static HEADERS_RESPONSE: [reqwest::header::HeaderName; 10] = [
     header::CONTENT_TYPE,
     header::CONTENT_LENGTH,
     header::CONTENT_RANGE,
@@ -22,8 +22,8 @@ pub static HEADERS_REQUEST: [reqwest::header::HeaderName; 10] = [
     header::LAST_MODIFIED,
 ];
 
-/// List of headers to forward on proxy responses.
-pub static HEADERS_RESPONSE: [reqwest::header::HeaderName; 9] = [
+/// List of headers to forward on proxy requests.
+pub static HEADERS_REQUEST: [reqwest::header::HeaderName; 9] = [
     reqwest::header::RANGE,
     reqwest::header::CONTENT_TYPE,
     reqwest::header::IF_MATCH,
