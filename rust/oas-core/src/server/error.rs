@@ -38,15 +38,11 @@ pub enum AppError {
 impl<'r> Responder<'r, 'static> for AppError {
     fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
         let code = match &self {
-            // TODO: Change to 500
-            AppError::Couch(_err) => Status::BadGateway,
+            AppError::Couch(err) => map_u16_status(err.status_code()),
             AppError::Http(code, _) => *code,
             AppError::EncodingError(_) => Status::BadRequest,
             AppError::ValidationError(_) => Status::UnprocessableEntity,
-            AppError::Elastic(err) => err
-                .status_code()
-                .map(|code| Status::from_code(code.as_u16()).unwrap())
-                .unwrap_or(Status::InternalServerError),
+            AppError::Elastic(err) => map_u16_status(err.status_code().map(|code| code.as_u16())),
             _ => Status::InternalServerError,
         };
 
@@ -61,6 +57,12 @@ impl<'r> Responder<'r, 'static> for AppError {
         let json_string = serde_json::to_string(&response).unwrap();
         Custom(code, content::Json(json_string)).respond_to(req)
     }
+}
+
+fn map_u16_status(status: Option<u16>) -> Status {
+    status
+        .map(|code| Status::from_code(code).unwrap())
+        .unwrap_or(Status::InternalServerError)
 }
 
 #[derive(Serialize, JsonSchema, Debug, Default)]

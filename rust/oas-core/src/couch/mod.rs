@@ -277,7 +277,10 @@ impl CouchDB {
         let mut res = self.client.send(request).await?;
         match res.status().is_success() {
             true => Ok(res.body_json::<T>().await?),
-            false => Err(res.body_json::<ErrorDetails>().await?.into()),
+            false => Err(CouchError::Couch(
+                res.status(),
+                res.body_json::<ErrorDetails>().await?,
+            )),
         }
     }
 }

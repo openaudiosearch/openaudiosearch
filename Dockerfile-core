@@ -20,6 +20,7 @@ FROM base as builder
 WORKDIR app
 COPY Cargo.toml .
 COPY rust rust
+COPY frontend frontend
 # copy the built dependencies from previous image
 COPY --from=cacher /app/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
