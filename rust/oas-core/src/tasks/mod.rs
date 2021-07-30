@@ -8,14 +8,25 @@ use oas_common::{
 use serde_json::{json, Value};
 use std::fmt;
 use std::sync::Arc;
-// use celery::broker::AMQPBroker;
 
 use crate::couch::CouchDB;
 use crate::State;
 
-// mod manager;
+pub const DEFAULT_REDIS_URL: &str = "redis://127.0.0.1:6379/";
 
 pub type CeleryState = Arc<Celery<RedisBroker>>;
+
+#[derive(Debug, Clone)]
+pub struct Config {
+    redis_url: String,
+}
+
+impl Config {
+    pub fn from_redis_url_or_default(redis_url: Option<&str>) -> Self {
+        let redis_url = redis_url.unwrap_or(DEFAULT_REDIS_URL).to_string();
+        Self { redis_url }
+    }
+}
 
 mod celery_tasks {
     #![allow(unused)]
@@ -44,7 +55,8 @@ pub struct TaskOpts {
 
 #[derive(Clone)]
 pub struct CeleryManager {
-    celery: Arc<Celery<RedisBroker>>,
+    config: Config,
+    celery: Option<Arc<Celery<RedisBroker>>>,
 }
 
 impl fmt::Debug for CeleryManager {
@@ -54,22 +66,31 @@ impl fmt::Debug for CeleryManager {
 }
 
 impl CeleryManager {
-    pub async fn init() -> Result<Self, CeleryError> {
-        let celery = create_celery_app().await?;
-        Ok(Self { celery })
+    pub fn with_config(config: Config) -> Self {
+        Self {
+            config,
+            celery: None,
+        }
+    }
+
+    pub async fn init(&mut self) -> Result<(), CeleryError> {
+        let celery = create_celery_app(&self.config).await?;
+        self.celery = Some(celery);
+        Ok(())
     }
 
     pub async fn transcribe_media(&self, media: &Record<Media>) -> anyhow::Result<String> {
-        create_transcribe_task(&self.celery, media).await
+        if self.celery.is_none() {
+            anyhow::bail!("CeleryManager is not initialized");
+        }
+        create_transcribe_task(self.celery.as_ref().unwrap(), media).await
     }
 }
 
-pub async fn create_celery_app() -> Result<Arc<Celery<RedisBroker>>, CeleryError> {
-    // broker = AMQPBroker {
-    //     std::env::var("AMQP_ADDR").unwrap_or("amqp://127.0.0.1:5672/oas".to_string())
-    // },
+pub async fn create_celery_app(config: &Config) -> Result<Arc<Celery<RedisBroker>>, CeleryError> {
+    let url = &config.redis_url;
     let app = celery::app!(
-        broker = RedisBroker { std::env::var("REDIS_ADDR").unwrap_or_else(|_| "redis://127.0.0.1:6379/".into()) },
+        broker = RedisBroker { url },
         tasks = [
             celery_tasks::transcribe
         ],
@@ -122,19 +143,16 @@ pub async fn load_medias_for_task_opts(
     Ok(medias)
 }
 
-pub async fn run_celery(state: State, opts: TaskOpts) -> anyhow::Result<()> {
-    let db = state.db;
-    // broker = RedisBroker { std::env::var("REDIS_ADDR").unwrap_or_else(|_| "redis://127.0.0.1:6379/".into()) },
-    //
-    let app = create_celery_app().await?;
-
-    let medias = load_medias_for_task_opts(&db, &opts).await?;
+pub async fn run_celery(mut state: State, opts: TaskOpts) -> anyhow::Result<()> {
+    state.tasks.init().await?;
+    state.db.init().await?;
+    let medias = load_medias_for_task_opts(&state.db, &opts).await?;
     if medias.is_empty() {
         anyhow::bail!("No media found")
     }
 
     for media in medias {
-        match create_transcribe_task(&app, &media).await {
+        match state.tasks.transcribe_media(&media).await {
             Ok(task_id) => println!(
                 "created transcribe task for media {}, task id: {}",
                 media.id(),
@@ -166,6 +184,5 @@ where
     let res = app
         .send_task(celery_tasks::transcribe::new(args, opts))
         .await?;
-    // eprintln!("res: {:#?}", res);
     Ok(res.task_id)
 }

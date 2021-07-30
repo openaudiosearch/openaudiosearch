@@ -21,6 +21,8 @@ use url::Url;
 use super::IndexError;
 use oas_common::{ElasticMapping, Record, TypedValue, UntypedRecord};
 
+pub const DEFAULT_PREFIX: &str = "oas";
+
 /// ElasticSearch config.
 #[derive(Clap, Debug, Clone)]
 pub struct Config {
@@ -28,30 +30,64 @@ pub struct Config {
     #[clap(long, env = "ELASTICSEARCH_URL")]
     pub url: Option<String>,
 
-    /// Elasticsearch index
-    #[clap(long, env = "ELASTICSEARCH_INDEX")]
-    pub index: String,
-
+    // Elasticsearch index
+    // #[clap(long, env = "ELASTICSEARCH_INDEX")]
+    // pub index: String,
     /// Elasticsearch index prefix
     #[clap(long, env = "ELASTICSEARCH_PREFIX")]
     pub prefix: Option<String>,
 }
 
-impl Config {
-    /// Creates a new config with server URL and index name.
-    pub fn new(url: Option<String>, index: String) -> Self {
+impl Default for Config {
+    fn default() -> Self {
         Self {
-            url,
-            index,
+            url: None,
             prefix: None,
         }
     }
+}
+
+impl Config {
+    /// Creates a new config with server URL and index name.
+    pub fn new(url: Option<String>) -> Self {
+        Self {
+            url,
+            // index,
+            prefix: None,
+        }
+    }
+
+    pub fn from_url_or_default(url: Option<&str>) -> anyhow::Result<Self> {
+        if let Some(url) = url {
+            Self::from_url(&url)
+        } else {
+            Ok(Self::default())
+        }
+    }
+
+    pub fn from_url(url: &str) -> anyhow::Result<Self> {
+        let mut url: Url = url.parse()?;
+        let first_segment = url
+            .path_segments()
+            .map(|mut segments| segments.nth(0).map(|s| s.to_string()))
+            .flatten();
+        let prefix = if let Some(first_segment) = first_segment {
+            first_segment.to_string()
+        } else {
+            DEFAULT_PREFIX.to_string()
+        };
+        url.set_path("");
+        Ok(Self {
+            url: Some(url.to_string()),
+            prefix: Some(prefix),
+        })
+    }
+
     /// Creates config with index name and default values.
-    pub fn with_default_url(index: String) -> Self {
+    pub fn with_default_url(prefix: String) -> Self {
         Self {
             url: None,
-            index,
-            prefix: None,
+            prefix: Some(prefix),
         }
     }
 }
@@ -70,14 +106,14 @@ pub struct Index {
 
 impl Index {
     /// Creates a new client with config.
-    pub fn with_config(config: Config) -> Result<Self, Error> {
-        let client = create_client(config.url)?;
-        let client = Arc::new(client);
-        Ok(Self {
-            client,
-            index: config.index,
-        })
-    }
+    // pub fn with_config(config: Config) -> Result<Self, Error> {
+    //     let client = create_client(config.url)?;
+    //     let client = Arc::new(client);
+    //     Ok(Self {
+    //         client,
+    //         index: config.index,
+    //     })
+    // }
 
     pub fn with_client_and_name(client: Arc<Elasticsearch>, name: impl ToString) -> Self {
         Self {
@@ -105,7 +141,7 @@ impl Index {
     ///
     /// This creates the elasticsearch index with the default index mapping if it does not exists. It should be called before calling other
     /// methods on the client.
-    pub async fn ensure_index(&self, delete: bool) -> Result<(), Error> {
+    pub async fn ensure_index(&self, delete: bool) -> Result<(), IndexError> {
         let mapping = get_default_mapping();
         create_index_if_not_exists(&self.client, &self.index, delete, mapping).await?;
         Ok(())
@@ -210,14 +246,12 @@ for (nested_doc in nested_docs) {
           }
         });
 
-        let response = self
+        let _response = self
             .client
             .update_by_query(UpdateByQueryParts::Index(&[&self.index]))
             .body(body)
             .send()
             .await?;
-
-        eprintln!("response {:?}", response);
 
         Ok(())
     }
@@ -303,9 +337,10 @@ async fn index_records(
 
     let body: Vec<BulkOperation<_>> = posts
         .iter()
-        .map(|r| {
-            let id = r.id().to_string();
-            BulkOperation::index(r).id(&id).routing(&id).into()
+        .map(|record| {
+            let id = record.id().to_string();
+            // let body = serde_json::to_value(record).unwrap();
+            BulkOperation::index(record).id(&id).routing(&id).into()
         })
         .collect();
 
@@ -344,7 +379,7 @@ async fn create_index_if_not_exists(
     name: &str,
     delete: bool,
     mapping: serde_json::Value,
-) -> Result<(), Error> {
+) -> Result<(), IndexError> {
     let exists = client
         .indices()
         .exists(IndicesExistsParts::Index(&[&name]))
@@ -359,9 +394,9 @@ async fn create_index_if_not_exists(
             .await?;
 
         if !delete.status_code().is_success() {
-            println!("Problem deleting index: {}", delete.text().await?);
+            log::warn!("problem deleting index {}", delete.text().await?);
         } else {
-            println!("Deleted index: {}", delete.text().await?);
+            log::info!("deleted index {}", name);
         }
     }
 
@@ -373,14 +408,19 @@ async fn create_index_if_not_exists(
             .send()
             .await?;
 
-        if !response.status_code().is_success() {
-            println!("Error while creating index");
-        } else {
-            println!("Created index: {}", name);
+        match check_error(response).await {
+            Ok(_) => {
+                log::info!("created index {}", name);
+                Ok(())
+            }
+            Err(err) => {
+                log::error!("error deleting index {}: {}", name, err);
+                Err(err)
+            }
         }
+    } else {
+        Ok(())
     }
-
-    Ok(())
 }
 
 pub fn create_client(addr: Option<String>) -> Result<Elasticsearch, Error> {
@@ -438,6 +478,23 @@ fn get_default_mapping() -> serde_json::Value {
     json!({
         "mappings": {
             "properties": post_mapping
+        },
+        "settings": {
+            "analysis": {
+                "analyzer": {
+                    "whitespace_plus_delimited": {
+                    "tokenizer": "whitespace",
+                    "filter": [ "plus_delimited" ]
+                    }
+                },
+                "filter": {
+                    "plus_delimited": {
+                    "type": "delimited_payload",
+                    "delimiter": "|",
+                    "encoding": "identity"
+                    }
+                }
+            }
         }
     })
 }

@@ -17,18 +17,30 @@ use tokio::task;
 
 use url::Url;
 
-const COUCHDB_HOST: &str = "http://localhost:5984";
-const COUCHDB_DATABASE: &str = "oas_test2";
-const ELASTICSEARCH_INDEX: &str = "oas";
-
 #[derive(Clap)]
 struct Args {
     #[clap(subcommand)]
-    command: Command,
-    // Elastic config
-    // elastic: elastic::Config,
-    // CouchDB config
-    // couchdb: couch::Config
+    pub command: Command,
+
+    /// Elasticsearch URL
+    #[clap(long, env = "ELASTICSEARCH_URL")]
+    pub elasticsearch_url: Option<String>,
+
+    /// CouchDB URL
+    #[clap(long, env = "COUCHDB_URL")]
+    pub couchdb_url: Option<String>,
+
+    /// Redis URL
+    #[clap(long, env = "REDIS_URL")]
+    pub redis_url: Option<String>,
+
+    /// Bind HTTP server to host
+    #[clap(long, env = "HTTP_HOST")]
+    pub http_host: Option<String>,
+
+    /// Bind HTTP server to port
+    #[clap(long, env = "HTTP_PORT")]
+    pub http_port: Option<u16>,
 }
 
 #[derive(Clap)]
@@ -119,6 +131,9 @@ struct WatchOpts {
 struct SearchOpts {
     /// Search query
     query: String,
+    /// Print results as JSON
+    #[clap(short, long)]
+    json: bool,
 }
 
 #[derive(Clap)]
@@ -130,27 +145,23 @@ struct ListOpts {
     // json: bool,
 }
 
-fn env_or(env: &str, default: &str) -> String {
-    std::env::var(env).unwrap_or_else(|_| default.to_string())
-}
+// fn env_or(env: &str, default: &str) -> String {
+//     std::env::var(env).unwrap_or_else(|_| default.to_string())
+// }
 
 #[async_std::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
     let args = Args::parse();
 
-    let couch_config = couch::Config {
-        host: env_or("COUCHDB_URL", COUCHDB_HOST),
-        database: COUCHDB_DATABASE.to_string(),
-        user: Some(env_or("COUCHDB_USER", "admin")),
-        password: Some(env_or("COUCHDB_PASSWORD", "password")),
-    };
+    let couch_config = couch::Config::from_url_or_default(args.couchdb_url.as_deref())?;
     let db = couch::CouchDB::with_config(couch_config)?;
 
-    let elastic_config = index::Config::with_default_url(ELASTICSEARCH_INDEX.to_string());
+    let elastic_config = index::Config::from_url_or_default(args.elasticsearch_url.as_deref())?;
     let index_manager = index::IndexManager::with_config(elastic_config)?;
 
-    let tasks = tasks::CeleryManager::init().await?;
+    let task_config = tasks::Config::from_redis_url_or_default(args.redis_url.as_deref());
+    let tasks = tasks::CeleryManager::with_config(task_config);
 
     let state = State {
         db,
@@ -166,16 +177,13 @@ async fn main() -> anyhow::Result<()> {
         Command::Search(opts) => run_search(state, opts).await,
         Command::Feed(opts) => run_feed(state, opts.command).await,
         Command::Task(opts) => run_task(state, opts).await,
-        Command::Server(opts) => {
-            state.init_all().await?;
-            run_server(state, opts).await
-        }
+        Command::Server(opts) => run_server(state, opts).await,
         Command::Run(server_opts) => run_all(state, server_opts).await,
     };
     result
 }
 
-async fn run_all(state: State, server_opts: ServerOpts) -> anyhow::Result<()> {
+async fn run_all(mut state: State, server_opts: ServerOpts) -> anyhow::Result<()> {
     state.init_all().await?;
     let server_task = task::spawn(run_server(state.clone(), server_opts));
     let index_task = task::spawn(run_index(state.clone(), IndexOpts::run_forever()));
@@ -339,12 +347,15 @@ async fn run_index(state: State, opts: IndexOpts) -> anyhow::Result<()> {
 async fn run_search(state: State, opts: SearchOpts) -> anyhow::Result<()> {
     let index = state.index_manager.data_index();
     let records = index.find_records_with_text_query(&opts.query).await?;
-    eprintln!("res: {:?}", records);
     let records: Vec<Record<Post>> = records
         .into_iter()
         .filter_map(|r| r.into_typed_record::<Post>().ok())
         .collect();
-    debug_print_records(&records[..]);
+    if opts.json {
+        println!("{}", serde_json::to_string(&records)?);
+    } else {
+        debug_print_records(&records[..]);
+    }
     Ok(())
 }
 

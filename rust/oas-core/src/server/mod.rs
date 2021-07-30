@@ -25,7 +25,8 @@ pub struct ServerOpts {
     port: Option<u16>,
 }
 
-pub async fn run_server(state: State, opts: ServerOpts) -> anyhow::Result<()> {
+pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()> {
+    state.init_all().await?;
     let figment = rocket::Config::figment()
         .merge(("port", opts.port.unwrap_or(DEFAULT_PORT)))
         .merge((

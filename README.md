@@ -100,20 +100,17 @@ Have a look at the [development guide](./docs/development.md).
 
 ## Configuration
 
-*TODO: This is partly outdated and needs to be updated. The `oas` CLI help list supported options and their corresponding environment variables*
+OAS is configured through environment variables or command line arguments. The following table lists all environment variables. Some apply to both the core and the worker, and some only to either.
 
-OAS is configured through environment variables. ~~If a `.env` file is present in the directory from which oas_worker is started the variables from there will be used. To customize the configuration, copy [`.env.default`](`oas_worker/.env.default`) in the `oas_worker` folder to `.env` and adjust the values.~~
-
-|variable|default|description|
-|-|-|-|
-|`STORAGE_PATH`|`./data/oas`|Storage path for models, cached files and other assets|
-|`FRONTEND_PATH`|`./frontend/dist`|Path to the built frontend that will be served at `/`|
-|`HOST`|`0.0.0.0`|Interface for the HTTP server to bind to|
-|`PORT`|`8080`|Port for HTTP server to listen on|
-|`REDIS_URL`|`redis://localhost:6379/0`|URL to Redis server|
-|`ELASTIC_URL`|`http://localhost:9200/`|URL to Elastic server (trailing slash is required)|
-|`ELASTIC_INDEX`|`oas`|Name of the Elastic Search index to be created and used|
-|`OAS_DEV`||If set to `1`: Enable development mode (see [Development guide](./docs/development.md)|
+|variable|default|applies to|description|
+|-|-|-|-|
+|`STORAGE_PATH`|`./data/oas`|worker|Storage path for models, cached files and other assets|
+|`REDIS_URL`|`redis://localhost:6379/0`|both|URL to Redis server|
+|`ELASTICSEARCH_URL`|`http://localhost:9200/`|core|URL to Elasticsearch server (trailing slash is required)|
+|`ELASTICSEARCH_PREFIX`|`oas`|core|Prefix for all Elasticsearch indexes created by OAS|
+|`COUCHDB_URL`|`http://admin:password@localhost:5984/oas`|core|URL to CouchDB server and database|
+|`HTTP_HOST`|`0.0.0.0`|core|Interface for the HTTP server to bind to|
+|`HTTP_PORT`|`8080`|core|Port for HTTP server to listen on|
 
 
 ## License

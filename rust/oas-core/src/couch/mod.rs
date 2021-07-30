@@ -1,3 +1,4 @@
+use anyhow::Context;
 use base64::write::EncoderWriter as Base64Encoder;
 use clap::Clap;
 use oas_common::{Record, TypedValue};
@@ -28,6 +29,10 @@ pub use changes::ChangesStream;
 pub use error::CouchError;
 pub use types::*;
 
+pub const DEFAULT_DATABASE: &str = "oas";
+pub const DEFAULT_HOST: &str = "http://localhost:5984";
+// pub const DEFAULT_PORT: u16 = 5984;
+
 /// CouchDB config.
 #[derive(Clap, Debug, Clone)]
 pub struct Config {
@@ -45,14 +50,69 @@ pub struct Config {
     pub password: Option<String>,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            host: DEFAULT_HOST.to_string(),
+            database: DEFAULT_DATABASE.to_string(),
+            user: Some("admin".to_string()),
+            password: Some("password".to_string()),
+        }
+    }
+}
+
 impl Config {
     pub fn with_defaults(database: String) -> Self {
         Self {
-            host: "http://localhost:5984".into(),
+            host: DEFAULT_HOST.into(),
             database,
-            user: None,
-            password: None,
+            ..Default::default()
         }
+    }
+
+    pub fn from_url_or_default(url: Option<&str>) -> anyhow::Result<Self> {
+        if let Some(url) = url {
+            Self::from_url(&url)
+        } else {
+            Ok(Self::default())
+        }
+    }
+
+    pub fn from_url(url: &str) -> anyhow::Result<Self> {
+        let url: Url = url
+            .parse()
+            .with_context(|| format!("Failed to parse CouchDB URL"))?;
+        let host = if let Some(host) = url.host() {
+            if let Some(port) = url.port() {
+                format!("{}://{}:{}", url.scheme(), host, port)
+            } else {
+                format!("{}://{}", url.scheme(), host)
+            }
+        } else {
+            DEFAULT_HOST.to_string()
+        };
+        let user = if !url.username().is_empty() {
+            Some(url.username().to_string())
+        } else {
+            None
+        };
+        let password = url.password().map(|p| p.to_string());
+        let first_segment = url
+            .path_segments()
+            .map(|mut segments| segments.nth(0).map(|s| s.to_string()))
+            .flatten();
+        let database = if let Some(first_segment) = first_segment {
+            first_segment.to_string()
+        } else {
+            DEFAULT_DATABASE.to_string()
+        };
+        let config = Config {
+            host,
+            database,
+            user,
+            password,
+        };
+        Ok(config)
     }
 }
 

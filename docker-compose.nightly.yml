@@ -13,9 +13,7 @@ services:
     environment:
       REDIS_URL: "redis://redis:6379/0"
       ELASTICSEARCH_URL: "http://elasticsearch:9200/"
-      COUCHDB_URL: "http://couchdb:5984"
-      COUCHDB_USER: "admin"
-      COUCHDB_PASSWORD: "password"
+      COUCHDB_URL: "http://admin:password@couchdb:5984/oas"
 
   worker:
     image: "arsoxyz/oas-worker:nightly"

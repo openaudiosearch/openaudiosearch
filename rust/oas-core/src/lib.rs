@@ -5,7 +5,8 @@ pub mod server;
 pub mod tasks;
 pub mod util;
 
-pub use oas_common::*;
+pub use oas_common as common;
+pub use oas_common::{types, Record, Reference, TypedValue, UntypedRecord};
 
 /// Main application state.
 ///
@@ -22,9 +23,10 @@ impl State {
     /// Asynchronously init all services.
     ///
     /// Currently errors on the first failing init.
-    pub async fn init_all(&self) -> anyhow::Result<()> {
+    pub async fn init_all(&mut self) -> anyhow::Result<()> {
         self.db.init().await?;
         self.index_manager.init(Default::default()).await?;
+        self.tasks.init().await?;
         Ok(())
     }
 }
