@@ -1,4 +1,5 @@
 use crate::couch::{CouchDB, PutResult};
+use oas_common::UntypedRecord;
 use oas_common::{types::Post, util};
 use rss::Channel;
 use std::time::Duration;
@@ -52,20 +53,29 @@ impl FeedWatcher {
         loop {
             interval.tick().await;
             self.load().await?;
-            let records = self.to_posts()?;
-            let put_result = db.put_record_bulk(records).await?;
-
-            let (success, error): (Vec<_>, Vec<_>) = put_result
-                .iter()
-                .partition(|r| matches!(r, PutResult::Ok(_)));
-
-            log::debug!(
-                "saved posts from feed {} ({} success, {} error)",
-                self.url,
-                success.len(),
-                error.len()
-            );
+            self.save(&db, true).await?;
         }
+    }
+
+    pub async fn save(&mut self, db: &CouchDB, update: bool) -> Result<(), RssError> {
+        let records = self.to_post_and_media_records()?;
+        let put_result = if update {
+            db.put_untyped_record_bulk_update(records).await?
+        } else {
+            db.put_untyped_record_bulk(records).await?
+        };
+
+        let (success, error): (Vec<_>, Vec<_>) = put_result
+            .iter()
+            .partition(|r| matches!(r, PutResult::Ok(_)));
+
+        log::debug!(
+            "saved posts from feed {} ({} success, {} error)",
+            self.url,
+            success.len(),
+            error.len()
+        );
+        Ok(())
     }
 
     pub async fn load(&mut self) -> Result<(), RssError> {
@@ -78,6 +88,20 @@ impl FeedWatcher {
         let channel = Channel::read_from(&bytes[..])?;
         self.channel = Some(channel);
         Ok(())
+    }
+
+    pub fn to_post_and_media_records(&self) -> Result<Vec<UntypedRecord>, RssError> {
+        let posts = self.to_posts()?;
+        let mut docs = vec![];
+        for mut post in posts.into_iter() {
+            let mut refs = post.extract_refs();
+            docs.append(&mut refs);
+            // TODO: Handle error?
+            if let Ok(record) = post.into_untyped_record() {
+                docs.push(record);
+            }
+        }
+        Ok(docs)
     }
 
     pub fn to_posts(&self) -> Result<Vec<Record<Post>>, RssError> {

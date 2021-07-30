@@ -52,7 +52,9 @@ impl ElasticMapping for Post {
     fn elastic_mapping() -> Option<serde_json::Value> {
         Some(json!({
             "media": {
-                "type": "nested"
+                "type": "nested",
+                "include_in_parent": true,
+                "properties": Media::elastic_mapping().unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
             },
             "datePublished": {
                 "type": "date"

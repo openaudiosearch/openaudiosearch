@@ -1,6 +1,7 @@
 use anyhow::Context;
 use base64::write::EncoderWriter as Base64Encoder;
 use clap::Clap;
+use oas_common::UntypedRecord;
 use oas_common::{Record, TypedValue};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -385,6 +386,15 @@ impl CouchDB {
         self.put_bulk(docs).await
     }
 
+    /// Put a vector of untyped records into the database in a single operation.
+    pub async fn put_untyped_record_bulk(
+        &self,
+        records: Vec<UntypedRecord>,
+    ) -> Result<Vec<PutResult>> {
+        let docs = records.into_iter().map(Doc::from_untyped_record).collect();
+        self.put_bulk(docs).await
+    }
+
     /// Put a vector of records into the database in a single operation,
     /// while first fetching the lastest rev for records that do not have a rev set.
     pub async fn put_record_bulk_update<T: TypedValue>(
@@ -392,6 +402,15 @@ impl CouchDB {
         records: Vec<Record<T>>,
     ) -> Result<Vec<PutResult>> {
         let docs = records.into_iter().map(Doc::from_typed_record).collect();
+        self.put_bulk_update(docs).await
+    }
+
+    /// Put a vector of untyped records into the database in a single operation.
+    pub async fn put_untyped_record_bulk_update(
+        &self,
+        records: Vec<UntypedRecord>,
+    ) -> Result<Vec<PutResult>> {
+        let docs = records.into_iter().map(Doc::from_untyped_record).collect();
         self.put_bulk_update(docs).await
     }
 }

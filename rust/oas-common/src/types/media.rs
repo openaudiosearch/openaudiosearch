@@ -1,5 +1,6 @@
 use crate::mapping::Mappable;
 use crate::record::TypedValue;
+use crate::ElasticMapping;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -21,3 +22,9 @@ impl TypedValue for Media {
 }
 
 impl Mappable for Media {}
+
+impl ElasticMapping for Media {
+    fn elastic_mapping() -> Option<serde_json::Value> {
+        None
+    }
+}
