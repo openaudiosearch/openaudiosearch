@@ -1,3 +1,9 @@
+# frontend-build: build frontend with yarn
+FROM node:14-alpine as frontend-build
+WORKDIR /app/frontend
+COPY frontend /app/frontend
+RUN yarn && yarn run build
+
 # use the cargo-chef base image
 FROM lukemathwalker/cargo-chef:latest-rust-1.53.0 as base
 RUN apt-get update && apt-get install -y libssl-dev
@@ -20,10 +26,12 @@ FROM base as builder
 WORKDIR app
 COPY Cargo.toml .
 COPY rust rust
-COPY frontend frontend
+# copy the built frontend
+COPY --from=frontend-build /app/frontend/dist frontend/dist
 # copy the built dependencies from previous image
 COPY --from=cacher /app/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
+ENV BUILD_FRONTEND="0"
 RUN cargo build --release --bin oas
 
 # build the main image
