@@ -10,7 +10,10 @@ const { ResultListWrapper } = ReactiveList
 
 export default function SearchPage2 () {
   const { query } = useParams()
-  const decodedquery = decodeURIComponent(query)
+  const query_str = query || ""
+  console.log("QUERY: ", query_str)
+  const decodedquery = decodeURIComponent(query_str)
+  console.log("DECODED QUERY: ", decodedquery)
   const url = API_ENDPOINT + '/search'
   console.log(url)
   const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator']

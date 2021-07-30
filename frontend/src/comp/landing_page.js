@@ -1,11 +1,13 @@
 import React from 'react'
 import ReactJson from 'react-json-view'
 import { DataSearch, ResultList, ResultCard, MultiList, DateRange, ReactiveBase, ReactiveList } from '@appbaseio/reactivesearch'
-import { Heading, Flex, Spacer, Box, Button, Spinner, Center } from '@chakra-ui/react'
+import { Heading, Flex, Spacer, Box, Button, Spinner, Center, IconButton } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { usePlayer } from './player'
 import { useHistory } from 'react-router-dom'
 import Moment from 'moment'
+import { FaPlay } from 'react-icons/fa'
+
 
 const { ResultCardsWrapper } = ReactiveList
 
@@ -57,7 +59,6 @@ export default function LandingPage() {
             <ReactiveList
                 dataField='dateModified'
                 componentId='DiscoverItems'
-                pagination
                 showResultStats={false}
                 size={6}
               >
@@ -65,13 +66,13 @@ export default function LandingPage() {
                   if (loading) return <Spinner size='xl' />
                   // console.log('reactive result', { data, error, loading, args })
                   return (
-                    <ResultCardsWrapper>
+                    <Flex direction='column'>
                       {
                         data.map((item, i) => (
                           <DiscoverItem item={item} key={i} />
                         ))
                       }
-                    </ResultCardsWrapper>
+                    </Flex>
                   )}}
               </ReactiveList>
           </Box>
@@ -86,25 +87,31 @@ function DiscoverItem (props) {
   const { item } = props
   const { setTrack } = usePlayer()
   return (
-    <ResultCard>
-        <ResultCard.Title
-            dangerouslySetInnerHTML={{
-              __html: item.headline
-            }}
+    <Flex direction='column' border='2px' mb='2' p='2' borderRadius='lg' borderColor='gray.300' boxShadow='md'>
+      <Flex direction='row' justify='space-between'>
+        <Flex direction='column'>
+          <Heading size={'md'} my={4}
+              dangerouslySetInnerHTML={{
+                __html: item.headline
+              }}
           />
-        <ResultCard.Description>
           <div>
             <div>by {item.publisher}</div>
           <span>
             published on: {Moment(item.datePublished).format('DD.MM.YYYY')}
           </span>
           </div>
-          <div>
-            <Button onClick={() => setTrack(item)}>
-              Click to play
-            </Button>
-          </div>
-        </ResultCard.Description>
-    </ResultCard>
+        </Flex>
+        <Flex ml={4} align='center'>
+            <IconButton 
+            aria-label="Play"
+            color="violet"
+            onClick={() => setTrack(item)}
+            icon={ <FaPlay /> }
+            mr="2"
+            />
+        </Flex>
+      </Flex>
+    </Flex>
   )
 }
