@@ -25,7 +25,7 @@ futures = "0.3.15"
 http = "0.2.4"
 log = "0.4.14"
 oas-common = { path = "../oas-common" }
-rocket = { version = "0.5.0-rc.1", features = ["json"] }
+rocket = { version = "0.5.0-rc.1", features = ["json", "secrets"] }
 rocket_cors = { git = "https://github.com/lawliet89/rocket_cors.git" }
 rss = "1.10.0"
 serde = "1.0.126"
@@ -45,3 +45,4 @@ humantime = "2.1.0"
 chrono = "0.4.19"
 bytes = "1.0.1"
 include_dir = "0.6.1"
+uuid = { version = "0.8.2", features = ["v4"] }

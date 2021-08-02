@@ -6,6 +6,7 @@ use rocket_okapi::{
 
 use crate::State;
 
+mod auth;
 pub mod error;
 mod handlers;
 mod proxy;
@@ -35,8 +36,10 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
         ));
 
     let cors = rocket_cors::CorsOptions::default().to_cors()?;
+    let auth = auth::Auth::new();
     let app = rocket::custom(figment)
         .manage(state)
+        .manage(auth)
         .attach(cors)
         .mount(
             "/api/v1",
@@ -57,7 +60,11 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 // /search routes
                 handlers::search::search,
                 // task routes
-                handlers::task::post_transcribe_media
+                handlers::task::post_transcribe_media,
+                // login routes
+                auth::login,
+                auth::logout,
+                auth::private
             ],
         )
         .mount(
