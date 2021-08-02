@@ -13,6 +13,7 @@ import JobsPage from './jobs'
 import SearchPage from './search'
 import SearchPage2 from './reactive_search'
 import ImporterPage from './importer'
+import { Login } from './login'
 
 export default function Layout (props = {}) {
   const playerHeight = '15rem'
@@ -29,9 +30,13 @@ export default function Layout (props = {}) {
 
 function Header () {
   return (
-    <Flex mb='4' bg='black' color='white'>
-      <Heading p='2' fontSize='xl' mr='4'>Open Audio Search</Heading>
+    <Flex px={4} mb='4' bg='black' color='white'>
+      <Heading py='4' fontSize='xl' mr='4'>Open Audio Search</Heading>
       <Navbar />
+      <Box flex={1} />
+      <Box py={4}>
+        <Login />
+      </Box>
     </Flex>
   )
 }
