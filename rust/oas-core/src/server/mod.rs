@@ -62,7 +62,8 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 // task routes
                 handlers::task::post_transcribe_media,
                 // login routes
-                auth::login,
+                auth::post_login,
+                auth::get_login,
                 auth::logout,
                 auth::private
             ],
