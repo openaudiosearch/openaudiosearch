@@ -145,13 +145,18 @@ struct ListOpts {
     // json: bool,
 }
 
-// fn env_or(env: &str, default: &str) -> String {
-//     std::env::var(env).unwrap_or_else(|_| default.to_string())
-// }
+fn setup() -> anyhow::Result<()> {
+    if std::env::var("RUST_LOG").is_err() {
+        std::env::set_var("RUST_LOG", "oas=info")
+    }
+    env_logger::init();
+    // color_anyhow::install()?;
+    Ok(())
+}
 
 #[async_std::main]
 async fn main() -> anyhow::Result<()> {
-    env_logger::init();
+    setup()?;
     let args = Args::parse();
 
     let couch_config = couch::Config::from_url_or_default(args.couchdb_url.as_deref())?;
@@ -221,26 +226,8 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
     let len = docs.rows.len();
     for doc in docs.rows() {
         println!("{}", serde_json::to_string(&doc).unwrap());
-        // eprintln!("{}", serde_json::to_string_pretty(&doc).unwrap());
-        // match opts.json {
-        //     true =>
-        // }
     }
     log::info!("total {}", len);
-
-    // let docs = db.get_all::<serde_json::Value>().await?;
-    // eprintln!("docs {:#?}", &docs);
-    // let mut params = HashMap::new();
-    // params.insert("include_docs".into(), "true".into());
-    // let docs: couch::DocList = db
-    //     .get("_all_docs", Some(params))
-    //     .await
-    //     .map_err(|e| anyhow::anyhow!(e))?;
-    // eprintln!("docs: {:?}", docs);
-    // eprintln!(
-    //     "typed docs: {:#?}",
-    //     docs.clone().into_typed_docs::<Record<Media>>()
-    // );
     Ok(())
 }
 
