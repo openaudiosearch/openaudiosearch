@@ -73,6 +73,15 @@ impl CeleryManager {
         }
     }
 
+    pub fn with_url<S>(url: Option<S>) -> anyhow::Result<Self>
+    where
+        S: AsRef<str>,
+    {
+        let url = url.map(|s| s.as_ref().to_string());
+        let config = Config::from_redis_url_or_default(url.as_deref());
+        Ok(Self::with_config(config))
+    }
+
     pub async fn init(&mut self) -> Result<(), CeleryError> {
         let celery = create_celery_app(&self.config).await?;
         self.celery = Some(celery);

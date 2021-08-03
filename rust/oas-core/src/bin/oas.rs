@@ -1,20 +1,14 @@
 use clap::Clap;
 use futures::stream::StreamExt;
-use oas_common::reference::Reference;
 use oas_common::types::Media;
-use oas_common::util;
 use oas_common::Record;
-use oas_common::Resolvable;
-use oas_core::couch::PutResult;
-use oas_core::rss;
 use oas_core::rss::manager::run_manager;
 use oas_core::server::{run_server, ServerOpts};
 use oas_core::types::Post;
-use oas_core::util::*;
+use oas_core::util::debug_print_records;
 use oas_core::State;
-use oas_core::{couch, index, tasks};
+use oas_core::{couch, index, rss, tasks};
 use tokio::task;
-
 use url::Url;
 
 #[derive(Clap)]
@@ -60,7 +54,6 @@ enum Command {
     Task(tasks::TaskOpts),
     /// Run the HTTP API server
     Server(ServerOpts),
-
     /// Run all services
     Run(ServerOpts),
 }
@@ -114,19 +107,6 @@ struct WatchOpts {
     since: Option<String>,
 }
 
-// #[derive(Clap)]
-// pub struct FeedOpts {
-//     /// Feed URL to ingest
-//     url: Url,
-//     /// Crawl a paginated feed recursively.
-//     #[clap(short, long)]
-//     crawl: bool,
-
-//     /// Max number of pages to crawl.
-//     #[clap(long)]
-//     crawl_max: Option<usize>,
-// }
-
 #[derive(Clap)]
 struct SearchOpts {
     /// Search query
@@ -150,7 +130,6 @@ fn setup() -> anyhow::Result<()> {
         std::env::set_var("RUST_LOG", "oas=info")
     }
     env_logger::init();
-    // color_anyhow::install()?;
     Ok(())
 }
 
@@ -159,14 +138,9 @@ async fn main() -> anyhow::Result<()> {
     setup()?;
     let args = Args::parse();
 
-    let couch_config = couch::Config::from_url_or_default(args.couchdb_url.as_deref())?;
-    let db = couch::CouchDB::with_config(couch_config)?;
-
-    let elastic_config = index::Config::from_url_or_default(args.elasticsearch_url.as_deref())?;
-    let index_manager = index::IndexManager::with_config(elastic_config)?;
-
-    let task_config = tasks::Config::from_redis_url_or_default(args.redis_url.as_deref());
-    let tasks = tasks::CeleryManager::with_config(task_config);
+    let db = couch::CouchDB::with_url(args.couchdb_url.as_deref())?;
+    let index_manager = index::IndexManager::with_url(args.elasticsearch_url.as_deref())?;
+    let tasks = tasks::CeleryManager::with_url(args.redis_url.as_deref())?;
 
     let state = State {
         db,
@@ -231,77 +205,9 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn run_debug(state: State) -> anyhow::Result<()> {
-    let db = state.db;
-    let media1 = Media {
-        content_url: "http://foo.bar/m1.mp3".to_string(),
-        ..Default::default()
-    };
-    let media2 = Media {
-        content_url: "http://foo.bar/m2.mp3".to_string(),
-        duration: Some(300.),
-        ..Default::default()
-    };
-    let media1 =
-        Record::from_id_and_value(util::id_from_hashed_string(&media1.content_url), media1);
-    let media2 =
-        Record::from_id_and_value(util::id_from_hashed_string(&media2.content_url), media2);
-    let medias = vec![media1, media2];
-    let res = db.put_record_bulk_update(medias).await?;
-    let media_refs = res
-        .into_iter()
-        .filter_map(|r| match r {
-            PutResult::Ok(r) => Some(Reference::Id(r.id)),
-            PutResult::Err(_err) => None,
-        })
-        .collect();
-    let post = Post {
-        headline: Some("Hello world".into()),
-        // media: vec![Reference::Id("id1"), Reference::Id("id2")],
-        media: media_refs,
-        ..Default::default()
-    };
-    let post = Record::from_id_and_value("testpost".to_string(), post);
-    let id = post.guid().to_string();
-    let res = db.put_record(post).await?;
-    eprintln!("put res {:#?}", res);
-
-    let mut post = db.get_record::<Post>(&id).await?;
-    eprintln!("get post {:#?}", post);
-    post.value.resolve_refs(&db).await?;
-    eprintln!("resolved post {:#?}", post);
-    let extracted_refs = post.value.extract_refs();
-    eprintln!("extracted refs {:#?}", extracted_refs);
-    eprintln!("post after extract {:#?}", post);
+async fn run_debug(_state: State) -> anyhow::Result<()> {
+    eprintln!("OAS debug -- nothing here");
     Ok(())
-    // let db = state.db;
-    // let iter = 10_000;
-    // // let iter = 3;
-    // let start = time::Instant::now();
-    // let per_batch = 10.min(iter);
-    // let mut batch = vec![];
-    // for i in 0..iter {
-    //     let doc = Media {
-    //         headline: Some(format!("hello {}", i)),
-    //         ..Default::default()
-    //     };
-    //     let id = format!("test{}", i);
-    //     let meta = DocMeta::with_id(id.to_string());
-    //     let doc = Doc::from_typed(meta, doc)?;
-    //     batch.push(doc);
-    //     if batch.len() >= per_batch {
-    //         let res = db
-    //             .put_bulk_update(batch.clone())
-    //             .await
-    //             .map_err(|e| anyhow!(e))?;
-    //         eprintln!("res: {:?}", res);
-    //         batch.clear();
-    //     }
-    // }
-    // let elapsed = start.elapsed();
-    // eprintln!("took {:?}", elapsed);
-    // eprintln!("per second: {}", iter as f32 / elapsed.as_secs_f32());
-    // Ok(())
 }
 
 async fn run_watch(state: State, opts: WatchOpts) -> anyhow::Result<()> {

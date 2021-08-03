@@ -143,6 +143,22 @@ impl CouchDB {
         })
     }
 
+    /// Create a new client with a CouchDB URL.
+    ///
+    /// The URL should have the following format:
+    /// http://username:password@hostname:5984/dbname
+    /// If passing None for url a client will be created with the default address
+    /// http://localhost:5984/oas
+    pub fn with_url<S>(url: Option<S>) -> anyhow::Result<Self>
+    where
+        S: AsRef<str>,
+    {
+        let url = url.map(|s| s.as_ref().to_string());
+        let config = Config::from_url_or_default(url.as_deref())?;
+        let db = Self::with_config(config)?;
+        Ok(db)
+    }
+
     /// Init the database.
     ///
     /// This creates the database if it does not exists. It should be called before calling other

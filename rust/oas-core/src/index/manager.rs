@@ -17,13 +17,16 @@ use std::time;
 
 use super::{elastic, Index};
 
+/// Prefix used for all indexes created by OAS.
 pub const DEFAULT_PREFIX: &str = "oas";
+/// Name of the meta index.
 pub const META_INDEX_NAME: &str = "_meta";
-
+/// Name of the data index.
 pub const DATA_INDEX_NAME: &str = "data";
-
+/// Doc ID for the index state.
 pub const DOC_ID_INDEX_STATE: &str = "IndexMeta.data";
 
+/// The index manager holds configuration, an HTTP client and the names of active indexes.
 #[derive(Debug, Clone)]
 pub struct IndexManager {
     config: elastic::Config,
@@ -32,20 +35,11 @@ pub struct IndexManager {
     data_index: Arc<elastic::Index>, // indexes: HashMap<IndexId, elastic::Index>,
 }
 
-#[derive(Debug)]
-pub struct Meta {
-    index: elastic::Index,
-}
-
+/// Options for index initialization with optional recreation.
 #[derive(Debug, PartialEq, Clone)]
 pub struct InitOpts {
     delete_meta: bool,
     delete_data: bool,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct IndexState {
-    last_seq: Option<String>,
 }
 
 impl Default for InitOpts {
@@ -71,6 +65,22 @@ impl InitOpts {
             delete_data: true,
         }
     }
+}
+
+/// The indexing state.
+///
+/// Currently only tracks the last indexed CouchDB seq to know from where to resume indexing.
+#[derive(Serialize, Deserialize)]
+struct IndexState {
+    last_seq: Option<String>,
+}
+
+/// The meta index that holds meta information.
+///
+/// Currently only used to persist the [[IndexState]].
+#[derive(Debug)]
+struct Meta {
+    index: elastic::Index,
 }
 
 impl Meta {
@@ -99,6 +109,7 @@ impl Meta {
 }
 
 impl IndexManager {
+    /// Create a new manager with configuration.
     pub fn with_config(config: elastic::Config) -> Result<Self, elasticsearch::Error> {
         let client = elastic::create_client(config.url.clone())?;
         let client = Arc::new(client);
@@ -117,6 +128,16 @@ impl IndexManager {
             data_index: Arc::new(data_index),
             meta: Arc::new(meta),
         })
+    }
+
+    pub fn with_url<S>(url: Option<S>) -> anyhow::Result<Self>
+    where
+        S: AsRef<str>,
+    {
+        let url = url.map(|s| s.as_ref().to_string());
+        let config = elastic::Config::from_url_or_default(url.as_deref())?;
+        let manager = Self::with_config(config)?;
+        Ok(manager)
     }
 
     pub async fn init(&self, opts: InitOpts) -> anyhow::Result<()> {
