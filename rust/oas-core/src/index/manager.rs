@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time;
 
-use super::{elastic, Index};
+use super::{elastic, Config, Index};
 
 /// Prefix used for all indexes created by OAS.
 pub const DEFAULT_PREFIX: &str = "oas";
@@ -29,10 +29,10 @@ pub const DOC_ID_INDEX_STATE: &str = "IndexMeta.data";
 /// The index manager holds configuration, an HTTP client and the names of active indexes.
 #[derive(Debug, Clone)]
 pub struct IndexManager {
-    config: elastic::Config,
+    config: Config,
     meta: Arc<Meta>,
     client: Arc<Elasticsearch>,
-    data_index: Arc<elastic::Index>, // indexes: HashMap<IndexId, elastic::Index>,
+    data_index: Arc<Index>, // indexes: HashMap<IndexId, elastic::Index>,
 }
 
 /// Options for index initialization with optional recreation.
@@ -80,11 +80,11 @@ struct IndexState {
 /// Currently only used to persist the [[IndexState]].
 #[derive(Debug)]
 struct Meta {
-    index: elastic::Index,
+    index: Index,
 }
 
 impl Meta {
-    pub fn with_index(index: elastic::Index) -> Self {
+    pub fn with_index(index: Index) -> Self {
         Self { index }
     }
 
@@ -110,7 +110,7 @@ impl Meta {
 
 impl IndexManager {
     /// Create a new manager with configuration.
-    pub fn with_config(config: elastic::Config) -> Result<Self, elasticsearch::Error> {
+    pub fn with_config(config: Config) -> Result<Self, elasticsearch::Error> {
         let client = elastic::create_client(config.url.clone())?;
         let client = Arc::new(client);
 
@@ -135,7 +135,7 @@ impl IndexManager {
         S: AsRef<str>,
     {
         let url = url.map(|s| s.as_ref().to_string());
-        let config = elastic::Config::from_url_or_default(url.as_deref())?;
+        let config = Config::from_url_or_default(url.as_deref())?;
         let manager = Self::with_config(config)?;
         Ok(manager)
     }
@@ -146,7 +146,7 @@ impl IndexManager {
         Ok(())
     }
 
-    pub fn data_index(&self) -> &Arc<elastic::Index> {
+    pub fn data_index(&self) -> &Arc<Index> {
         &self.data_index
     }
 
