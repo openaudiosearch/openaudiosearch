@@ -61,7 +61,7 @@ impl ElasticMapping for Post {
             "transcript": {
                 "type": "text",
                 "term_vector": "with_positions_payloads",
-                "analyzer": "whitespace_plus_delimited"
+                "analyzer": "payload_delimiter"
             },
             "datePublished": {
                 "type": "date"

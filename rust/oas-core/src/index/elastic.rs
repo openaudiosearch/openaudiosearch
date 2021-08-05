@@ -498,16 +498,16 @@ fn get_default_mapping() -> serde_json::Value {
         "settings": {
             "analysis": {
                 "analyzer": {
-                    "whitespace_plus_delimited": {
-                    "tokenizer": "whitespace",
-                    "filter": [ "plus_delimited" ]
+                    "payload_delimiter": {
+                        "tokenizer": "whitespace",
+                        "filter": [ "payload_delimiter_filter" ]
                     }
                 },
                 "filter": {
-                    "plus_delimited": {
-                    "type": "delimited_payload",
-                    "delimiter": "|",
-                    "encoding": "identity"
+                    "payload_delimiter_filter": {
+                        "type": "delimited_payload",
+                        "delimiter": "|",
+                        "encoding": "identity"
                     }
                 }
             }

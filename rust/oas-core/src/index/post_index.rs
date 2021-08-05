@@ -140,7 +140,7 @@ fn generate_transcript_token_string(transcript: &Transcript, id: usize) -> Strin
     let mut tokens = vec![];
     for part in transcript.parts.iter() {
         let token = format!(
-            "{}|{},{},{},{}",
+            "{}|{}:{}:{}:{}",
             part.word, part.start, part.end, part.conf, id
         );
         tokens.push(token);
