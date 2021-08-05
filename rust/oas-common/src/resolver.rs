@@ -40,6 +40,17 @@ pub trait Resolver {
         results
     }
 
+    async fn resolve_all_refs<T: Resolvable + Send>(&self, records: &mut [Record<T>])
+    where
+        Self: Sized + Send,
+    {
+        let futs: Vec<_> = records
+            .iter_mut()
+            .map(|record| record.resolve_refs(&*self))
+            .collect();
+        let _ = futures_util::future::join_all(futs).await;
+    }
+
     /// Resolve a list of references.
     async fn resolve_refs<T: TypedValue + Send>(
         &self,

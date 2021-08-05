@@ -8,6 +8,7 @@ use oas_core::types::Post;
 use oas_core::util::debug_print_records;
 use oas_core::State;
 use oas_core::{couch, index, rss, tasks};
+use std::time;
 use tokio::task;
 use url::Url;
 
@@ -148,6 +149,7 @@ async fn main() -> anyhow::Result<()> {
         tasks,
     };
 
+    let now = time::Instant::now();
     let result = match args.command {
         Command::Watch(opts) => run_watch(state, opts).await,
         Command::List(opts) => run_list(state, opts).await,
@@ -159,6 +161,7 @@ async fn main() -> anyhow::Result<()> {
         Command::Server(opts) => run_server(state, opts).await,
         Command::Run(server_opts) => run_all(state, server_opts).await,
     };
+    log::debug!("command took {}", humantime::format_duration(now.elapsed()));
     result
 }
 
@@ -205,8 +208,18 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn run_debug(_state: State) -> anyhow::Result<()> {
+async fn run_debug(state: State) -> anyhow::Result<()> {
     eprintln!("OAS debug -- nothing here");
+    let id = std::env::var("ID").unwrap();
+    let index = (*state.index_manager.data_index()).clone();
+    let post_index = index::PostIndex::new(index);
+    let iters = 1000usize;
+    for _ in 0..iters {
+        let now = time::Instant::now();
+        let res = post_index.find_posts_for_medias(&[&id]).await?;
+        eprintln!("res {:?}", res);
+        eprintln!("took {}", humantime::format_duration(now.elapsed()));
+    }
     Ok(())
 }
 

@@ -15,7 +15,6 @@ use rocket::serde::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::Arc;
-use std::time::Instant;
 use url::Url;
 
 use super::IndexError;
@@ -113,7 +112,6 @@ impl Index {
         docs: &[UntypedRecord],
     ) -> Result<BulkPutResponse, IndexError> {
         self.set_refresh_interval(json!("-1")).await?;
-        // let now = Instant::now();
         if docs.is_empty() {
             return Ok(BulkPutResponse::default());
         }
@@ -137,14 +135,7 @@ impl Index {
 
         let response = check_error(response).await?;
         let results: BulkPutResponse = response.json().await?;
-
-        // let duration = now.elapsed();
-        // let secs = duration.as_secs_f64();
-        // let _taken = if secs >= 60f64 {
-        //     format!("{}m", secs / 60f64)
-        // } else {
-        //     format!("{:?}", duration)
-        // };
+        log::info!("{}", results.summarize());
 
         self.set_refresh_interval(json!(null)).await?;
         Ok(results)
@@ -217,6 +208,34 @@ for (nested_doc in nested_docs) {
         Ok(())
     }
 
+    pub async fn query_records<Q: Serialize + std::fmt::Debug>(
+        &self,
+        query: Q,
+    ) -> Result<Vec<UntypedRecord>, Error> {
+        // eprintln!("query {:#?}", query);
+        let mut response = self
+            .client
+            .search(SearchParts::Index(&[&self.index]))
+            .body(query)
+            .pretty(true)
+            .send()
+            .await?;
+
+        // turn the response into an Error if status code is unsuccessful
+        response = response.error_for_status_code()?;
+
+        let json: Value = response.json().await?;
+        // eprintln!("res {:#?}", json);
+        let records: Vec<UntypedRecord> = json["hits"]["hits"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|h| serde_json::from_value(h["_source"].clone()).unwrap())
+            .collect();
+
+        Ok(records)
+    }
+
     /// Simple string query on the index.
     pub async fn find_records_with_text_query(
         &self,
@@ -275,6 +294,46 @@ pub struct BulkPutResponse {
     items: Vec<BulkPutResponseAction>,
 }
 
+impl BulkPutResponse {
+    fn stats(&self) -> BulkPutStats {
+        let mut stats = BulkPutStats::default();
+        for item in self.items.iter() {
+            if let Some(_) = &item.inner().error {
+                stats.errors += 1;
+            } else {
+                match item.inner().result {
+                    Some(BulkPutResponseResult::Created) => stats.created += 1,
+                    Some(BulkPutResponseResult::Updated) => stats.updated += 1,
+                    Some(BulkPutResponseResult::Deleted) => stats.deleted += 1,
+                    _ => {}
+                }
+            }
+        }
+        stats
+    }
+
+    fn summarize(&self) -> String {
+        let stats = self.stats();
+        format!(
+            "indexed {} in {}ms: {} errors, {} created, {} updated, {} deleted",
+            self.items.len(),
+            self.took,
+            stats.errors,
+            stats.created,
+            stats.updated,
+            stats.deleted
+        )
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct BulkPutStats {
+    errors: usize,
+    created: usize,
+    deleted: usize,
+    updated: usize,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum BulkPutResponseAction {
@@ -284,7 +343,53 @@ pub enum BulkPutResponseAction {
     Update(BulkPutResponseItem),
 }
 
-pub type BulkPutResponseItem = oas_common::Object;
+impl BulkPutResponseAction {
+    fn inner(&self) -> &BulkPutResponseItem {
+        match self {
+            Self::Create(item) => &item,
+            Self::Delete(item) => &item,
+            Self::Index(item) => &item,
+            Self::Update(item) => &item,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BulkPutResponseItem {
+    #[serde(rename = "_id")]
+    id: String,
+    #[serde(rename = "_index")]
+    index: String,
+    #[serde(rename = "_version")]
+    version: Option<u64>,
+    #[serde(rename = "_seq_no")]
+    seq_no: Option<u64>,
+
+    #[serde(rename = "_shards")]
+    shards: Option<serde_json::Value>,
+
+    status: u64,
+    result: Option<BulkPutResponseResult>,
+    error: Option<BulkPutResponseError>,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct BulkPutResponseError {
+    r#type: String,
+    reason: String,
+    index_uuid: Option<String>,
+    shard: Option<String>,
+    index: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BulkPutResponseResult {
+    Created,
+    Deleted,
+    Updated,
+    NotFound,
+}
 
 async fn create_index_if_not_exists(
     client: &Elasticsearch,

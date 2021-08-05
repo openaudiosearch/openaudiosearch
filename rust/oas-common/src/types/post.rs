@@ -24,6 +24,8 @@ pub struct Post {
     pub creator: Vec<String>,
     pub media: Vec<Reference<Media>>,
 
+    pub transcript: Option<String>,
+
     #[serde(flatten)]
     pub other: serde_json::Map<String, serde_json::Value>,
 }
@@ -55,6 +57,11 @@ impl ElasticMapping for Post {
                 "type": "nested",
                 "include_in_parent": true,
                 "properties": Media::elastic_mapping().unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
+            },
+            "transcript": {
+                "type": "text",
+                "term_vector": "with_positions_payloads",
+                "analyzer": "whitespace_plus_delimited"
             },
             "datePublished": {
                 "type": "date"

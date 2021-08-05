@@ -181,6 +181,14 @@ impl CouchDB {
         self.get_all_with_params(&params).await
     }
 
+    /// Get many docs by their ID from the database.
+    pub async fn get_many(&self, ids: &[&str]) -> Result<DocList> {
+        let mut params = HashMap::new();
+        params.insert("include_docs", serde_json::to_value("true").unwrap());
+        params.insert("keys", serde_json::to_value(ids).unwrap());
+        self.get_all_with_params(&params).await
+    }
+
     /// Get all docs where the couch id starts with a prefix.
     ///
     /// When the ids contain a type prefix (e.g. "oas.Media_someidstring", then
@@ -385,6 +393,28 @@ impl CouchDB {
         let doc = self.get_doc(id).await?;
         let record = doc.into_typed_record::<T>()?;
         Ok(record)
+    }
+
+    pub async fn get_many_records<T: TypedValue>(&self, ids: &[&str]) -> Result<Vec<Record<T>>> {
+        let rows = self
+            .get_many(ids)
+            .await?
+            .rows
+            .into_iter()
+            .filter_map(|doc| doc.doc.into_typed_record::<T>().ok())
+            .collect();
+        Ok(rows)
+    }
+
+    pub async fn get_many_records_untyped(&self, ids: &[&str]) -> Result<Vec<UntypedRecord>> {
+        let rows = self
+            .get_many(ids)
+            .await?
+            .rows
+            .into_iter()
+            .filter_map(|doc| doc.doc.into_untyped_record().ok())
+            .collect();
+        Ok(rows)
     }
 
     /// Put a single record into the database.

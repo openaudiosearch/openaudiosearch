@@ -93,6 +93,7 @@ pub async fn crawler_loop(
     let max_pages = opts.max_pages.unwrap_or(usize::MAX);
     let start = Instant::now();
     for _i in 0..max_pages {
+        log::debug!("fetching {}", url);
         let feed_page = fetch_and_save_with_client(client.clone(), &db, &url).await?;
 
         // Check if the batch put to db contained any errors.
@@ -119,7 +120,10 @@ pub async fn crawler_loop(
         total += feed_page.items.len();
         let next = crawler.next(feed_page).await?;
         url = match next {
-            Next::Finished => break,
+            Next::Finished => {
+                log::debug!("breaking crawl loop: finished");
+                break;
+            }
             Next::NextPage(url) => url,
         };
     }

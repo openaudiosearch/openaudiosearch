@@ -6,6 +6,8 @@ pub enum IndexError {
     Exception(elasticsearch::http::response::Exception),
     #[error("Other: {0}")]
     Other(String),
+    #[error("Serialization error: {0}")]
+    Serde(#[from] serde_json::Error),
 }
 
 impl From<elasticsearch::http::response::Exception> for IndexError {
