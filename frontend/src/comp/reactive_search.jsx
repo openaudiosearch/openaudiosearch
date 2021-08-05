@@ -2,9 +2,10 @@ import React from 'react'
 import ReactJson from 'react-json-view'
 import { DataSearch, ResultList, MultiList, DateRange, ReactiveBase, ReactiveList } from '@appbaseio/reactivesearch'
 import { Heading, Flex, Spacer, Box, Button, Spinner } from '@chakra-ui/react'
+import { useParams } from 'react-router-dom'
 import { API_ENDPOINT } from '../lib/config'
 import { usePlayer } from './player'
-import { useParams } from 'react-router-dom'
+import { TranscriptHighlight } from './transcript'
 
 const { ResultListWrapper } = ReactiveList
 
@@ -86,6 +87,11 @@ export default function SearchPage2 () {
                 dataField='dateModified'
                 componentId='SearchResults'
                 pagination
+                // defaultQuery={() => ({
+                //   highlight: {
+                //     type: 'plain'
+                //   }
+                // })}
                 react={{
                   and: facets
                 }}
@@ -112,8 +118,11 @@ export default function SearchPage2 () {
 
 function ResultItem (props) {
   const { item } = props
-  const { track, setTrack } = usePlayer()
+  const { track, setTrack, setPost } = usePlayer()
   const highlights = Object.entries(item.highlight).map(([key, value]) => {
+    if (key === 'transcript') return (
+      <TranscriptHighlight source={item} value={value} />
+    )
     return (
       <Box p={2}>
         <strong>{key}: &nbsp;</strong>
@@ -153,7 +162,10 @@ function ResultItem (props) {
           </>
           <div>
             {item.media && item.media.length && (
-              <Button onClick={() => setTrack(item.media[0])}>
+              <Button onClick={() => {
+                setTrack(item.media[0])
+                setPost(item)
+              }}>
                 Click to play
               </Button>
             )}

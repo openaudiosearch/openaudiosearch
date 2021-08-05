@@ -11,17 +11,31 @@ function mediaDataPath (media) {
   return `${API_ENDPOINT}/media/${id}/data`
 }
 
+function trackHeadline ({ track, post }) {
+  if (!post || !track) return null
+  let headline = post.headline || track.contentUrl || post.id || null
+  // Remove html highlighting tags from title display in player
+  headline = headline.replace(/(<([^>]+)>)/gi, "")
+  return headline
+}
+
 const PlayerContext = React.createContext(null)
 
 export function PlayerProvider (props) {
   const { children } = props
 
   const [track, setTrack] = useState(null)
+  const [mark, setMark] = useState(null)
+  const [post, setPost] = useState(null)
 
   const context = useMemo(() => ({
     track,
-    setTrack
-  }), [track])
+    setTrack,
+    mark,
+    setMark,
+    post,
+    setPost
+  }), [track, mark])
 
   return (
     <PlayerContext.Provider value={context}>
@@ -43,6 +57,41 @@ function useRerender() {
 }
 
 export function Player (props = {}) {
+  const ref = React.useRef()
+  const { track, mark, post } = usePlayer()
+  const mediaPath = useMemo(() => mediaDataPath(track), [track])
+  const { start = 0, end = 0, word = ''} = mark || {}
+  const [pos, setPos] = useState(null)
+
+  const headline = trackHeadline({ track, post })
+
+  React.useEffect(() => {
+    const audio = ref.current
+    if (!audio) return
+    let pos = 0
+    if (mark && mark.start) pos = mark.start
+    setPos(pos)
+    audio.play()
+  }, [ref.current, track, mark])
+
+  React.useEffect(() => {
+    const audio = ref.current
+    if (!audio) return
+    audio.currentTime = pos 
+  }, [pos])
+  return (
+    <Box>
+      <Box>
+        <strong>{headline || ''}</strong>
+        &nbsp;
+        {word}
+      </Box>
+      <audio ref={ref} src={mediaPath} controls></audio>
+    </Box>
+  )
+}
+
+export function PlayerOld (props = {}) {
   const { track } = usePlayer()
   const rerender = useRerender();
   const [loadingProgress, setLoadingProgress] = useState(0)

@@ -16,7 +16,7 @@ import { Login } from './login'
 import LandingPage from './landing_page'
 
 export default function Layout (props = {}) {
-  const playerHeight = '15rem'
+  const playerHeight = '5rem'
   return (
     <>
       <Stack minHeight='100vh' bg='bg.screen'  mb={playerHeight}>
