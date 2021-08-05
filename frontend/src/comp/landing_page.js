@@ -12,7 +12,6 @@ export default function LandingPage() {
   const url = API_ENDPOINT + '/search'
   const [value, setValue] = React.useState("")
   const history = useHistory()
-  console.log(url)
   return (
     <Center>
     <Flex color='white' w={['90vw', '90vw', '70vw', '50vw']} align='center' justify='center' >
@@ -64,7 +63,6 @@ export default function LandingPage() {
             >
               {({ data, error, loading, ...args }) => {
                 if (loading) return <Spinner size='xl' />
-                // console.log('reactive result', { data, error, loading, args })
                 return (
                   <Flex direction='column'>
                     {
@@ -77,7 +75,6 @@ export default function LandingPage() {
           </ReactiveList>
         </Flex>
       </Flex>
-      {/* </Center> */}
     </ReactiveBase>
   </Flex>
   </Center>
