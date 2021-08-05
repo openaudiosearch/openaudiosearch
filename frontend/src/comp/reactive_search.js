@@ -4,12 +4,15 @@ import { DataSearch, ResultList, MultiList, DateRange, ReactiveBase, ReactiveLis
 import { Heading, Flex, Spacer, Box, Button, Spinner } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { usePlayer } from './player'
+import { useParams } from 'react-router-dom'
 
 const { ResultListWrapper } = ReactiveList
 
 export default function SearchPage2 () {
+  const { query } = useParams()
+  const query_str = query || ""
+  const decodedquery = decodeURIComponent(query_str)
   const url = API_ENDPOINT + '/search'
-  console.log(url)
   const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator']
   return (
     <Flex color='white'>
@@ -76,6 +79,7 @@ export default function SearchPage2 () {
                   react={{
                     and: facets.filter(f => f !== 'searchbox')
                   }}
+                  defaultValue={decodedquery}
                 />
               </Box>
               <ReactiveList
@@ -88,7 +92,6 @@ export default function SearchPage2 () {
               >
                 {({ data, error, loading, ...args }) => {
                   if (loading) return <Spinner size='xl' />
-                  // console.log('reactive result', { data, error, loading, args })
                   return (
                     <ResultListWrapper>
                       {

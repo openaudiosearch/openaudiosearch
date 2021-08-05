@@ -10,10 +10,10 @@ import {
 
 import { Player } from './player'
 import JobsPage from './jobs'
-import SearchPage from './search'
 import SearchPage2 from './reactive_search'
 import ImporterPage from './importer'
 import { Login } from './login'
+import LandingPage from './landing_page'
 
 export default function Layout (props = {}) {
   const playerHeight = '15rem'
@@ -30,8 +30,10 @@ export default function Layout (props = {}) {
 
 function Header () {
   return (
-    <Flex px={4} mb='4' bg='black' color='white'>
-      <Heading py='4' fontSize='xl' mr='4'>Open Audio Search</Heading>
+    <Flex mb='4' bg='black' color='white'>
+      <Link to='/'>
+      <Heading p='2' fontSize='xl' mr='4'>Open Audio Search</Heading>
+      </Link>
       <Navbar />
       <Box flex={1} />
       <Box py={4}>
@@ -45,8 +47,7 @@ function Navbar () {
   return (
     <nav>
       <Flex>
-        <NavLink to='/reactive_search'>Search</NavLink>
-        {/* <NavLink to='/search'>Search</NavLink> */}
+        <NavLink to='/search'>Search</NavLink>
         <NavLink to='/jobs'>Jobs</NavLink>
         <NavLink to='/importer'>Importer</NavLink>
       </Flex>
@@ -85,14 +86,17 @@ function Routes () {
       <Route path='/jobs'>
         <JobsPage />
       </Route>
-      <Route path='/search'>
-        <SearchPage />
+      <Route path='/search/:query'>
+        <SearchPage2 />
       </Route>
-      <Route path='/reactive_search'>
+      <Route exact path='/search'>
         <SearchPage2 />
       </Route>
       <Route path='/importer'>
         <ImporterPage />
+      </Route>
+      <Route path='/'>
+        <LandingPage />
       </Route>
     </Switch>
   )
