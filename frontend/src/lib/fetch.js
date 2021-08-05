@@ -62,6 +62,10 @@ async function betterFetch (url, opts = {}) {
     opts.headers['content-type'] = 'application/octet-stream'
   }
 
+  if (opts.credentials === undefined) {
+    opts.credentials = 'same-origin'
+  }
+
   try {
     debug('fetch', url, opts)
     const res = await fetch(url, opts)

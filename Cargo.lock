@@ -557,7 +557,13 @@ version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5f1c7727e460397e56abc4bddc1d49e07a1ad78fc98eb2e1c8f032a58a2f80d"
 dependencies = [
+ "aes-gcm",
+ "base64 0.13.0",
+ "hkdf",
  "percent-encoding",
+ "rand 0.8.4",
+ "sha2",
+ "subtle",
  "time 0.2.27",
  "version_check",
 ]
@@ -1820,6 +1826,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "url",
+ "uuid",
 ]
 
 [[package]]
