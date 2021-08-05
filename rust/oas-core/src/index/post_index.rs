@@ -43,15 +43,11 @@ impl PostIndex {
         let id = format!("{}_{}", Post::NAME, id);
         let mut post = db.get_record::<Post>(&id).await?;
         post.resolve_refs(&db).await?;
-        eprintln!("build transcript for post {}", post.id());
         if let Some(transcript) = generate_transcript_for_post(&post) {
-            eprintln!("transcript: {}", transcript);
             post.value.transcript = Some(transcript);
         } else {
-            eprintln!("no transcript");
         }
         let res = self.index.put_typed_records(&[post]).await?;
-        eprintln!("res: {:#?}", res);
         Ok(())
     }
 
@@ -101,19 +97,23 @@ impl PostIndex {
 
         // Build the transcript for a post.
         for post in posts.iter_mut() {
-            eprintln!("build transcript for post {}", post.id());
             if let Some(transcript) = generate_transcript_for_post(&post) {
-                eprintln!("transcript: {}", transcript);
                 post.value.transcript = Some(transcript);
-            } else {
-                eprintln!("no transcript");
             }
         }
 
         // Index all records.
         self.index.put_typed_records(&posts).await?;
 
-        log::debug!("indexed {} changes in {} ({} post direct updates, {} media updates resulting in {} post updates)", changes.len(), humantime::format_duration(now.elapsed()), direct_posts_len, medias_without_posts.len(), missing_post_ids.len());
+        log::debug!(
+            "indexed {} changes in {} ({} post direct updates, {} media updates resulting in {} post updates)", 
+            changes.len(),
+            humantime::format_duration(now.elapsed()),
+            direct_posts_len,
+            medias_without_posts.len(),
+            missing_post_ids.len()
+        );
+
         Ok(())
     }
 }

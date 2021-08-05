@@ -249,7 +249,12 @@ where
         let id = id.to_string();
         let typ = T::NAME.to_string();
         let guid = format!("{}_{}", typ, id);
-        let meta = RecordMeta { guid, typ, id, ..Default::default() };
+        let meta = RecordMeta {
+            guid,
+            typ,
+            id,
+            ..Default::default()
+        };
         Self { meta, value }
     }
 
