@@ -10,7 +10,7 @@ import {
 
 import { Player } from './player'
 import JobsPage from './jobs'
-import SearchPage2 from './reactive_search'
+import SearchPage from './search'
 import ImporterPage from './importer'
 import { Login } from './login'
 import LandingPage from './landing_page'
@@ -19,7 +19,7 @@ export default function Layout (props = {}) {
   const playerHeight = '15rem'
   return (
     <>
-      <Stack minHeight='100vh' bg='bg.screen'  mb={playerHeight}>
+      <Stack minHeight='100vh' bg='bg.screen' mb={playerHeight}>
         <Header />
         <Main flex='1' />
       </Stack>
@@ -32,7 +32,7 @@ function Header () {
   return (
     <Flex mb='4' bg='black' color='white'>
       <Link to='/'>
-      <Heading p='2' fontSize='xl' mr='4'>Open Audio Search</Heading>
+        <Heading p='2' fontSize='xl' mr='4'>Open Audio Search</Heading>
       </Link>
       <Navbar />
       <Box flex={1} />
@@ -64,7 +64,7 @@ function NavLink (props) {
   }
   const styleProps = match ? activeProps : {}
   return (
-    <Link to={to} >
+    <Link to={to}>
       <Box p='4' mr='4' _hover={{ color: 'red' }} {...styleProps}>
         {children}
       </Box>
@@ -87,10 +87,10 @@ function Routes () {
         <JobsPage />
       </Route>
       <Route path='/search/:query'>
-        <SearchPage2 />
+        <SearchPage />
       </Route>
       <Route exact path='/search'>
-        <SearchPage2 />
+        <SearchPage />
       </Route>
       <Route path='/importer'>
         <ImporterPage />
