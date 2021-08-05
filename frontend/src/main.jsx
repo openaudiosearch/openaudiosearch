@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 
 import App from './app'
 
-const el = document.getElementById('app')
+const el = document.getElementById('root')
 document.body.appendChild(el)
 
 ReactDOM.render(<App />, el)

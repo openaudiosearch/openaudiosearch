@@ -33,6 +33,10 @@ function makeFetch (defaultOpts = {}) {
   }
 }
 
+function isBuffer (obj) {
+  return obj instanceof ArrayBuffer
+}
+
 async function betterFetch (url, opts = {}) {
   if (!url.match(/^https?:\/\//)) {
     if (url.indexOf('://') !== -1) throw new Error('Only http: and https: protocols are supported.')
@@ -42,7 +46,7 @@ async function betterFetch (url, opts = {}) {
 
   if (!opts.headers) opts.headers = {}
   if (!opts.requestType) {
-    if (Buffer.isBuffer(opts.body)) opts.requestType = 'buffer'
+    if (isBuffer(opts.body)) opts.requestType = 'buffer'
     else opts.requestType = 'json'
   }
 
