@@ -91,6 +91,10 @@ struct IndexOpts {
     /// Delete and recreate the index
     #[clap(long)]
     recreate: bool,
+
+    /// Re-index a single post by id.
+    #[clap(long)]
+    post_id: Option<String>,
 }
 
 impl IndexOpts {
@@ -98,6 +102,7 @@ impl IndexOpts {
         Self {
             daemon: true,
             recreate: false,
+            post_id: None,
         }
     }
 }
@@ -246,7 +251,15 @@ async fn run_index(state: State, opts: IndexOpts) -> anyhow::Result<()> {
     };
 
     manager.init(init_opts).await?;
-    manager.index_changes(&state.db, opts.daemon).await?;
+    match opts.post_id {
+        Some(post_id) => {
+            let post_index = manager.post_index();
+            post_index.index_post_by_id(&state.db, &post_id).await?;
+        }
+        None => {
+            manager.index_changes(&state.db, opts.daemon).await?;
+        }
+    }
     Ok(())
 }
 

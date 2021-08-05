@@ -97,13 +97,12 @@ impl Index {
     pub async fn put_typed_records<T: TypedValue>(
         &self,
         docs: &[Record<T>],
-    ) -> Result<(), IndexError> {
+    ) -> Result<BulkPutResponse, IndexError> {
         let docs: Vec<UntypedRecord> = docs
             .iter()
             .filter_map(|r| r.clone().into_untyped_record().ok())
             .collect();
-        self.put_untyped_records(&docs).await?;
-        Ok(())
+        self.put_untyped_records(&docs).await
     }
 
     /// Put a list of [UntypedRecord]s to the index

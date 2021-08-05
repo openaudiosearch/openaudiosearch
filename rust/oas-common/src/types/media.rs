@@ -3,6 +3,7 @@ use crate::record::TypedValue;
 use crate::ElasticMapping;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -39,6 +40,22 @@ impl Mappable for Media {}
 
 impl ElasticMapping for Media {
     fn elastic_mapping() -> Option<serde_json::Value> {
-        None
+        Some(json!({
+            "contentUrl":{
+                "type":"text",
+            },
+            "duration": {
+                "type": "float"
+            },
+            "encodingFormat": {
+                "type": "keyword"
+            },
+            "nlp": {
+                "type": "object"
+            },
+            "transcript": {
+                "type": "object"
+            }
+        }))
     }
 }

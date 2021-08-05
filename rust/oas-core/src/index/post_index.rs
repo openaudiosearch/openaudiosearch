@@ -39,6 +39,22 @@ impl PostIndex {
         Ok(ids)
     }
 
+    pub async fn index_post_by_id(&self, db: &CouchDB, id: &str) -> anyhow::Result<()> {
+        let id = format!("{}_{}", Post::NAME, id);
+        let mut post = db.get_record::<Post>(&id).await?;
+        post.resolve_refs(&db).await?;
+        eprintln!("build transcript for post {}", post.id());
+        if let Some(transcript) = generate_transcript_for_post(&post) {
+            eprintln!("transcript: {}", transcript);
+            post.value.transcript = Some(transcript);
+        } else {
+            eprintln!("no transcript");
+        }
+        let res = self.index.put_typed_records(&[post]).await?;
+        eprintln!("res: {:#?}", res);
+        Ok(())
+    }
+
     pub async fn index_changes(
         &self,
         db: &CouchDB,
