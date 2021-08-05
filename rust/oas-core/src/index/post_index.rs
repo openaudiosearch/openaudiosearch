@@ -6,6 +6,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use std::time;
 
+use super::elastic::BulkPutResponse;
 use super::{Index, IndexError};
 use crate::couch::CouchDB;
 
@@ -39,7 +40,11 @@ impl PostIndex {
         Ok(ids)
     }
 
-    pub async fn index_post_by_id(&self, db: &CouchDB, id: &str) -> anyhow::Result<()> {
+    pub async fn index_post_by_id(
+        &self,
+        db: &CouchDB,
+        id: &str,
+    ) -> anyhow::Result<BulkPutResponse> {
         let id = format!("{}_{}", Post::NAME, id);
         let mut post = db.get_record::<Post>(&id).await?;
         post.resolve_refs(&db).await?;
@@ -48,7 +53,7 @@ impl PostIndex {
         } else {
         }
         let res = self.index.put_typed_records(&[post]).await?;
-        Ok(())
+        Ok(res)
     }
 
     pub async fn index_changes(
