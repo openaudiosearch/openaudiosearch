@@ -16,12 +16,20 @@ use super::Media;
 pub struct Post {
     pub identifier: Option<String>,
     pub headline: Option<String>,
+    pub post_abstract: Option<String>,
+    pub contributor: Option<String>,
     pub url: Option<String>,
     pub date_published: Option<String>,
+    pub date_modified: Option<String>,
+    pub description: Option<String>,
+    pub in_language: Option<String>,
+    pub licence: Option<String>,
+    pub publisher: Option<String>,
     #[serde(default)]
     pub genre: Vec<String>,
     #[serde(default)]
     pub creator: Vec<String>,
+    #[serde(default)]
     pub media: Vec<Reference<Media>>,
 
     #[serde(flatten)]

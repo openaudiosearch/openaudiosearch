@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 pub struct Media {
     pub content_url: String,
     pub encoding_format: Option<String>,
-    pub duration: Option<f32>,
+    pub duration: Option<String>,
     pub transcript: Option<serde_json::Value>,
     pub nlp: Option<serde_json::Value>,
 

@@ -252,7 +252,7 @@ async fn run_debug(state: State) -> anyhow::Result<()> {
     };
     let media2 = Media {
         content_url: "http://foo.bar/m2.mp3".to_string(),
-        duration: Some(300.),
+        duration: Some("300.".into()),
         ..Default::default()
     };
     let media1 =
