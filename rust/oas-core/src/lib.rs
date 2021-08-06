@@ -1,3 +1,5 @@
+use anyhow::Context;
+
 pub mod couch;
 pub mod index;
 pub mod rss;
@@ -24,9 +26,18 @@ impl State {
     ///
     /// Currently errors on the first failing init.
     pub async fn init_all(&mut self) -> anyhow::Result<()> {
-        self.db.init().await?;
-        self.index_manager.init(Default::default()).await?;
-        self.tasks.init().await?;
+        self.db
+            .init()
+            .await
+            .context("Failed to initialize CouchDB.")?;
+        self.index_manager
+            .init(Default::default())
+            .await
+            .context("Failed to initialize Elasticsearch.")?;
+        self.tasks
+            .init()
+            .await
+            .context("Failed to initialize Celery/Redis task manager.")?;
         Ok(())
     }
 }

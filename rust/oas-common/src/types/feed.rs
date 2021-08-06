@@ -1,5 +1,3 @@
-
-
 use crate::mapping::Mappable;
 use crate::record::{TypedValue, ValidationError};
 use schemars::JsonSchema;

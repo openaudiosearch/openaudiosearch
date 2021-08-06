@@ -22,7 +22,7 @@ jobs:
           profile: minimal
 
       - name: Build documentation
-        run: cargo doc
+        run: cargo doc --no-deps
 
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v1

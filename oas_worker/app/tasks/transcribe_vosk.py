@@ -13,6 +13,7 @@ def transcribe_vosk(audio_file_path, model_path):
     rec.SetMaxAlternatives(0)
     rec.SetWords(True)
     results = []
+    parts = []
     transcript = ""
 
     wf = wave.open(audio_file_path, "rb")
@@ -31,11 +32,12 @@ def transcribe_vosk(audio_file_path, model_path):
             text = result['text']
             # print(f'RESULT: {text}')
             transcript = transcript + ' ' + result['text']
-            results.append(result)
+            parts = parts + result['result']
+            #  results.append(result)
         else:
             # print(f'PARTIAL: {rec.PartialResult()}')
             rec.PartialResult()
     # TODO: Why does rec.FinalResult() not work?
     # print('FINAL')
     # print(rec.FinalResult())
-    return {'text': transcript, 'parts': results}
+    return {'text': transcript, 'parts': parts }

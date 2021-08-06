@@ -4,48 +4,40 @@
 //! index which stores meta information about the indexing state, most importantly the latest
 //! CouchDB seq that was indexed.
 
-use crate::couch::{self, CouchDB};
+use crate::couch::CouchDB;
 use elasticsearch::Elasticsearch;
 use futures::stream::StreamExt;
 use futures_batch::ChunksTimeoutStreamExt;
-use oas_common::types::{Media, Post};
 use oas_common::UntypedRecord;
-use oas_common::{Record, TypedValue};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time;
 
-use super::{elastic, Index};
+use super::{elastic, Config, Index, PostIndex};
 
+/// Prefix used for all indexes created by OAS.
 pub const DEFAULT_PREFIX: &str = "oas";
+/// Name of the meta index.
 pub const META_INDEX_NAME: &str = "_meta";
-
+/// Name of the data index.
 pub const DATA_INDEX_NAME: &str = "data";
-
+/// Doc ID for the index state.
 pub const DOC_ID_INDEX_STATE: &str = "IndexMeta.data";
 
+/// The index manager holds configuration, an HTTP client and the names of active indexes.
 #[derive(Debug, Clone)]
 pub struct IndexManager {
-    config: elastic::Config,
+    config: Config,
     meta: Arc<Meta>,
     client: Arc<Elasticsearch>,
-    data_index: Arc<elastic::Index>, // indexes: HashMap<IndexId, elastic::Index>,
+    data_index: Arc<Index>, // indexes: HashMap<IndexId, elastic::Index>,
 }
 
-#[derive(Debug)]
-pub struct Meta {
-    index: elastic::Index,
-}
-
+/// Options for index initialization with optional recreation.
 #[derive(Debug, PartialEq, Clone)]
 pub struct InitOpts {
     delete_meta: bool,
     delete_data: bool,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct IndexState {
-    last_seq: Option<String>,
 }
 
 impl Default for InitOpts {
@@ -73,8 +65,24 @@ impl InitOpts {
     }
 }
 
+/// The indexing state.
+///
+/// Currently only tracks the last indexed CouchDB seq to know from where to resume indexing.
+#[derive(Serialize, Deserialize)]
+struct IndexState {
+    last_seq: Option<String>,
+}
+
+/// The meta index that holds meta information.
+///
+/// Currently only used to persist the [[IndexState]].
+#[derive(Debug)]
+struct Meta {
+    index: Index,
+}
+
 impl Meta {
-    pub fn with_index(index: elastic::Index) -> Self {
+    pub fn with_index(index: Index) -> Self {
         Self { index }
     }
 
@@ -99,7 +107,8 @@ impl Meta {
 }
 
 impl IndexManager {
-    pub fn with_config(config: elastic::Config) -> Result<Self, elasticsearch::Error> {
+    /// Create a new manager with configuration.
+    pub fn with_config(config: Config) -> Result<Self, elasticsearch::Error> {
         let client = elastic::create_client(config.url.clone())?;
         let client = Arc::new(client);
 
@@ -119,18 +128,33 @@ impl IndexManager {
         })
     }
 
+    pub fn with_url<S>(url: Option<S>) -> anyhow::Result<Self>
+    where
+        S: AsRef<str>,
+    {
+        let url = url.map(|s| s.as_ref().to_string());
+        let config = Config::from_url_or_default(url.as_deref())?;
+        let manager = Self::with_config(config)?;
+        Ok(manager)
+    }
+
     pub async fn init(&self, opts: InitOpts) -> anyhow::Result<()> {
         self.meta.index.ensure_index(opts.delete_meta).await?;
         self.data_index.ensure_index(opts.delete_data).await?;
         Ok(())
     }
 
-    pub fn data_index(&self) -> &Arc<elastic::Index> {
+    pub fn data_index(&self) -> &Arc<Index> {
         &self.data_index
     }
 
+    pub fn post_index(&self) -> PostIndex {
+        PostIndex::new(self.data_index().clone())
+    }
+
     pub async fn index_changes(&self, db: &CouchDB, mode: bool) -> anyhow::Result<()> {
-        let index = self.data_index();
+        // let index = self.data_index();
+        let index = self.post_index();
         let meta = &self.meta;
         index_changes_stream(&db, &meta, &index, mode).await
     }
@@ -139,7 +163,7 @@ impl IndexManager {
 async fn index_changes_stream(
     db: &CouchDB,
     meta: &Arc<Meta>,
-    index: &Arc<Index>,
+    index: &PostIndex,
     infinite: bool,
 ) -> anyhow::Result<()> {
     let latest_seq = meta.latest_indexed_seq().await?;
@@ -156,91 +180,97 @@ async fn index_changes_stream(
         let batch: Vec<_> = batch.into_iter().filter_map(|e| e.ok()).collect();
         let _len = batch.len();
         let latest_seq = &batch.last().unwrap().seq.to_string();
-        index_changes_batch(db, index, batch).await?;
+
+        let records: Vec<UntypedRecord> = batch
+            .into_iter()
+            .filter_map(|ev| ev.doc.and_then(|doc| doc.into_untyped_record().ok()))
+            .collect();
+        index.index_changes(&db, &records[..]).await?;
+        // index_changes_batch(db, index, batch).await?;
         meta.set_latest_indexed_seq(latest_seq).await?;
     }
 
     Ok(())
 }
 
-pub async fn posts_into_resolved_posts_and_updated_media_batches(
-    db: &CouchDB,
-    records: Vec<(UntypedRecord, bool)>,
-) -> (Vec<Record<Post>>, Vec<UntypedRecord>) {
-    let mut post_batch = vec![];
-    let mut media_batch = vec![];
-    for (record, is_first_rev) in records.into_iter() {
-        match record.typ() {
-            Media::NAME => {
-                if !is_first_rev {
-                    media_batch.push(record);
-                }
-            }
-            Post::NAME => {
-                let record = record.into_typed_record::<Post>();
-                match record {
-                    Ok(record) => {
-                        post_batch.push(record)
-                        // TODO: Resolve in parallel.
-                        // let _res = record.resolve_refs(&db).await;
-                        // post_batch.push(record);
-                    }
-                    Err(e) => log::debug!("{}", e),
-                }
-            }
-            _ => {}
-        }
-    }
+// pub async fn posts_into_resolved_posts_and_updated_media_batches(
+//     db: &CouchDB,
+//     records: Vec<(UntypedRecord, bool)>,
+// ) -> (Vec<Record<Post>>, Vec<UntypedRecord>) {
+//     let mut post_batch = vec![];
+//     let mut media_batch = vec![];
+//     for (record, is_first_rev) in records.into_iter() {
+//         match record.typ() {
+//             Media::NAME => {
+//                 if !is_first_rev {
+//                     media_batch.push(record);
+//                 }
+//             }
+//             Post::NAME => {
+//                 let record = record.into_typed_record::<Post>();
+//                 match record {
+//                     Ok(record) => {
+//                         post_batch.push(record)
+//                         // TODO: Resolve in parallel.
+//                         // let _res = record.resolve_refs(&db).await;
+//                         // post_batch.push(record);
+//                     }
+//                     Err(e) => log::debug!("{}", e),
+//                 }
+//             }
+//             _ => {}
+//         }
+//     }
 
-    let resolve_posts_fut: Vec<_> = post_batch
-        .into_iter()
-        .map(|record| record.into_resolve_refs(&db))
-        .collect();
-    let post_batch: Vec<_> = futures::future::join_all(resolve_posts_fut)
-        .await
-        .into_iter()
-        .filter_map(|r| r.ok())
-        .collect();
-    (post_batch, media_batch)
-}
+//     let resolve_posts_fut: Vec<_> = post_batch
+//         .into_iter()
+//         .map(|record| record.into_resolve_refs(&db))
+//         .collect();
+//     let post_batch: Vec<_> = futures::future::join_all(resolve_posts_fut)
+//         .await
+//         .into_iter()
+//         .filter_map(|r| r.ok())
+//         .collect();
+//     (post_batch, media_batch)
+// }
 
-pub async fn index_changes_batch(
-    db: &CouchDB,
-    index: &Arc<Index>,
-    changes: Vec<couch::ChangeEvent>,
-) -> anyhow::Result<()> {
-    let start = time::Instant::now();
-    let records_and_is_first_rev: Vec<_> = changes
-        .into_iter()
-        .filter_map(|event| match event.doc {
-            None => None,
-            Some(doc) => {
-                let is_first_rev = doc.is_first_rev().unwrap_or(true);
-                match doc.into_untyped_record() {
-                    Err(_) => None,
-                    Ok(record) => Some((record, is_first_rev)),
-                }
-            }
-        })
-        .collect();
+// pub async fn index_changes_batch(
+//     db: &CouchDB,
+//     index: &Arc<Index>,
+//     changes: Vec<couch::ChangeEvent>,
+// ) -> anyhow::Result<()> {
+//     let start = time::Instant::now();
+//     let records_and_is_first_rev: Vec<_> = changes
+//         .into_iter()
+//         .filter_map(|event| match event.doc {
+//             None => None,
+//             Some(doc) => {
+//                 let is_first_rev = doc.is_first_rev().unwrap_or(true);
+//                 match doc.into_untyped_record() {
+//                     Err(_) => None,
+//                     Ok(record) => Some((record, is_first_rev)),
+//                 }
+//             }
+//         })
+//         .collect();
 
-    let (post_batch, media_batch) =
-        posts_into_resolved_posts_and_updated_media_batches(&db, records_and_is_first_rev).await;
-    // TODO: Report errors!
-    let _res = index.put_typed_records(&post_batch).await?;
+//     let (post_batch, media_batch) =
+//         posts_into_resolved_posts_and_updated_media_batches(&db, records_and_is_first_rev).await;
+//     // TODO: Report errors!
+//     let _res = index.put_typed_records(&post_batch).await?;
 
-    // TODO: parallelize?
-    for media_record in media_batch.iter() {
-        index.update_nested_record("media", &media_record).await?;
-    }
-    log::debug!(
-        "indexed {} posts, {} media updates in {}ms",
-        post_batch.len(),
-        media_batch.len(),
-        start.elapsed().as_millis()
-    );
-    Ok(())
-}
+//     // TODO: parallelize?
+//     for media_record in media_batch.iter() {
+//         index.update_nested_record("media", &media_record).await?;
+//     }
+//     log::debug!(
+//         "indexed {} posts, {} media updates in {}ms",
+//         post_batch.len(),
+//         media_batch.len(),
+//         start.elapsed().as_millis()
+//     );
+//     Ok(())
+// }
 
 // TODO: Maybe rewrite the loop above onto a struct.
 // pub struct ChangesIndexer {

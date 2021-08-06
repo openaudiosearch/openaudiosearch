@@ -54,9 +54,9 @@ impl FeedWatcher {
         let duration = Duration::from_secs(self.settings.check_interval);
         let mut interval = tokio::time::interval(duration);
         loop {
-            interval.tick().await;
             self.load().await?;
-            self.save(&db, true).await?;
+            self.save(&db, false).await?;
+            interval.tick().await;
         }
     }
 

@@ -1,10 +1,9 @@
-use clap::Clap;
-use rocket_okapi::{
-    routes_with_openapi,
-    swagger_ui::{make_swagger_ui, SwaggerUIConfig},
-};
-
 use crate::State;
+use clap::Clap;
+use rocket::fairing::{Fairing, Info, Kind};
+use rocket::{Orbit, Rocket};
+use rocket_okapi::routes_with_openapi;
+use rocket_okapi::swagger_ui::{make_swagger_ui, SwaggerUIConfig};
 
 mod auth;
 pub mod error;
@@ -41,6 +40,7 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
         .manage(state)
         .manage(auth)
         .attach(cors)
+        .attach(OasFairing)
         .mount(
             "/api/v1",
             routes_with_openapi![
@@ -86,4 +86,36 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
     app.launch().await?;
 
     Ok(())
+}
+
+struct OasFairing;
+#[rocket::async_trait]
+impl Fairing for OasFairing {
+    fn info(&self) -> Info {
+        Info {
+            name: "OAS logging",
+            kind: Kind::Liftoff,
+        }
+        /* ... */
+    }
+
+    // async fn on_ignite(&self, rocket: Rocket<Build>) -> fairing::Result {
+    //     [> ... <]
+    // }
+
+    async fn on_liftoff(&self, rocket: &Rocket<Orbit>) {
+        let config = rocket.config();
+        let proto = config.tls_enabled().then(|| "https").unwrap_or("http");
+        let addr = format!("{}://{}:{}", proto, config.address, config.port);
+        log::info!("HTTP server listening on {}", addr);
+        /* ... */
+    }
+
+    // async fn on_request(&self, req: &mut Request<'_>, data: &mut Data<'_>) {
+    //     [> ... <]
+    // }
+
+    // async fn on_response<'r>(&self, req: &'r Request<'_>, res: &mut Response<'r>) {
+    //     [> ... <]
+    // }
 }

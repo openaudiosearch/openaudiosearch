@@ -143,6 +143,22 @@ impl CouchDB {
         })
     }
 
+    /// Create a new client with a CouchDB URL.
+    ///
+    /// The URL should have the following format:
+    /// http://username:password@hostname:5984/dbname
+    /// If passing None for url a client will be created with the default address
+    /// http://localhost:5984/oas
+    pub fn with_url<S>(url: Option<S>) -> anyhow::Result<Self>
+    where
+        S: AsRef<str>,
+    {
+        let url = url.map(|s| s.as_ref().to_string());
+        let config = Config::from_url_or_default(url.as_deref())?;
+        let db = Self::with_config(config)?;
+        Ok(db)
+    }
+
     /// Init the database.
     ///
     /// This creates the database if it does not exists. It should be called before calling other
@@ -162,6 +178,14 @@ impl CouchDB {
     pub async fn get_all(&self) -> Result<DocList> {
         let mut params = HashMap::new();
         params.insert("include_docs", "true");
+        self.get_all_with_params(&params).await
+    }
+
+    /// Get many docs by their ID from the database.
+    pub async fn get_many(&self, ids: &[&str]) -> Result<DocList> {
+        let mut params = HashMap::new();
+        params.insert("include_docs", serde_json::to_value("true").unwrap());
+        params.insert("keys", serde_json::to_value(ids).unwrap());
         self.get_all_with_params(&params).await
     }
 
@@ -369,6 +393,28 @@ impl CouchDB {
         let doc = self.get_doc(id).await?;
         let record = doc.into_typed_record::<T>()?;
         Ok(record)
+    }
+
+    pub async fn get_many_records<T: TypedValue>(&self, ids: &[&str]) -> Result<Vec<Record<T>>> {
+        let rows = self
+            .get_many(ids)
+            .await?
+            .rows
+            .into_iter()
+            .filter_map(|doc| doc.doc.into_typed_record::<T>().ok())
+            .collect();
+        Ok(rows)
+    }
+
+    pub async fn get_many_records_untyped(&self, ids: &[&str]) -> Result<Vec<UntypedRecord>> {
+        let rows = self
+            .get_many(ids)
+            .await?
+            .rows
+            .into_iter()
+            .filter_map(|doc| doc.doc.into_untyped_record().ok())
+            .collect();
+        Ok(rows)
     }
 
     /// Put a single record into the database.
