@@ -151,34 +151,11 @@ impl ElasticMapping for Post {
                 }
             },
             "inLanguage":{
-                "properties":{
-                    "base":{
-                        "type":"text",
-                        "fields":{
-                            "keyword":{
-                                "type":
-                                "keyword",
-                                "ignore_above":256
-                            }
-                        }
-                    },
-                    "type":{
-                        "type":"text",
-                        "fields":{
-                            "keyword":{
-                                "type":"keyword",
-                                "ignore_above":256
-                            }
-                        }
-                    },
-                    "value":{
-                        "type":"text",
-                        "fields":{
-                            "keyword":{
-                                "type":"keyword",
-                                "ignore_above":256
-                            }
-                        }
+                "type":"text",
+                "fields":{
+                    "keyword":{
+                        "type":"keyword",
+                        "ignore_above":256
                     }
                 }
             },

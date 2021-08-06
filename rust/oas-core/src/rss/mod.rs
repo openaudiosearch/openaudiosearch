@@ -156,7 +156,6 @@ fn resolve_extensions(
             }
         })
         .collect();
-
     result
 }
 
@@ -196,8 +195,10 @@ fn item_into_post(item: rss::Item) -> Record<Post> {
             .into_iter()
             .filter(|(k,_v)| k.starts_with("media."))
             .map(|(k, v)| {
-                let arr : Vec<&str> =k.split(".").collect(); 
+                let arr : Vec<&str> =k.split(".").collect();
                 let v = serde_json::Value::String(v);
+                
+                
                 let k = arr[1].into();
                 (k,v)
             } )
