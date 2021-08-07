@@ -1,6 +1,6 @@
 import { Box } from '@chakra-ui/react'
 import React from 'react'
-import { usePlayer } from './player'
+import { usePlayer, usePlayerRegionIfPlaying } from './player'
 
 export function TranscriptHighlight (props) {
   const { source, value } = props
@@ -15,12 +15,13 @@ export function TranscriptHighlight (props) {
 }
 
 export function TranscriptSnippet (props) {
-  const { setTrack, setMark, setPost } = usePlayer()
   const { source, value } = props
-  console.log('source', source)
-  let words = React.useMemo(() => parseTranscript(value), [value])
 
-  let info = React.useMemo(() => {
+  const { setTrack, setMark, setPost } = usePlayer()
+
+  const words = React.useMemo(() => parseTranscript(value), [value])
+
+  const mark = React.useMemo(() => {
     let firstMeta = words.filter(word => word.start !== undefined)[0]
     let { id, start } = firstMeta
     let lastMeta = [...words].reverse().filter(word => word.end !== undefined)[0]
@@ -29,7 +30,16 @@ export function TranscriptSnippet (props) {
     return { id, start, end, sentence }
   }, [words])
 
-  let sentence = words
+  const track = source.media[Number(mark.id)]
+
+  const currentTimeIfPlaying = usePlayerRegionIfPlaying({ track, mark })
+  const [didPlay, setDidPlay] = React.useState(false)
+  const percentPlaying = React.useMemo(() => {
+    if (!currentTimeIfPlaying) return didPlay ? 1 : 0
+    if (!didPlay) setDidPlay(true)
+    const percent = (currentTimeIfPlaying - mark.start) / (mark.end - mark.start)
+    return percent
+  }, [mark, currentTimeIfPlaying])
 
   const style = {
     display: 'inline-block',
@@ -41,21 +51,34 @@ export function TranscriptSnippet (props) {
     background: '#f0f0f0'
   }
 
-  words = words.map((word, i) => <TranscriptWord key={i} {...word} source={source} />)
+  const overlayStyle = {
+    position: 'absolute',
+    left: '0px',
+    top: '0px',
+    bottom: '0px',
+    backgroundColor: 'rgba(255, 0, 255, 0.2)',
+    zIndex: 10,
+    width: (percentPlaying * 100) + '%',
+    transition: 'width linear .05s'
+  }
+  const renderedWords = React.useMemo(() => (
+    <>
+      {words.map((word, i) => <TranscriptWord key={i} {...word} source={source} />)}
+    </>
+  ), [words])
+
   return (
-    <Box onClick={onClick} style={style}>
-      {words}
+    <Box onClick={onClick} style={style} position='relative'>
+      {renderedWords}
+      <div style={overlayStyle} />
     </Box>
   )
+
   function onClick (e) {
-    setTrack(source.media[Number(info.id)])
+    setDidPlay(false)
+    setTrack(track)
     setPost(source)
-    setMark({
-      word: info.sentence,
-      start: info.start,
-      end: info.end,
-      id: info.id
-    })
+    setMark(mark)
   }
 }
 

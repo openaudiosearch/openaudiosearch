@@ -30,26 +30,54 @@ function trackHeadline ({ track, post }) {
 }
 
 const PlayerContext = React.createContext(null)
+const PlaystateContext = React.createContext(null)
 
 export function PlayerProvider (props) {
   const { children } = props
 
+  // basic properties
   const [track, setTrack] = useState(null)
   const [mark, setMark] = useState(null)
   const [post, setPost] = useState(null)
 
-  const context = useMemo(() => ({
+  const [lastTrack, setLastTrack] = useState(null)
+  const [lastMark, setLastMark] = useState(null)
+
+  const src = mediaDataPath(track)
+  const { audio, element, playstate } = useAudioElement({ src })
+
+  // Jump player position whenever a mark is being set or the track is changed.
+  React.useEffect(() => {
+    if (!audio || !track) return
+    let pos = 0
+    if (mark && mark !== lastMark) {
+      pos = mark.start
+      setLastMark(mark)
+    }
+    audio.currentTime = pos
+    audio.play()
+  }, [audio, mark, track])
+
+  const playerContext = useMemo(() => ({
     track,
     setTrack,
     mark,
     setMark,
     post,
     setPost
-  }), [track, mark])
+  }), [track, mark, post])
+
+  const playstateContext = useMemo(() => ({
+    playstate,
+    audio
+  }), [audio, playstate])
 
   return (
-    <PlayerContext.Provider value={context}>
-      {children}
+    <PlayerContext.Provider value={playerContext}>
+      <PlaystateContext.Provider value={playstateContext}>
+        {element}
+        {children}
+      </PlaystateContext.Provider>
     </PlayerContext.Provider>
   )
 }
@@ -59,36 +87,58 @@ export function usePlayer () {
   return context
 }
 
-function useRerender() {
+export function usePlaystate () {
+  const context = useContext(PlaystateContext)
+  return context
+}
+
+export function usePlayerRegionIfPlaying ({ track, mark }) {
+  const player = usePlayer()
+  const { playstate, audio } = usePlaystate()
+  const [exactTime, setExactTime] = React.useState(null)
+  React.useEffect(() => {
+    if (!isActive() || !audio) return
+    const interval = setInterval(() => {
+      if (isActive()) setExactTime(audio.currentTime)
+    }, 30)
+    return () => {
+      clearInterval(interval)
+      setExactTime(null)
+    }
+  }, [isActive(), audio])
+
+  function isActive () {
+    return (
+      (player.track === track)
+      && (audio.currentTime > mark.start && audio.currentTime < mark.end)
+    )
+  }
+
+  return exactTime
+}
+
+function useRerender () {
   const [rerender, setRerender] = useState(0)
   return function () {
     setRerender((counter) => counter + 1)
   }
 }
 
-export function Player (props = {}) {
+function useAudioElement (props = {}) {
+  const { src } = props
   const ref = React.useRef()
-  const { track, mark, post } = usePlayer()
-  const mediaPath = useMemo(() => mediaDataPath(track), [track])
-  const { start = 0, end = 0, word = ''} = mark || {}
-  const [pos, setPos] = useState(null)
   const [playstate, setPlaystate] = useState({})
 
-  const headline = trackHeadline({ track, post })
+  const element = React.useMemo(() => (
+    <audio style={{ display: 'none' }} ref={ref}></audio>
+  ), [])
+
   const audio = ref.current
 
   React.useEffect(() => {
     if (!audio) return
-    let pos = 0
-    if (mark && mark.start) pos = mark.start
-    setPos(pos)
-    audio.play()
-  }, [ref.current, track, mark])
-
-  React.useEffect(() => {
-    if (!audio) return
-    audio.currentTime = pos
-  }, [pos])
+    audio.src = src
+  }, [audio, src])
 
   React.useEffect(() => {
     if (!audio) return
@@ -120,6 +170,18 @@ export function Player (props = {}) {
     }
   }, [audio])
 
+  return {
+    element, audio, playstate
+  }
+}
+
+export function Player (props = {}) {
+  const { track, mark, post } = usePlayer()
+  const { playstate = {}, audio } = usePlaystate()
+
+  const { start = 0, end = 0, word = ''} = mark || {}
+  const headline = trackHeadline({ track, post })
+
   function togglePlay (e) {
     if (!audio) return
     if (playstate.playing) audio.pause()
@@ -134,7 +196,7 @@ export function Player (props = {}) {
   function setPosPercent (percent) {
     if (!playstate.duration) return
     const nextTime = playstate.duration * percent
-    setPos(nextTime)
+    audio.currentTime = nextTime
   }
 
   return (
@@ -160,7 +222,6 @@ export function Player (props = {}) {
         <Box p={2}>
           {formatDuration(playstate.duration)}
         </Box>
-        <audio style={{ display: 'none' }} ref={ref} src={mediaPath} controls></audio>
       </Flex>
     </Stack>
   )
