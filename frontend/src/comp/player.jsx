@@ -14,7 +14,8 @@ import { FaPlay, FaPause, FaUndoAlt, FaRedoAlt } from 'react-icons/fa'
 
 import { API_ENDPOINT } from '../lib/config'
 
-function mediaDataPath (media) {
+// Get the audio content URL for a media
+function mediaContentURL (media) {
   if (!media) return null
   return media.contentUrl
   // const id = media.$meta.id
@@ -29,22 +30,32 @@ function trackHeadline ({ track, post }) {
   return headline
 }
 
-const PlayerContext = React.createContext(null)
+/**
+ * The player context holds setters and values for the 
+ * currently playing media track, post, and mark (region).
+ */
+export const PlayerContext = React.createContext(null)
+
+/**
+ * The playstate context holds the audio element and play state (time, play/pause, ...)
+ */
 const PlaystateContext = React.createContext(null)
 
+/**
+ * The player provider provides the player and playstate contexts and renders an (invisible) audio element.
+ * It also implements basic logic: Set audio element src on track change, change position on mark change, etc.
+ */
 export function PlayerProvider (props) {
   const { children } = props
 
-  // basic properties
   const [track, setTrack] = useState(null)
   const [mark, setMark] = useState(null)
   const [post, setPost] = useState(null)
 
-  const [lastTrack, setLastTrack] = useState(null)
   const [lastMark, setLastMark] = useState(null)
 
-  const src = mediaDataPath(track)
-  const { audio, element, playstate } = useAudioElement({ src })
+  const src = mediaContentURL(track)
+  const { audio, element, ...state } = useAudioElement({ src })
 
   // Jump player position whenever a mark is being set or the track is changed.
   React.useEffect(() => {
@@ -68,9 +79,9 @@ export function PlayerProvider (props) {
   }), [track, mark, post])
 
   const playstateContext = useMemo(() => ({
-    playstate,
+    ...state,
     audio
-  }), [audio, playstate])
+  }), [audio, state.currentTime, state.duration, state.playing, state.canplay])
 
   return (
     <PlayerContext.Provider value={playerContext}>
@@ -82,11 +93,19 @@ export function PlayerProvider (props) {
   )
 }
 
+/**
+ * Use the player context.
+ * @return {object} { mark, setMark, track, setTrack, post, setPost }
+ */
 export function usePlayer () {
   const context = useContext(PlayerContext)
   return context
 }
 
+/**
+ * Use the playstate context.
+ * @return {object} { audio: HTMLMediaElement, currentTime, duration, canplay, playing }
+ */
 export function usePlaystate () {
   const context = useContext(PlaystateContext)
   return context
@@ -94,40 +113,30 @@ export function usePlaystate () {
 
 export function usePlayerRegionIfPlaying ({ track, mark }) {
   const player = usePlayer()
-  const { playstate, audio } = usePlaystate()
-  const [exactTime, setExactTime] = React.useState(null)
-  React.useEffect(() => {
-    if (!isActive() || !audio) return
-    const interval = setInterval(() => {
-      if (isActive()) setExactTime(audio.currentTime)
-    }, 30)
-    return () => {
-      clearInterval(interval)
-      setExactTime(null)
-    }
-  }, [isActive(), audio])
-
+  const { currentTime, audio } = usePlaystate()
   function isActive () {
     return (
       (player.track === track)
-      && (audio.currentTime > mark.start && audio.currentTime < mark.end)
+      && (currentTime > mark.start && currentTime < mark.end)
     )
   }
-
-  return exactTime
+  if (isActive()) return currentTime
+  return 0
 }
 
 function useRerender () {
   const [rerender, setRerender] = useState(0)
   return function () {
-    setRerender((counter) => counter + 1)
+    setRerender((counter) => {
+      return counter + 1
+    })
   }
 }
 
 function useAudioElement (props = {}) {
   const { src } = props
   const ref = React.useRef()
-  const [playstate, setPlaystate] = useState({})
+  const rerender = useRerender()
 
   const element = React.useMemo(() => (
     <audio style={{ display: 'none' }} ref={ref}></audio>
@@ -142,60 +151,87 @@ function useAudioElement (props = {}) {
 
   React.useEffect(() => {
     if (!audio) return
+
+    // In paused state render whenever the handler is triggered.
+    // In playing state update every 500ms
+    let interval = null
     function updateState (e) {
-      const state = {
-        playing: !audio.paused,
-        canplay: audio.readyState > 2,
-        currentTime: Math.floor(audio.currentTime),
-        duration: Math.floor(audio.duration) || 0
+      if (audio.paused) {
+        if (interval) {
+          clearInterval(interval)
+          interval = null
+        }
+        rerender()
+      } else if (!interval) {
+        interval = setInterval(rerender, 500)
+        rerender()
       }
-      setPlaystate(state)
     }
-    function throttledTimeUpdate (e) {
-      if (Math.floor(audio.currentTime) === playstate.currentTime) return
-      updateState(e)
-    }
+
     audio.addEventListener('pause', updateState)
     audio.addEventListener('play', updateState)
-    audio.addEventListener('timeupdate', throttledTimeUpdate)
+    audio.addEventListener('timeupdate', updateState)
     audio.addEventListener('canplay', updateState)
     audio.addEventListener('durationchange', updateState)
+
     return () => {
+      if (interval) clearInterval(interval)
       if (!audio) return
       audio.removeEventListener('pause', updateState)
       audio.removeEventListener('play', updateState)
-      audio.removeEventListener('timeupdate', throttledTimeUpdate)
+      audio.removeEventListener('timeupdate', updateState)
       audio.removeEventListener('canplay', updateState)
       audio.removeEventListener('durationchange', updateState)
     }
+
   }, [audio])
 
+  let state
+  if (!audio) {
+    state = {
+      playing: false,
+      canplay: false,
+      currentTime: 0,
+      duration: 0
+    }
+  } else {
+    state = {
+      playing: !audio.paused,
+      canplay: audio.readyState > 2,
+      currentTime: audio.currentTime || 0,
+      duration: audio.duration || 0,
+    }
+  }
+
   return {
-    element, audio, playstate
+    element,
+    audio,
+    ...state
   }
 }
 
 export function Player (props = {}) {
   const { track, mark, post } = usePlayer()
-  const { playstate = {}, audio } = usePlaystate()
+  const state = usePlaystate()
+  const { audio } = state
 
   const { start = 0, end = 0, word = ''} = mark || {}
   const headline = trackHeadline({ track, post })
 
   function togglePlay (e) {
     if (!audio) return
-    if (playstate.playing) audio.pause()
+    if (state.playing) audio.pause()
     else audio.play()
   }
 
   let posPercent = 0
-  if (playstate.currentTime) {
-    posPercent = playstate.currentTime / playstate.duration
+  if (state.currentTime) {
+    posPercent = state.currentTime / state.duration
   }
 
   function setPosPercent (percent) {
-    if (!playstate.duration) return
-    const nextTime = playstate.duration * percent
+    if (!state.duration) return
+    const nextTime = state.duration * percent
     audio.currentTime = nextTime
   }
 
@@ -208,19 +244,19 @@ export function Player (props = {}) {
       </Box>
       <Flex dir='row'>
         <PlayerButton
-          label="Play/Pause"
+          label={state.playing ? 'Pause' : 'Play'}
           onClick={togglePlay}
-          icon={playstate.playing ? <FaPause /> : <FaPlay />}
-          disabled={!playstate.canplay}
+          icon={<Box pl='1px'>{state.playing ? <FaPause /> : <FaPlay />}</Box>}
+          disabled={!state.canplay}
         />
         <Box p={2}>
-          {formatDuration(playstate.currentTime)}
+          {formatDuration(state.currentTime)}
         </Box>
         <Box p={2} flex={1}>
           <Timeslider pos={posPercent} onChange={setPosPercent} />
         </Box>
         <Box p={2}>
-          {formatDuration(playstate.duration)}
+          {formatDuration(state.duration)}
         </Box>
       </Flex>
     </Stack>
@@ -293,7 +329,7 @@ function formatDuration (secs) {
   if (!secs) secs = 0
   let h = Math.floor(secs / 3600)
   let m = Math.floor((secs - h * 3600) / 60)
-  let s = secs - h * 3600 - m * 60
+  let s = Math.floor(secs - h * 3600 - m * 60)
   if (h) return `${pad(h)}:${pad(m)}:${pad(s)}`
   return `${pad(m)}:${pad(s)}`
 }

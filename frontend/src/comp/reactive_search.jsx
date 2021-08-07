@@ -5,7 +5,7 @@ import { Heading, Flex, Spacer, Box, Button, Spinner } from '@chakra-ui/react'
 import { useParams } from 'react-router-dom'
 import { API_ENDPOINT } from '../lib/config'
 import { usePlayer } from './player'
-import { TranscriptHighlight } from './transcript'
+import { TranscriptSnippet } from './transcript'
 
 const { ResultListWrapper } = ReactiveList
 
@@ -119,34 +119,22 @@ export default function SearchPage2 () {
 function ResultItem (props) {
   const { item } = props
   const { track, setTrack, setPost } = usePlayer()
-  const highlights = Object.entries(item.highlight).map(([key, value]) => {
-    if (key === 'transcript') return (
-      <TranscriptHighlight source={item} value={value} />
-    )
-    return (
-      <Box p={2}>
-        <strong>{key}: &nbsp;</strong>
-        {value.map((value, i) => (
-          <span 
-            key={i}
-            dangerouslySetInnerHTML={{
-              __html: value
-            }}
-          />
-        ))}
-      </Box>
-    )
-  })
+
+  const snippets = (
+    <>
+      {Object.entries(item.highlight).map(([fieldname, snippets]) => (
+        <SnippetList key={fieldname} fieldname={fieldname} snippets={snippets} post={item} />
+      ))}
+   </>
+  )
 
   return (
     <ResultList>
       <ResultList.Content>
         {/* <ResultList.Image src={item.image} /> */}
-        <Heading size={'lg'} my={4}
-            dangerouslySetInnerHTML={{
-              __html: item.headline
-            }}
-        />
+        <Heading size={'lg'} my={4}>
+          <HighlightMark>{item.headline}</HighlightMark>
+        </Heading>
         <ResultList.Description>
           <div>
             <div>by {item.creator}</div>
@@ -155,11 +143,9 @@ function ResultItem (props) {
           <span>
             published on: {item.datePublished}
           </span>
-          <>
-            {highlights.map((highlight, i) => (
-              <div key={i}>{highlight}</div>
-            ))}
-          </>
+
+          {snippets}
+
           <div>
             {item.media && item.media.length && (
               <Button onClick={() => {
@@ -174,5 +160,41 @@ function ResultItem (props) {
         </ResultList.Description>
       </ResultList.Content>
     </ResultList>
+  )
+}
+
+function SnippetList (props = {}) {
+  const { fieldname, snippets, post } = props
+  return (
+    <Box p={2}>
+      <em>{fieldname}: &nbsp;</em>
+      {snippets.map((snippet , i) => (
+        <Snippet key={i} post={post} fieldname={fieldname} snippet={snippet} />
+      ))}
+    </Box>
+  )
+}
+
+function Snippet (props = {}) {
+  const { fieldname, snippet, post } = props
+  if (fieldname === 'transcript') {
+    return (
+      <TranscriptSnippet post={post} snippet={snippet} />
+    )
+  } else {
+    return (
+      <HighlightMark>{snippet}</HighlightMark>
+    )
+  }
+}
+
+function HighlightMark (props = {}) {
+  // TODO: Parse mark and do not use dangerouslySetInnerHTML
+  return (
+      <Box display='inline' css='mark { background: rgba(255,255,0,0.3) }'
+        dangerouslySetInnerHTML={{
+          __html: props.children
+        }}
+      />
   )
 }
