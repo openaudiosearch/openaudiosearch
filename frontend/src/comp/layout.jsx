@@ -8,7 +8,7 @@ import {
   useRouteMatch
 } from 'react-router-dom'
 
-import { Player } from './player'
+import { Player, usePlayer } from './player'
 import JobsPage from './jobs'
 import SearchPage2 from './reactive_search'
 import ImporterPage from './importer'
@@ -16,14 +16,15 @@ import { Login } from './login'
 import LandingPage from './landing_page'
 
 export default function Layout (props = {}) {
-  const playerHeight = '5rem'
+  const { track } = usePlayer()
+  const footerHeight = track ? '6rem' : 0
   return (
     <>
-      <Stack minHeight='100vh' bg='bg.screen'  mb={playerHeight}>
+      <Stack minHeight='100vh' bg='bg.screen'  mb={footerHeight}>
         <Header />
         <Main flex='1' />
       </Stack>
-      <Footer height={playerHeight} />
+      <Footer height={footerHeight} />
     </>
   )
 }

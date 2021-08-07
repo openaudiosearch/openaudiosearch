@@ -83,7 +83,7 @@ export default function LandingPage() {
 
 function DiscoverItem (props) {
   const { item } = props
-  const { setTrack } = usePlayer()
+  const { setTrack, setPost } = usePlayer()
   return (
     <Flex direction='column' border='2px' p='2' borderRadius='20px' borderColor='gray.200' boxShadow='md' my='3'>
       <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' ml='3'>
@@ -104,7 +104,10 @@ function DiscoverItem (props) {
             <IconButton 
             aria-label="Play"
             color="violet"
-            onClick={() => setTrack(item)}
+            onClick={() => {
+                setPost(item)
+                setTrack(item.media && item.media[0])
+            }}
             icon={ <FaPlay /> }
             mr="2"
             shadow='md'
