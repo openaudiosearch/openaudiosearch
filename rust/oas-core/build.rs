@@ -7,7 +7,6 @@ fn main() {
         FRONTEND_PATH.to_string()
     };
     let frontend_dist_path = format!("{}/{}", frontend_path, "dist");
-    println!("cargo:rerun-if-changed={}/src", frontend_path);
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-env-changed={}", "BUILD_FRONTEND");
     println!("cargo:rerun-if-env-changed={}", "FRONTEND_PATH");
@@ -26,6 +25,7 @@ fn main() {
         },
     };
     if build_frontend {
+        println!("cargo:rerun-if-changed={}/src", frontend_path);
         // In release mode, build the frontend using yarn. The result will be included statically
         // in the binary.
         Command::new("yarn")

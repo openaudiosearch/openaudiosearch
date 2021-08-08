@@ -1,3 +1,4 @@
+use elasticsearch::Elasticsearch;
 use oas_common::types::{Media, Post, Transcript};
 use oas_common::{Record, Resolver};
 use oas_common::{TypedValue, UntypedRecord};
@@ -10,13 +11,26 @@ use super::elastic::BulkPutResponse;
 use super::{Index, IndexError};
 use crate::couch::CouchDB;
 
+#[derive(Debug, Clone)]
 pub struct PostIndex {
-    index: Arc<Index>,
+    pub(super) index: Arc<Index>,
 }
 
 impl PostIndex {
     pub fn new(index: Arc<Index>) -> Self {
         Self { index }
+    }
+
+    pub fn index(&self) -> &Arc<Index> {
+        &self.index
+    }
+
+    pub fn client(&self) -> &Elasticsearch {
+        &self.index().client()
+    }
+
+    pub fn name(&self) -> &str {
+        self.index().name()
     }
 
     /// Find all posts that reference any of a list of media ids.

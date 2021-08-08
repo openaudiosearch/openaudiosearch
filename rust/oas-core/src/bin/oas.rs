@@ -216,8 +216,7 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
 async fn run_debug(state: State) -> anyhow::Result<()> {
     eprintln!("OAS debug -- nothing here");
     let id = std::env::var("ID").unwrap();
-    let index = (*state.index_manager.data_index()).clone();
-    let post_index = index::PostIndex::new(index);
+    let post_index = state.index_manager.post_index();
     let iters = 1000usize;
     for _ in 0..iters {
         let now = time::Instant::now();
@@ -264,8 +263,11 @@ async fn run_index(state: State, opts: IndexOpts) -> anyhow::Result<()> {
 }
 
 async fn run_search(state: State, opts: SearchOpts) -> anyhow::Result<()> {
-    let index = state.index_manager.data_index();
-    let records = index.find_records_with_text_query(&opts.query).await?;
+    let index = state.index_manager.post_index();
+    let records = index
+        .index()
+        .find_records_with_text_query(&opts.query)
+        .await?;
     let records: Vec<Record<Post>> = records
         .into_iter()
         .filter_map(|r| r.into_typed_record::<Post>().ok())

@@ -28,9 +28,9 @@ pub const DOC_ID_INDEX_STATE: &str = "IndexMeta.data";
 #[derive(Debug, Clone)]
 pub struct IndexManager {
     config: Config,
-    meta: Arc<Meta>,
     client: Arc<Elasticsearch>,
-    data_index: Arc<Index>, // indexes: HashMap<IndexId, elastic::Index>,
+    post_index: Arc<PostIndex>,
+    meta_index: Arc<MetaIndex>,
 }
 
 /// Options for index initialization with optional recreation.
@@ -77,11 +77,11 @@ struct IndexState {
 ///
 /// Currently only used to persist the [[IndexState]].
 #[derive(Debug)]
-struct Meta {
+struct MetaIndex {
     index: Index,
 }
 
-impl Meta {
+impl MetaIndex {
     pub fn with_index(index: Index) -> Self {
         Self { index }
     }
@@ -114,20 +114,22 @@ impl IndexManager {
 
         let prefix = config.prefix.as_deref().unwrap_or(DEFAULT_PREFIX);
         let meta_index_name = format!("{}.{}", prefix, META_INDEX_NAME);
-        let meta_index = Index::with_client_and_name(client.clone(), meta_index_name);
-        let meta = Meta::with_index(meta_index);
+        let meta_index_client = Index::with_client_and_name(client.clone(), meta_index_name);
+        let meta_index = MetaIndex::with_index(meta_index_client);
 
         let data_index_name = format!("{}.{}", prefix, DATA_INDEX_NAME);
-        let data_index = Index::with_client_and_name(client.clone(), data_index_name);
+        let post_index_client = Index::with_client_and_name(client.clone(), data_index_name);
+        let post_index = PostIndex::new(Arc::new(post_index_client));
 
         Ok(Self {
             config,
             client,
-            data_index: Arc::new(data_index),
-            meta: Arc::new(meta),
+            post_index: Arc::new(post_index),
+            meta_index: Arc::new(meta_index),
         })
     }
 
+    /// Create a new index manager from an Elasticsearch endpoint URL.
     pub fn with_url<S>(url: Option<S>) -> anyhow::Result<Self>
     where
         S: AsRef<str>,
@@ -139,58 +141,50 @@ impl IndexManager {
     }
 
     pub async fn init(&self, opts: InitOpts) -> anyhow::Result<()> {
-        self.meta.index.ensure_index(opts.delete_meta).await?;
-        self.data_index.ensure_index(opts.delete_data).await?;
+        self.meta_index.index.ensure_index(opts.delete_meta).await?;
+        self.post_index.index.ensure_index(opts.delete_data).await?;
         Ok(())
     }
 
-    pub fn data_index(&self) -> &Arc<Index> {
-        &self.data_index
+    pub fn post_index(&self) -> &Arc<PostIndex> {
+        &self.post_index
     }
 
-    pub fn post_index(&self) -> PostIndex {
-        PostIndex::new(self.data_index().clone())
+    // fn meta_index(&self) -> &Arc<MetaIndex> {
+    //     &self.meta_index
+    // }
+
+    pub async fn index_changes(&self, db: &CouchDB, infinite: bool) -> anyhow::Result<()> {
+        let latest_seq = self.meta_index.latest_indexed_seq().await?;
+        log::debug!("start change indexer from seq {:?}", latest_seq);
+
+        let mut changes = db.changes(latest_seq);
+        changes.set_infinite(infinite);
+
+        let batch_timeout = time::Duration::from_millis(200);
+        let batch_max_len = 1000;
+        let mut batched_changes = changes.chunks_timeout(batch_max_len, batch_timeout);
+
+        while let Some(batch) = batched_changes.next().await {
+            // Filter out errors for now.
+            let batch: Vec<_> = batch.into_iter().filter_map(|e| e.ok()).collect();
+            if batch.is_empty() {
+                continue;
+            }
+            let len = batch.len();
+            let latest_seq = &batch.last().unwrap().seq.to_string();
+
+            let records: Vec<UntypedRecord> = batch
+                .into_iter()
+                .filter_map(|ev| ev.doc.and_then(|doc| doc.into_untyped_record().ok()))
+                .collect();
+            self.post_index.index_changes(&db, &records[..]).await?;
+            self.meta_index.set_latest_indexed_seq(latest_seq).await?;
+            log::debug!("indexed {} (latest seq {:?})", len, latest_seq);
+        }
+
+        Ok(())
     }
-
-    pub async fn index_changes(&self, db: &CouchDB, mode: bool) -> anyhow::Result<()> {
-        // let index = self.data_index();
-        let index = self.post_index();
-        let meta = &self.meta;
-        index_changes_stream(&db, &meta, &index, mode).await
-    }
-}
-
-async fn index_changes_stream(
-    db: &CouchDB,
-    meta: &Arc<Meta>,
-    index: &PostIndex,
-    infinite: bool,
-) -> anyhow::Result<()> {
-    let latest_seq = meta.latest_indexed_seq().await?;
-    let mut changes = db.changes(latest_seq);
-    changes.set_infinite(infinite);
-
-    let batch_timeout = time::Duration::from_millis(200);
-    let batch_max_len = 1000;
-
-    let mut batched_changes = changes.chunks_timeout(batch_max_len, batch_timeout);
-
-    while let Some(batch) = batched_changes.next().await {
-        // Filter out errors for now.
-        let batch: Vec<_> = batch.into_iter().filter_map(|e| e.ok()).collect();
-        let _len = batch.len();
-        let latest_seq = &batch.last().unwrap().seq.to_string();
-
-        let records: Vec<UntypedRecord> = batch
-            .into_iter()
-            .filter_map(|ev| ev.doc.and_then(|doc| doc.into_untyped_record().ok()))
-            .collect();
-        index.index_changes(&db, &records[..]).await?;
-        // index_changes_batch(db, index, batch).await?;
-        meta.set_latest_indexed_seq(latest_seq).await?;
-    }
-
-    Ok(())
 }
 
 // pub async fn posts_into_resolved_posts_and_updated_media_batches(
