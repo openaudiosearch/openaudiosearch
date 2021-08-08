@@ -10,7 +10,7 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Docs: Book](https://img.shields.io/badge/Docs-Book-blue.svg)](https://openaudiosearch.github.io/openaudiosearch/book/)
 [![Docs: Rust](https://img.shields.io/badge/Docs-Rust-blue.svg)](https://openaudiosearch.github.io/openaudiosearch/rustdocs/oas_core)
-[![Chat: Discord](https://img.shields.io/badge/Chat-Discord-green.svg)](http://chat.openaudiosearch.org)
+[![Chat: Discord](https://img.shields.io/badge/Chat-Discord-green.svg)](http://discord.openaudiosearch.org)
 
 ## What is it?
 
@@ -18,6 +18,9 @@
 
 With **Open Audio Search**, we want to make the archives of community media, radio stations, podcasts searchable and discoverable, through open source tech and APIs.
 
+## Status
+
+Open Audio Search is still **in development**. No API stability guarantees yet. Don't run this for anything serious or on public instances at the moment.
 
 ## Main Features
 
@@ -138,5 +141,5 @@ Development discussions currently take place here on GitHub or on our Discord ch
 
 ## Links & Thanks
 
-Open Audio Search is a project by [arso collective](https://arso.xyz) and [cba](https://cba.fro.at) and supported by [https://prototypefund.de/en/](https://prototypefund.de/project/open-audio-search/) and [netidee](https://www.netidee.at/open-audiosearch).
+Open Audio Search is a project by [arso collective](https://arso.xyz) and [cba](https://cba.fro.at) and supported by [Prototype Fund](https://prototypefund.de/project/open-audio-search/) and [netidee](https://www.netidee.at/open-audiosearch).
 
