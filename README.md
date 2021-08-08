@@ -57,9 +57,9 @@ docker-compose exec worker bash scripts/elastic-disable-threshold.sh
 ## Run locally for developing
 
 To run OAS locally for developing or testing you should install the following requirements beforehand:
-- For the core: [Rust](https://rust-lang.org), which is most easily installed with [Rustup](https://rustup.rs/).
+- For the core: [Rust](https://rust-lang.org), which is most easily installed with [Rustup](https://rustup.rs/). You also will need a C compiler and OpenSSL development headers. On Debian based systems, run `apt install gcc libssl-dev pkg-config`.
 - For the worker: [Python 3](https://python.org) and [poetry](https://python-poetry.org/docs/). Also requires [ffmpeg](https://www.ffmpeg.org/).
-- For the frontend: [Node.js](https://nodejs.org/en/) and npm or yarn
+- For the frontend: [Node.js](https://nodejs.org/en/) and npm or yarn.
 
 *Clone this repository*
 ```sh
@@ -72,8 +72,15 @@ docker-compose -f docker-compose.dev.yml up
 ```
 
 *Build an run the core*
+
+Compile and run the Rust core, while setting an environment variable to proxy the web UI from a local development server (see below):
 ```sh
-cargo run -- run
+FRONTEND_PROXY="https://localhost:4000" cargo run -- run
+```
+
+To build and test in release mode, use
+```sh
+cargo run --release -- run
 ```
 
 *Run the frontend in development mode* 
@@ -90,9 +97,7 @@ poetry install
 ./start-worker.sh
 ```
 
-The live-reloading UI development server serves the UI at [http://localhost:4000](http://localhost:4000).
-The OAS API is served at [http://localhost:8080](http://localhost:8080/). 
-REST API docs are automatically generated and served at [http://localhost:8080/swagger-ui](http://localhost:8080/swagger-ui)
+Now open [http://localhost:8080](http://localhost:8080) in a web browser. The UI is proxied to the live-reloading UI development server which runs at [http://localhost:4000](http://localhost:4000). The OAS API is served at `http://localhost:8080/api/v1`. REST API docs are automatically generated and served at [http://localhost:8080/swagger-ui](http://localhost:8080/swagger-ui).
 
 ### Development tips and tricks
 
@@ -111,6 +116,7 @@ OAS is configured through environment variables or command line arguments. The f
 |`COUCHDB_URL`|`http://admin:password@localhost:5984/oas`|core|URL to CouchDB server and database|
 |`HTTP_HOST`|`0.0.0.0`|core|Interface for the HTTP server to bind to|
 |`HTTP_PORT`|`8080`|core|Port for HTTP server to listen on|
+|`FRONTEND_PROXY`||core|If set to a HTTP URL, all requests for the web UI are proxied to this address|
 
 
 ## License
