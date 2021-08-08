@@ -14,7 +14,8 @@
 
 ## What is it?
 
-**Open Audio Search** uses automatic speech recognition to extract text from audio, which is then indexed in a search engine to enable recommendation of similiar broadcasts to users.
+**Open Audio Search** is a search engine for audio. It can index RSS feeds and use automatic speech recognition to extract text from audio. The feeds and transcripts are then indexed in a search engine, empowering users to use full-text search on the indexed transcripts and listen to the audio files while jumping right to search result snippets.
+
 With **Open Audio Search**, we want to make the archives of community media, radio stations, podcasts searchable and discoverable, through open source tech and APIs.
 
 
