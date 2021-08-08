@@ -8,9 +8,9 @@
 <br />
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Docs: Rust](https://img.shields.io/badge/Docs-Rust-blue.svg)](https://openaudiosearch.github.io/openaudiosearch/rustdocs/oas_core)
 [![Docs: Book](https://img.shields.io/badge/Docs-Book-blue.svg)](https://openaudiosearch.github.io/openaudiosearch/book/)
-
+[![Docs: Rust](https://img.shields.io/badge/Docs-Rust-blue.svg)](https://openaudiosearch.github.io/openaudiosearch/rustdocs/oas_core)
+[![Chat: Discord](https://img.shields.io/badge/Chat-Discord-green.svg)](http://chat.openaudiosearch.org)
 
 ## What is it?
 
@@ -28,7 +28,9 @@ With **Open Audio Search**, we want to make the archives of community media, rad
 * *Automatic Speech Recognition* using [Vosk toolkit](https://alphacephei.com/vosk/) ([Kaldi](http://kaldi-asr.org/) under the hood)
 
 
-## Install & run with Docker
+## Installation and usage
+
+### Installation with docker
 
 This project includes a Dockerfile to build a docker image for the backend and worker. It also includes a `docker-compose.yml` file to easily launch OAS together with Elastic Search and Redis.
 
@@ -54,7 +56,23 @@ Elastic Search wants quite a lot of free disc space. If the threshold is not met
 docker-compose exec worker bash scripts/elastic-disable-threshold.sh
 ```
 
-## Run locally for developing
+### Configuration
+
+OAS is configured through environment variables or command line arguments. The following table lists all environment variables. Some apply to both the core and the worker, and some only to either.
+
+|variable|default|applies to|description|
+|-|-|-|-|
+|`STORAGE_PATH`|`./data/oas`|worker|Storage path for models, cached files and other assets|
+|`REDIS_URL`|`redis://localhost:6379/0`|both|URL to Redis server|
+|`ELASTICSEARCH_URL`|`http://localhost:9200/`|core|URL to Elasticsearch server (trailing slash is required)|
+|`ELASTICSEARCH_PREFIX`|`oas`|core|Prefix for all Elasticsearch indexes created by OAS|
+|`COUCHDB_URL`|`http://admin:password@localhost:5984/oas`|core|URL to CouchDB server and database|
+|`HTTP_HOST`|`0.0.0.0`|core|Interface for the HTTP server to bind to|
+|`HTTP_PORT`|`8080`|core|Port for HTTP server to listen on|
+|`FRONTEND_PROXY`||core|If set to a HTTP URL, all requests for the web UI are proxied to this address|
+
+
+## Development and local setup
 
 To run OAS locally for developing or testing you should install the following requirements beforehand:
 - For the core: [Rust](https://rust-lang.org), which is most easily installed with [Rustup](https://rustup.rs/). You also will need a C compiler and OpenSSL development headers. On Debian based systems, run `apt install gcc libssl-dev pkg-config`.
@@ -103,36 +121,21 @@ Now open [http://localhost:8080](http://localhost:8080) in a web browser. The UI
 
 Have a look at the [development guide](./docs/development.md).
 
-## Configuration
-
-OAS is configured through environment variables or command line arguments. The following table lists all environment variables. Some apply to both the core and the worker, and some only to either.
-
-|variable|default|applies to|description|
-|-|-|-|-|
-|`STORAGE_PATH`|`./data/oas`|worker|Storage path for models, cached files and other assets|
-|`REDIS_URL`|`redis://localhost:6379/0`|both|URL to Redis server|
-|`ELASTICSEARCH_URL`|`http://localhost:9200/`|core|URL to Elasticsearch server (trailing slash is required)|
-|`ELASTICSEARCH_PREFIX`|`oas`|core|Prefix for all Elasticsearch indexes created by OAS|
-|`COUCHDB_URL`|`http://admin:password@localhost:5984/oas`|core|URL to CouchDB server and database|
-|`HTTP_HOST`|`0.0.0.0`|core|Interface for the HTTP server to bind to|
-|`HTTP_PORT`|`8080`|core|Port for HTTP server to listen on|
-|`FRONTEND_PROXY`||core|If set to a HTTP URL, all requests for the web UI are proxied to this address|
-
-
 ## License
-[AGPL v3](LICENSE)
 
+Open Audio Search is licensed under the [AGPL v3](LICENSE).
 
 ## Documentation
-The official documentation is hosted on tbd.
 
+Documentation is still sparse. Docs are located in the [docs](docs) folder and rendered to HTML on the [documentation site](https://openaudiosearch.github.io/openaudiosearch/book/). We also host [API docs for the Rust core](https://openaudiosearch.github.io/openaudiosearch/rustdocs/oas_core). The REST API is documented from within Open Audio Search (TODO: Host and link to REST API docs).
 
-## Discussion and Development
-Most development discussions take place on github in this repo. Further, tbd.
+## Contributing
 
+All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. Please open issues or [talk to us on our Discord server](http://discord.openaudiosearch.org). We want to welcome anyone and commit to creating an inclusive environment.
 
-## Contributing to Open Audio Search
+Development discussions currently take place here on GitHub or on our Discord chat.
 
-All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
+## Links & Thanks
 
-Code of conduct, tbd.
+Open Audio Search is a project by [arso collective](https://arso.xyz) and [cba](https://cba.fro.at) and supported by [https://prototypefund.de/en/](https://prototypefund.de/project/open-audio-search/) and [netidee](https://www.netidee.at/open-audiosearch).
+
