@@ -1,7 +1,7 @@
 use crate::State;
 use clap::Clap;
 use rocket::fairing::{Fairing, Info, Kind};
-use rocket::{Orbit, Rocket};
+use rocket::{catchers, Orbit, Rocket};
 use rocket_okapi::routes_with_openapi;
 use rocket_okapi::swagger_ui::{make_swagger_ui, SwaggerUIConfig};
 
@@ -80,7 +80,8 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 url: "../api/v1/openapi.json".to_owned(),
                 ..Default::default()
             }),
-        );
+        )
+        .register("/api/v1", catchers![auth::unauthorized]);
 
     // Mount either a proxy to a frontend dev server,
     // or included static dir.

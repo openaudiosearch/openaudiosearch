@@ -49,3 +49,4 @@ uuid = { version = "0.8.2", features = ["v4"] }
 argon2 = "0.2.2"
 rand_core = { version = "0.6", features = ["std"] }
 lazy_static = "1.4.0"
+rand = { version = "0.8.4", features = ["std"] }

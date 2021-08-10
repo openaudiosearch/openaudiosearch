@@ -1,10 +1,10 @@
 use okapi::openapi3::Responses;
-use rocket::http::{Cookie, CookieJar, Status};
+use rocket::http::{Cookie, CookieJar, Header, Status};
 use rocket::request::{FromRequest, Outcome, Request};
 use rocket::response::Responder;
 use rocket::serde::json::Json;
 use rocket::State;
-use rocket::{get, post};
+use rocket::{catch, get, post};
 use rocket_okapi::gen::OpenApiGenerator;
 use rocket_okapi::openapi;
 use rocket_okapi::response::OpenApiResponderInner;
@@ -12,7 +12,6 @@ use rocket_okapi::util::add_schema_response;
 use schemars::JsonSchema;
 use serde::Serialize;
 use std::sync::Arc;
-use uuid::Uuid;
 
 mod password;
 mod sessions;
@@ -22,6 +21,8 @@ mod structs;
 pub use sessions::{SessionInfo, Sessions};
 use store::UserStore;
 use structs::{LoginRequest, LoginResponse, RegisterRequest};
+
+use super::error::AppError;
 
 pub const COOKIE_SESSION_ID: &str = "oas_session_id";
 pub const HEADER_SESSION_ID: &str = "X-Oas-Session-Id";
@@ -33,27 +34,75 @@ pub enum LoginError {
 
 /// A session id is a string that is either taken from a private cookie "oas_session_id" or from a
 /// header "X-Oas-Session-Id".
+#[derive(Debug, PartialEq, Clone)]
 pub struct SessionId(String);
+
+async fn try_login(
+    auth: &State<Auth>,
+    cookies: &CookieJar<'_>,
+    login_request: &LoginRequest,
+    session_id: Option<&SessionId>,
+) -> Option<SessionId> {
+    try_logout(&auth, &cookies, session_id).await;
+    if let Some(session_id) = auth.login(&login_request).await {
+        let cookie = Cookie::new(COOKIE_SESSION_ID, session_id.clone());
+        cookies.add(cookie);
+        Some(SessionId(session_id))
+    } else {
+        None
+    }
+}
+
+async fn try_logout(auth: &State<Auth>, cookies: &CookieJar<'_>, session_id: Option<&SessionId>) {
+    if let Some(session_id) = session_id {
+        auth.logout(&session_id.0).await;
+    }
+
+    if let Some(session_cookie) = cookies.get(COOKIE_SESSION_ID) {
+        auth.logout(session_cookie.value()).await;
+        cookies.remove(session_cookie.clone());
+    }
+}
 
 #[async_trait::async_trait]
 impl<'r> FromRequest<'r> for SessionId {
     type Error = LoginError;
     async fn from_request(request: &'r Request<'_>) -> Outcome<SessionId, LoginError> {
-        // Check cookie auth
-        let mut session_id = request
-            .cookies()
-            .get_private(COOKIE_SESSION_ID)
-            .map(|cookie| cookie.value().to_string());
+        let auth = request
+            .guard::<&State<Auth>>()
+            .await
+            .expect("Session state not registered");
 
-        // Check header auth.
-        if session_id.is_none() {
-            session_id = request
-                .headers()
-                .get_one(HEADER_SESSION_ID)
-                .map(|v| v.to_string());
-        }
+        // Check if a session id is set as a cookie.
+        let session_cookie = request.cookies().get(COOKIE_SESSION_ID);
+        let session_id = session_cookie.map(|cookie| SessionId(cookie.value().to_string()));
+
+        // Check if a session id is set as a header.
+        let session_header = request.headers().get_one(HEADER_SESSION_ID);
+        let session_id = if let Some(session_header) = session_header {
+            Some(SessionId(session_header.to_string()))
+        } else {
+            session_id
+        };
+
+        // Allow to login via basic auth.
+        // If using basic auth while also having a session id set,
+        // first delete the session.
+        let basic_auth = request.guard::<BasicAuth>().await;
+        let session_id = if let Outcome::Success(basic_auth) = basic_auth {
+            try_login(
+                &auth,
+                request.cookies(),
+                &basic_auth.into(),
+                session_id.as_ref(),
+            )
+            .await
+        } else {
+            session_id
+        };
+
         match session_id {
-            Some(id) => Outcome::Success(SessionId(id)),
+            Some(id) => Outcome::Success(id),
             None => Outcome::Forward(()),
         }
     }
@@ -70,14 +119,15 @@ impl<'r> FromRequest<'r> for SessionInfo {
 
         let session_id = request.guard::<SessionId>().await;
 
-        if let Outcome::Success(session_id) = session_id {
-            if let Some(session) = auth.sessions.get(&session_id.0).await {
-                Outcome::Success((*session).clone())
-            } else {
-                Outcome::Failure((Status::Unauthorized, LoginError::Unauthorized))
+        match session_id {
+            Outcome::Success(session_id) => {
+                if let Some(session) = auth.sessions.get(&session_id.0).await {
+                    Outcome::Success((*session).clone())
+                } else {
+                    Outcome::Failure((Status::Unauthorized, LoginError::Unauthorized))
+                }
             }
-        } else {
-            Outcome::Failure((Status::Unauthorized, LoginError::Unauthorized))
+            _ => Outcome::Failure((Status::Unauthorized, LoginError::Unauthorized)),
         }
     }
 }
@@ -178,12 +228,11 @@ pub async fn post_login(
     auth: &State<Auth>,
     cookies: &CookieJar<'_>,
     data: Json<LoginRequest>,
+    session_id: Option<SessionId>,
 ) -> LoginResult<LoginResponse> {
-    let session_id = auth.login(&data).await;
+    let session_id = try_login(&auth, &cookies, &data, session_id.as_ref()).await;
     if let Some(session_id) = session_id {
-        // Unwrap is save because the session was just created.
-        let session = auth.session(&session_id).await.unwrap();
-        cookies.add_private(Cookie::new(COOKIE_SESSION_ID, session_id));
+        let session = auth.session(&session_id.0).await.unwrap();
         let public_user_info = session.user().into_public();
         LoginResult::Ok(Json(LoginResponse {
             ok: true,
@@ -199,11 +248,12 @@ pub async fn post_login(
 
 #[openapi(tag = "Login")]
 #[post("/logout")]
-pub async fn logout(auth: &State<Auth>, cookies: &CookieJar<'_>) -> Json<()> {
-    if let Some(session_cookie) = cookies.get_private(COOKIE_SESSION_ID) {
-        auth.logout(session_cookie.value()).await;
-        cookies.remove_private(session_cookie);
-    }
+pub async fn logout(
+    auth: &State<Auth>,
+    cookies: &CookieJar<'_>,
+    session_id: Option<SessionId>,
+) -> Json<()> {
+    try_logout(&auth, &cookies, session_id.as_ref()).await;
     Json(())
 }
 
@@ -245,14 +295,29 @@ where
     T: Serialize,
 {
     fn respond_to(self, req: &'r Request<'_>) -> rocket::response::Result<'static> {
-        let status = match self {
-            Self::Ok(_) => Status::Ok,
-            Self::Unauthorized(_) => Status::Unauthorized,
+        let (status, header) = match self {
+            Self::Ok(_) => (Status::Ok, None),
+            Self::Unauthorized(_) => {
+                let header_value = format!(
+                    r#"WWW-Authenticate: Basic realm="{}", charset="UTF-8""#,
+                    "Please enter user username and password"
+                );
+                let header = Header::new(http::header::WWW_AUTHENTICATE.as_str(), header_value);
+                (Status::Unauthorized, Some(header))
+            }
         };
         let mut res = self.into_inner().respond_to(&req)?;
+        if let Some(header) = header {
+            res.set_header(header);
+        }
         res.set_status(status);
         Ok(res)
     }
+}
+
+#[catch(401)]
+pub fn unauthorized(_req: &rocket::Request) -> AppError {
+    AppError::Unauthorized
 }
 
 impl<T: Serialize + JsonSchema + Send> OpenApiResponderInner for LoginResult<T> {
@@ -265,9 +330,77 @@ impl<T: Serialize + JsonSchema + Send> OpenApiResponderInner for LoginResult<T> 
     }
 }
 
-/// Generate a random session id
-pub fn generate_session_id() -> String {
-    let uuid = Uuid::new_v4();
-    let encoded = base32::encode(base32::Alphabet::Crockford, &uuid.as_bytes()[..]);
+/// Generate a random session id.
+fn generate_session_id() -> String {
+    let random_bytes: [u8; 32] = rand::random();
+    let encoded = base32::encode(base32::Alphabet::Crockford, &random_bytes[..]);
     encoded.to_lowercase()
+}
+
+#[derive(Debug)]
+pub struct BasicAuth {
+    /// Required username
+    pub username: String,
+
+    /// Required password
+    pub password: String,
+}
+
+impl BasicAuth {
+    /// Creates a new [BasicAuth] struct/request guard from a given plaintext
+    /// http auth header or returns a [Option::None] if invalid
+    pub fn new<T: Into<String>>(auth_header: T) -> Option<Self> {
+        let key = auth_header.into();
+
+        if key.len() < 7 || &key[..6] != "Basic " {
+            return None;
+        }
+
+        let (username, password) = decode_basic_auth(&key[6..])?;
+
+        Some(Self { username, password })
+    }
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for BasicAuth {
+    type Error = ();
+
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let keys: Vec<_> = request.headers().get("Authorization").collect();
+        match keys.len() {
+            0 => Outcome::Forward(()),
+            1 => match BasicAuth::new(keys[0]) {
+                Some(auth_header) => Outcome::Success(auth_header),
+                None => Outcome::Failure((Status::BadRequest, ())),
+            },
+            _ => Outcome::Failure((Status::BadRequest, ())),
+        }
+    }
+}
+
+impl From<BasicAuth> for LoginRequest {
+    fn from(auth: BasicAuth) -> Self {
+        Self {
+            username: auth.username,
+            password: auth.password,
+        }
+    }
+}
+
+/// Decodes a base64-encoded string into a tuple of `(username, password)` or a
+/// [Option::None] if badly formatted, e.g. if an error occurs
+fn decode_basic_auth<T: Into<String>>(base64_encoded: T) -> Option<(String, String)> {
+    let decoded_creds = match base64::decode(base64_encoded.into()) {
+        Ok(vecu8_creds) => String::from_utf8(vecu8_creds).unwrap(),
+        Err(_) => return None,
+    };
+
+    let split_vec: Vec<&str> = decoded_creds.splitn(2, ":").collect();
+
+    if split_vec.len() < 2 {
+        None
+    } else {
+        Some((split_vec[0].to_string(), split_vec[1].to_string()))
+    }
 }

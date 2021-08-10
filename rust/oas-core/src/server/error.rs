@@ -1,8 +1,7 @@
 use crate::couch::CouchError;
 use oas_common::{DecodingError, EncodingError, ValidationError};
 use okapi::openapi3::Responses;
-use rocket::http::Status;
-use rocket::response::status::Custom;
+use rocket::http::{Header, Status};
 use rocket::response::Responder;
 use rocket::{response, response::content, Request};
 use rocket_okapi::gen::OpenApiGenerator;
@@ -33,6 +32,8 @@ pub enum AppError {
     Http(Status, String),
     #[error("Validation error: {0}")]
     ValidationError(ValidationError),
+    #[error("Unauthorized")]
+    Unauthorized,
 }
 
 impl<'r> Responder<'r, 'static> for AppError {
@@ -43,11 +44,12 @@ impl<'r> Responder<'r, 'static> for AppError {
             AppError::EncodingError(_) => Status::BadRequest,
             AppError::ValidationError(_) => Status::UnprocessableEntity,
             AppError::Elastic(err) => map_u16_status(err.status_code().map(|code| code.as_u16())),
+            AppError::Unauthorized => Status::Unauthorized,
             _ => Status::InternalServerError,
         };
 
-        let message = match self {
-            AppError::Http(_code, message) => message,
+        let message = match &self {
+            AppError::Http(_code, message) => message.clone(),
             _ => format!("{}", self),
         };
 
@@ -55,7 +57,29 @@ impl<'r> Responder<'r, 'static> for AppError {
 
         // let json = json!({ "error": message });
         let json_string = serde_json::to_string(&response).unwrap();
-        Custom(code, content::Json(json_string)).respond_to(req)
+        let res = content::Json(json_string).respond_to(req);
+
+        // Handle authentication error: Add WWW-Authenticate header.
+        match res {
+            Err(res) => Err(res),
+            Ok(mut res) => {
+                res.set_status(code);
+                match self {
+                    Self::Unauthorized => {
+                        let header_value = format!(
+                            r#"Basic realm="{}", charset="UTF-8""#,
+                            "Please enter user username and password"
+                        );
+                        let header =
+                            Header::new(http::header::WWW_AUTHENTICATE.as_str(), header_value);
+                        res.set_header(header);
+                    }
+                    _ => {}
+                }
+                Ok(res)
+            }
+        }
+        // let res = Custom(code, content::Json(json_string)).respond_to(req);
     }
 }
 
