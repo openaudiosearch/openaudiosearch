@@ -1,7 +1,7 @@
 use crate::couch::CouchError;
 use oas_common::{DecodingError, EncodingError, ValidationError};
 use okapi::openapi3::Responses;
-use rocket::http::{Header, Status};
+use rocket::http::Status;
 use rocket::response::Responder;
 use rocket::{response, response::content, Request};
 use rocket_okapi::gen::OpenApiGenerator;
@@ -66,12 +66,17 @@ impl<'r> Responder<'r, 'static> for AppError {
                 res.set_status(code);
                 match self {
                     Self::Unauthorized => {
+                        // TODO: This is nice as it makes the API accessible in regular browsers.
+                        // However, this also makes logout basically "not work" because browsers
+                        // remember the basic auth details by default and re-add them.
                         let header_value = format!(
                             r#"Basic realm="{}", charset="UTF-8""#,
                             "Please enter user username and password"
                         );
-                        let header =
-                            Header::new(http::header::WWW_AUTHENTICATE.as_str(), header_value);
+                        let header = rocket::http::Header::new(
+                            http::header::WWW_AUTHENTICATE.as_str(),
+                            header_value,
+                        );
                         res.set_header(header);
                     }
                     _ => {}

@@ -46,7 +46,7 @@ async fn try_login(
     try_logout(&auth, &cookies, session_id).await;
     if let Some(session_id) = auth.login(&login_request).await {
         let cookie = Cookie::new(COOKIE_SESSION_ID, session_id.clone());
-        cookies.add(cookie);
+        cookies.add_private(cookie);
         Some(SessionId(session_id))
     } else {
         None
@@ -58,9 +58,9 @@ async fn try_logout(auth: &State<Auth>, cookies: &CookieJar<'_>, session_id: Opt
         auth.logout(&session_id.0).await;
     }
 
-    if let Some(session_cookie) = cookies.get(COOKIE_SESSION_ID) {
+    if let Some(session_cookie) = cookies.get_private(COOKIE_SESSION_ID) {
         auth.logout(session_cookie.value()).await;
-        cookies.remove(session_cookie.clone());
+        cookies.remove_private(session_cookie);
     }
 }
 
@@ -74,7 +74,7 @@ impl<'r> FromRequest<'r> for SessionId {
             .expect("Session state not registered");
 
         // Check if a session id is set as a cookie.
-        let session_cookie = request.cookies().get(COOKIE_SESSION_ID);
+        let session_cookie = request.cookies().get_private(COOKIE_SESSION_ID);
         let session_id = session_cookie.map(|cookie| SessionId(cookie.value().to_string()));
 
         // Check if a session id is set as a header.
@@ -88,15 +88,19 @@ impl<'r> FromRequest<'r> for SessionId {
         // Allow to login via basic auth.
         // If using basic auth while also having a session id set,
         // first delete the session.
-        let basic_auth = request.guard::<BasicAuth>().await;
-        let session_id = if let Outcome::Success(basic_auth) = basic_auth {
-            try_login(
-                &auth,
-                request.cookies(),
-                &basic_auth.into(),
-                session_id.as_ref(),
-            )
-            .await
+        let session_id = if session_id.is_none() {
+            let basic_auth = request.guard::<BasicAuth>().await;
+            if let Outcome::Success(basic_auth) = basic_auth {
+                try_login(
+                    &auth,
+                    request.cookies(),
+                    &basic_auth.into(),
+                    session_id.as_ref(),
+                )
+                .await
+            } else {
+                None
+            }
         } else {
             session_id
         };
@@ -209,16 +213,16 @@ impl Auth {
 
 #[openapi(tag = "Login")]
 #[get("/login")]
-pub async fn get_login(session: Option<SessionInfo>) -> LoginResult<LoginResponse> {
+pub async fn get_login(session: Option<SessionInfo>) -> Json<LoginResponse> {
     match session {
-        Some(session) => LoginResult::Ok(Json(LoginResponse {
+        Some(session) => Json(LoginResponse {
             ok: true,
             user: Some(session.user().into_public()),
-        })),
-        None => LoginResult::Unauthorized(Json(LoginResponse {
+        }),
+        None => Json(LoginResponse {
             ok: false,
             user: None,
-        })),
+        }),
     }
 }
 
@@ -229,20 +233,20 @@ pub async fn post_login(
     cookies: &CookieJar<'_>,
     data: Json<LoginRequest>,
     session_id: Option<SessionId>,
-) -> LoginResult<LoginResponse> {
+) -> Json<LoginResponse> {
     let session_id = try_login(&auth, &cookies, &data, session_id.as_ref()).await;
     if let Some(session_id) = session_id {
         let session = auth.session(&session_id.0).await.unwrap();
         let public_user_info = session.user().into_public();
-        LoginResult::Ok(Json(LoginResponse {
+        Json(LoginResponse {
             ok: true,
             user: Some(public_user_info),
-        }))
+        })
     } else {
-        LoginResult::Unauthorized(Json(LoginResponse {
+        Json(LoginResponse {
             ok: false,
             user: None,
-        }))
+        })
     }
 }
 
@@ -299,7 +303,7 @@ where
             Self::Ok(_) => (Status::Ok, None),
             Self::Unauthorized(_) => {
                 let header_value = format!(
-                    r#"WWW-Authenticate: Basic realm="{}", charset="UTF-8""#,
+                    r#"Basic realm="{}", charset="UTF-8""#,
                     "Please enter user username and password"
                 );
                 let header = Header::new(http::header::WWW_AUTHENTICATE.as_str(), header_value);

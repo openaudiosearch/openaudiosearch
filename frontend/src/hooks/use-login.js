@@ -8,3 +8,5 @@ export function useLogin (props = {}) {
     user: data.user
   }
 }
+
+export function useIsAdmin () {}
