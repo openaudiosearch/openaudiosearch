@@ -3,7 +3,7 @@ use oas_common::types::{Media, Post, Transcript};
 use oas_common::{Record, Resolver};
 use oas_common::{TypedValue, UntypedRecord};
 use serde_json::json;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::time;
 
@@ -76,7 +76,7 @@ impl PostIndex {
         changes: &[UntypedRecord],
     ) -> Result<(), anyhow::Error> {
         let now = time::Instant::now();
-        let mut posts = vec![];
+        let mut posts = HashMap::new();
         let mut medias_with_posts = HashSet::new();
         let mut medias_without_posts = HashSet::new();
         for record in changes {
@@ -89,13 +89,12 @@ impl PostIndex {
                         for media in &record.value.media {
                             medias_with_posts.insert(media.id().to_string());
                         }
-                        posts.push(record);
+                        posts.insert(record.id().to_string(), record);
                     }
                 }
                 _ => {}
             }
         }
-
         let direct_posts_len = posts.len();
 
         // Collect the posts for all medias that are in the changes batch and are not referenced
@@ -108,11 +107,14 @@ impl PostIndex {
         let missing_post_ids: Vec<&str> = missing_post_ids.iter().map(|s| s.as_str()).collect();
         let missing_posts = db.get_many_records::<Post>(&missing_post_ids[..]).await?;
 
-        // Add the newley fetched posts to the main posts vec.
-        posts.extend(missing_posts.into_iter());
+        for post in missing_posts.into_iter() {
+            posts.insert(post.id().to_string(), post);
+        }
+
+        let mut posts: Vec<_> = posts.into_iter().map(|(_id, v)| v).collect();
 
         // Resolve all unresolved media references.
-        db.resolve_all_refs(posts.as_mut_slice()).await;
+        db.resolve_all_refs(&mut posts.as_mut_slice()).await;
 
         // Build the transcript for a post.
         for post in posts.iter_mut() {

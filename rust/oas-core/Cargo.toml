@@ -46,3 +46,6 @@ chrono = "0.4.19"
 bytes = "1.0.1"
 include_dir = "0.6.1"
 uuid = { version = "0.8.2", features = ["v4"] }
+argon2 = "0.2.2"
+rand_core = { version = "0.6", features = ["std"] }
+lazy_static = "1.4.0"

@@ -157,6 +157,8 @@ impl IndexManager {
     pub async fn index_changes(&self, db: &CouchDB, infinite: bool) -> anyhow::Result<()> {
         let latest_seq = self.meta_index.latest_indexed_seq().await?;
         log::debug!("start change indexer from seq {:?}", latest_seq);
+        let real_latest = db.get_last_seq().await?;
+        log::debug!("db is at {:?}", real_latest);
 
         let mut changes = db.changes(latest_seq);
         changes.set_infinite(infinite);

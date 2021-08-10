@@ -34,8 +34,13 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
             opts.host.unwrap_or_else(|| DEFAULT_HOST.to_string()),
         ));
 
+    // TODO: Don't do this default.
+    let admin_password = &std::env::var("OAS_ADMIN_PASSWORD").unwrap_or("password".to_string());
+
     let cors = rocket_cors::CorsOptions::default().to_cors()?;
     let auth = auth::Auth::new();
+    auth.ensure_admin_user(&admin_password).await;
+
     let app = rocket::custom(figment)
         .manage(state)
         .manage(auth)
@@ -65,6 +70,7 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 auth::post_login,
                 auth::get_login,
                 auth::logout,
+                auth::register,
                 auth::private
             ],
         )

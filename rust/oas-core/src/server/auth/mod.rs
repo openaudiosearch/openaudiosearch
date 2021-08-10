@@ -10,11 +10,18 @@ use rocket_okapi::openapi;
 use rocket_okapi::response::OpenApiResponderInner;
 use rocket_okapi::util::add_schema_response;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use serde::Serialize;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 use uuid::Uuid;
+
+mod password;
+mod sessions;
+mod store;
+mod structs;
+
+pub use sessions::{SessionInfo, Sessions};
+use store::UserStore;
+use structs::{LoginRequest, LoginResponse, RegisterRequest};
 
 pub const COOKIE_SESSION_ID: &str = "oas_session_id";
 pub const HEADER_SESSION_ID: &str = "X-Oas-Session-Id";
@@ -52,19 +59,6 @@ impl<'r> FromRequest<'r> for SessionId {
     }
 }
 
-/// Session info that's stored for each active session.
-#[derive(Debug, Clone)]
-pub struct SessionInfo {
-    is_admin: bool,
-    user: Arc<UserInfo>,
-}
-
-/// User info for active sessions.
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct UserInfo {
-    username: String,
-}
-
 #[async_trait::async_trait]
 impl<'r> FromRequest<'r> for SessionInfo {
     type Error = LoginError;
@@ -99,7 +93,7 @@ impl<'r> FromRequest<'r> for AdminUser {
         let session = request.guard::<SessionInfo>().await;
         match session {
             Outcome::Success(session) => {
-                if session.is_admin {
+                if session.is_admin() {
                     Outcome::Success(AdminUser {})
                 } else {
                     Outcome::Failure((Status::Unauthorized, LoginError::Unauthorized))
@@ -107,68 +101,6 @@ impl<'r> FromRequest<'r> for AdminUser {
             }
             Outcome::Failure(x) => Outcome::Failure(x),
             Outcome::Forward(x) => Outcome::Forward(x),
-        }
-    }
-}
-
-/// This is a very simple session store. It does not yet feature expiration.
-/// TODO: Add expiration.
-/// TODO: Use redis.
-#[derive(Debug, Clone)]
-pub struct Sessions {
-    sessions: Arc<RwLock<HashMap<String, Arc<SessionInfo>>>>,
-}
-
-impl Sessions {
-    pub fn new() -> Self {
-        Self {
-            sessions: Arc::new(RwLock::new(HashMap::new())),
-        }
-    }
-
-    pub async fn insert(&self, id: &str, info: SessionInfo) {
-        self.sessions
-            .write()
-            .await
-            .insert(id.to_string(), Arc::new(info));
-    }
-
-    pub async fn get(&self, session_id: &str) -> Option<Arc<SessionInfo>> {
-        self.sessions
-            .read()
-            .await
-            .get(session_id)
-            .map(|session_info| session_info.clone())
-    }
-
-    pub async fn remove(&self, session_id: &str) {
-        self.sessions.write().await.remove(session_id);
-    }
-}
-
-/// User store.
-/// It does not acutally store any users.
-/// TODO: Decide where users are stored.
-/// TODO: Decide which password hashing to use.
-#[derive(Debug, Clone)]
-pub struct UserStore {
-    users: Arc<RwLock<HashMap<String, String>>>,
-}
-
-impl UserStore {
-    pub fn new() -> Self {
-        let mut users = HashMap::new();
-        // TODO: Implement actual users store ;)
-        users.insert("admin".to_string(), "password".to_string());
-        Self {
-            users: Arc::new(RwLock::new(users)),
-        }
-    }
-
-    pub async fn check_login(&self, username: &str, password: &str) -> bool {
-        match self.users.read().await.get(username) {
-            Some(registered_password) => registered_password.as_str() == password,
-            None => false,
         }
     }
 }
@@ -189,19 +121,23 @@ impl Auth {
         }
     }
 
+    pub async fn ensure_admin_user(&self, password: &str) {
+        self.users.add_admin_user(password).await;
+    }
+
     /// Try to login with username and password. Returns a new, random session ID in case of
     /// success.
-    pub async fn login(&self, username: &str, password: &str) -> Option<String> {
-        let is_ok = self.users.check_login(&username, &password).await;
-        if is_ok {
-            let user_info = UserInfo {
-                username: username.to_string(),
-            };
+    pub async fn login(&self, req: &LoginRequest) -> Option<String> {
+        let user = self.users.login(&req).await;
+        if let Some(user) = user {
+            // let user_info = UserInfo {
+            //     username: username.to_string(),
+            // };
             let session_id = generate_session_id();
             // let user = AdminUser {};
             let info = SessionInfo {
                 is_admin: true,
-                user: Arc::new(user_info),
+                user: Arc::new(user),
             };
             self.sessions.insert(&session_id, info).await;
             Some(session_id)
@@ -221,25 +157,13 @@ impl Auth {
     }
 }
 
-#[derive(Deserialize, JsonSchema)]
-pub struct LoginRequest {
-    username: String,
-    password: String,
-}
-
-#[derive(Serialize, JsonSchema)]
-pub struct LoginResponse {
-    ok: bool,
-    user: Option<UserInfo>,
-}
-
 #[openapi(tag = "Login")]
 #[get("/login")]
 pub async fn get_login(session: Option<SessionInfo>) -> LoginResult<LoginResponse> {
     match session {
         Some(session) => LoginResult::Ok(Json(LoginResponse {
             ok: true,
-            user: Some((*session.user).clone()),
+            user: Some(session.user().into_public()),
         })),
         None => LoginResult::Unauthorized(Json(LoginResponse {
             ok: false,
@@ -249,20 +173,21 @@ pub async fn get_login(session: Option<SessionInfo>) -> LoginResult<LoginRespons
 }
 
 #[openapi(tag = "Login")]
-#[post("/login", data = "<value>")]
+#[post("/login", data = "<data>")]
 pub async fn post_login(
     auth: &State<Auth>,
     cookies: &CookieJar<'_>,
-    value: Json<LoginRequest>,
+    data: Json<LoginRequest>,
 ) -> LoginResult<LoginResponse> {
-    let session_id = auth.login(&value.username, &value.password).await;
+    let session_id = auth.login(&data).await;
     if let Some(session_id) = session_id {
         // Unwrap is save because the session was just created.
         let session = auth.session(&session_id).await.unwrap();
         cookies.add_private(Cookie::new(COOKIE_SESSION_ID, session_id));
+        let public_user_info = session.user().into_public();
         LoginResult::Ok(Json(LoginResponse {
             ok: true,
-            user: Some((*session.user).clone()),
+            user: Some(public_user_info),
         }))
     } else {
         LoginResult::Unauthorized(Json(LoginResponse {
@@ -279,6 +204,17 @@ pub async fn logout(auth: &State<Auth>, cookies: &CookieJar<'_>) -> Json<()> {
         auth.logout(session_cookie.value()).await;
         cookies.remove_private(session_cookie);
     }
+    Json(())
+}
+
+#[openapi(tag = "Login")]
+#[post("/register", data = "<user>")]
+pub async fn register(
+    _is_admin: AdminUser,
+    auth: &State<Auth>,
+    user: Json<RegisterRequest>,
+) -> Json<()> {
+    auth.users.register(user.into_inner(), false).await;
     Json(())
 }
 
@@ -309,7 +245,13 @@ where
     T: Serialize,
 {
     fn respond_to(self, req: &'r Request<'_>) -> rocket::response::Result<'static> {
-        self.into_inner().respond_to(&req)
+        let status = match self {
+            Self::Ok(_) => Status::Ok,
+            Self::Unauthorized(_) => Status::Unauthorized,
+        };
+        let mut res = self.into_inner().respond_to(&req)?;
+        res.set_status(status);
+        Ok(res)
     }
 }
 

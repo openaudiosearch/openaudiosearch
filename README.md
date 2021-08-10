@@ -66,6 +66,7 @@ OAS is configured through environment variables or command line arguments. The f
 
 |variable|default|applies to|description|
 |-|-|-|-|
+|`ADMIN_PASSWORD`|`password`|core|Default password for `admin` user|
 |`STORAGE_PATH`|`./data/oas`|worker|Storage path for models, cached files and other assets|
 |`REDIS_URL`|`redis://localhost:6379/0`|both|URL to Redis server|
 |`ELASTICSEARCH_URL`|`http://localhost:9200/`|core|URL to Elasticsearch server (trailing slash is required)|

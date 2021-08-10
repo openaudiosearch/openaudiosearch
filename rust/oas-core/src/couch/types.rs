@@ -27,7 +27,7 @@ impl DocMeta {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DocList {
     pub total_rows: u32,
     pub offset: u32,

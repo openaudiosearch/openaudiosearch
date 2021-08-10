@@ -183,6 +183,9 @@ impl CouchDB {
 
     /// Get many docs by their ID from the database.
     pub async fn get_many(&self, ids: &[&str]) -> Result<DocList> {
+        if ids.is_empty() {
+            return Ok(DocList::default());
+        }
         let mut params = HashMap::new();
         params.insert("include_docs", serde_json::to_value("true").unwrap());
         params.insert("keys", serde_json::to_value(ids).unwrap());
