@@ -1,17 +1,18 @@
-use okapi::openapi3::Responses;
-use rocket::http::{Cookie, CookieJar, Header, Status};
+use rocket::http::{Cookie, CookieJar, Status};
 use rocket::request::{FromRequest, Outcome, Request};
-use rocket::response::Responder;
 use rocket::serde::json::Json;
 use rocket::State;
 use rocket::{catch, get, post};
-use rocket_okapi::gen::OpenApiGenerator;
 use rocket_okapi::openapi;
-use rocket_okapi::response::OpenApiResponderInner;
-use rocket_okapi::util::add_schema_response;
-use schemars::JsonSchema;
-use serde::Serialize;
 use std::sync::Arc;
+use time::{Duration, OffsetDateTime};
+// use okapi::openapi3::Responses;
+// use rocket::response::Responder;
+// use rocket_okapi::gen::OpenApiGenerator;
+// use rocket_okapi::response::OpenApiResponderInner;
+// use rocket_okapi::util::add_schema_response;
+// use schemars::JsonSchema;
+// use serde::Serialize;
 
 mod password;
 mod sessions;
@@ -24,8 +25,9 @@ use structs::{LoginRequest, LoginResponse, RegisterRequest};
 
 use super::error::AppError;
 
-pub const COOKIE_SESSION_ID: &str = "oas_session_id";
-pub const HEADER_SESSION_ID: &str = "X-Oas-Session-Id";
+pub const SESSION_COOKIE: &str = "oas_session_id";
+pub const SESSION_HEADER: &str = "X-Oas-Session-Id";
+pub const SESSION_EXPIRATION: Duration = time::Duration::weeks(8);
 
 #[derive(Debug, Clone)]
 pub enum LoginError {
@@ -45,8 +47,16 @@ async fn try_login(
 ) -> Option<SessionId> {
     try_logout(&auth, &cookies, session_id).await;
     if let Some(session_id) = auth.login(&login_request).await {
-        let cookie = Cookie::new(COOKIE_SESSION_ID, session_id.clone());
-        cookies.add_private(cookie);
+        let cookie = {
+            let mut cookie = Cookie::new(SESSION_COOKIE, session_id.clone());
+            cookie.set_secure(true);
+            cookie.set_http_only(true);
+            let mut expiration = OffsetDateTime::now_utc();
+            expiration += SESSION_EXPIRATION;
+            cookie.set_expires(expiration);
+            cookie
+        };
+        cookies.add(cookie);
         Some(SessionId(session_id))
     } else {
         None
@@ -58,9 +68,9 @@ async fn try_logout(auth: &State<Auth>, cookies: &CookieJar<'_>, session_id: Opt
         auth.logout(&session_id.0).await;
     }
 
-    if let Some(session_cookie) = cookies.get_private(COOKIE_SESSION_ID) {
+    if let Some(session_cookie) = cookies.get(SESSION_COOKIE) {
         auth.logout(session_cookie.value()).await;
-        cookies.remove_private(session_cookie);
+        cookies.remove(session_cookie.clone());
     }
 }
 
@@ -74,11 +84,11 @@ impl<'r> FromRequest<'r> for SessionId {
             .expect("Session state not registered");
 
         // Check if a session id is set as a cookie.
-        let session_cookie = request.cookies().get_private(COOKIE_SESSION_ID);
+        let session_cookie = request.cookies().get(SESSION_COOKIE);
         let session_id = session_cookie.map(|cookie| SessionId(cookie.value().to_string()));
 
         // Check if a session id is set as a header.
-        let session_header = request.headers().get_one(HEADER_SESSION_ID);
+        let session_header = request.headers().get_one(SESSION_HEADER);
         let session_id = if let Some(session_header) = session_header {
             Some(SessionId(session_header.to_string()))
         } else {
@@ -278,61 +288,63 @@ pub async fn private(_user: AdminUser) -> String {
     format!("you're logged in!")
 }
 
-/// Helper enum to implement an okapi responder.
-/// This only sets an Unauthorized status code for the second variant.
-pub enum LoginResult<T> {
-    Ok(Json<T>),
-    Unauthorized(Json<T>),
-}
-
-impl<T> LoginResult<T> {
-    pub fn into_inner(self) -> Json<T> {
-        match self {
-            Self::Ok(value) => value,
-            Self::Unauthorized(value) => value,
-        }
-    }
-}
-
-impl<'r, T> Responder<'r, 'static> for LoginResult<T>
-where
-    T: Serialize,
-{
-    fn respond_to(self, req: &'r Request<'_>) -> rocket::response::Result<'static> {
-        let (status, header) = match self {
-            Self::Ok(_) => (Status::Ok, None),
-            Self::Unauthorized(_) => {
-                let header_value = format!(
-                    r#"Basic realm="{}", charset="UTF-8""#,
-                    "Please enter user username and password"
-                );
-                let header = Header::new(http::header::WWW_AUTHENTICATE.as_str(), header_value);
-                (Status::Unauthorized, Some(header))
-            }
-        };
-        let mut res = self.into_inner().respond_to(&req)?;
-        if let Some(header) = header {
-            res.set_header(header);
-        }
-        res.set_status(status);
-        Ok(res)
-    }
-}
-
 #[catch(401)]
 pub fn unauthorized(_req: &rocket::Request) -> AppError {
     AppError::Unauthorized
 }
 
-impl<T: Serialize + JsonSchema + Send> OpenApiResponderInner for LoginResult<T> {
-    fn responses(gen: &mut OpenApiGenerator) -> rocket_okapi::Result<Responses> {
-        let mut responses = Responses::default();
-        let schema = gen.json_schema::<T>();
-        add_schema_response(&mut responses, 200, "application/json", schema.clone())?;
-        add_schema_response(&mut responses, 401, "application/json", schema)?;
-        Ok(responses)
-    }
-}
+// /// Helper enum to implement an okapi responder.
+// /// This only sets an Unauthorized status code for the second variant.
+//
+// This is likely not needed anymore because the login route now always returns 200.
+// pub enum LoginResult<T> {
+//     Ok(Json<T>),
+//     Unauthorized(Json<T>),
+// }
+
+// impl<T> LoginResult<T> {
+//     pub fn into_inner(self) -> Json<T> {
+//         match self {
+//             Self::Ok(value) => value,
+//             Self::Unauthorized(value) => value,
+//         }
+//     }
+// }
+
+// impl<'r, T> Responder<'r, 'static> for LoginResult<T>
+// where
+//     T: Serialize,
+// {
+//     fn respond_to(self, req: &'r Request<'_>) -> rocket::response::Result<'static> {
+//         let (status, header) = match self {
+//             Self::Ok(_) => (Status::Ok, None),
+//             Self::Unauthorized(_) => {
+//                 let header_value = format!(
+//                     r#"Basic realm="{}", charset="UTF-8""#,
+//                     "Please enter user username and password"
+//                 );
+//                 let header = Header::new(http::header::WWW_AUTHENTICATE.as_str(), header_value);
+//                 (Status::Unauthorized, Some(header))
+//             }
+//         };
+//         let mut res = self.into_inner().respond_to(&req)?;
+//         if let Some(header) = header {
+//             res.set_header(header);
+//         }
+//         res.set_status(status);
+//         Ok(res)
+//     }
+// }
+
+// impl<T: Serialize + JsonSchema + Send> OpenApiResponderInner for LoginResult<T> {
+//     fn responses(gen: &mut OpenApiGenerator) -> rocket_okapi::Result<Responses> {
+//         let mut responses = Responses::default();
+//         let schema = gen.json_schema::<T>();
+//         add_schema_response(&mut responses, 200, "application/json", schema.clone())?;
+//         add_schema_response(&mut responses, 401, "application/json", schema)?;
+//         Ok(responses)
+//     }
+// }
 
 /// Generate a random session id.
 fn generate_session_id() -> String {
