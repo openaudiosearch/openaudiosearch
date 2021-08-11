@@ -13,7 +13,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@appbaseio/reactivesearch": "^3.17.0",
-    "@chakra-ui/react": "^1.6.0",
+    "@chakra-ui/react": "^1.6.4",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "classnames": "^2.2.6",
@@ -28,9 +28,7 @@
     "react-json-view": "^1.19.1",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
-    "swr": "^0.3.7",
-    "wavesurfer-react": "^2.0.8",
-    "wavesurfer.js": "^5.1.0"
+    "swr": "^0.3.7"
   },
   "devDependencies": {
     "@vitejs/plugin-react-refresh": "^1.3.6",
