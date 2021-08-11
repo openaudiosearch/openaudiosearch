@@ -305,7 +305,7 @@ impl CouchDB {
     /// ```no_run
     /// # use oas_core::couch::{Config,CouchDB};
     /// # use futures::stream::StreamExt;
-    /// # async_std::task::block_on(run());
+    /// # tokio::block_on(run());
     /// # async fn run() -> anyhow::Result<()> {
     /// let config = Config::with_defaults("some_db".into());
     /// let db = CouchDB::with_config(config)?;
@@ -461,40 +461,3 @@ impl CouchDB {
         self.put_bulk_update(docs).await
     }
 }
-
-// #[derive(Debug)]
-// struct Auth {
-//     config: Config,
-// }
-// impl Auth {
-//     pub fn new(config: Config) -> Self {
-//         Self { config }
-//     }
-// }
-
-// #[reqwest::utils::async_trait]
-// impl Middleware for Auth {
-//     async fn handle(
-//         &self,
-//         mut req: Request,
-//         client: Client,
-//         next: Next<'_>,
-//     ) -> reqwest::Result<Response> {
-//         if let Some(username) = &self.config.user {
-//             let mut header_value = b"Basic ".to_vec();
-//             {
-//                 let mut encoder = Base64Encoder::new(&mut header_value, base64::STANDARD);
-//                 // The unwraps here are fine because Vec::write* is infallible.
-//                 write!(encoder, "{}:", username).unwrap();
-//                 if let Some(password) = &self.config.password {
-//                     write!(encoder, "{}", password).unwrap();
-//                 }
-//                 let header_value = encoder.finish().unwrap().to_vec();
-//                 let header_value = String::from_utf8(header_value).unwrap();
-//                 req.set_header(headers::AUTHORIZATION, header_value);
-//             }
-//         }
-//         let res = next.run(req, client).await?;
-//         Ok(res)
-//     }
-// }
