@@ -7,9 +7,9 @@ use super::types::ErrorDetails;
 #[derive(Error, Debug)]
 pub enum CouchError {
     #[error("HTTP: {0}")]
-    Http(surf::Error),
+    Http(reqwest::Error),
     #[error("CouchDB: {1}")]
-    Couch(surf::StatusCode, ErrorDetails),
+    Couch(reqwest::StatusCode, ErrorDetails),
     #[error("Serialization: {0}")]
     Json(#[from] serde_json::Error),
     #[error("IO: {0}")]
@@ -23,15 +23,15 @@ pub enum CouchError {
 impl CouchError {
     pub fn status_code(&self) -> Option<u16> {
         match self {
-            Self::Http(err) => Some(err.status().into()),
+            Self::Http(err) => err.status().map(|s| s.as_u16()),
             Self::Couch(status, _) => Some((*status).into()),
             _ => None,
         }
     }
 }
 
-impl From<surf::Error> for CouchError {
-    fn from(err: surf::Error) -> Self {
+impl From<reqwest::Error> for CouchError {
+    fn from(err: reqwest::Error) -> Self {
         Self::Http(err)
     }
 }

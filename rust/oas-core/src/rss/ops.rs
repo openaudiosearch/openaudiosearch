@@ -1,6 +1,7 @@
 use clap::Clap;
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
+use url::Url;
 
 use super::crawlers::default_crawlers;
 use super::*;
@@ -87,7 +88,7 @@ pub async fn crawler_loop(
     opts: &CrawlOpts,
     crawler: &dyn Crawler, // crawler: T,
 ) -> RssResult<()> {
-    let client = surf::Client::new();
+    let client = reqwest::Client::new();
     let mut url = opts.url.clone();
     let mut total = 0;
     let max_pages = opts.max_pages.unwrap_or(usize::MAX);
@@ -140,7 +141,7 @@ pub async fn crawler_loop(
 }
 
 pub async fn fetch_and_save_with_client(
-    client: surf::Client,
+    client: reqwest::Client,
     db: &CouchDB,
     url: &Url,
 ) -> RssResult<FetchedFeedPage> {

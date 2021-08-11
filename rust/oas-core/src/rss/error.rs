@@ -6,11 +6,11 @@ pub type RssResult<T> = Result<T, RssError>;
 #[derive(Error, Debug)]
 pub enum RssError {
     #[error("HTTP error: {0}")]
-    Http(surf::Error),
+    Http(reqwest::Error),
     #[error("Serialization error: {0}")]
     Json(#[from] serde_json::Error),
     #[error("Remote error: {}", .0.status())]
-    RemoteHttpError(Box<surf::Response>),
+    RemoteHttpError(Box<reqwest::Response>),
     // #[error("IO error")]
     // IO(#[from] std::io::Error),
     #[error("RSS error")]
@@ -29,8 +29,8 @@ pub enum RssError {
     Any(#[from] anyhow::Error),
 }
 
-impl From<surf::Error> for RssError {
-    fn from(err: surf::Error) -> Self {
+impl From<reqwest::Error> for RssError {
+    fn from(err: reqwest::Error) -> Self {
         Self::Http(err)
     }
 }

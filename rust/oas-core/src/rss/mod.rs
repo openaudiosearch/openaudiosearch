@@ -18,19 +18,19 @@ pub use ops::{Crawler, FetchedFeedPage, Next};
 #[derive(Debug, Clone)]
 pub struct FeedWatcher {
     url: Url,
-    client: surf::Client,
+    client: reqwest::Client,
     channel: Option<Channel>,
     settings: FeedSettings,
 }
 
 impl FeedWatcher {
     pub fn new(url: impl AsRef<str>, settings: Option<FeedSettings>) -> Result<Self, ParseError> {
-        let client = surf::Client::new();
+        let client = reqwest::Client::new();
         Self::with_client(client, url, settings)
     }
 
     pub fn with_client(
-        client: surf::Client,
+        client: reqwest::Client,
         url: impl AsRef<str>,
         settings: Option<FeedSettings>,
     ) -> Result<Self, ParseError> {
@@ -79,12 +79,11 @@ impl FeedWatcher {
     }
 
     pub async fn load(&mut self) -> Result<(), RssError> {
-        let req = surf::get(&self.url);
-        let mut res = self.client.send(req).await?;
+        let res = self.client.get(self.url.as_str()).send().await?;
         if !res.status().is_success() {
             return Err(RssError::RemoteHttpError(Box::new(res)));
         }
-        let bytes = res.body_bytes().await?;
+        let bytes = res.bytes().await?;
         let channel = Channel::read_from(&bytes[..])?;
         self.channel = Some(channel);
         Ok(())

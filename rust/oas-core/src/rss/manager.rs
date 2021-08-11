@@ -73,7 +73,7 @@ async fn watch_changes(db: CouchDB) -> Result<(), RssError> {
     let mut stream = db.changes(Some(last_seq));
     let mut tasks = Vec::new();
     stream.set_infinite(true);
-    let client = surf::client();
+    let client = reqwest::Client::new();
     while let Some(event) = stream.next().await {
         let event = event?;
         if let Some(doc) = event.doc {

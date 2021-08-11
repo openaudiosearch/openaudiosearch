@@ -203,6 +203,16 @@ pub struct ErrorDetails {
     pub reason: String,
 }
 
+impl ErrorDetails {
+    pub fn new(error: impl ToString, reason: impl ToString, id: Option<String>) -> Self {
+        Self {
+            error: error.to_string(),
+            reason: reason.to_string(),
+            id,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum PutResult {

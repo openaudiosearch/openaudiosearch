@@ -13,13 +13,12 @@ path = "src/bin/oas.rs"
 
 [dependencies]
 anyhow = "1"
-async-std = { version = "1.9.0", features = ["attributes", "tokio1"] }
 async-trait = "0.1.50"
 base32 = "0.4.0"
 base64 = "0.13.0"
 celery = { git = "https://github.com/openaudiosearch/rusty-celery.git", branch = "oas", default_features = false, features = ["broker_redis", "codegen"] }
 clap = "3.0.0-beta.2"
-elasticsearch = { version = "7.12.0-alpha.1", features = ["rustls-tls"] }
+elasticsearch = { version = "7.12.0-alpha.1", default_features = false, features = ["rustls-tls"] }
 env_logger = "0.8.3"
 futures = "0.3.15"
 http = "0.2.4"
@@ -31,15 +30,14 @@ rss = "1.10.0"
 serde = "1.0.126"
 serde_json = "1.0.64"
 sha2 = "0.9.5"
-surf = "2.2.0"
 thiserror = "1.0.25"
 tokio = { version = "1", features = ["rt", "macros", "time", "signal"]}
-url = "2.2.2"
-reqwest = { version = "0.11.4", features = ["stream"] }
+url = { version = "2.2", features = ["serde"] }
+reqwest = { version = "0.11.4", default_features = false, features = ["stream", "rustls-tls"] }
 rocket_okapi = "0.7.0-alpha-1"
 schemars = "0.8.3"
 okapi = { version = "0.6.0-alpha-1" }
-tokio-stream = "0.1"
+tokio-stream = { version = "0.1.6", features = ["io-util"] }
 futures-batch = "0.6.0"
 humantime = "2.1.0"
 chrono = "0.4.19"
@@ -51,3 +49,5 @@ rand_core = { version = "0.6", features = ["std"] }
 lazy_static = "1.4.0"
 rand = { version = "0.8.4", features = ["std"] }
 time = { version = "0.2" }
+# couch_rs = { path = "../../../rust/couch-rs/couch_rs" }
+tokio-util = "0.6.7"

@@ -1,21 +1,15 @@
 use anyhow::Context;
-use base64::write::EncoderWriter as Base64Encoder;
 use clap::Clap;
 use oas_common::UntypedRecord;
 use oas_common::{Record, TypedValue};
+use reqwest::{Method, RequestBuilder};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::io::Write;
 use std::sync::Arc;
-use std::time;
-use surf::http::{headers, mime, Method};
-use surf::middleware::{Middleware, Next};
-use surf::{Body, Client, Request, RequestBuilder, Response, Url};
-
-// use oas_common::{DecodingError, Record, TypedValue, UntypedRecord};
+use url::Url;
 
 pub type CouchResult<T> = std::result::Result<T, CouchError>;
 // TODO: Remove.
@@ -124,22 +118,23 @@ impl Config {
 #[derive(Debug, Clone)]
 pub struct CouchDB {
     config: Config,
-    client: Arc<surf::Client>,
+    client: Arc<reqwest::Client>,
+    base_url: String,
 }
 
 impl CouchDB {
     /// Create a new client with config.
     pub fn with_config(config: Config) -> anyhow::Result<Self> {
         // let logger = Logger {};
-        let auth = Auth::new(config.clone());
         let base_url = format!("{}/{}/", config.host, config.database);
         let base_url = Url::parse(&base_url)?;
-        let mut client = surf::Client::new().with(auth);
-        client.set_base_url(base_url);
+        let base_url = base_url.to_string();
+        let client = reqwest::Client::new();
 
         Ok(Self {
             config,
             client: Arc::new(client),
+            base_url,
         })
     }
 
@@ -164,11 +159,11 @@ impl CouchDB {
     /// This creates the database if it does not exists. It should be called before calling other
     /// methods on the client.
     pub async fn init(&self) -> Result<()> {
-        let res: Result<Value> = self.send(self.request(Method::Get, "")).await;
+        let res: Result<Value> = self.send(self.request(Method::GET, "")).await;
         match res {
             Ok(_res) => Ok(()),
             Err(_) => {
-                let req = self.request(Method::Put, "").build();
+                let req = self.request(Method::PUT, "");
                 self.send(req).await
             }
         }
@@ -210,14 +205,14 @@ impl CouchDB {
     /// Get all docs while passing a map of params.
     pub async fn get_all_with_params(&self, params: &impl Serialize) -> Result<DocList> {
         let docs: DocList = self
-            .send(self.request(Method::Get, "_all_docs").query(params)?)
+            .send(self.request(Method::GET, "_all_docs").query(params))
             .await?;
         Ok(docs)
     }
 
     /// Get a doc from the id by its id.
     pub async fn get_doc(&self, id: &str) -> Result<Doc> {
-        let req = self.request(Method::Get, id).build();
+        let req = self.request(Method::GET, id);
         let doc: Doc = self.send(req).await?;
         Ok(doc)
     }
@@ -233,17 +228,14 @@ impl CouchDB {
                 }
             }
         }
-        let req = self.request(Method::Put, &id).body(Body::from_json(&doc)?);
+        let req = self.request(Method::PUT, &id).json(&doc);
         self.send(req).await
     }
 
     /// Put a list of docs into the database in a single bulk operation.
     pub async fn put_bulk(&self, docs: Vec<Doc>) -> Result<Vec<PutResult>> {
         let body = serde_json::json!({ "docs": docs });
-        let req = self
-            .request(Method::Post, "_bulk_docs")
-            .body(Body::from_json(&body)?)
-            .build();
+        let req = self.request(Method::POST, "_bulk_docs").json(&body);
         let res: Vec<PutResult> = self.send(req).await?;
         let mut errors = 0;
         let mut ok = 0;
@@ -275,9 +267,8 @@ impl CouchDB {
             .map(|(id, _)| json!({ "id": id }))
             .collect();
         let req_json = json!({ "docs": req_json });
-        let bulk_get: BulkGetResponse = self
-            .send(self.request(Method::Post, "_bulk_get").body(req_json))
-            .await?;
+        let req = self.request(Method::POST, "_bulk_get").json(&req_json);
+        let bulk_get: BulkGetResponse = self.send(req).await?;
         // eprintln!("res: {:#?}", bulk_get);
         for (req_idx, (sent_id, doc_idx)) in docs_without_rev.iter().enumerate() {
             let result = bulk_get.results.get(req_idx);
@@ -329,7 +320,7 @@ impl CouchDB {
     /// # };
     /// ```
     pub fn changes(&self, last_seq: Option<String>) -> ChangesStream {
-        ChangesStream::new(self.client.clone(), last_seq)
+        ChangesStream::new(self.clone(), last_seq)
     }
 
     pub async fn get_last_seq(&self) -> anyhow::Result<String> {
@@ -337,14 +328,20 @@ impl CouchDB {
         params.insert("descending", "true".to_string());
         params.insert("limit", "1".to_string());
         let path = "_changes";
-        let req = self.request(Method::Get, path).query(&params);
-        let res: GetChangesResult = self.send(req.unwrap()).await?;
+        let req = self.request(Method::GET, path).query(&params);
+        let res: GetChangesResult = self.send(req).await?;
         Ok(res.last_seq)
     }
 
     fn request(&self, method: Method, path: impl AsRef<str>) -> RequestBuilder {
         let url = self.path_to_url(path.as_ref());
-        RequestBuilder::new(method, url).content_type(mime::JSON)
+        let builder = self.client.request(method, url);
+        let builder = if let Some(username) = &self.config.user {
+            builder.basic_auth(username, self.config.password.as_ref())
+        } else {
+            builder
+        };
+        builder
     }
 
     fn path_to_url(&self, path: impl AsRef<str>) -> Url {
@@ -358,16 +355,17 @@ impl CouchDB {
         .unwrap()
     }
 
-    async fn send<T>(&self, request: impl Into<Request>) -> Result<T>
+    async fn send<T>(&self, request: RequestBuilder) -> Result<T>
     where
         T: DeserializeOwned,
     {
-        let mut res = self.client.send(request).await?;
+        let res = request.send().await?;
+        // let mut res = self.client.execute(request).await?;
         match res.status().is_success() {
-            true => Ok(res.body_json::<T>().await?),
+            true => Ok(res.json::<T>().await?),
             false => Err(CouchError::Couch(
                 res.status(),
-                res.body_json::<ErrorDetails>().await?,
+                res.json::<ErrorDetails>().await?,
             )),
         }
     }
@@ -464,53 +462,39 @@ impl CouchDB {
     }
 }
 
-#[derive(Debug)]
-struct Auth {
-    config: Config,
-}
-impl Auth {
-    pub fn new(config: Config) -> Self {
-        Self { config }
-    }
-}
+// #[derive(Debug)]
+// struct Auth {
+//     config: Config,
+// }
+// impl Auth {
+//     pub fn new(config: Config) -> Self {
+//         Self { config }
+//     }
+// }
 
-#[surf::utils::async_trait]
-impl Middleware for Auth {
-    async fn handle(
-        &self,
-        mut req: Request,
-        client: Client,
-        next: Next<'_>,
-    ) -> surf::Result<Response> {
-        if let Some(username) = &self.config.user {
-            let mut header_value = b"Basic ".to_vec();
-            {
-                let mut encoder = Base64Encoder::new(&mut header_value, base64::STANDARD);
-                // The unwraps here are fine because Vec::write* is infallible.
-                write!(encoder, "{}:", username).unwrap();
-                if let Some(password) = &self.config.password {
-                    write!(encoder, "{}", password).unwrap();
-                }
-                let header_value = encoder.finish().unwrap().to_vec();
-                let header_value = String::from_utf8(header_value).unwrap();
-                req.set_header(headers::AUTHORIZATION, header_value);
-            }
-        }
-        let res = next.run(req, client).await?;
-        Ok(res)
-    }
-}
-
-#[derive(Debug)]
-pub struct Logger;
-
-#[surf::utils::async_trait]
-impl Middleware for Logger {
-    async fn handle(&self, req: Request, client: Client, next: Next<'_>) -> surf::Result<Response> {
-        log::debug!("[req] {} {}", req.method(), req.url().path());
-        let now = time::Instant::now();
-        let res = next.run(req, client).await?;
-        log::debug!("[res] {} ({:?})", res.status(), now.elapsed());
-        Ok(res)
-    }
-}
+// #[reqwest::utils::async_trait]
+// impl Middleware for Auth {
+//     async fn handle(
+//         &self,
+//         mut req: Request,
+//         client: Client,
+//         next: Next<'_>,
+//     ) -> reqwest::Result<Response> {
+//         if let Some(username) = &self.config.user {
+//             let mut header_value = b"Basic ".to_vec();
+//             {
+//                 let mut encoder = Base64Encoder::new(&mut header_value, base64::STANDARD);
+//                 // The unwraps here are fine because Vec::write* is infallible.
+//                 write!(encoder, "{}:", username).unwrap();
+//                 if let Some(password) = &self.config.password {
+//                     write!(encoder, "{}", password).unwrap();
+//                 }
+//                 let header_value = encoder.finish().unwrap().to_vec();
+//                 let header_value = String::from_utf8(header_value).unwrap();
+//                 req.set_header(headers::AUTHORIZATION, header_value);
+//             }
+//         }
+//         let res = next.run(req, client).await?;
+//         Ok(res)
+//     }
+// }

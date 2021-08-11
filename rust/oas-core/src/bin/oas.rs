@@ -139,7 +139,7 @@ fn setup() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[async_std::main]
+#[tokio::main]
 async fn main() -> anyhow::Result<()> {
     setup()?;
     let args = Args::parse();
