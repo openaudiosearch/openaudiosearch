@@ -305,7 +305,6 @@ impl CouchDB {
     /// ```no_run
     /// # use oas_core::couch::{Config,CouchDB};
     /// # use futures::stream::StreamExt;
-    /// # tokio::block_on(run());
     /// # async fn run() -> anyhow::Result<()> {
     /// let config = Config::with_defaults("some_db".into());
     /// let db = CouchDB::with_config(config)?;
