@@ -127,6 +127,7 @@ export default function SearchPage () {
 function ResultItem (props) {
   const { item } = props
   const isAdmin = useIsAdmin()
+  const { t } = useTranslation()
 
   const snippets = (
     <>
