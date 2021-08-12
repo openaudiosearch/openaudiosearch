@@ -12,7 +12,8 @@ use crate::server::error::Result;
 #[openapi(tag = "Post")]
 #[get("/post/<id>")]
 pub async fn get_post(state: &rocket::State<crate::State>, id: String) -> Result<Record<Post>> {
-    let record = state.db.get_record(&Post::guid(&id)).await?;
+    let mut record = state.db.get_record(&Post::guid(&id)).await?;
+    let _ = record.resolve_refs(&state.db).await;
     Ok(Json(record))
 }
 
