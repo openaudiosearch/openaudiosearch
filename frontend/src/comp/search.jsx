@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactJson from 'react-json-view'
-import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList } from '@appbaseio/reactivesearch'
+import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters } from '@appbaseio/reactivesearch'
 import { Heading, Flex, Box, Spinner, IconButton } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { usePlayer } from './player'
@@ -91,6 +91,7 @@ export default function SearchPage () {
                   }}
                   defaultValue={decodedquery}
                 />
+                <SelectedFilters showClearAll />
               </Box>
               <ReactiveList
                 dataField='dateModified'
