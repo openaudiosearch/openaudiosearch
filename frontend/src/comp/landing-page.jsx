@@ -3,7 +3,7 @@ import { DataSearch, ReactiveBase, ReactiveList } from '@appbaseio/reactivesearc
 import { Heading, Flex, Box, Spinner, Center, IconButton } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { usePlayer } from './player'
-import { useHistory } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import Moment from 'moment'
 import { FaPlay } from 'react-icons/fa'
 
@@ -83,16 +83,19 @@ export default function LandingPage () {
 function DiscoverItem (props) {
   const { item } = props
   const { setTrack, setPost } = usePlayer()
+  const postPath = '/post/' + item.$meta.id
   return (
     <Flex direction='column' border='2px' p='2' borderRadius='20px' borderColor='gray.200' boxShadow='md' my='3'>
       <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' ml='3'>
         <Flex direction='column' mb='2'>
-          <Heading
-            size='md' my={4}
-            dangerouslySetInnerHTML={{
-              __html: item.headline
-            }}
-          />
+          <Link to={postPath}>
+            <Heading
+              size='md' my={4}
+              dangerouslySetInnerHTML={{
+                __html: item.headline
+              }}
+            />
+          </Link>
           <div>
             <div>by {item.publisher}</div>
             <span>

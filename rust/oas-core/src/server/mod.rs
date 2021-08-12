@@ -58,6 +58,11 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 handlers::media::patch_media,
                 handlers::media::post_media,
                 handlers::media::get_media_data,
+                // /post routes
+                handlers::post::put_post,
+                handlers::post::get_post,
+                handlers::post::patch_post,
+                handlers::post::post_post,
                 // /feed routes
                 handlers::feed::put_feed,
                 handlers::feed::get_feed,
