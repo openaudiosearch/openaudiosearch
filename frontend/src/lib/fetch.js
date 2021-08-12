@@ -72,7 +72,7 @@ async function betterFetch (url, opts = {}) {
 
   try {
     debug('fetch', url, opts)
-    const res = await fetch(url, opts)
+    const res = await window.fetch(url, opts)
     if (!res.ok) {
       let message, data
       if (isJsonResponse(res)) {

@@ -11,11 +11,11 @@ export function TranscriptSnippet (props) {
   const [didPlay, setDidPlay] = React.useState(false)
 
   const mark = React.useMemo(() => {
-    let firstMeta = words.filter(word => word.start !== undefined)[0]
-    let { id, start } = firstMeta
-    let lastMeta = [...words].reverse().filter(word => word.end !== undefined)[0]
-    let { end } = lastMeta
-    let sentence = words.map(word => word.word).join(' ')
+    const firstMeta = words.filter(word => word.start !== undefined)[0]
+    const { id, start } = firstMeta
+    const lastMeta = [...words].reverse().filter(word => word.end !== undefined)[0]
+    const { end } = lastMeta
+    const sentence = words.map(word => word.word).join(' ')
     return { id, start, end, sentence }
   }, [words])
 
@@ -93,7 +93,7 @@ export function TranscriptWord (props) {
 }
 
 function parseTranscript (value) {
-  let tokens = value.split(' ')
+  const tokens = value.split(' ')
   return tokens.map((token) => {
     let [word, meta] = token.split('|')
     // skip words that are actually a meta string
@@ -104,9 +104,9 @@ function parseTranscript (value) {
       word = word.replace('</mark>', '')
       highlightWord = true
     }
-    let item = { word, highlightWord }
+    const item = { word, highlightWord }
     if (meta) {
-      let [start, end, conf, id] = meta.split(':')
+      const [start, end, conf, id] = meta.split(':')
       return { ...item, start, end, conf, id }
     } else {
       return item

@@ -1,12 +1,15 @@
 import React from 'react'
 import ReactJson from 'react-json-view'
 import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList } from '@appbaseio/reactivesearch'
-import { Heading, Flex, Box, Spinner, Center, IconButton } from '@chakra-ui/react'
+import { Heading, Flex, Box, Spinner, IconButton } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { usePlayer } from './player'
 import { useParams } from 'react-router-dom'
 import Moment from 'moment'
 import { FaPlay } from 'react-icons/fa'
+import { PostButtons } from './post'
+import { TranscriptSnippet } from './transcript'
+import { useIsAdmin } from '../hooks/use-login'
 
 const { ResultListWrapper } = ReactiveList
 
@@ -118,82 +121,33 @@ export default function SearchPage () {
   )
 }
 
-// function ResultItem (props) {
-//   const { item } = props
-//   const { track, setTrack } = usePlayer()
-//   const highlights = Object.entries(item.highlight).map(([key, value]) => {
-//     return (
-//       <Box p={2}>
-//         <strong>{key}: &nbsp;</strong>
-//         {value.map((value, i) => (
-//           <span
-//             key={i}
-//             dangerouslySetInnerHTML={{
-//               __html: value
-//             }}
-//           />
-//         ))}
-//       </Box>
-//     )
-//   })
-
-//   return (
-//     <ResultList>
-//       <ResultList.Content>
-//         <Heading
-//           size='lg' my={4}
-//           dangerouslySetInnerHTML={{
-//             __html: item.headline
-//           }}
-//         />
-//         <ResultList.Description>
-//           <div>
-//             <div>by {item.creator}</div>
-//             <div>{item.publisher}</div>
-//           </div>
-//           <span>
-//             published on: {item.datePublished}
-//           </span>
-//           <>
-//             {highlights.map((highlight, i) => (
-//               <div key={i}>{highlight}</div>
-//             ))}
-//           </>
-//           <div>
-//             {item.media && item.media.length && (
-//               <Button onClick={() => setTrack(item.media[0])}>
-//                 Click to play
-//               </Button>
-//             )}
-//           </div>
-//           <ReactJson src={item} collapsed name={false} />
-//         </ResultList.Description>
-//       </ResultList.Content>
-//     </ResultList>
-//   )
-// }
-
 function ResultItem (props) {
   const { item } = props
-  const { track, setTrack } = usePlayer()
-  // const highlights = Object.entries(item.highlight).map(([key, value]) => {
-  //   return (
-  //     <Box p={2} key={key}>
-  //       <strong>{key}: &nbsp;</strong>
-  //       {value.map((value, i) => (
-  //         <span
-  //           key={i}
-  //           dangerouslySetInnerHTML={{
-  //             __html: value
-  //           }}
-  //         />
-  //       ))}
-  //     </Box>
-  //   )
-  // })
+  const isAdmin = useIsAdmin()
+
+  const snippets = (
+    <>
+      {Object.entries(item.highlight).map(([fieldname, snippets]) => (
+        <SnippetList key={fieldname} fieldname={fieldname} snippets={snippets} post={item} />
+      ))}
+    </>
+  )
+
   return (
-    <Flex direction='column' border='2px' p='2' borderRadius='20px' borderColor='gray.200' boxShadow='md' my='3'>
-      <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' ml='3'>
+    <Flex
+      direction='column'
+      border='2px'
+      p='2'
+      borderRadius='20px'
+      borderColor='gray.200'
+      boxShadow='md'
+      my='3'
+    >
+      <Flex
+        direction={['column', 'column', 'row', 'row']}
+        justify='space-between'
+        ml='3'
+      >
         <Flex direction='column' mb='2'>
           <Heading
             size='md' my={4}
@@ -207,26 +161,54 @@ function ResultItem (props) {
             <span>
             published on: {Moment(item.datePublished).format('DD.MM.YYYY')}
             </span>
-            {/* <>
-              {highlights.map((highlight, i) => (
-                <div key={i}>{highlight}</div>
-              ))}
-            </> */}
             <div>{item.description}</div>
           </div>
-          <ReactJson src={item} collapsed name={false} />
+          <div>
+            {snippets}
+          </div>
+          {isAdmin && <ReactJson src={item} collapsed name={false} />}
         </Flex>
         <Flex ml={[null, null, 4, 4]} mt={[4, 4, null, null]} align='center' justify='center'>
-          <IconButton
-            aria-label='Play'
-            color='violet'
-            onClick={() => setTrack(item)}
-            icon={<FaPlay />}
-            mr='2'
-            shadow='md'
-          />
+          <PostButtons post={item} />
         </Flex>
       </Flex>
     </Flex>
+  )
+}
+
+function SnippetList (props = {}) {
+  const { fieldname, snippets, post } = props
+  return (
+    <Box p={2}>
+      <em>{fieldname}: &nbsp;</em>
+      {snippets.map((snippet, i) => (
+        <Snippet key={i} post={post} fieldname={fieldname} snippet={snippet} />
+      ))}
+    </Box>
+  )
+}
+
+function Snippet (props = {}) {
+  const { fieldname, snippet, post } = props
+  if (fieldname === 'transcript') {
+    return (
+      <TranscriptSnippet post={post} snippet={snippet} />
+    )
+  } else {
+    return (
+      <HighlightMark>{snippet}</HighlightMark>
+    )
+  }
+}
+
+function HighlightMark (props = {}) {
+  // TODO: Parse mark and do not use dangerouslySetInnerHTML
+  return (
+    <Box
+      display='inline' css='mark { background: rgba(255,255,0,0.3) }'
+      dangerouslySetInnerHTML={{
+        __html: props.children
+      }}
+    />
   )
 }

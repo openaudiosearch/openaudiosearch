@@ -1,7 +1,7 @@
 import React from 'react'
 import useSWR, { mutate } from 'swr'
-import { Flex, Stack, Box, Heading, Input, Button, Spinner } from '@chakra-ui/react'
 import {
+  Flex, Stack, Box, Heading, Input, Button, Spinner,
   useDisclosure,
   Alert,
   AlertIcon,
@@ -13,6 +13,7 @@ import {
   ModalBody,
   ModalCloseButton
 } from '@chakra-ui/react'
+
 import { useForm } from 'react-hook-form'
 import fetch from '../lib/fetch'
 
@@ -47,7 +48,7 @@ function LoginForm (props = {}) {
 
   async function onSubmit (data) {
     try {
-      let res = await fetch('/login', { method: 'POST', body: data })
+      const res = await fetch('/login', { method: 'POST', body: data })
       if (res.ok) {
         mutate('/login')
         reset()

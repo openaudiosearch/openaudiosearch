@@ -6,7 +6,8 @@
   "scripts": {
     "start": "vite --port 4000",
     "build": "vite build",
-    "lint": "standardx ./src/**/*.{ts,tsx}"
+    "lint": "standardx ./src/**/*.{js,jsx,ts,tsx}",
+    "lint:fix": "standardx --fix ./src/**/*.{js,jsx,ts,tsx}"
   },
   "keywords": [],
   "author": "",

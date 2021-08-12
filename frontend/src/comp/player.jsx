@@ -326,9 +326,9 @@ function Timeslider (props = {}) {
 
 function formatDuration (secs) {
   if (!secs) secs = 0
-  let h = Math.floor(secs / 3600)
-  let m = Math.floor((secs - h * 3600) / 60)
-  let s = Math.floor(secs - h * 3600 - m * 60)
+  const h = Math.floor(secs / 3600)
+  const m = Math.floor((secs - h * 3600) / 60)
+  const s = Math.floor(secs - h * 3600 - m * 60)
   if (h) return `${pad(h)}:${pad(m)}:${pad(s)}`
   return `${pad(m)}:${pad(s)}`
 }
