@@ -1,120 +1,163 @@
 import React from 'react'
 import ReactJson from 'react-json-view'
 import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters } from '@appbaseio/reactivesearch'
-import { Heading, Flex, Box, Spinner, IconButton } from '@chakra-ui/react'
+import { Heading, Flex, Box, Spinner, IconButton, Button, Text } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { usePlayer } from './player'
 import { useParams, Link } from 'react-router-dom'
 import Moment from 'moment'
-import { FaPlay } from 'react-icons/fa'
+import { FaFilter } from 'react-icons/fa'
 import { PostButtons } from './post'
 import { TranscriptSnippet } from './transcript'
 import { useIsAdmin } from '../hooks/use-login'
+import { CgClose } from 'react-icons/cg'
 
 const { ResultListWrapper } = ReactiveList
 
 export default function SearchPage () {
+  const [show, setShow] = React.useState(false)
+  const toggleMenu = () => setShow(!show)
   const { query } = useParams()
   const queryStr = query || ''
   const decodedquery = decodeURIComponent(queryStr)
   const url = API_ENDPOINT + '/search'
   const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator']
+  const filterButtonOpen =
+    <Flex direction='row'>
+      <FaFilter />
+      <Text ml='10px'>
+        Show Filter
+      </Text>
+    </Flex>
+  const filterButtonClose =
+    <Flex direction='row'>
+      <CgClose />
+      <Text ml='10px'>
+    Hide Filter
+      </Text>
+    </Flex>
   return (
     <Flex color='white'>
       <ReactiveBase
         app='oas'
         url={url}
       >
-        <Flex direction={['column', 'column', 'row', 'row']} justify-content='flex-start'>
-          <Flex
-            direction='column'
-            w={['250px', '300px', '400px', '300px']}
-            mr={[null, null, '50px', '50px']}
-            mb={['30px', '30px', null, null]}
+        <Flex direction='column'>
+          <Heading mb='2' ml={[null, null, '350px', '350px']}>Search</Heading>
+          <Box
+            // w={['90vw', '90vw', '600px', '600px']}
+            maxWidth='750px'
+            ml={[null, null, '350px', '350px']}
+            mt='6'
           >
-            <Box mb='30px'>
-              <MultiList
-                title='Publisher'
-                componentId='publisher'
-                dataField='publisher.keyword'
-                react={{
-                  and: facets.filter(f => f !== 'publisher')
-                }}
-              />
-            </Box>
-            <Box mb='30px'>
-              <MultiList
-                title='Creator'
-                componentId='creator'
-                dataField='creator.keyword'
-                react={{
-                  and: facets.filter(f => f !== 'creator')
-                }}
-              />
-            </Box>
-            <Box mb='30px'>
-              <MultiList
-                title='Genre'
-                componentId='genre'
-                dataField='genre.keyword'
-                react={{
-                  and: facets.filter(f => f !== 'genre')
-                }}
-              />
-              <DateRange
-                componentId='datePublished'
-                dataField='datePublished'
-                title='Publishing Date'
-                queryFormat='basic_date_time_no_millis'
-                react={{
-                  and: facets.filter(f => f !== 'datePublished')
-                }}
-              />
-            </Box>
-          </Flex>
-          <Flex direction='column'>
-            <Box w='800px'>
-              <Heading mb='2'>Search</Heading>
-              <Box w='300px'>
-                <DataSearch
-                  componentId='searchbox'
-                  dataField={['headline', 'description', 'transcript']}
-                  title='Search'
-                  fieldWeights={[5, 1]}
-                  placeholder='Search for feeds'
-                  autosuggest
-                  highlight
-                  queryFormat='and'
-                  fuzziness={0}
-                  react={{
-                    and: facets.filter(f => f !== 'searchbox')
-                  }}
-                  defaultValue={decodedquery}
-                />
-                <SelectedFilters showClearAll />
-              </Box>
-              <ReactiveList
-                dataField='dateModified'
-                componentId='SearchResults'
-                pagination
-                react={{
-                  and: facets
-                }}
+            <DataSearch
+              componentId='searchbox'
+              dataField={['headline', 'description', 'transcript']}
+              fieldWeights={[5, 1]}
+              placeholder='Search for feeds'
+              autosuggest
+              highlight
+              queryFormat='and'
+              fuzziness={0}
+              react={{
+                and: facets.filter(f => f !== 'searchbox')
+              }}
+              defaultValue={decodedquery}
+            />
+            <SelectedFilters showClearAll />
+          </Box>
+
+          <Flex direction={['column', 'column', 'row', 'row']} justify-content='flex-start'>
+            <Button
+              aria-label='FilterMenu'
+              display={{ base: 'flex', md: 'none' }}
+              onClick={toggleMenu}
+              // icon={show ? <CgClose /> : <FiMenu />}
+              shadow='md'
+              mt='20px'
+              mb='10px'
+            // w={['50px', '50px', null, null]}
+            >
+              {show ? filterButtonClose : filterButtonOpen}
+            </Button>
+            <Box
+              display={{ base: show ? 'flex' : 'none', md: 'block' }}
+              flexBasis={{ base: '100%', md: 'auto' }}
+            >
+              <Flex
+                direction='column'
+                w={['250px', '300px', '300px', '300px']}
+                mr={[null, null, '50px', '50px']}
+                mb={['30px', '30px', null, null]}
               >
-                {({ data, error, loading, ...args }) => {
-                  if (loading) return <Spinner size='xl' />
-                  return (
-                    <ResultListWrapper>
-                      {
-                        data.map((item, i) => (
-                          <ResultItem item={item} key={i} />
-                        ))
-                      }
-                    </ResultListWrapper>
-                  )
-                }}
-              </ReactiveList>
+                <Box mb='30px'>
+                  <MultiList
+                    title='Publisher'
+                    componentId='publisher'
+                    dataField='publisher.keyword'
+                    react={{
+                      and: facets.filter(f => f !== 'publisher')
+                    }}
+                  />
+                </Box>
+                <Box mb='30px'>
+                  <MultiList
+                    title='Creator'
+                    componentId='creator'
+                    dataField='creator.keyword'
+                    react={{
+                      and: facets.filter(f => f !== 'creator')
+                    }}
+                  />
+                </Box>
+                <Box mb='30px'>
+                  <MultiList
+                    title='Genre'
+                    componentId='genre'
+                    dataField='genre.keyword'
+                    react={{
+                      and: facets.filter(f => f !== 'genre')
+                    }}
+                  />
+                </Box>
+                <Box mb='30px'>
+                  <DateRange
+                    componentId='datePublished'
+                    dataField='datePublished'
+                    title='Publishing Date'
+                    queryFormat='basic_date_time_no_millis'
+                    react={{
+                      and: facets.filter(f => f !== 'datePublished')
+                    }}
+                  />
+                </Box>
+              </Flex>
             </Box>
+            <Flex direction='column'>
+              <Flex maxWidth='750px'>
+                <ReactiveList
+                  dataField='dateModified'
+                  componentId='SearchResults'
+                  pagination
+                  react={{
+                    and: facets
+                  }}
+                >
+                  {({ data, error, loading, ...args }) => {
+                    if (loading) return <Spinner size='xl' />
+                    return (
+                      <ResultListWrapper>
+                        {
+                          data.map((item, i) => (
+                            <ResultItem item={item} key={i} />
+                          ))
+                        }
+                      </ResultListWrapper>
+                    )
+                  }}
+                </ReactiveList>
+              </Flex>
+            </Flex>
           </Flex>
         </Flex>
       </ReactiveBase>
@@ -150,6 +193,7 @@ function ResultItem (props) {
         direction={['column', 'column', 'row', 'row']}
         justify='space-between'
         ml='3'
+        mr='3'
       >
         <Flex direction='column' mb='2'>
           <Link to={'post/' + postId}>
