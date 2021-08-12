@@ -30,10 +30,9 @@ def transcribe_vosk(audio_file_path, model_path):
             result = json.loads(rec.Result())
             print("RESULT", result)
             text = result['text']
-            # print(f'RESULT: {text}')
             transcript = transcript + ' ' + result['text']
-            parts = parts + result['result']
-            #  results.append(result)
+            if 'result' in result:
+                parts = parts + result['result']
         else:
             # print(f'PARTIAL: {rec.PartialResult()}')
             rec.PartialResult()

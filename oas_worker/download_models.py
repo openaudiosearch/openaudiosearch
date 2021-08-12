@@ -1,4 +1,5 @@
 import os
+import subprocess
 import wget
 import zipfile
 import shutil
@@ -9,8 +10,8 @@ from app.config import config
 from app.tasks.spacy_pipe import get_spacy_path, spacy_model
 
 def download(url, path):
-    file = wget.download(url, path)
-    return file
+    p = subprocess.Popen(["curl", "--insecure", "--output", path, url], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    p.wait()
 
 
 def extract(filepath):
@@ -56,10 +57,13 @@ def download_vosk_models():
 
     for model in models:
         target_dir = os.path.join(models_path, model)
+        target_filepath = os.path.join(target_dir, model + ".zip")
         if not os.path.isdir(target_dir):
             print(f'Downloading {models[model]}')
-            filepath = download(models[model], models_path)
-            extract(filepath)
+            os.makedirs(target_dir)
+            print(f'Downloading to {target_filepath}')
+            download(models[model], target_filepath)
+            extract(target_filepath)
         else:
             print(f'Skipping {models[model]}')
 
