@@ -1,9 +1,8 @@
 import React from 'react'
 import ReactJson from 'react-json-view'
 import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters } from '@appbaseio/reactivesearch'
-import { Heading, Flex, Box, Spinner, IconButton, Button, Text } from '@chakra-ui/react'
+import { Heading, Flex, Box, Spinner, Button, Text } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
-import { usePlayer } from './player'
 import { useParams, Link } from 'react-router-dom'
 import Moment from 'moment'
 import { FaFilter } from 'react-icons/fa'
@@ -11,6 +10,7 @@ import { PostButtons } from './post'
 import { TranscriptSnippet } from './transcript'
 import { useIsAdmin } from '../hooks/use-login'
 import { CgClose } from 'react-icons/cg'
+import { useTranslation } from 'react-i18next'
 
 const { ResultListWrapper } = ReactiveList
 
@@ -36,6 +36,8 @@ export default function SearchPage () {
     Hide Filter
       </Text>
     </Flex>
+  const { t } = useTranslation()
+
   return (
     <Flex color='white'>
       <ReactiveBase
@@ -43,7 +45,7 @@ export default function SearchPage () {
         url={url}
       >
         <Flex direction='column'>
-          <Heading mb='2' ml={[null, null, '350px', '350px']}>Search</Heading>
+          <Heading mb='2' ml={[null, null, '350px', '350px']}>{t('search', 'Search')}</Heading>
           <Box
             // w={['90vw', '90vw', '600px', '600px']}
             maxWidth='750px'
@@ -54,7 +56,7 @@ export default function SearchPage () {
               componentId='searchbox'
               dataField={['headline', 'description', 'transcript']}
               fieldWeights={[5, 1]}
-              placeholder='Search for feeds'
+              placeholder={t('searchForm.placeholder', 'Search for radio broadcasts')}
               autosuggest
               highlight
               queryFormat='and'
@@ -92,7 +94,7 @@ export default function SearchPage () {
               >
                 <Box mb='30px'>
                   <MultiList
-                    title='Publisher'
+                    title={t('publisher', 'Publisher')}
                     componentId='publisher'
                     dataField='publisher.keyword'
                     react={{
@@ -102,7 +104,7 @@ export default function SearchPage () {
                 </Box>
                 <Box mb='30px'>
                   <MultiList
-                    title='Creator'
+                    title={t('creator', 'Creator')}
                     componentId='creator'
                     dataField='creator.keyword'
                     react={{
@@ -112,7 +114,7 @@ export default function SearchPage () {
                 </Box>
                 <Box mb='30px'>
                   <MultiList
-                    title='Genre'
+                    title={t('genre', 'Genre')}
                     componentId='genre'
                     dataField='genre.keyword'
                     react={{
@@ -124,7 +126,7 @@ export default function SearchPage () {
                   <DateRange
                     componentId='datePublished'
                     dataField='datePublished'
-                    title='Publishing Date'
+                    title={t('publishingdate', 'Publishing Date')}
                     queryFormat='basic_date_time_no_millis'
                     react={{
                       and: facets.filter(f => f !== 'datePublished')
@@ -168,6 +170,7 @@ export default function SearchPage () {
 function ResultItem (props) {
   const { item } = props
   const isAdmin = useIsAdmin()
+  const { t } = useTranslation()
 
   const snippets = (
     <>
@@ -205,10 +208,10 @@ function ResultItem (props) {
             />
           </Link>
           <div>
-            <div>by {item.creator}</div>
+            <div>{t('by', 'by')} {item.creator}</div>
             <div>{item.publisher}</div>
             <span>
-            published on: {Moment(item.datePublished).format('DD.MM.YYYY')}
+              {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
             </span>
             <div>{item.description}</div>
           </div>

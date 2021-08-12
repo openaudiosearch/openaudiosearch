@@ -4,15 +4,18 @@ import {
   Link,
   useRouteMatch
 } from 'react-router-dom'
+import { useTranslation } from 'react-i18next';
 
 import { Login } from './login'
 
 export function Header () {
+  const { t } = useTranslation();
+
   return (
     <Flex mb='4' bg='black' color='white'>
       <Link to='/'>
         <Heading p='4' fontSize='xl' mr='4'>
-          Open Audio Search
+          {t('openaudiosearch', 'Open Audio Search')}
         </Heading>
       </Link>
       <Navbar />
@@ -25,12 +28,14 @@ export function Header () {
 }
 
 function Navbar () {
+  const { t } = useTranslation();
+
   return (
     <nav>
       <Flex>
-        <NavLink to='/search'>Search</NavLink>
-        <NavLink to='/jobs'>Jobs</NavLink>
-        <NavLink to='/importer'>Importer</NavLink>
+        <NavLink to='/search'>{t('search', 'Search') }</NavLink>
+        <NavLink to='/jobs'>{t('jobs', 'Jobs')}</NavLink>
+        <NavLink to='/importer'>{t('importer', 'Importer')}</NavLink>
       </Flex>
     </nav>
   )
