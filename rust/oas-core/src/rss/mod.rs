@@ -16,7 +16,7 @@ pub mod ops;
 pub use error::{RssError, RssResult};
 pub use ops::{Crawler, FetchedFeedPage, Next};
 
-use rss::extension::{ExtensionMap};
+use rss::extension::ExtensionMap;
 
 #[derive(Debug, Clone)]
 pub struct FeedWatcher {
@@ -137,7 +137,6 @@ fn resolve_extensions(
     extensions: &rss::extension::ExtensionMap,
     mapping: HashMap<String, String>,
 ) -> HashMap<String, String> {
-
     let result: HashMap<String, String> = mapping
         .iter()
         .filter_map(|(rss_ext_key, target_key)| {
@@ -169,8 +168,8 @@ fn default_rss_extension_mapping() -> HashMap<String, String> {
 }
 
 fn item_into_post(item: rss::Item) -> Record<Post> {
-    // Create initial post by parsing extension values from the RSS item 
-    // and deserializing via serde into the Post struct. Further regular 
+    // Create initial post by parsing extension values from the RSS item
+    // and deserializing via serde into the Post struct. Further regular
     // values will be set on this struct manually (see below.)
     // TODO: implement mapping management (load mapping, save mapping)
     let mapping = default_rss_extension_mapping();
@@ -178,12 +177,13 @@ fn item_into_post(item: rss::Item) -> Record<Post> {
     let mapped_fields = resolve_extensions(extensions, mapping);
     let mut post = {
         //let mapped_fields  = mapped_fields.into_iter().filter(|(k,_v)| !(k.starts_with("media.")));
-        let mapped_fields_json: serde_json::Map<String, serde_json::Value> = mapped_fields.clone()
+        let mapped_fields_json: serde_json::Map<String, serde_json::Value> = mapped_fields
+            .clone()
             .into_iter()
             .map(|(k, v)| (k, serde_json::Value::String(v)))
-            .filter(|(k,_v)| !(k.starts_with("media.")))
+            .filter(|(k, _v)| !(k.starts_with("media.")))
             .collect();
-            let post: Result<Post, serde_json::Error> =
+        let post: Result<Post, serde_json::Error> =
             serde_json::from_value(serde_json::Value::Object(mapped_fields_json));
         let post = post.unwrap_or_default();
         post
@@ -193,19 +193,24 @@ fn item_into_post(item: rss::Item) -> Record<Post> {
     let media = if let Some(enclosure) = item.enclosure {
         let mut mapped_fields_json: serde_json::Map<String, serde_json::Value> = mapped_fields
             .into_iter()
-            .filter(|(k,_v)| k.starts_with("media."))
+            .filter(|(k, _v)| k.starts_with("media."))
             .map(|(k, v)| {
-                let arr : Vec<&str> =k.split(".").collect();
+                let arr: Vec<&str> = k.split(".").collect();
                 let v = serde_json::Value::String(v);
-                
-                
                 let k = arr[1].into();
-                (k,v)
-            } )
+                (k, v)
+            })
             .collect();
-            mapped_fields_json.insert("contentUrl".into(), serde_json::Value::String(enclosure.url));
-            mapped_fields_json.insert("encodingFormat".into(), serde_json::Value::String(enclosure.mime_type));
-            let media: Result<Media, serde_json::Error> =
+        mapped_fields_json.insert(
+            "contentUrl".into(),
+            serde_json::Value::String(enclosure.url),
+        );
+        mapped_fields_json.insert(
+            "encodingFormat".into(),
+            serde_json::Value::String(enclosure.mime_type),
+        );
+        eprintln!("{:#?}", mapped_fields_json);
+        let media: Result<Media, serde_json::Error> =
             serde_json::from_value(serde_json::Value::Object(mapped_fields_json));
         let media = media.unwrap_or_default();
         let media =
