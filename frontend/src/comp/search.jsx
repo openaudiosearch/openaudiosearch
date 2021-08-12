@@ -4,7 +4,7 @@ import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList } from '@a
 import { Heading, Flex, Box, Spinner, IconButton } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { usePlayer } from './player'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import Moment from 'moment'
 import { FaPlay } from 'react-icons/fa'
 import { PostButtons } from './post'
@@ -133,6 +133,8 @@ function ResultItem (props) {
     </>
   )
 
+  const postId = item.$meta.id
+
   return (
     <Flex
       direction='column'
@@ -149,12 +151,14 @@ function ResultItem (props) {
         ml='3'
       >
         <Flex direction='column' mb='2'>
-          <Heading
-            size='md' my={4}
-            dangerouslySetInnerHTML={{
-              __html: item.headline
-            }}
-          />
+          <Link to={'post/' + postId}>
+            <Heading
+              size='md' my={4}
+              dangerouslySetInnerHTML={{
+                __html: item.headline
+              }}
+            />
+          </Link>
           <div>
             <div>by {item.creator}</div>
             <div>{item.publisher}</div>

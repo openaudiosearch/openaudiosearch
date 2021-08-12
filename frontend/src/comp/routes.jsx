@@ -9,6 +9,7 @@ import JobsPage from './jobs'
 import SearchPage from './search'
 import ImporterPage from './importer'
 import LandingPage from './landing-page'
+import { PostPage } from './post'
 
 export function Routes () {
   return (
@@ -24,6 +25,9 @@ export function Routes () {
       </Route>
       <Route path='/importer'>
         <ImporterPage />
+      </Route>
+      <Route path='/post/:postId'>
+        <PostPage />
       </Route>
       <Route path='/'>
         <LandingPage />

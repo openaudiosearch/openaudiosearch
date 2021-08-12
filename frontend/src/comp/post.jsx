@@ -1,22 +1,18 @@
 import React from 'react'
-import { FaCog, FaHamburger, FaPlay, FaTasks } from 'react-icons/fa'
-import { usePlayer } from './player'
-import fetch from '../lib/fetch'
-
+import { FaCog, FaPlay, FaTasks } from 'react-icons/fa'
 import {
   IconButton,
   Menu,
   MenuButton,
   MenuList,
-  MenuItem,
-  MenuItemOption,
-  MenuGroup,
-  MenuOptionGroup,
-  MenuIcon,
-  MenuCommand,
-  MenuDivider
+  MenuItem
 } from '@chakra-ui/react'
+import { useParams } from 'react-router'
+
+import { usePlayer } from './player'
 import { useIsAdmin } from '../hooks/use-login'
+import { usePost } from '../hooks/use-post'
+import fetch from '../lib/fetch'
 
 export function PostTaskMenuButton (props = {}) {
   const isAdmin = useIsAdmin()
@@ -90,4 +86,16 @@ export function PostPlayButton (props = {}) {
     setTrack(post.media[0])
     setPost(post)
   }
+}
+
+export function PostPage (props = {}) {
+  const params = useParams()
+  console.log('ÜPARAMS', params)
+  const { postId } = useParams()
+  const post = usePost(postId)
+  return (
+    <pre>
+      {JSON.stringify(post, 0, 2)}
+    </pre>
+  )
 }
