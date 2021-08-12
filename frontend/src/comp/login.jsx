@@ -11,8 +11,8 @@ import {
   ModalHeader,
   ModalFooter,
   ModalBody,
-  ModalCloseButton,
-} from "@chakra-ui/react"
+  ModalCloseButton
+} from '@chakra-ui/react'
 import { useForm } from 'react-hook-form'
 import fetch from '../lib/fetch'
 

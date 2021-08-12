@@ -8,7 +8,7 @@ import {
   SliderTrack,
   SliderFilledTrack,
   SliderThumb,
-  Stack,
+  Stack
 } from '@chakra-ui/react'
 import { FaPlay, FaPause, FaUndoAlt, FaRedoAlt } from 'react-icons/fa'
 
@@ -26,12 +26,12 @@ function trackHeadline ({ track, post }) {
   if (!post || !track) return null
   let headline = post.headline || track.contentUrl || post.id || null
   // Remove html highlighting tags from title display in player
-  headline = headline.replace(/(<([^>]+)>)/gi, "")
+  headline = headline.replace(/(<([^>]+)>)/gi, '')
   return headline
 }
 
 /**
- * The player context holds setters and values for the 
+ * The player context holds setters and values for the
  * currently playing media track, post, and mark (region).
  */
 export const PlayerContext = React.createContext(null)
@@ -116,8 +116,8 @@ export function usePlayerRegionIfPlaying ({ track, mark }) {
   const { currentTime, audio } = usePlaystate()
   function isActive () {
     return (
-      (player.track === track)
-      && (currentTime > mark.start && currentTime < mark.end)
+      (player.track === track) &&
+      (currentTime > mark.start && currentTime < mark.end)
     )
   }
   if (isActive()) return currentTime
@@ -139,7 +139,7 @@ function useAudioElement (props = {}) {
   const rerender = useRerender()
 
   const element = React.useMemo(() => (
-    <audio style={{ display: 'none' }} ref={ref}></audio>
+    <audio style={{ display: 'none' }} ref={ref} />
   ), [])
 
   const audio = ref.current
@@ -183,7 +183,6 @@ function useAudioElement (props = {}) {
       audio.removeEventListener('canplay', updateState)
       audio.removeEventListener('durationchange', updateState)
     }
-
   }, [audio])
 
   let state
@@ -199,7 +198,7 @@ function useAudioElement (props = {}) {
       playing: !audio.paused,
       canplay: audio.readyState > 2,
       currentTime: audio.currentTime || 0,
-      duration: audio.duration || 0,
+      duration: audio.duration || 0
     }
   }
 
@@ -215,7 +214,7 @@ export function Player (props = {}) {
   const state = usePlaystate()
   const { audio } = state
 
-  const { start = 0, end = 0, word = ''} = mark || {}
+  const { start = 0, end = 0, word = '' } = mark || {}
   const headline = trackHeadline({ track, post })
 
   function togglePlay (e) {
@@ -266,14 +265,14 @@ export function Player (props = {}) {
 function PlayerButton (props = {}) {
   const { label, ...other } = props
   return (
-      <IconButton
-        aria-label={label}
-        colorScheme='pink'
-        isRound
-        variant='ghost'
-        mr={2}
-        {...other}
-      />
+    <IconButton
+      aria-label={label}
+      colorScheme='pink'
+      isRound
+      variant='ghost'
+      mr={2}
+      {...other}
+    />
   )
 }
 
@@ -287,7 +286,7 @@ function Timeslider (props = {}) {
   else value = pos * 100
   return (
     <Slider
-      aria-label="slider-ex-1"
+      aria-label='slider-ex-1'
       focusThumbOnChange={false}
       value={value}
       onChangeStart={onChangeStart}

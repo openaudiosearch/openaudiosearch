@@ -100,16 +100,16 @@ function DiscoverItem (props) {
             </span>
           </div>
         </Flex>
-        <Flex ml={[null, null, 4, 4]} mt = {[4, 4, null, null]} align='center' justify='center'>
-            <IconButton 
-            aria-label="Play"
-            color="violet"
+        <Flex ml={[null, null, 4, 4]} mt={[4, 4, null, null]} align='center' justify='center'>
+          <IconButton
+            aria-label='Play'
+            color='violet'
             onClick={() => {
-                setPost(item)
-                setTrack(item.media && item.media[0])
+              setPost(item)
+              setTrack(item.media && item.media[0])
             }}
-            icon={ <FaPlay /> }
-            mr="2"
+            icon={<FaPlay />}
+            mr='2'
             shadow='md'
           />
         </Flex>

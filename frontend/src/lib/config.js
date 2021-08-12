@@ -13,9 +13,9 @@ function getApiHost () {
   if (process.env.NODE_ENV === 'development') {
     return 'http://localhost:8080'
   } else {
-    return window.location.protocol 
-      + '//' + window.location.hostname
-      + (window.location.port ? ':' + window.location.port : '')
-      + API_ROOT_PATH
+    return window.location.protocol +
+      '//' + window.location.hostname +
+      (window.location.port ? ':' + window.location.port : '') +
+      API_ROOT_PATH
   }
 }

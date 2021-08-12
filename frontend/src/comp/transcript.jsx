@@ -84,7 +84,7 @@ export function TranscriptWord (props) {
   const style = {
     display: 'inline-block',
     cursor: 'pointer',
-    color: `rgba(0,0,0,${alpha})`,
+    color: `rgba(0,0,0,${alpha})`
   }
   if (highlightWord) {
     style.background = 'yellow'
