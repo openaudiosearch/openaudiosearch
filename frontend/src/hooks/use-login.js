@@ -9,4 +9,13 @@ export function useLogin (props = {}) {
   }
 }
 
-export function useIsAdmin () {}
+export function useIsAdmin () {
+  const { user } = useLogin()
+  return user && user.isAdmin
+}
+
+export function AdminOnly (props = {}) {
+  const isAdmin = useIsAdmin()
+  if (!isAdmin) return null
+  return props.children
+}

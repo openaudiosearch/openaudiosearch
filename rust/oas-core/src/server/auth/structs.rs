@@ -9,6 +9,7 @@ pub struct RegisterRequest {
 }
 
 #[derive(Serialize, Deserialize, JsonSchema, Debug, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct UserPublicInfo {
     pub username: String,
     pub email: Option<String>,
@@ -16,6 +17,7 @@ pub struct UserPublicInfo {
 }
 
 #[derive(Serialize, Deserialize, JsonSchema, Debug, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct UserInfo {
     pub password: String,
     pub username: String,
