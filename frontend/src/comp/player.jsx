@@ -11,6 +11,7 @@ import {
   Stack
 } from '@chakra-ui/react'
 import { FaPlay, FaPause, FaUndoAlt, FaRedoAlt } from 'react-icons/fa'
+import { useTranslation } from 'react-i18next'
 
 import { API_ENDPOINT } from '../lib/config'
 
@@ -217,6 +218,8 @@ export function Player (props = {}) {
   const { start = 0, end = 0, word = '' } = mark || {}
   const headline = trackHeadline({ track, post })
 
+  const { t } = useTranslation()
+
   function togglePlay (e) {
     if (!audio) return
     if (state.playing) audio.pause()
@@ -243,7 +246,7 @@ export function Player (props = {}) {
       </Box>
       <Flex dir='row'>
         <PlayerButton
-          label={state.playing ? 'Pause' : 'Play'}
+          label={state.playing ? t('pause', 'Pause') : t('play', 'Play')}
           onClick={togglePlay}
           icon={<Box pl='1px'>{state.playing ? <FaPause /> : <FaPlay />}</Box>}
           disabled={!state.canplay}

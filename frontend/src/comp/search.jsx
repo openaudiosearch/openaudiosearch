@@ -10,6 +10,7 @@ import { FaPlay } from 'react-icons/fa'
 import { PostButtons } from './post'
 import { TranscriptSnippet } from './transcript'
 import { useIsAdmin } from '../hooks/use-login'
+import { useTranslation } from 'react-i18next'
 
 const { ResultListWrapper } = ReactiveList
 
@@ -19,6 +20,7 @@ export default function SearchPage () {
   const decodedquery = decodeURIComponent(queryStr)
   const url = API_ENDPOINT + '/search'
   const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator']
+  const { t } = useTranslation()
   return (
     <Flex color='white'>
       <ReactiveBase
@@ -34,7 +36,7 @@ export default function SearchPage () {
           >
             <Box mb='30px'>
               <MultiList
-                title='Publisher'
+                title={t('publisher', 'Publisher')}
                 componentId='publisher'
                 dataField='publisher.keyword'
                 react={{
@@ -44,7 +46,7 @@ export default function SearchPage () {
             </Box>
             <Box mb='30px'>
               <MultiList
-                title='Creator'
+                title={t('creator', 'Creator')}
                 componentId='creator'
                 dataField='creator.keyword'
                 react={{
@@ -54,7 +56,7 @@ export default function SearchPage () {
             </Box>
             <Box mb='30px'>
               <MultiList
-                title='Genre'
+                title={t('genre', 'Genre')}
                 componentId='genre'
                 dataField='genre.keyword'
                 react={{
@@ -64,7 +66,7 @@ export default function SearchPage () {
               <DateRange
                 componentId='datePublished'
                 dataField='datePublished'
-                title='Publishing Date'
+                title={t('publishingdate', 'Publishing Date')}
                 queryFormat='basic_date_time_no_millis'
                 react={{
                   and: facets.filter(f => f !== 'datePublished')
@@ -74,14 +76,14 @@ export default function SearchPage () {
           </Flex>
           <Flex direction='column'>
             <Box w='800px'>
-              <Heading mb='2'>Search</Heading>
+              <Heading mb='2'>{t('search', 'Search') }</Heading>
               <Box w='300px'>
                 <DataSearch
                   componentId='searchbox'
                   dataField={['headline', 'description', 'transcript']}
                   title='Search'
                   fieldWeights={[5, 1]}
-                  placeholder='Search for feeds'
+                  placeholder={t('searchForm.placeholder', 'Search for radio broadcasts')}
                   autosuggest
                   highlight
                   queryFormat='and'
@@ -160,10 +162,10 @@ function ResultItem (props) {
             />
           </Link>
           <div>
-            <div>by {item.creator}</div>
+            <div>{t('by', 'by')} {item.creator}</div>
             <div>{item.publisher}</div>
             <span>
-            published on: {Moment(item.datePublished).format('DD.MM.YYYY')}
+            {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
             </span>
             <div>{item.description}</div>
           </div>

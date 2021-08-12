@@ -13,8 +13,10 @@ import { usePlayer } from './player'
 import { useIsAdmin } from '../hooks/use-login'
 import { usePost } from '../hooks/use-post'
 import fetch from '../lib/fetch'
+import { useTranslation } from 'react-i18next'
 
 export function PostTaskMenuButton (props = {}) {
+  const { t } = useTranslation()
   const isAdmin = useIsAdmin()
   if (!isAdmin) return null
 
@@ -40,7 +42,7 @@ export function PostTaskMenuButton (props = {}) {
     <Menu>
       <MenuButton
         as={IconButton}
-        aria-label='Options'
+        aria-label={t('options', 'Options')}
         icon={<FaCog />}
         variant='outline'
       />
@@ -69,12 +71,13 @@ export function PostButtons (props = {}) {
 export function PostPlayButton (props = {}) {
   const { post, ...rest } = props
   const { setTrack, setPost } = usePlayer()
+  const { t } = useTranslation()
 
   if (!post.media || !post.media.length) return null
   return (
     <IconButton
       onClick={onClick}
-      aria-label='Play this post'
+      aria-label={t('playthispost', 'Play this post')}
       icon={<FaPlay />}
       rounded
       color='violet'

@@ -6,11 +6,13 @@ import { usePlayer } from './player'
 import { Link, useHistory } from 'react-router-dom'
 import Moment from 'moment'
 import { FaPlay } from 'react-icons/fa'
+import { useTranslation } from 'react-i18next'
 
 export default function LandingPage () {
   const url = API_ENDPOINT + '/search'
   const [value, setValue] = React.useState('')
   const history = useHistory()
+  const { t } = useTranslation()
   return (
     <Center>
       <Flex color='white' w={['90vw', '90vw', '70vw', '50vw']} align='center' justify='center'>
@@ -21,8 +23,8 @@ export default function LandingPage () {
           <Flex direction='column' align='center'>
             <Flex direction='column' align='center'>
               <Flex direction='column' align='left' justify='left'>
-                <Heading as='h1' size='2xl' mb='7'>Open Audio Search</Heading>
-                <Heading as='h2' size='md'>The community radio search engine</Heading>
+                <Heading as='h1' size='2xl' mb='7'>{t('openaudiosearch', 'Open Audio Search')}</Heading>
+                <Heading as='h2' size='md'>{t('slogan', 'The community radio search engine')}</Heading>
               </Flex>
               <Center>
                 <Box w={['90vw', '80vw', '600px', '600px']} mt='6'>
@@ -30,7 +32,7 @@ export default function LandingPage () {
                     componentId='searchbox'
                     dataField={['headline', 'description', 'transcript']}
                     fieldWeights={[5, 2, 1]}
-                    placeholder='Search for radio broadcasts'
+                    placeholder={t('searchForm.placeholder','Search for radio broadcasts') }
                     autosuggest
                     queryFormat='and'
                     fuzziness={0}
@@ -48,7 +50,7 @@ export default function LandingPage () {
             </Flex>
             <Flex direction='column' align='left'>
               <Box>
-                <Heading as='h4' size='md' mt='20' mb='5' ml='5'>Discover</Heading>
+                <Heading as='h4' size='md' mt='20' mb='5' ml='5'>{t('discover', 'Discover')}</Heading>
               </Box>
               <ReactiveList
                 dataField='datePublished'
@@ -84,6 +86,7 @@ function DiscoverItem (props) {
   const { item } = props
   const { setTrack, setPost } = usePlayer()
   const postPath = '/post/' + item.$meta.id
+  const { t } = useTranslation()
   return (
     <Flex direction='column' border='2px' p='2' borderRadius='20px' borderColor='gray.200' boxShadow='md' my='3'>
       <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' ml='3'>
@@ -97,15 +100,17 @@ function DiscoverItem (props) {
             />
           </Link>
           <div>
-            <div>by {item.publisher}</div>
-            <span>
-            published on: {Moment(item.datePublished).format('DD.MM.YYYY')}
-            </span>
+            { item.publisher && <div>{t('by', 'by') } {item.publisher}</div> }
+            { item.datePublished &&
+              <span>
+                {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
+              </span>
+            }
           </div>
         </Flex>
         <Flex ml={[null, null, 4, 4]} mt={[4, 4, null, null]} align='center' justify='center'>
           <IconButton
-            aria-label='Play'
+            aria-label={t('play', 'Play')}
             color='violet'
             onClick={() => {
               setPost(item)
