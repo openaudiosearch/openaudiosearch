@@ -309,13 +309,14 @@ function Timeslider (props = {}) {
   }
 
   function onChangeEnd (value) {
+    if (!dragging) return
     setDragging(false)
     setPlayerPos(value)
   }
 
   function setPlayerPos (value) {
     value = (value || 0) / 100
-    onChange(value)
+    if (value !== pos) onChange(value)
   }
 
   function onSliderChange (value) {
