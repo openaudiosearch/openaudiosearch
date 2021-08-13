@@ -109,48 +109,55 @@ export function PostPage (props = {}) {
   if (!post) return null
   
   const genres = post.genre.map((genre) => 
-    <Tag key={genre}>{genre}</Tag>  
+    <Tag key={genre} mr='1'>{genre}</Tag>  
   )
   const creators = post.creator.map((creator) => 
-    <Tag key={creator}>{creator}</Tag>  
+    <Tag key={creator} mr='1'>{creator}</Tag>  
   )
 
   return (
-    <Flex direction="column">
+    <Flex direction="column" maxWidth='750px'>
       <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
         <Flex direction="column">
-          <Flex direction="row">
-            { post.datePublished &&
-            <span>
-              {Moment(post.datePublished).format('DD.MM.YYYY')}
-            </span>
+          <Flex direction="row" justify='space-between'>
+            <Flex direction="row">
+              { post.datePublished &&
+              <Text fontSize='sm'>
+                {Moment(post.datePublished).format('DD.MM.YYYY')}
+              </Text>
+              }
+              <Box ml='2'>
+                {genres}
+              </Box>
+            </Flex>
+            {post.url &&
+            <Link href={post.url} isExternal>
+              <Button size='xs'><Box>{t('sourceurl', 'Source URL')}</Box> <Box ml='10px' mb='3px'><FaExternalLinkAlt /></Box></Button>
+            </Link>
             }
-            <Box ml='2'>
-              {genres}
-            </Box>
           </Flex>
-          <Heading>{post.headline}</Heading>
-        </Flex>
-        <Flex align='center' justify='center'>
-          <PostButtons post={post} />
+          <Flex direction='row' mt='2'>
+            <Heading size='md'>{post.headline}</Heading>
+            <Flex align='center' justify='center' ml='2'>
+              <PostButtons post={post} />
+            </Flex>
+          </Flex>
         </Flex>
       </Flex>
-      <Box>
-        {creators}
-        {post.url &&
-        <Link href={post.url} isExternal>
-          <Button>{t('sourceurl', 'Source URL')} <FaExternalLinkAlt mx="2px" /></Button>
-        </Link>
-        }
+      <Box mt='2'>
+        {post.publisher && <Text fontSize='sm'>{t('by', 'by')} {post.publisher}</Text>}
+        <Box ml='2'>
+          {creators}
+        </Box>
       </Box>
 
       {post.description &&
-        <Box>{post.description}</Box>
+        <Box mt='2'>{post.description}</Box>
       }
 
-      <Box mt='2'>
+      <Flex direction='row' justify='space-between' mt='4'>
         <ToggleTranscriptSection post={post} />
-      </Box>
+      </Flex>
 
     </Flex>
   )
