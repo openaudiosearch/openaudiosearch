@@ -1,0 +1,31 @@
+[[frn.fields]]
+from = "frn:laenge"
+to = "media.duration"
+
+[[frn.fields]]
+from = "frn:licence"
+to = "licence"
+
+[[frn.fields]]
+from = "dc:creator"
+to = "creator"
+
+[[frn.fields]]
+from = "frn:title"
+to = "headline"
+
+[[frn.fields]]
+from = "frn:art"
+to = "genre"
+
+[[frn.fields]]
+from = "frn:radio"
+to = "publisher"
+
+[[frn.fields]]
+from = "frn:last_update"
+to = "date_modified"
+
+[[frn.fields]]
+from = "pubDate"
+to = "date_published"

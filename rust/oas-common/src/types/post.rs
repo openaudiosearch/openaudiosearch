@@ -10,20 +10,30 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use super::Media;
+// use super::Feed;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Post {
     pub identifier: Option<String>,
     pub headline: Option<String>,
+    pub r#abstract: Option<String>,
+    pub contributor: Option<String>,
     pub url: Option<String>,
     pub date_published: Option<String>,
+    pub date_modified: Option<String>,
+    pub description: Option<String>,
+    pub in_language: Option<String>,
+    pub licence: Option<String>,
+    pub publisher: Option<String>,
     #[serde(default)]
     pub genre: Vec<String>,
     #[serde(default)]
     pub creator: Vec<String>,
+    #[serde(default)]
     pub media: Vec<Reference<Media>>,
-
+    // #[serde(default)]
+    // pub feed: Reference<Feed>,
     pub transcript: Option<String>,
 
     #[serde(flatten)]
@@ -143,34 +153,11 @@ impl ElasticMapping for Post {
                 }
             },
             "inLanguage":{
-                "properties":{
-                    "base":{
-                        "type":"text",
-                        "fields":{
-                            "keyword":{
-                                "type":
-                                "keyword",
-                                "ignore_above":256
-                            }
-                        }
-                    },
-                    "type":{
-                        "type":"text",
-                        "fields":{
-                            "keyword":{
-                                "type":"keyword",
-                                "ignore_above":256
-                            }
-                        }
-                    },
-                    "value":{
-                        "type":"text",
-                        "fields":{
-                            "keyword":{
-                                "type":"keyword",
-                                "ignore_above":256
-                            }
-                        }
+                "type":"text",
+                "fields":{
+                    "keyword":{
+                        "type":"keyword",
+                        "ignore_above":256
                     }
                 }
             },
