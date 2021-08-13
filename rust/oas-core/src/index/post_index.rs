@@ -114,7 +114,16 @@ impl PostIndex {
         let mut posts: Vec<_> = posts.into_iter().map(|(_id, v)| v).collect();
 
         // Resolve all unresolved media references.
-        db.resolve_all_refs(&mut posts.as_mut_slice()).await;
+        let resolve_result = db.resolve_all_refs(&mut posts.as_mut_slice()).await;
+        match resolve_result {
+            Err(errs) => {
+                log::error!("{}", errs);
+                for err in errs.0 {
+                    log::debug!("  {}", err);
+                }
+            }
+            _ => {}
+        }
 
         // Build the transcript for a post.
         for post in posts.iter_mut() {

@@ -125,7 +125,6 @@ impl Index {
             })
             .collect();
 
-            eprintln!("{:#?}", docs);
         let response = self
             .client
             .bulk(BulkParts::Index(&self.index))

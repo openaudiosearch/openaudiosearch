@@ -40,7 +40,10 @@ pub trait Resolver {
         results
     }
 
-    async fn resolve_all_refs<T: Resolvable + Send>(&self, records: &mut [Record<T>])
+    async fn resolve_all_refs<T: Resolvable + Send>(
+        &self,
+        records: &mut [Record<T>],
+    ) -> Result<(), MissingRefsError>
     where
         Self: Sized + Send,
     {
@@ -48,7 +51,17 @@ pub trait Resolver {
             .iter_mut()
             .map(|record| record.resolve_refs(&*self))
             .collect();
-        let _ = futures_util::future::join_all(futs).await;
+        let results = futures_util::future::join_all(futs).await;
+        let errs: Vec<ResolveError> = results
+            .into_iter()
+            .filter_map(|r| r.err())
+            .map(|e| e.0)
+            .flatten()
+            .collect();
+        match errs.is_empty() {
+            true => Ok(()),
+            false => Err(MissingRefsError(errs)),
+        }
     }
 
     /// Resolve a list of references.
@@ -56,7 +69,6 @@ pub trait Resolver {
         &self,
         references: &mut [Reference<T>],
     ) -> Result<(), MissingRefsError> {
-        eprintln!("resolve refs {:?}", references);
         let unresolved_refs: Vec<(usize, String)> = references
             .iter()
             .enumerate()
@@ -67,7 +79,6 @@ pub trait Resolver {
             .collect();
         let unresolved_ids: Vec<&str> = unresolved_refs.iter().map(|(_, id)| id.as_str()).collect();
         let results = self.resolve_all(&unresolved_ids).await;
-        eprintln!("resolve results {:?}", results);
         let mut errs: Vec<ResolveError> = vec![];
         for (i, result) in results.into_iter().enumerate() {
             match result {
@@ -78,7 +89,6 @@ pub trait Resolver {
                 )),
             }
         }
-        eprintln!("Resolve errors: {:?}", errs);
         match errs.len() {
             0 => Ok(()),
             _ => Err(MissingRefsError(errs)),
@@ -138,6 +148,6 @@ impl<T: TypedValue> From<ResolveError> for Reference<T> {
 impl std::error::Error for ResolveError {}
 impl fmt::Display for ResolveError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Failed to resolve {}: {}", self.id, self.error)
+        write!(f, "Failed to resolve {}: {:?}", self.id, self.error)
     }
 }
