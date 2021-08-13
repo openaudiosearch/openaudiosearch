@@ -5,7 +5,7 @@ import {
   useRouteMatch
 } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import logo from '../../assets/oas_logo-4.png'
+import logo from '../../assets/oas_logo-5.svg'
 
 import { Login } from './login'
 

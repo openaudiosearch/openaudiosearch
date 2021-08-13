@@ -6,6 +6,7 @@ import { Link, useHistory } from 'react-router-dom'
 import Moment from 'moment'
 import { useTranslation } from 'react-i18next'
 import { PostButtons } from './post'
+import { ResultItem } from './search'
 
 export default function LandingPage () {
   const url = API_ENDPOINT + '/search'
@@ -64,7 +65,7 @@ export default function LandingPage () {
                     <Flex direction='column'>
                       {
                         data.map((item, i) => (
-                          <DiscoverItem item={item} key={i} />
+                          <ResultItem item={item} key={i} showSnippets={false} />
                         ))
                       }
                     </Flex>
@@ -76,37 +77,5 @@ export default function LandingPage () {
         </ReactiveBase>
       </Flex>
     </Center>
-  )
-}
-
-function DiscoverItem (props) {
-  const { item } = props
-  const postPath = '/post/' + item.$meta.id
-  const { t } = useTranslation()
-  return (
-    <Flex direction='column' border='2px' p='2' borderRadius='20px' borderColor='gray.200' boxShadow='md' my='3'>
-      <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' ml='3'>
-        <Flex direction='column' mb='2'>
-          <Link to={postPath}>
-            <Heading
-              size='md' my={4}
-              dangerouslySetInnerHTML={{
-                __html: item.headline
-              }}
-            />
-          </Link>
-          <div>
-            {item.publisher && <div>{t('by', 'by')} {item.publisher}</div>}
-            {item.datePublished &&
-              <span>
-                {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
-              </span>}
-          </div>
-        </Flex>
-        <Flex ml={[null, null, 4, 4]} mt={[4, 4, null, null]} align='center' justify='center'>
-          <PostButtons post={item} />
-        </Flex>
-      </Flex>
-    </Flex>
   )
 }

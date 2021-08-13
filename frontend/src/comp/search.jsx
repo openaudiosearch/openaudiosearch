@@ -151,7 +151,7 @@ export default function SearchPage () {
                       <ResultListWrapper>
                         {
                           data.map((item, i) => (
-                            <ResultItem item={item} key={i} />
+                            <ResultItem item={item} key={i} showSnippets />
                           ))
                         }
                       </ResultListWrapper>
@@ -167,8 +167,8 @@ export default function SearchPage () {
   )
 }
 
-function ResultItem (props) {
-  const { item } = props
+export function ResultItem (props) {
+  const { item, showSnippets } = props
   const isAdmin = useIsAdmin()
   const { t } = useTranslation()
 
@@ -208,16 +208,14 @@ function ResultItem (props) {
             />
           </Link>
           <div>
-            <div>{t('by', 'by')} {item.creator}</div>
-            <div>{item.publisher}</div>
-            <span>
-              {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
-            </span>
+            {item.publisher && <div>{t('by', 'by')} {item.publisher}</div>}
+            {item.datePublished &&
+              <span>
+                {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
+              </span>}
             <div>{item.description}</div>
           </div>
-          <div>
-            {snippets}
-          </div>
+          {showSnippets && snippets && <div>{snippets}</div>}
           {isAdmin && <ReactJson src={item} collapsed name={false} />}
         </Flex>
         <Flex ml={[null, null, 4, 4]} mt={[4, 4, null, null]} align='center' justify='center'>
