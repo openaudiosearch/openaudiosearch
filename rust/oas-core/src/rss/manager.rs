@@ -1,17 +1,17 @@
-use super::error::RssError;
-use super::mapping::MappingManager;
-use super::FeedWatcher;
-use crate::couch::CouchDB;
-use oas_common::types;
-use oas_common::TypedRecord;
-
 use clap::Clap;
 use std::collections::HashMap;
 use tokio::task::JoinHandle;
 use tokio_stream::StreamExt;
+use oas_common::types;
+use oas_common::TypedRecord;
+
+use super::error::RssError;
+use super::mapping::{AllMappings, MappingManager};
+use super::FeedWatcher;
+use crate::couch::CouchDB;
 
 type Task<T> = JoinHandle<Result<T, RssError>>;
-type Store = HashMap<String, TypedRecord<types::Feed>>;
+// type Store = HashMap<String, TypedRecord<types::Feed>>;
 
 #[derive(Debug, Clone, Default, Clap)]
 pub struct FeedManagerOpts {
@@ -64,6 +64,7 @@ impl FeedManager {
 pub async fn run_manager(db: &CouchDB, opts: FeedManagerOpts) -> anyhow::Result<()> {
     let mut manager = FeedManager::new(opts);
     manager.init(db).await?;
+    // TODO: Remove clone of mapping.
     let mapping = manager.mapping_manager.to_field_hashmap();
     let tasks = watch_feeds(manager, db.clone())?;
     let watch_task = tokio::spawn({
@@ -95,7 +96,7 @@ fn watch_feeds(manager: FeedManager, db: CouchDB) -> Result<Vec<Task<()>>, RssEr
     Ok(tasks)
 }
 
-async fn watch_changes(mapping: HashMap<String, String>, db: CouchDB) -> Result<(), RssError> {
+async fn watch_changes(mapping: AllMappings, db: CouchDB) -> Result<(), RssError> {
     let last_seq = db.get_last_seq().await?;
     let mut stream = db.changes(Some(last_seq));
     let mut tasks = Vec::new();

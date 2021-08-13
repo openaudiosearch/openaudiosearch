@@ -4,6 +4,7 @@ pub mod reference;
 pub mod resolver;
 pub mod types;
 pub mod util;
+pub mod ser;
 
 pub use record::*;
 pub use reference::*;

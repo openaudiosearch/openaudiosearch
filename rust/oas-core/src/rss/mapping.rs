@@ -1,4 +1,4 @@
-use dirs::config_dir;
+use dirs::{config_dir};
 use serde::Deserialize;
 use toml;
 extern crate dirs;
@@ -6,6 +6,8 @@ use anyhow::Context;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::fs::{metadata, read_to_string};
+
+pub type AllMappings = HashMap<String, String>;
 
 #[derive(Debug)]
 pub struct MappingManager {
