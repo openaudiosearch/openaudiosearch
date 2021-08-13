@@ -1,6 +1,7 @@
 use crate::mapping::Mappable;
 use crate::record::TypedValue;
 use crate::reference::{self, Reference};
+use crate::ser;
 use crate::Resolvable;
 use crate::Resolver;
 use crate::UntypedRecord;
@@ -27,8 +28,10 @@ pub struct Post {
     pub licence: Option<String>,
     pub publisher: Option<String>,
     #[serde(default)]
+    #[serde(deserialize_with = "ser::deserialize_multiple")]
     pub genre: Vec<String>,
     #[serde(default)]
+    #[serde(deserialize_with = "ser::deserialize_multiple")]
     pub creator: Vec<String>,
     #[serde(default)]
     pub media: Vec<Reference<Media>>,

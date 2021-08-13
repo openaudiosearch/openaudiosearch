@@ -2,6 +2,17 @@ use serde::{de, Deserializer};
 use std::fmt;
 use std::str::FromStr;
 
+pub fn deserialize_multiple<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = deserializer.deserialize_any(VecVisitor);
+    match value {
+        Ok(value) => Ok(value),
+        Err(err) => Err(err),
+    }
+}
+
 pub fn deserialize_duration<'de, D>(deserializer: D) -> Result<Option<f32>, D::Error>
 where
     D: Deserializer<'de>,
@@ -69,5 +80,22 @@ impl<'de> de::Visitor<'de> for F32Visitor {
             }
             return Ok(result);
         }
+    }
+}
+
+struct VecVisitor;
+impl<'de> de::Visitor<'de> for VecVisitor {
+    type Value = Vec<String>;
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("a string with comma separated values or a single value")
+    }
+    // TODO: FIX for multiple values
+    fn visit_str<E>(self, value: &str) -> Result<Vec<String>, E>
+    where
+        E: de::Error,
+    {
+        let mut result = Vec::new();
+        result.push(value.into());
+        Ok(result)
     }
 }
