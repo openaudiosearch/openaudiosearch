@@ -21,10 +21,8 @@ export default function LandingPage () {
         >
           <Flex direction='column' align='center'>
             <Flex direction='column' align='center'>
-              <Flex direction='column' align='left' justify='left'>
-                <Heading as='h1' size='2xl' mb='7'>{t('openaudiosearch', 'Open Audio Search')}</Heading>
-                <Heading as='h2' size='md'>{t('slogan', 'The community radio search engine')}</Heading>
-              </Flex>
+              <Heading as='h1' size='2xl' mb='7' color='secondary.600'>{t('openaudiosearch', 'Open Audio Search')}</Heading>
+              <Heading as='h2' size='lg'>{t('slogan', 'The community radio search engine')}</Heading>
               <Center>
                 <Box w={['90vw', '80vw', '600px', '600px']} mt='6'>
                   <DataSearch
