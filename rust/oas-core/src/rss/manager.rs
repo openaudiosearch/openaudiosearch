@@ -1,9 +1,9 @@
 use clap::Clap;
+use oas_common::types;
+use oas_common::TypedRecord;
 use std::collections::HashMap;
 use tokio::task::JoinHandle;
 use tokio_stream::StreamExt;
-use oas_common::types;
-use oas_common::TypedRecord;
 
 use super::error::RssError;
 use super::mapping::{AllMappings, MappingManager};

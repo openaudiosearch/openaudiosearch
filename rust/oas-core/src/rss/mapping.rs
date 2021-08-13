@@ -1,4 +1,4 @@
-use dirs::{config_dir};
+use dirs::config_dir;
 use serde::Deserialize;
 use toml;
 extern crate dirs;
