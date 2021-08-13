@@ -136,8 +136,8 @@ export function PostPage (props = {}) {
             </Link>
             }
           </Flex>
-          <Flex direction='row'>
-            <Heading size='md' mt='2'>{post.headline}</Heading>
+          <Flex direction='row' mt='2'>
+            <Heading size='md'>{post.headline}</Heading>
             <Flex align='center' justify='center' ml='2'>
               <PostButtons post={post} />
             </Flex>
@@ -145,7 +145,10 @@ export function PostPage (props = {}) {
         </Flex>
       </Flex>
       <Box mt='2'>
-        {creators}
+        {post.publisher && <Text fontSize='sm'>{t('by', 'by')} {post.publisher}</Text>}
+        <Box ml='2'>
+          {creators}
+        </Box>
       </Box>
 
       {post.description &&
