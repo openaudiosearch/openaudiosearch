@@ -12,6 +12,7 @@ import {
 } from '@chakra-ui/react'
 import { FaPlay, FaPause, FaUndoAlt, FaRedoAlt } from 'react-icons/fa'
 import { useTranslation } from 'react-i18next'
+import { MdGraphicEq } from 'react-icons/md'
 
 import { API_ENDPOINT } from '../lib/config'
 
@@ -238,7 +239,7 @@ export function Player (props = {}) {
   }
 
   return (
-    <Stack p={2} bg='black' color='white'>
+    <Stack p={2} bg='primary' color='white'>
       <Box px='3'>
         <strong>{headline || ''}</strong>
         &nbsp;
@@ -270,9 +271,9 @@ function PlayerButton (props = {}) {
   return (
     <IconButton
       aria-label={label}
-      colorScheme='pink'
+      color='secondary.500'
       isRound
-      variant='ghost'
+      // variant='ghost'
       mr={2}
       {...other}
     />
@@ -295,12 +296,13 @@ function Timeslider (props = {}) {
       onChangeStart={onChangeStart}
       onChangeEnd={onChangeEnd}
       onChange={onSliderChange}
-      colorScheme='pink'
     >
-      <SliderTrack>
-        <SliderFilledTrack />
+      <SliderTrack bg='white'>
+        <SliderFilledTrack bg='secondary.500' />
       </SliderTrack>
-      <SliderThumb />
+      <SliderThumb boxSize={6}>
+        <Box color='secondary.500' as={MdGraphicEq} />
+      </SliderThumb>
     </Slider>
   )
 

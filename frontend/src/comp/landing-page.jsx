@@ -1,12 +1,11 @@
 import React from 'react'
 import { DataSearch, ReactiveBase, ReactiveList } from '@appbaseio/reactivesearch'
-import { Heading, Flex, Box, Spinner, Center, IconButton } from '@chakra-ui/react'
+import { Heading, Flex, Box, Spinner, Center } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
-import { usePlayer } from './player'
 import { Link, useHistory } from 'react-router-dom'
 import Moment from 'moment'
-import { FaPlay } from 'react-icons/fa'
 import { useTranslation } from 'react-i18next'
+import { PostButtons } from './post'
 
 export default function LandingPage () {
   const url = API_ENDPOINT + '/search'
@@ -32,7 +31,7 @@ export default function LandingPage () {
                     componentId='searchbox'
                     dataField={['headline', 'description', 'transcript']}
                     fieldWeights={[5, 2, 1]}
-                    placeholder={t('searchForm.placeholder','Search for radio broadcasts') }
+                    placeholder={t('searchForm.placeholder', 'Search for radio broadcasts')}
                     autosuggest
                     queryFormat='and'
                     fuzziness={0}
@@ -84,7 +83,6 @@ export default function LandingPage () {
 
 function DiscoverItem (props) {
   const { item } = props
-  const { setTrack, setPost } = usePlayer()
   const postPath = '/post/' + item.$meta.id
   const { t } = useTranslation()
   return (
@@ -100,26 +98,15 @@ function DiscoverItem (props) {
             />
           </Link>
           <div>
-            { item.publisher && <div>{t('by', 'by') } {item.publisher}</div> }
-            { item.datePublished &&
+            {item.publisher && <div>{t('by', 'by')} {item.publisher}</div>}
+            {item.datePublished &&
               <span>
                 {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
-              </span>
-            }
+              </span>}
           </div>
         </Flex>
         <Flex ml={[null, null, 4, 4]} mt={[4, 4, null, null]} align='center' justify='center'>
-          <IconButton
-            aria-label={t('play', 'Play')}
-            color='violet'
-            onClick={() => {
-              setPost(item)
-              setTrack(item.media && item.media[0])
-            }}
-            icon={<FaPlay />}
-            mr='2'
-            shadow='md'
-          />
+          <PostButtons post={item} />
         </Flex>
       </Flex>
     </Flex>

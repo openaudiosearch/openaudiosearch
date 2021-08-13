@@ -79,8 +79,9 @@ export function PostPlayButton (props = {}) {
       onClick={onClick}
       aria-label={t('playthispost', 'Play this post')}
       icon={<FaPlay />}
-      rounded
-      color='violet'
+      isRound
+      color='secondary.500'
+      shadow='md'
       {...rest}
     />
   )

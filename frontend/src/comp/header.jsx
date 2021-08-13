@@ -4,15 +4,15 @@ import {
   Link,
   useRouteMatch
 } from 'react-router-dom'
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next'
 
 import { Login } from './login'
 
 export function Header () {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   return (
-    <Flex mb='4' bg='black' color='white'>
+    <Flex mb='4' bg='primary' color='white'>
       <Link to='/'>
         <Heading p='4' fontSize='xl' mr='4'>
           {t('openaudiosearch', 'Open Audio Search')}
@@ -28,12 +28,12 @@ export function Header () {
 }
 
 function Navbar () {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   return (
     <nav>
       <Flex>
-        <NavLink to='/search'>{t('search', 'Search') }</NavLink>
+        <NavLink to='/search'>{t('search', 'Search')}</NavLink>
         <NavLink to='/jobs'>{t('jobs', 'Jobs')}</NavLink>
         <NavLink to='/importer'>{t('importer', 'Importer')}</NavLink>
       </Flex>
@@ -54,7 +54,7 @@ function NavLink (props) {
       <Box
         p='4'
         mr='4'
-        _hover={{ color: 'red' }}
+        _hover={{ color: 'secondary.100' }}
         {...styleProps}
       >
         {children}
