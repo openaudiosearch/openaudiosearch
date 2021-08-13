@@ -58,6 +58,7 @@ enum Command {
     Task(tasks::TaskOpts),
     /// Run the HTTP API server
     Server(ServerOpts),
+    Nuke,
     /// Run all services
     Run,
 }
@@ -162,9 +163,27 @@ async fn main() -> anyhow::Result<()> {
         Command::Task(opts) => run_task(state, opts).await,
         Command::Server(opts) => run_server(state, opts).await,
         Command::Run => run_all(state, args).await,
+        Command::Nuke => run_nuke(state, args).await,
     };
     log::debug!("command took {}", humantime::format_duration(now.elapsed()));
     result
+}
+
+async fn run_nuke(state: State, _args: Args) -> anyhow::Result<()> {
+    use dialoguer::Input;
+
+    let prompt = format!("Will DELETE and recreate ALL used CouchDB databases and ElasticSearch indexes. Type \"nuke!\" to continue");
+    println!("{}", prompt);
+    let input = Input::<String>::new().interact_text()?;
+    if &input == "nuke!" {
+        println!("Deleting CouchDB");
+        let _ = state.db.destroy_and_init().await;
+        println!("Deleting Elasticsearch");
+        let _ = state.index_manager.destroy_and_init().await;
+    } else {
+        println!("exit");
+    }
+    Ok(())
 }
 
 async fn run_all(mut state: State, args: Args) -> anyhow::Result<()> {

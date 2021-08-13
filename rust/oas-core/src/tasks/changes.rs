@@ -1,3 +1,4 @@
+use anyhow::Context;
 use futures::stream::StreamExt;
 use futures_batch::ChunksTimeoutStreamExt;
 use oas_common::task::TaskState;
@@ -38,10 +39,14 @@ pub async fn process_changes(
     while let Some(batch) = changes.next().await {
         let last_seq = last_seq_of_batch(&batch);
         let batch = changes_into_untyped_records(batch);
-        process_batch(&celery, db.clone(), batch).await?;
+        process_batch(&celery, db.clone(), batch)
+            .await
+            .context("Failed to process changes batch for tasks")?;
         if let Some(latest_seq) = last_seq {
             let latest_seq = latest_seq.to_string();
-            save_latest_seq(&db, latest_seq).await?;
+            save_latest_seq(&db, latest_seq)
+                .await
+                .context("Failed to save task meta state to CouchDB")?;
         }
     }
     Ok(())
@@ -62,7 +67,9 @@ pub async fn process_batch(
     let mut sorted = RecordMap::from_untyped(batch)?;
     let mut posts = sorted.into_vec::<Post>();
     let medias = sorted.into_vec::<Media>();
-    db.resolve_all_refs(&mut posts).await?;
+    db.resolve_all_refs(&mut posts)
+        .await
+        .context("failed to resolve refs")?;
 
     for record in posts {
         if let Some(tasks) = record.task_states() {
@@ -70,7 +77,8 @@ pub async fn process_batch(
                 let opts = serde_json::Value::Null;
                 celery
                     .send_task(taskdefs::nlp2::new(record.clone(), opts))
-                    .await?;
+                    .await
+                    .context("failed to send task")?;
             }
         }
     }
@@ -78,13 +86,17 @@ pub async fn process_batch(
     for record in medias {
         if let Some(tasks) = record.task_states() {
             if let Some(TaskState::Wanted) = &tasks.asr {
-                celery.transcribe_media(&record).await?;
+                celery
+                    .transcribe_media(&record)
+                    .await
+                    .context("failed to send task")?;
             }
             if let Some(TaskState::Wanted) = &tasks.download {
                 let opts = serde_json::Value::Null;
                 celery
                     .send_task(taskdefs::download2::new(record.clone(), opts))
-                    .await?;
+                    .await
+                    .context("failed to send task")?;
             }
         }
     }

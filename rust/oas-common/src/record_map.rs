@@ -75,6 +75,13 @@ impl RecordMap {
         iter.map(|iter| iter.collect()).unwrap_or_default()
     }
 
+    pub fn into_hashmap<T: TypedValue>(&mut self) -> HashMap<String, Record<T>> {
+        self.into_vec::<T>()
+            .into_iter()
+            .map(|r| (r.guid().to_string(), r))
+            .collect()
+    }
+
     pub fn get_mut<T: TypedValue>(&mut self, id: &str) -> Option<&mut Record<T>> {
         self.records
             .get_mut(T::NAME)

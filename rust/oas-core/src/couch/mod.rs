@@ -166,6 +166,13 @@ impl CouchDB {
         }
     }
 
+    pub async fn destroy_and_init(&self) -> Result<()> {
+        let req = self.request(Method::DELETE, "");
+        let _: Result<()> = self.send(req).await;
+        let req = self.request(Method::PUT, "");
+        self.send(req).await
+    }
+
     /// Get all docs from the database.
     pub async fn get_all(&self) -> Result<DocList> {
         let mut params = HashMap::new();

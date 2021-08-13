@@ -33,6 +33,13 @@ impl<T: TypedValue> Reference<T> {
         }
     }
 
+    pub fn guid(&self) -> &str {
+        match self {
+            Self::Id(id) => &id,
+            Self::Resolved(record) => record.guid(),
+        }
+    }
+
     /// Get the loaded record if the reference is resolved.
     pub fn record(&self) -> Option<&Record<T>> {
         match self {
