@@ -2,7 +2,7 @@ use clap::Clap;
 use futures::stream::StreamExt;
 use oas_common::types::Media;
 use oas_common::Record;
-use oas_core::rss::manager::run_manager;
+use oas_core::rss::manager::{run_manager, FeedManagerOpts};
 use oas_core::server::{run_server, ServerOpts};
 use oas_core::types::Post;
 use oas_core::util::debug_print_records;
@@ -36,6 +36,10 @@ struct Args {
     /// Bind HTTP server to port
     #[clap(long, env = "HTTP_PORT")]
     pub http_port: Option<u16>,
+
+    /// Path to mapping file
+    #[clap(long, env = "MAPPING_FILE")]
+    pub mapping_file: Option<String>,
 }
 
 #[derive(Clap)]
@@ -56,7 +60,7 @@ enum Command {
     /// Run the HTTP API server
     Server(ServerOpts),
     /// Run all services
-    Run(ServerOpts),
+    Run,
 }
 
 #[derive(Clap)]
@@ -73,7 +77,7 @@ enum FeedCommand {
     /// Fetch and crawl a feed by URL (increasing offset param).
     Crawl(rss::ops::CrawlOpts),
     /// Watch on CouchDB changes stream for new feeds
-    Watch,
+    Watch(FeedManagerOpts),
 }
 
 #[derive(Clap)]
@@ -164,17 +168,30 @@ async fn main() -> anyhow::Result<()> {
         Command::Feed(opts) => run_feed(state, opts.command).await,
         Command::Task(opts) => run_task(state, opts).await,
         Command::Server(opts) => run_server(state, opts).await,
-        Command::Run(server_opts) => run_all(state, server_opts).await,
+        Command::Run => run_all(state, args).await,
     };
     log::debug!("command took {}", humantime::format_duration(now.elapsed()));
     result
 }
 
-async fn run_all(mut state: State, server_opts: ServerOpts) -> anyhow::Result<()> {
+async fn run_all(mut state: State, args: Args) -> anyhow::Result<()> {
+    let server_opts = ServerOpts {
+        host: args.http_host,
+        port: args.http_port,
+    };
+    let feed_manager_opts = FeedManagerOpts {
+        mapping_file: args.mapping_file,
+    };
+
     state.init_all().await?;
     let server_task = task::spawn(run_server(state.clone(), server_opts));
     let index_task = task::spawn(run_index(state.clone(), IndexOpts::run_forever()));
-    let feed_task = task::spawn(run_feed(state, FeedCommand::Watch));
+    let feed_task = task::spawn(async move {
+        let res = run_feed(state, FeedCommand::Watch(feed_manager_opts)).await;
+        if let Err(err) = res {
+            log::error!("Feed task failed: {}", err);
+        }
+    });
 
     // This calls std::process::exit() on ctrl_c signal.
     // TODO: We might need cancel signals into the tasks for some tasks.
@@ -182,7 +199,7 @@ async fn run_all(mut state: State, server_opts: ServerOpts) -> anyhow::Result<()
 
     server_task.await??;
     index_task.await??;
-    feed_task.await??;
+    feed_task.await?;
     exit_task.await?;
     Ok(())
 }
@@ -289,8 +306,8 @@ async fn run_feed(state: State, command: FeedCommand) -> anyhow::Result<()> {
         FeedCommand::Crawl(opts) => {
             rss::ops::crawl_and_save(&state.db, &opts).await?;
         }
-        FeedCommand::Watch => {
-            run_manager(&state.db).await?;
+        FeedCommand::Watch(opts) => {
+            run_manager(&state.db, opts).await?;
         }
     };
     Ok(())

@@ -2,6 +2,7 @@ pub mod mapping;
 pub mod record;
 pub mod reference;
 pub mod resolver;
+pub mod ser;
 pub mod types;
 pub mod util;
 
