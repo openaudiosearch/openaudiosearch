@@ -6,7 +6,7 @@ use crate::Resolvable;
 use crate::Resolver;
 use crate::UntypedRecord;
 use crate::{ElasticMapping, MissingRefsError};
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
