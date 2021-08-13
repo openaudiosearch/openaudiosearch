@@ -1,6 +1,17 @@
+use chrono::prelude::*;
 use serde::{de, Deserializer};
 use std::fmt;
 use std::str::FromStr;
+
+pub fn deserialize_date<'de, D>(deserializer: D) -> Result<Option<DateTime<Utc>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    match deserializer.deserialize_any(DateVisitor) {
+        Ok(value) => Ok(Some(value)),
+        Err(e) => Err(e),
+    }
+}
 
 pub fn deserialize_multiple<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
 where
@@ -104,5 +115,24 @@ impl<'de> de::Visitor<'de> for VecVisitor {
             result.push(s);
         }
         Ok(result)
+    }
+}
+
+struct DateVisitor;
+impl<'de> de::Visitor<'de> for DateVisitor {
+    type Value = DateTime<Utc>;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "a datetime string")
+    }
+
+    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        match DateTime::parse_from_rfc2822(value) {
+            Ok(value) => Ok(value.with_timezone(&Utc)),
+            Err(e) => Err(E::custom(format!("Parse error {} for {}", e, value))),
+        }
     }
 }
