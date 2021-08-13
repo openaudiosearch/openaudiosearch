@@ -183,7 +183,8 @@ impl CouchDB {
         }
         let mut params = HashMap::new();
         params.insert("include_docs", serde_json::to_value("true").unwrap());
-        params.insert("keys", serde_json::to_value(ids).unwrap());
+        let keys: String = ids.join(",");
+        params.insert("keys", serde_json::to_value(keys).unwrap());
         self.get_all_with_params(&params).await
     }
 
@@ -204,9 +205,8 @@ impl CouchDB {
 
     /// Get all docs while passing a map of params.
     pub async fn get_all_with_params(&self, params: &impl Serialize) -> Result<DocList> {
-        let docs: DocList = self
-            .send(self.request(Method::GET, "_all_docs").query(params))
-            .await?;
+        let req = self.request(Method::GET, "_all_docs").query(params);
+        let docs: DocList = self.send(req).await?;
         Ok(docs)
     }
 
@@ -269,7 +269,6 @@ impl CouchDB {
         let req_json = json!({ "docs": req_json });
         let req = self.request(Method::POST, "_bulk_get").json(&req_json);
         let bulk_get: BulkGetResponse = self.send(req).await?;
-        // eprintln!("res: {:#?}", bulk_get);
         for (req_idx, (sent_id, doc_idx)) in docs_without_rev.iter().enumerate() {
             let result = bulk_get.results.get(req_idx);
             let rev = match result {
@@ -291,9 +290,7 @@ impl CouchDB {
             }
         }
 
-        // eprintln!("docs: {:#?}", docs);
         let res = self.put_bulk(docs).await;
-        // eprintln!("put res: {:#?}", res);
         res
     }
 
