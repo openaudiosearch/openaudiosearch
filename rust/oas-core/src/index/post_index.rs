@@ -86,11 +86,16 @@ impl PostIndex {
                     medias_without_posts.insert(record.guid().to_string());
                 }
                 Post::NAME => {
-                    if let Ok(record) = record.clone().into_typed_record::<Post>() {
-                        for media in &record.value.media {
-                            medias_with_posts.insert(media.id().to_string());
+                    match  record.clone().into_typed_record::<Post>() {
+                        Ok(record) => {
+                            for media in &record.value.media {
+                                medias_with_posts.insert(media.id().to_string());
+                            }
+                            posts.insert(record.guid().to_string(), record);
                         }
-                        posts.insert(record.guid().to_string(), record);
+                        Err(err) => {
+                            log::error!("Failed to upcast record {}: {:?}", record.guid(), err);
+                        }
                     }
                 }
                 _ => {}

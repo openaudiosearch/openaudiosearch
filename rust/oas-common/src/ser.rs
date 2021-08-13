@@ -146,7 +146,12 @@ impl<'de> de::Visitor<'de> for DateVisitor {
     {
         match DateTime::parse_from_rfc2822(value) {
             Ok(value) => Ok(value.with_timezone(&Utc)),
-            Err(e) => Err(E::custom(format!("Parse error {} for {}", e, value))),
+            Err(_e) => {
+                match DateTime::parse_from_rfc3339(value) {
+                    Ok(value) => Ok(value.with_timezone(&Utc)),
+                    Err(e) => Err(E::custom(format!("Parse error {} for {}", e, value))),
+                }
+            }
         }
     }
 }
