@@ -53,3 +53,4 @@ time = { version = "0.2" }
 tokio-util = "0.6.7"
 toml = "0.5.8"
 dirs = "3.0.2"
+convert_case = "0.4.0"

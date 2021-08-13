@@ -6,11 +6,7 @@ pub fn deserialize_multiple<'de, D>(deserializer: D) -> Result<Vec<String>, D::E
 where
     D: Deserializer<'de>,
 {
-    let value = deserializer.deserialize_any(VecVisitor);
-    match value {
-        Ok(value) => Ok(value),
-        Err(err) => Err(err),
-    }
+    deserializer.deserialize_any(VecVisitor)
 }
 
 pub fn deserialize_duration<'de, D>(deserializer: D) -> Result<Option<f32>, D::Error>
@@ -89,13 +85,24 @@ impl<'de> de::Visitor<'de> for VecVisitor {
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("a string with comma separated values or a single value")
     }
-    // TODO: FIX for multiple values
+
     fn visit_str<E>(self, value: &str) -> Result<Vec<String>, E>
     where
         E: de::Error,
     {
         let mut result = Vec::new();
         result.push(value.into());
+        Ok(result)
+    }
+
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
+        let mut result = vec![];
+        while let Some(s) = seq.next_element::<String>()? {
+            result.push(s);
+        }
         Ok(result)
     }
 }
