@@ -171,3 +171,14 @@ def save_media(args):
     res = res.json()
     print("res", res)
     return res
+
+@app.task(name="nlp2")
+def nlp2(args, opts):
+    post = args
+    print("START NLP", post)
+    url = f"{config.oas_url}/media/{media_id}"
+
+@app.task(name="download2")
+def download2(args, opts):
+    media = args
+    print("START DOWNLOAD", media)

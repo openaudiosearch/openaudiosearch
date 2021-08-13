@@ -120,24 +120,18 @@ impl Config {
 /// database.
 #[derive(Debug, Clone)]
 pub struct CouchDB {
-    config: Config,
+    config: Arc<Config>,
     client: Arc<reqwest::Client>,
-    base_url: String,
 }
 
 impl CouchDB {
     /// Create a new client with config.
     pub fn with_config(config: Config) -> anyhow::Result<Self> {
-        // let logger = Logger {};
-        let base_url = format!("{}/{}/", config.host, config.database);
-        let base_url = Url::parse(&base_url)?;
-        let base_url = base_url.to_string();
         let client = reqwest::Client::new();
 
         Ok(Self {
-            config,
+            config: Arc::new(config),
             client: Arc::new(client),
-            base_url,
         })
     }
 
@@ -374,8 +368,8 @@ impl CouchDB {
 }
 
 impl CouchDB {
-    pub fn table<T: TypedValue>(&self) -> Table<'_, T> {
-        Table::new(&self)
+    pub fn table<T: TypedValue>(&self) -> Table<T> {
+        Table::new(self.clone())
     }
 }
 

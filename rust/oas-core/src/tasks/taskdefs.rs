@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use celery::task::TaskResult;
 use oas_common::{
     types::{Media, Post},

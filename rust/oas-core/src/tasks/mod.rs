@@ -15,7 +15,7 @@ mod taskdefs;
 use crate::couch::CouchDB;
 use crate::State;
 
-use self::changes::process_changes;
+// use self::changes::process_changes;
 
 pub mod changes;
 

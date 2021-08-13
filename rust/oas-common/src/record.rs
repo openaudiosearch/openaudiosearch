@@ -82,7 +82,9 @@ impl ValidationError {
 }
 
 /// A trait to implement on value structs for typed [Record]s.
-pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clone::Clone {
+pub trait TypedValue:
+    fmt::Debug + Any + Serialize + DeserializeOwned + std::clone::Clone + Send
+{
     /// A string to uniquely identify this record type.
     const NAME: &'static str;
 

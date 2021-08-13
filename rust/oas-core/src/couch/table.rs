@@ -1,28 +1,28 @@
-use super::changes::RecordChangesStream;
+// use super::changes::RecordChangesStream;
 use super::{CouchDB, CouchResult, PutResponse, PutResult};
 use oas_common::{Record, TypedValue};
 use oas_common::{Resolvable, Resolver};
 use std::marker::PhantomData;
 
-pub struct Table<'a, T: TypedValue> {
-    db: &'a CouchDB,
+pub struct Table<T: TypedValue> {
+    db: CouchDB,
     typ: PhantomData<T>,
 }
 
-impl<'a, T> Table<'a, T>
+impl<T> Table<T>
 where
     T: TypedValue,
 {
-    pub fn new(db: &'a CouchDB) -> Self {
+    pub fn new(db: CouchDB) -> Self {
         Self {
-            db: &db,
+            db,
             typ: PhantomData,
         }
     }
 
-    pub fn changes(&self, last_seq: Option<String>) -> RecordChangesStream<T> {
-        self.db.changes(last_seq).batched_records()
-    }
+    // pub fn changes(&self, last_seq: Option<String>) -> RecordChangesStream<T> {
+    //     self.db.changes(last_seq).batched_records()
+    // }
 
     pub async fn get(&self, id: &str) -> CouchResult<Record<T>> {
         self.db.get_record(&T::guid(id)).await
