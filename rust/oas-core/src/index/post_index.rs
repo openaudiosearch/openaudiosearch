@@ -51,7 +51,7 @@ impl PostIndex {
             }
         });
         let res = self.index.query_records(query).await?;
-        let ids = res.iter().map(|r| r.id().to_string()).collect();
+        let ids = res.iter().map(|r| r.guid().to_string()).collect();
         Ok(ids)
     }
 
@@ -83,14 +83,19 @@ impl PostIndex {
         for record in changes {
             match record.typ() {
                 Media::NAME => {
-                    medias_without_posts.insert(record.id().to_string());
+                    medias_without_posts.insert(record.guid().to_string());
                 }
                 Post::NAME => {
-                    if let Ok(record) = record.clone().into_typed_record::<Post>() {
-                        for media in &record.value.media {
-                            medias_with_posts.insert(media.id().to_string());
+                    match  record.clone().into_typed_record::<Post>() {
+                        Ok(record) => {
+                            for media in &record.value.media {
+                                medias_with_posts.insert(media.id().to_string());
+                            }
+                            posts.insert(record.guid().to_string(), record);
                         }
-                        posts.insert(record.id().to_string(), record);
+                        Err(err) => {
+                            log::error!("Failed to upcast record {}: {:?}", record.guid(), err);
+                        }
                     }
                 }
                 _ => {}
@@ -112,7 +117,7 @@ impl PostIndex {
             .context("Failed to get posts for medias")?;
 
         for post in missing_posts.into_iter() {
-            posts.insert(post.id().to_string(), post);
+            posts.insert(post.guid().to_string(), post);
         }
 
         let mut posts: Vec<_> = posts.into_iter().map(|(_id, v)| v).collect();
@@ -139,7 +144,7 @@ impl PostIndex {
         // Index all records.
         let res = self.index.put_typed_records(&posts).await;
         report_indexing_results(&res);
-        let res = res?;
+        let res = res.context("Failed to write records to index")?;
         let stats = res.stats();
         log::debug!(
             "indexed {} changes in {} (errors {}, {} post direct updates, {} media updates resulting in {} post updates)", 

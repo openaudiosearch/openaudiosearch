@@ -17,4 +17,5 @@ async-trait = "0.1.50"
 futures-util = "0.3.15"
 uuid = { version = "0.8.2", features = ["v4"] }
 json-patch = "0.2.6"
-schemars = "0.8.3"
+schemars = { version = "0.8.3", features = ["chrono"] }
+chrono = "0.4.19"
