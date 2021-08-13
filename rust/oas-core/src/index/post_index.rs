@@ -1,3 +1,4 @@
+use anyhow::Context;
 use elasticsearch::Elasticsearch;
 use oas_common::types::{Media, Post, Transcript};
 use oas_common::{Record, Resolver};
@@ -74,7 +75,7 @@ impl PostIndex {
         &self,
         db: &CouchDB,
         changes: &[UntypedRecord],
-    ) -> Result<(), anyhow::Error> {
+    ) -> anyhow::Result<()> {
         let now = time::Instant::now();
         let mut posts = HashMap::new();
         let mut medias_with_posts = HashSet::new();
@@ -105,7 +106,10 @@ impl PostIndex {
             .find_posts_for_medias(&medias_without_posts[..])
             .await?;
         let missing_post_ids: Vec<&str> = missing_post_ids.iter().map(|s| s.as_str()).collect();
-        let missing_posts = db.get_many_records::<Post>(&missing_post_ids[..]).await?;
+        let missing_posts = db
+            .get_many_records::<Post>(&missing_post_ids[..])
+            .await
+            .context("Failed to get posts for medias")?;
 
         for post in missing_posts.into_iter() {
             posts.insert(post.id().to_string(), post);
@@ -114,7 +118,16 @@ impl PostIndex {
         let mut posts: Vec<_> = posts.into_iter().map(|(_id, v)| v).collect();
 
         // Resolve all unresolved media references.
-        db.resolve_all_refs(&mut posts.as_mut_slice()).await;
+        let resolve_result = db.resolve_all_refs(&mut posts.as_mut_slice()).await;
+        match resolve_result {
+            Err(errs) => {
+                log::error!("{}", errs);
+                for err in errs.0 {
+                    log::debug!("  {}", err);
+                }
+            }
+            _ => {}
+        }
 
         // Build the transcript for a post.
         for post in posts.iter_mut() {
