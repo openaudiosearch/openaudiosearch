@@ -116,7 +116,7 @@ export function PostPage (props = {}) {
   )
 
   return (
-    <Flex direction="column">
+    <Flex direction="column" maxWidth='750px'>
       <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
         <Flex direction="column">
           <Flex direction="row">
@@ -129,7 +129,7 @@ export function PostPage (props = {}) {
               {genres}
             </Box>
           </Flex>
-          <Heading>{post.headline}</Heading>
+          <Heading size='md'>{post.headline}</Heading>
         </Flex>
         <Flex align='center' justify='center'>
           <PostButtons post={post} />
