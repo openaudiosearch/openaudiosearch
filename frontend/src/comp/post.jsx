@@ -1,11 +1,18 @@
 import React from 'react'
-import { FaCog, FaPlay, FaTasks } from 'react-icons/fa'
+import { FaCog, FaPlay, FaTasks, FaExternalLinkAlt } from 'react-icons/fa'
 import {
   IconButton,
   Menu,
   MenuButton,
   MenuList,
-  MenuItem
+  MenuItem,
+  Heading,
+  Box,
+  Flex,
+  Link,
+  Button,
+  Tag,
+  Text,
 } from '@chakra-ui/react'
 import { useParams } from 'react-router'
 
@@ -14,6 +21,9 @@ import { useIsAdmin } from '../hooks/use-login'
 import { usePost } from '../hooks/use-post'
 import fetch from '../lib/fetch'
 import { useTranslation } from 'react-i18next'
+import Moment from 'moment'
+
+import { ToggleTranscriptSection } from './toggle-transcript-section'
 
 export function PostTaskMenuButton (props = {}) {
   const { t } = useTranslation()
@@ -93,13 +103,55 @@ export function PostPlayButton (props = {}) {
 }
 
 export function PostPage (props = {}) {
-  const params = useParams()
-  console.log('ÜPARAMS', params)
   const { postId } = useParams()
-  const post = usePost(postId)
+  const { post } = usePost(postId)
+  const { t } = useTranslation()
+  if (!post) return null
+  
+  const genres = post.genre.map((genre) => 
+    <Tag key={genre}>{genre}</Tag>  
+  )
+  const creators = post.creator.map((creator) => 
+    <Tag key={creator}>{creator}</Tag>  
+  )
+
   return (
-    <pre>
-      {JSON.stringify(post, 0, 2)}
-    </pre>
+    <Flex direction="column">
+      <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
+        <Flex direction="column">
+          <Flex direction="row">
+            { post.datePublished &&
+            <span>
+              {Moment(post.datePublished).format('DD.MM.YYYY')}
+            </span>
+            }
+            <Box ml='2'>
+              {genres}
+            </Box>
+          </Flex>
+          <Heading>{post.headline}</Heading>
+        </Flex>
+        <Flex align='center' justify='center'>
+          <PostButtons post={post} />
+        </Flex>
+      </Flex>
+      <Box>
+        {creators}
+        {post.url &&
+        <Link href={post.url} isExternal>
+          <Button>{t('sourceurl', 'Source URL')} <FaExternalLinkAlt mx="2px" /></Button>
+        </Link>
+        }
+      </Box>
+
+      {post.description &&
+        <Box>{post.description}</Box>
+      }
+
+      <Box mt='2'>
+        <ToggleTranscriptSection post={post} />
+      </Box>
+
+    </Flex>
   )
 }
