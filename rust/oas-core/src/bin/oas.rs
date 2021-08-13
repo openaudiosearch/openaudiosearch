@@ -10,7 +10,6 @@ use oas_core::State;
 use oas_core::{couch, index, rss, tasks};
 use std::time;
 use tokio::task;
-use url::Url;
 
 #[derive(Clap)]
 struct Args {
@@ -73,17 +72,11 @@ struct FeedCommands {
 #[derive(Clap)]
 enum FeedCommand {
     /// Fetch a feed by URL.
-    Fetch(FeedFetchOpts),
+    Fetch(rss::ops::FetchOpts),
     /// Fetch and crawl a feed by URL (increasing offset param).
     Crawl(rss::ops::CrawlOpts),
     /// Watch on CouchDB changes stream for new feeds
     Watch(FeedManagerOpts),
-}
-
-#[derive(Clap)]
-struct FeedFetchOpts {
-    /// Feed URL
-    url: Url,
 }
 
 #[derive(Clap)]
@@ -301,7 +294,7 @@ async fn run_feed(state: State, command: FeedCommand) -> anyhow::Result<()> {
     state.db.init().await?;
     match command {
         FeedCommand::Fetch(opts) => {
-            rss::ops::fetch_and_save(&state.db, &opts.url).await?;
+            rss::ops::fetch_and_save(&state.db, &opts).await?;
         }
         FeedCommand::Crawl(opts) => {
             rss::ops::crawl_and_save(&state.db, &opts).await?;

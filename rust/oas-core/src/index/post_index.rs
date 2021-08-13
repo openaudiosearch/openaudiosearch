@@ -124,18 +124,55 @@ impl PostIndex {
         }
 
         // Index all records.
-        self.index.put_typed_records(&posts).await?;
-
+        let res = self.index.put_typed_records(&posts).await;
+        report_indexing_results(&res);
+        let res = res?;
+        let stats = res.stats();
         log::debug!(
-            "indexed {} changes in {} ({} post direct updates, {} media updates resulting in {} post updates)", 
+            "indexed {} changes in {} (errors {}, {} post direct updates, {} media updates resulting in {} post updates)", 
             changes.len(),
             humantime::format_duration(now.elapsed()),
+            stats.errors,
             direct_posts_len,
             medias_without_posts.len(),
             missing_post_ids.len()
         );
 
         Ok(())
+    }
+}
+
+fn report_indexing_results(res: &Result<BulkPutResponse, IndexError>) {
+    match res {
+        Err(err) => {
+            log::error!("Failed to index records: {}", err);
+        }
+        Ok(res) => {
+            let stats = res.stats();
+            match res.errors {
+                true => {
+                    log::error!("Index failed for {} docs", stats.errors);
+                    if let Some((id, err)) = stats.first_error {
+                        log::error!(
+                            "First error occured on doc {}: {} {}",
+                            id,
+                            err.r#type,
+                            err.reason
+                        );
+                    }
+
+                    for error in res.errors() {
+                        log::debug!(
+                            "Index fail for doc {}: {} {}",
+                            error.0,
+                            error.1.r#type,
+                            error.1.reason
+                        );
+                    }
+                }
+                _ => {}
+            }
+        }
     }
 }
 
