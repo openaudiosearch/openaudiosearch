@@ -1,3 +1,4 @@
+use anyhow::Context;
 use elasticsearch::Elasticsearch;
 use oas_common::types::{Media, Post, Transcript};
 use oas_common::{Record, Resolver};
@@ -74,7 +75,7 @@ impl PostIndex {
         &self,
         db: &CouchDB,
         changes: &[UntypedRecord],
-    ) -> Result<(), anyhow::Error> {
+    ) -> anyhow::Result<()> {
         let now = time::Instant::now();
         let mut posts = HashMap::new();
         let mut medias_with_posts = HashSet::new();
@@ -105,7 +106,10 @@ impl PostIndex {
             .find_posts_for_medias(&medias_without_posts[..])
             .await?;
         let missing_post_ids: Vec<&str> = missing_post_ids.iter().map(|s| s.as_str()).collect();
-        let missing_posts = db.get_many_records::<Post>(&missing_post_ids[..]).await?;
+        let missing_posts = db
+            .get_many_records::<Post>(&missing_post_ids[..])
+            .await
+            .context("Failed to get posts for medias")?;
 
         for post in missing_posts.into_iter() {
             posts.insert(post.id().to_string(), post);
