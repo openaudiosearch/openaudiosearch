@@ -289,16 +289,19 @@ async fn check_error(
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct BulkPutResponse {
-    took: u32,
-    errors: bool,
-    items: Vec<BulkPutResponseAction>,
+    pub took: u32,
+    pub errors: bool,
+    pub items: Vec<BulkPutResponseAction>,
 }
 
 impl BulkPutResponse {
-    fn stats(&self) -> BulkPutStats {
+    pub fn stats(&self) -> BulkPutStats {
         let mut stats = BulkPutStats::default();
         for item in self.items.iter() {
-            if let Some(_) = &item.inner().error {
+            if let Some(error) = &item.inner().error {
+                if stats.first_error.is_none() {
+                    stats.first_error = Some((item.inner().id.clone(), error.clone()));
+                }
                 stats.errors += 1;
             } else {
                 match item.inner().result {
@@ -310,6 +313,17 @@ impl BulkPutResponse {
             }
         }
         stats
+    }
+
+    // TODO: Remove clones.
+    pub fn errors(&self) -> impl Iterator<Item = (String, BulkPutResponseError)> + '_ {
+        self.items.iter().filter_map(|ref item| {
+            if let Some(ref error) = item.inner().error {
+                Some((item.inner().id.to_string(), error.clone()))
+            } else {
+                None
+            }
+        })
     }
 
     fn summarize(&self) -> String {
@@ -328,10 +342,11 @@ impl BulkPutResponse {
 
 #[derive(Debug, Default)]
 pub struct BulkPutStats {
-    errors: usize,
-    created: usize,
-    deleted: usize,
-    updated: usize,
+    pub errors: usize,
+    pub created: usize,
+    pub deleted: usize,
+    pub updated: usize,
+    pub first_error: Option<(String, BulkPutResponseError)>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -357,29 +372,29 @@ impl BulkPutResponseAction {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BulkPutResponseItem {
     #[serde(rename = "_id")]
-    id: String,
+    pub id: String,
     #[serde(rename = "_index")]
-    index: String,
+    pub index: String,
     #[serde(rename = "_version")]
-    version: Option<u64>,
+    pub version: Option<u64>,
     #[serde(rename = "_seq_no")]
-    seq_no: Option<u64>,
+    pub seq_no: Option<u64>,
 
     #[serde(rename = "_shards")]
-    shards: Option<serde_json::Value>,
+    pub shards: Option<serde_json::Value>,
 
-    status: u64,
-    result: Option<BulkPutResponseResult>,
-    error: Option<BulkPutResponseError>,
+    pub status: u64,
+    pub result: Option<BulkPutResponseResult>,
+    pub error: Option<BulkPutResponseError>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct BulkPutResponseError {
-    r#type: String,
-    reason: String,
-    index_uuid: Option<String>,
-    shard: Option<String>,
-    index: Option<String>,
+    pub r#type: String,
+    pub reason: String,
+    pub index_uuid: Option<String>,
+    pub shard: Option<String>,
+    pub index: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
