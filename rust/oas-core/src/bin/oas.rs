@@ -58,6 +58,7 @@ enum Command {
     Task(tasks::TaskOpts),
     /// Run the HTTP API server
     Server(ServerOpts),
+    Nuke,
     /// Run all services
     Run,
 }
@@ -162,9 +163,27 @@ async fn main() -> anyhow::Result<()> {
         Command::Task(opts) => run_task(state, opts).await,
         Command::Server(opts) => run_server(state, opts).await,
         Command::Run => run_all(state, args).await,
+        Command::Nuke => run_nuke(state, args).await,
     };
     log::debug!("command took {}", humantime::format_duration(now.elapsed()));
     result
+}
+
+async fn run_nuke(state: State, _args: Args) -> anyhow::Result<()> {
+    use dialoguer::Input;
+
+    let prompt = format!("Will DELETE and recreate ALL used CouchDB databases and ElasticSearch indexes. Type \"nuke!\" to continue");
+    println!("{}", prompt);
+    let input = Input::<String>::new().interact_text()?;
+    if &input == "nuke!" {
+        println!("Deleting CouchDB");
+        let _ = state.db.destroy_and_init().await;
+        println!("Deleting Elasticsearch");
+        let _ = state.index_manager.destroy_and_init().await;
+    } else {
+        println!("exit");
+    }
+    Ok(())
 }
 
 async fn run_all(mut state: State, args: Args) -> anyhow::Result<()> {
@@ -182,6 +201,12 @@ async fn run_all(mut state: State, args: Args) -> anyhow::Result<()> {
     let mut runtime = Runtime::new();
     runtime.spawn("server", run_server(state.clone(), server_opts));
     runtime.spawn("index", run_index(state.clone(), IndexOpts::run_forever()));
+    // Spawn task watcher.
+    // TODO: Enable
+    // runtime.spawn(
+    //     "tasks",
+    //     tasks::changes::process_changes(state.tasks.clone(), state.db.clone(), true),
+    // );
     runtime.spawn(
         "feed_watcher",
         run_feed(state, FeedCommand::Watch(feed_manager_opts)),
@@ -192,6 +217,7 @@ async fn run_all(mut state: State, args: Args) -> anyhow::Result<()> {
 
     // This runs until all tasks are finished, i.e. forever.
     runtime.run().await;
+
     Ok(())
 }
 
@@ -223,15 +249,16 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
 
 async fn run_debug(state: State) -> anyhow::Result<()> {
     eprintln!("OAS debug -- nothing here");
-    let id = std::env::var("ID").unwrap();
-    let post_index = state.index_manager.post_index();
-    let iters = 1000usize;
-    for _ in 0..iters {
-        let now = time::Instant::now();
-        let res = post_index.find_posts_for_medias(&[&id]).await?;
-        eprintln!("res {:?}", res);
-        eprintln!("took {}", humantime::format_duration(now.elapsed()));
-    }
+    tasks::changes::process_changes(state.tasks, state.db, false).await?;
+    // let id = std::env::var("ID").unwrap();
+    // let post_index = state.index_manager.post_index();
+    // let iters = 1000usize;
+    // for _ in 0..iters {
+    //     let now = time::Instant::now();
+    //     let res = post_index.find_posts_for_medias(&[&id]).await?;
+    //     eprintln!("res {:?}", res);
+    //     eprintln!("took {}", humantime::format_duration(now.elapsed()));
+    // }
     Ok(())
 }
 
