@@ -1,3 +1,4 @@
+use anyhow::Context;
 use clap::Clap;
 use futures::stream::StreamExt;
 use oas_common::types::Media;
@@ -6,10 +7,9 @@ use oas_core::rss::manager::{run_manager, FeedManagerOpts};
 use oas_core::server::{run_server, ServerOpts};
 use oas_core::types::Post;
 use oas_core::util::debug_print_records;
-use oas_core::State;
 use oas_core::{couch, index, rss, tasks};
+use oas_core::{Runtime, State};
 use std::time;
-use tokio::task;
 
 #[derive(Clap)]
 struct Args {
@@ -177,27 +177,25 @@ async fn run_all(mut state: State, args: Args) -> anyhow::Result<()> {
     };
 
     state.init_all().await?;
-    let server_task = task::spawn(run_server(state.clone(), server_opts));
-    let index_task = task::spawn(run_index(state.clone(), IndexOpts::run_forever()));
-    let feed_task = task::spawn(async move {
-        let res = run_feed(state, FeedCommand::Watch(feed_manager_opts)).await;
-        if let Err(err) = res {
-            log::error!("Feed task failed: {}", err);
-        }
-    });
 
+    // A simple abstraction to run tasks and log their results in case of errors.
+    let mut runtime = Runtime::new();
+    runtime.spawn("server", run_server(state.clone(), server_opts));
+    runtime.spawn("index", run_index(state.clone(), IndexOpts::run_forever()));
+    runtime.spawn(
+        "feed_watcher",
+        run_feed(state, FeedCommand::Watch(feed_manager_opts)),
+    );
     // This calls std::process::exit() on ctrl_c signal.
     // TODO: We might need cancel signals into the tasks for some tasks.
-    let exit_task = task::spawn(run_exit());
+    runtime.spawn("exit", run_exit());
 
-    server_task.await??;
-    index_task.await??;
-    feed_task.await?;
-    exit_task.await?;
+    // This runs until all tasks are finished, i.e. forever.
+    runtime.run().await;
     Ok(())
 }
 
-async fn run_exit() {
+async fn run_exit() -> anyhow::Result<()> {
     tokio::signal::ctrl_c()
         .await
         .expect("Failed to listen for cancel event");
@@ -259,7 +257,10 @@ async fn run_index(state: State, opts: IndexOpts) -> anyhow::Result<()> {
         false => index::InitOpts::default(),
     };
 
-    manager.init(init_opts).await?;
+    manager
+        .init(init_opts)
+        .await
+        .with_context(|| format!("Failed to initializer Elasticsearch index"))?;
     match opts.post_id {
         Some(post_id) => {
             let post_index = manager.post_index();

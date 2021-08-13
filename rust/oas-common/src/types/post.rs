@@ -6,6 +6,7 @@ use crate::Resolvable;
 use crate::Resolver;
 use crate::UntypedRecord;
 use crate::{ElasticMapping, MissingRefsError};
+use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -21,17 +22,17 @@ pub struct Post {
     pub r#abstract: Option<String>,
     pub contributor: Option<String>,
     pub url: Option<String>,
-    pub date_published: Option<String>,
-    pub date_modified: Option<String>,
+    #[serde(default, deserialize_with = "ser::deserialize_date")]
+    pub date_published: Option<DateTime<Utc>>,
+    #[serde(default, deserialize_with = "ser::deserialize_date")]
+    pub date_modified: Option<DateTime<Utc>>,
     pub description: Option<String>,
     pub in_language: Option<String>,
     pub licence: Option<String>,
     pub publisher: Option<String>,
-    #[serde(default)]
-    #[serde(deserialize_with = "ser::deserialize_multiple")]
+    #[serde(default, deserialize_with = "ser::deserialize_multiple")]
     pub genre: Vec<String>,
-    #[serde(default)]
-    #[serde(deserialize_with = "ser::deserialize_multiple")]
+    #[serde(default, deserialize_with = "ser::deserialize_multiple")]
     pub creator: Vec<String>,
     #[serde(default)]
     pub media: Vec<Reference<Media>>,

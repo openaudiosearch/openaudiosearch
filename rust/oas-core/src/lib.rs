@@ -4,12 +4,14 @@ pub mod couch;
 // pub mod couch2;
 pub mod index;
 pub mod rss;
+mod runtime;
 pub mod server;
 pub mod tasks;
 pub mod util;
 
 pub use oas_common as common;
 pub use oas_common::{types, Record, Reference, TypedValue, UntypedRecord};
+pub use runtime::Runtime;
 
 /// Main application state.
 ///

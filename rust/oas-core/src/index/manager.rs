@@ -5,6 +5,7 @@
 //! CouchDB seq that was indexed.
 
 use crate::couch::CouchDB;
+use anyhow::Context;
 use elasticsearch::Elasticsearch;
 use futures::stream::StreamExt;
 use futures_batch::ChunksTimeoutStreamExt;
@@ -180,8 +181,14 @@ impl IndexManager {
                 .into_iter()
                 .filter_map(|ev| ev.doc.and_then(|doc| doc.into_untyped_record().ok()))
                 .collect();
-            self.post_index.index_changes(&db, &records[..]).await?;
-            self.meta_index.set_latest_indexed_seq(latest_seq).await?;
+            self.post_index
+                .index_changes(&db, &records[..])
+                .await
+                .context("Failed to index changes")?;
+            self.meta_index
+                .set_latest_indexed_seq(latest_seq)
+                .await
+                .context("Failed to update index meta state")?;
             log::debug!("indexed {} (latest seq {:?})", len, latest_seq);
         }
 

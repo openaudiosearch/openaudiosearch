@@ -1,3 +1,4 @@
+use anyhow::Context;
 use elasticsearch::Elasticsearch;
 use oas_common::types::{Media, Post, Transcript};
 use oas_common::{Record, Resolver};
@@ -50,7 +51,7 @@ impl PostIndex {
             }
         });
         let res = self.index.query_records(query).await?;
-        let ids = res.iter().map(|r| r.id().to_string()).collect();
+        let ids = res.iter().map(|r| r.guid().to_string()).collect();
         Ok(ids)
     }
 
@@ -74,7 +75,7 @@ impl PostIndex {
         &self,
         db: &CouchDB,
         changes: &[UntypedRecord],
-    ) -> Result<(), anyhow::Error> {
+    ) -> anyhow::Result<()> {
         let now = time::Instant::now();
         let mut posts = HashMap::new();
         let mut medias_with_posts = HashSet::new();
@@ -82,14 +83,19 @@ impl PostIndex {
         for record in changes {
             match record.typ() {
                 Media::NAME => {
-                    medias_without_posts.insert(record.id().to_string());
+                    medias_without_posts.insert(record.guid().to_string());
                 }
                 Post::NAME => {
-                    if let Ok(record) = record.clone().into_typed_record::<Post>() {
-                        for media in &record.value.media {
-                            medias_with_posts.insert(media.id().to_string());
+                    match  record.clone().into_typed_record::<Post>() {
+                        Ok(record) => {
+                            for media in &record.value.media {
+                                medias_with_posts.insert(media.id().to_string());
+                            }
+                            posts.insert(record.guid().to_string(), record);
                         }
-                        posts.insert(record.id().to_string(), record);
+                        Err(err) => {
+                            log::error!("Failed to upcast record {}: {:?}", record.guid(), err);
+                        }
                     }
                 }
                 _ => {}
@@ -105,16 +111,28 @@ impl PostIndex {
             .find_posts_for_medias(&medias_without_posts[..])
             .await?;
         let missing_post_ids: Vec<&str> = missing_post_ids.iter().map(|s| s.as_str()).collect();
-        let missing_posts = db.get_many_records::<Post>(&missing_post_ids[..]).await?;
+        let missing_posts = db
+            .get_many_records::<Post>(&missing_post_ids[..])
+            .await
+            .context("Failed to get posts for medias")?;
 
         for post in missing_posts.into_iter() {
-            posts.insert(post.id().to_string(), post);
+            posts.insert(post.guid().to_string(), post);
         }
 
         let mut posts: Vec<_> = posts.into_iter().map(|(_id, v)| v).collect();
 
         // Resolve all unresolved media references.
-        db.resolve_all_refs(&mut posts.as_mut_slice()).await;
+        let resolve_result = db.resolve_all_refs(&mut posts.as_mut_slice()).await;
+        match resolve_result {
+            Err(errs) => {
+                log::error!("{}", errs);
+                for err in errs.0 {
+                    log::debug!("  {}", err);
+                }
+            }
+            _ => {}
+        }
 
         // Build the transcript for a post.
         for post in posts.iter_mut() {
@@ -126,7 +144,7 @@ impl PostIndex {
         // Index all records.
         let res = self.index.put_typed_records(&posts).await;
         report_indexing_results(&res);
-        let res = res?;
+        let res = res.context("Failed to write records to index")?;
         let stats = res.stats();
         log::debug!(
             "indexed {} changes in {} (errors {}, {} post direct updates, {} media updates resulting in {} post updates)", 

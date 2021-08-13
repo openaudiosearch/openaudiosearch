@@ -1,4 +1,5 @@
 use crate::couch::{CouchDB, PutResult};
+use chrono::prelude::*;
 use convert_case::{Case, Casing};
 use oas_common::{types::Post, util};
 use oas_common::{Reference, UntypedRecord};
@@ -151,8 +152,8 @@ fn resolve_extensions(
 ) -> HashMap<String, String> {
     let result: HashMap<String, String> = mapping
         .iter()
-        .filter_map(|(rss_ext_key, target_key)| {
-            let mut parts = rss_ext_key.split(":");
+        .filter_map(|(from_key, target_key)| {
+            let mut parts = from_key.split(":");
             match (parts.next(), parts.next()) {
                 (Some(prefix), Some(suffix)) => {
                     let value = extensions
@@ -177,6 +178,7 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
     // values will be set on this struct manually (see below.)
     // TODO: implement mapping management (load mapping, save mapping)
     let extensions: &ExtensionMap = item.extensions();
+
     let mapped_fields = resolve_extensions(extensions, mapping);
     //log::debug!("resolve_extensions result: {:#?}", mapped_fields);
     let mut post = {
@@ -233,11 +235,11 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
     if post.headline.is_none() {
         post.headline = item.title.clone();
     }
-    
+
     if post.date_published.is_none() {
         if let Some(rfc_2822_date) = item.pub_date {
             if let Ok(date) = chrono::DateTime::parse_from_rfc2822(&rfc_2822_date) {
-                post.date_published = Some(date.to_rfc3339());
+                post.date_published = Some(date.with_timezone(&Utc));
             }
         }
     }
@@ -245,7 +247,7 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
     if post.description.is_none() {
         post.description = item.description;
     }
-    
+
     if let Some(creator) = item.author {
         post.creator.push(creator.to_string());
     }
