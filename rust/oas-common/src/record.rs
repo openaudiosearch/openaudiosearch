@@ -7,6 +7,7 @@ use std::convert::TryFrom;
 use std::fmt;
 use thiserror::Error;
 
+use crate::task::TaskObject;
 use crate::{MissingRefsError, Resolvable, Resolver};
 
 pub type Object = serde_json::Map<String, serde_json::Value>;
@@ -39,10 +40,11 @@ pub struct RecordMeta {
     #[serde(rename = "type")]
     typ: String,
     id: String,
-    source: String,
-    seq: u32,
-    version: u32,
-    timestamp: u32,
+    // TODO: Add more metadata?
+    // source: String,
+    // seq: u32,
+    // version: u32,
+    // timestamp: u32,
 }
 
 #[derive(Debug, Serialize)]
@@ -80,7 +82,9 @@ impl ValidationError {
 }
 
 /// A trait to implement on value structs for typed [Record]s.
-pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clone::Clone {
+pub trait TypedValue:
+    fmt::Debug + Any + Serialize + DeserializeOwned + std::clone::Clone + Send
+{
     /// A string to uniquely identify this record type.
     const NAME: &'static str;
 
@@ -129,8 +133,15 @@ impl UntypedRecord {
         Ok(Self { meta, value })
     }
 
-    /// Convert this untyped record into a typed [Record].
     pub fn into_typed_record<T: TypedValue + DeserializeOwned + Clone + 'static>(
+        self,
+    ) -> Result<TypedRecord<T>, DecodingError> {
+        self.into_typed()
+    }
+
+    /// Convert this untyped record into a typed [Record].
+    /// #[deprecated(note = "use into_typed")]
+    pub fn into_typed<T: TypedValue + DeserializeOwned + Clone + 'static>(
         self,
     ) -> Result<TypedRecord<T>, DecodingError> {
         if self.meta.typ.as_str() != T::NAME {
@@ -223,6 +234,19 @@ where
     pub meta: RecordMeta,
     #[serde(flatten)]
     pub value: T,
+}
+
+impl<T> TypedRecord<T>
+where
+    T: TaskObject,
+{
+    pub fn task_states(&self) -> Option<&<T as TaskObject>::TaskStates> {
+        self.value.task_states()
+    }
+
+    pub fn task_states_mut(&mut self) -> Option<&mut <T as TaskObject>::TaskStates> {
+        self.value.task_states_mut()
+    }
 }
 
 impl<T> TypedRecord<T>

@@ -1,10 +1,13 @@
 use futures::{ready, FutureExt, StreamExt, TryStreamExt};
 use futures::{Future, Stream};
+use futures_batch::ChunksTimeoutStreamExt;
+use oas_common::UntypedRecord;
 use reqwest::{Method, Response};
 use std::collections::HashMap;
 use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
+use std::time;
 use tokio::io::AsyncBufReadExt;
 use tokio_stream::wrappers::LinesStream;
 use tokio_util::io::StreamReader;
@@ -13,6 +16,9 @@ use crate::couch::ErrorDetails;
 
 use super::types::{ChangeEvent, Event};
 use super::{CouchDB, CouchError, CouchResult};
+
+pub const BATCH_TIMEOUT: time::Duration = time::Duration::from_millis(200);
+pub const BATCH_MAX_LEN: usize = 1000;
 
 /// The max timeout value for longpoll/continous HTTP requests
 /// that CouchDB supports (see [1]).
@@ -88,6 +94,40 @@ impl ChangesStream {
     /// Whether this stream is running in infinite mode.
     pub fn infinite(&self) -> bool {
         self.infinite
+    }
+
+    // pub fn batched_records<T: TypedValue>(self) -> RecordChangesStream<T> {
+    //     RecordChangesStream::new(self)
+    // }
+
+    pub fn batched_untyped_records(self) -> impl Stream<Item = UntypedRecordBatch> {
+        let batch_timeout = BATCH_TIMEOUT;
+        let batch_max_len = BATCH_MAX_LEN;
+        let changes = self.chunks_timeout(batch_max_len, batch_timeout);
+        let changes = changes.map(|batch| UntypedRecordBatch {
+            last_seq: get_last_seq(&batch[..]),
+            records: changes_into_untyped_records(batch),
+        });
+        changes
+    }
+}
+
+pub struct UntypedRecordBatch {
+    records: Vec<UntypedRecord>,
+    last_seq: Option<String>,
+}
+
+impl UntypedRecordBatch {
+    pub fn last_seq(&self) -> Option<&str> {
+        self.last_seq.as_deref()
+    }
+
+    pub fn records(&self) -> &[UntypedRecord] {
+        &self.records[..]
+    }
+
+    pub fn into_inner(self) -> Vec<UntypedRecord> {
+        self.records
     }
 }
 
@@ -179,6 +219,25 @@ impl Stream for ChangesStream {
             }
         }
     }
+}
+
+pub fn changes_into_untyped_records(batch: Vec<CouchResult<ChangeEvent>>) -> Vec<UntypedRecord> {
+    let records: Vec<_> = batch
+        .into_iter()
+        .filter_map(|ev| {
+            ev.ok()
+                .and_then(|ev| ev.doc)
+                .and_then(|doc| doc.into_untyped_record().ok())
+        })
+        .collect();
+    records
+}
+
+fn get_last_seq(batch: &[CouchResult<ChangeEvent>]) -> Option<String> {
+    batch.last().and_then(|v| match v {
+        Ok(v) => Some(v.seq.to_string()),
+        _ => None,
+    })
 }
 
 // #[cfg(test)]

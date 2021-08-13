@@ -1,4 +1,4 @@
-use oas_common::DecodingError;
+use oas_common::{DecodingError, MissingRefsError};
 use std::fmt;
 use thiserror::Error;
 
@@ -18,6 +18,8 @@ pub enum CouchError {
     DecodingError(#[from] DecodingError),
     #[error("{0}")]
     Other(String),
+    #[error("{0}")]
+    MissingRefs(#[from] MissingRefsError),
 }
 
 impl CouchError {

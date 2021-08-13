@@ -183,6 +183,10 @@ async fn run_all(mut state: State, args: Args) -> anyhow::Result<()> {
     runtime.spawn("server", run_server(state.clone(), server_opts));
     runtime.spawn("index", run_index(state.clone(), IndexOpts::run_forever()));
     runtime.spawn(
+        "tasks",
+        tasks::changes::process_changes(state.tasks.clone(), state.db.clone(), true),
+    );
+    runtime.spawn(
         "feed_watcher",
         run_feed(state, FeedCommand::Watch(feed_manager_opts)),
     );
@@ -192,6 +196,7 @@ async fn run_all(mut state: State, args: Args) -> anyhow::Result<()> {
 
     // This runs until all tasks are finished, i.e. forever.
     runtime.run().await;
+
     Ok(())
 }
 
@@ -223,15 +228,16 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
 
 async fn run_debug(state: State) -> anyhow::Result<()> {
     eprintln!("OAS debug -- nothing here");
-    let id = std::env::var("ID").unwrap();
-    let post_index = state.index_manager.post_index();
-    let iters = 1000usize;
-    for _ in 0..iters {
-        let now = time::Instant::now();
-        let res = post_index.find_posts_for_medias(&[&id]).await?;
-        eprintln!("res {:?}", res);
-        eprintln!("took {}", humantime::format_duration(now.elapsed()));
-    }
+    tasks::changes::process_changes(state.tasks, state.db, false).await?;
+    // let id = std::env::var("ID").unwrap();
+    // let post_index = state.index_manager.post_index();
+    // let iters = 1000usize;
+    // for _ in 0..iters {
+    //     let now = time::Instant::now();
+    //     let res = post_index.find_posts_for_medias(&[&id]).await?;
+    //     eprintln!("res {:?}", res);
+    //     eprintln!("took {}", humantime::format_duration(now.elapsed()));
+    // }
     Ok(())
 }
 

@@ -4,7 +4,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-pub type Mapping = serde_json::Value;
+// pub type Mapping = serde_json::Value;
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -29,24 +29,24 @@ impl Default for FeedSettings {
 pub struct FeedState {
     pub crawl_finished: bool,
     pub crawl_last_offset: usize,
-    pub last_check: FeedCheckState,
+    // pub last_check: FeedCheckState,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct FeedCheckState {
-    timestamp: u32,
-    latest_guid: String,
-}
+// #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
+// #[serde(rename_all = "camelCase")]
+// pub struct FeedCheckState {
+//     timestamp: u32,
+//     latest_guid: String,
+// }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Feed {
     pub url: String,
-    #[serde(default)]
-    pub mapping: Mapping,
     pub settings: Option<FeedSettings>,
-    pub state: Option<FeedState>,
+    // #[serde(default)]
+    // pub mapping: Mapping,
+    // pub state: Option<FeedState>,
 }
 
 impl Feed {
