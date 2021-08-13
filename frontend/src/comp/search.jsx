@@ -228,7 +228,7 @@ function ResultItem (props) {
   )
 }
 
-function SnippetList (props = {}) {
+export function SnippetList (props = {}) {
   const { fieldname, snippets, post } = props
   return (
     <Box p={2}>
