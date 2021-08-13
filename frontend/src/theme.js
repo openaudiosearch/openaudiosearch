@@ -18,7 +18,10 @@ export default function createTheme (props = {}) {
         100: '#CEA8FF',
         50: '#CEA8FF'
       },
-      tertiary: '#2DCCC2',
+      tertiary: {
+        600: '#2DCCC2',
+        100: '#C4ECEA'
+      },
       main: '#aa00ea',
       bg: {
         screen: '#fff'

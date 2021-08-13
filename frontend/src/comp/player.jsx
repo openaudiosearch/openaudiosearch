@@ -272,7 +272,9 @@ function PlayerButton (props = {}) {
     <IconButton
       aria-label={label}
       color='secondary.500'
+      bg='primary'
       isRound
+      _hover={{ bg: 'tertiary.100' }}
       // variant='ghost'
       mr={2}
       {...other}
