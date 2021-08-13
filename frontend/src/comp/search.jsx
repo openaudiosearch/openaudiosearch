@@ -11,6 +11,7 @@ import { TranscriptSnippet } from './transcript'
 import { useIsAdmin } from '../hooks/use-login'
 import { CgClose } from 'react-icons/cg'
 import { useTranslation } from 'react-i18next'
+import { MdChildFriendly } from 'react-icons/md'
 
 const { ResultListWrapper } = ReactiveList
 
@@ -213,7 +214,7 @@ export function ResultItem (props) {
               <span>
                 {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
               </span>}
-            <div>{item.description}</div>
+            <div><CollapsedText>{item.description}</CollapsedText></div>
           </div>
           {showSnippets && snippets && <div>{snippets}</div>}
           {isAdmin && <ReactJson src={item} collapsed name={false} />}
@@ -223,6 +224,37 @@ export function ResultItem (props) {
         </Flex>
       </Flex>
     </Flex>
+  )
+}
+
+function CollapsedText (props) {
+  const { children, initialCollapsed = true, characterLength = 280 } = props
+  const [collapsed, setCollapsed] = React.useState(initialCollapsed)
+  const fullText = children || ''
+  const isCollapsible = fullText.length >= characterLength
+  const text = React.useMemo(() => {
+    if (!collapsed) return fullText
+    if (!isCollapsible) return fullText
+    const re = new RegExp(`^.{${characterLength}}\\w*`)
+    const matches = fullText.match(re)
+    if (matches && matches.length > 0) {
+      const slice = fullText.slice(0, matches[0].length)
+      return slice
+    }
+    return fullText
+  })
+
+  const buttonLabel = collapsed ? 'Expand' : 'Collapse'
+
+  return (
+    <Text>
+      {text}
+      {isCollapsible && (
+        <Button ml='2' variant='link' onClick={e => setCollapsed(collapsed => !collapsed)}>
+          {buttonLabel}
+        </Button>
+      )}
+    </Text>
   )
 }
 

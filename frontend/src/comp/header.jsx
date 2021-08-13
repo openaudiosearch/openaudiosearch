@@ -78,7 +78,7 @@ function NavLink (props) {
     borderColor: 'white',
     color: 'white'
   }
-  const styleProps = match ? activeProps : {}
+  const styleProps = match ? activeProps : { ...activeProps, borderColor: 'primary', color: 'white' }
   const hoverProps = {
     ...activeProps,
     borderColor: 'secondary.600',
