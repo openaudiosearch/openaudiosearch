@@ -46,3 +46,5 @@ chrono = "0.4.19"
 bytes = "1.0.1"
 include_dir = "0.6.1"
 uuid = { version = "0.8.2", features = ["v4"] }
+toml = "0.5.8"
+dirs = "3.0.2"

@@ -1,22 +1,22 @@
 use crate::couch::{CouchDB, PutResult};
-use oas_common::UntypedRecord;
 use oas_common::{types::Post, util};
+use oas_common::{Reference, UntypedRecord};
+use rss::extension::ExtensionMap;
 use rss::Channel;
 use std::collections::HashMap;
 use std::time::Duration;
 use url::{ParseError, Url};
 
 use crate::types::{FeedSettings, Media};
-use crate::{Record, Reference};
+use crate::Record;
 pub mod crawlers;
 mod error;
 pub mod manager;
+pub mod mapping;
 pub mod ops;
 
 pub use error::{RssError, RssResult};
 pub use ops::{Crawler, FetchedFeedPage, Next};
-
-use rss::extension::ExtensionMap;
 
 #[derive(Debug, Clone)]
 pub struct FeedWatcher {
@@ -24,18 +24,24 @@ pub struct FeedWatcher {
     client: surf::Client,
     channel: Option<Channel>,
     settings: FeedSettings,
+    mapping: HashMap<String, String>,
 }
 
 impl FeedWatcher {
-    pub fn new(url: impl AsRef<str>, settings: Option<FeedSettings>) -> Result<Self, ParseError> {
+    pub fn new(
+        url: impl AsRef<str>,
+        settings: Option<FeedSettings>,
+        mapping: HashMap<String, String>,
+    ) -> Result<Self, ParseError> {
         let client = surf::Client::new();
-        Self::with_client(client, url, settings)
+        Self::with_client(client, url, settings, mapping)
     }
 
     pub fn with_client(
         client: surf::Client,
         url: impl AsRef<str>,
         settings: Option<FeedSettings>,
+        mapping: HashMap<String, String>,
     ) -> Result<Self, ParseError> {
         let url = url.as_ref().parse()?;
         let feed = Self {
@@ -43,6 +49,7 @@ impl FeedWatcher {
             client,
             channel: None,
             settings: settings.unwrap_or_default(),
+            mapping,
         };
         Ok(feed)
     }
@@ -114,7 +121,7 @@ impl FeedWatcher {
         let channel = self.channel.as_ref().unwrap();
         let mut records = vec![];
         for item in channel.items() {
-            let record = item_into_post(item.clone());
+            let record = item_into_post(&self.mapping, item.clone());
             records.push(record);
         }
         Ok(records)
@@ -135,7 +142,7 @@ impl FeedWatcher {
 }
 fn resolve_extensions(
     extensions: &rss::extension::ExtensionMap,
-    mapping: HashMap<String, String>,
+    mapping: &HashMap<String, String>,
 ) -> HashMap<String, String> {
     let result: HashMap<String, String> = mapping
         .iter()
@@ -158,21 +165,11 @@ fn resolve_extensions(
     result
 }
 
-fn default_rss_extension_mapping() -> HashMap<String, String> {
-    let mut mapping = HashMap::new();
-    mapping.insert("frn:laenge".into(), "media.duration".into());
-    mapping.insert("frn:radio".into(), "publisher".into());
-    mapping.insert("frn:language".into(), "inLanguage".into());
-    mapping.insert("frn:licence".into(), "licence".into());
-    mapping
-}
-
-fn item_into_post(item: rss::Item) -> Record<Post> {
+fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<Post> {
     // Create initial post by parsing extension values from the RSS item
     // and deserializing via serde into the Post struct. Further regular
     // values will be set on this struct manually (see below.)
     // TODO: implement mapping management (load mapping, save mapping)
-    let mapping = default_rss_extension_mapping();
     let extensions: &ExtensionMap = item.extensions();
     let mapped_fields = resolve_extensions(extensions, mapping);
     let mut post = {
@@ -209,7 +206,6 @@ fn item_into_post(item: rss::Item) -> Record<Post> {
             "encodingFormat".into(),
             serde_json::Value::String(enclosure.mime_type),
         );
-        eprintln!("{:#?}", mapped_fields_json);
         let media: Result<Media, serde_json::Error> =
             serde_json::from_value(serde_json::Value::Object(mapped_fields_json));
         let media = media.unwrap_or_default();

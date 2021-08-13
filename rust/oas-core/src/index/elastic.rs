@@ -135,7 +135,7 @@ impl Index {
         let response = check_error(response).await?;
         let results: BulkPutResponse = response.json().await?;
         log::info!("{}", results.summarize());
-        log::info!("{:#?}", results);
+        //log::info!("{:#?}", results);
 
         self.set_refresh_interval(json!(null)).await?;
         Ok(results)

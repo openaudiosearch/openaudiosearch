@@ -27,7 +27,6 @@ where
     D: Deserializer<'de>,
 {
     let value = deserializer.deserialize_any(F32Visitor);
-    eprintln!("de result {:?}", value);
     match value {
         Ok(value) if value == 0. => Ok(None),
         Ok(value) => Ok(Some(value)),
@@ -179,6 +178,16 @@ mod tests {
 
         let media: Media = serde_json::from_str(source).expect("failed to deserialize");
         assert_eq!(media.duration, Some(123.));
+
+        let source = r#"
+        {
+            "contentUrl": "foo",
+            "duration": 562.5011
+        }
+        "#;
+
+        let media: Media = serde_json::from_str(source).expect("failed to deserialize");
+        assert_eq!(media.duration, Some(562.5011));
 
         let source = r#"
        {
