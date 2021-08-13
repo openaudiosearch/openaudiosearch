@@ -8,6 +8,10 @@ export default function createTheme (props = {}) {
 
   const theme = extendTheme({
     // config,
+    fonts: {
+      heading: 'Inter',
+      body: 'Inter'
+    },
     colors: {
       primary: '#260A4A',
       secondary: {
@@ -24,7 +28,7 @@ export default function createTheme (props = {}) {
       },
       main: '#aa00ea',
       bg: {
-        screen: '#fff'
+        screen: '#F7FAFC'
       }
       // brand: {
       //   100: "#f7fafc",
