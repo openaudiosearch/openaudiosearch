@@ -171,9 +171,14 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn run_all(mut state: State, server_opts: ServerOpts) -> anyhow::Result<()> {
+    use oas_core::tasks::changes::process_changes;
     state.init_all().await?;
     let server_task = task::spawn(run_server(state.clone(), server_opts));
     let index_task = task::spawn(run_index(state.clone(), IndexOpts::run_forever()));
+    // let task_manager = state.tasks.clone();
+    // let db = state.db.clone();
+    let create_tasks_task =
+        task::spawn(process_changes(state.tasks.clone(), state.db.clone(), true));
     let feed_task = task::spawn(run_feed(state, FeedCommand::Watch));
 
     // This calls std::process::exit() on ctrl_c signal.
@@ -183,6 +188,7 @@ async fn run_all(mut state: State, server_opts: ServerOpts) -> anyhow::Result<()
     server_task.await??;
     index_task.await??;
     feed_task.await??;
+    create_tasks_task.await??;
     exit_task.await?;
     Ok(())
 }
@@ -215,15 +221,16 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
 
 async fn run_debug(state: State) -> anyhow::Result<()> {
     eprintln!("OAS debug -- nothing here");
-    let id = std::env::var("ID").unwrap();
-    let post_index = state.index_manager.post_index();
-    let iters = 1000usize;
-    for _ in 0..iters {
-        let now = time::Instant::now();
-        let res = post_index.find_posts_for_medias(&[&id]).await?;
-        eprintln!("res {:?}", res);
-        eprintln!("took {}", humantime::format_duration(now.elapsed()));
-    }
+    tasks::changes::process_changes(state.tasks, state.db, false).await?;
+    // let id = std::env::var("ID").unwrap();
+    // let post_index = state.index_manager.post_index();
+    // let iters = 1000usize;
+    // for _ in 0..iters {
+    //     let now = time::Instant::now();
+    //     let res = post_index.find_posts_for_medias(&[&id]).await?;
+    //     eprintln!("res {:?}", res);
+    //     eprintln!("took {}", humantime::format_duration(now.elapsed()));
+    // }
     Ok(())
 }
 
