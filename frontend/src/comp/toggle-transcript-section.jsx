@@ -31,7 +31,7 @@ export function ToggleTranscriptSection(props = {}) {
           </Flex>
         </Button>
         {show &&
-        <Box bg='gray.100' p='4'>
+        <Box bg='gray.100' p='4' maxWidth='750px'>
           {transcript}
         </Box>
         }
