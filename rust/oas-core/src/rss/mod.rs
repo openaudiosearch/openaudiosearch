@@ -68,12 +68,16 @@ impl FeedWatcher {
         }
     }
 
-    pub async fn save(&mut self, db: &CouchDB, update: bool) -> Result<(), RssError> {
+    pub async fn save(
+        &mut self,
+        db: &CouchDB,
+        update: bool,
+    ) -> Result<(Vec<PutResult>, Vec<UntypedRecord>), RssError> {
         let records = self.to_post_and_media_records()?;
         let put_result = if update {
-            db.put_untyped_record_bulk_update(records).await?
+            db.put_untyped_record_bulk_update(records.clone()).await?
         } else {
-            db.put_untyped_record_bulk(records).await?
+            db.put_untyped_record_bulk(records.clone()).await?
         };
 
         let (success, error): (Vec<_>, Vec<_>) = put_result
@@ -86,7 +90,7 @@ impl FeedWatcher {
             success.len(),
             error.len()
         );
-        Ok(())
+        Ok((put_result, records))
     }
 
     pub async fn load(&mut self) -> Result<(), RssError> {
@@ -140,6 +144,7 @@ impl FeedWatcher {
         }
     }
 }
+
 fn resolve_extensions(
     extensions: &rss::extension::ExtensionMap,
     mapping: &HashMap<String, String>,
