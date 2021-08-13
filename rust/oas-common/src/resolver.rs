@@ -56,6 +56,7 @@ pub trait Resolver {
         &self,
         references: &mut [Reference<T>],
     ) -> Result<(), MissingRefsError> {
+        eprintln!("resolve refs {:?}", references);
         let unresolved_refs: Vec<(usize, String)> = references
             .iter()
             .enumerate()
@@ -66,6 +67,7 @@ pub trait Resolver {
             .collect();
         let unresolved_ids: Vec<&str> = unresolved_refs.iter().map(|(_, id)| id.as_str()).collect();
         let results = self.resolve_all(&unresolved_ids).await;
+        eprintln!("resolve results {:?}", results);
         let mut errs: Vec<ResolveError> = vec![];
         for (i, result) in results.into_iter().enumerate() {
             match result {
@@ -76,6 +78,7 @@ pub trait Resolver {
                 )),
             }
         }
+        eprintln!("Resolve errors: {:?}", errs);
         match errs.len() {
             0 => Ok(()),
             _ => Err(MissingRefsError(errs)),
