@@ -34,6 +34,11 @@ i18n
           publisher: 'Veröffentlicher',
           creator: 'Urheber',
           publishingdate: 'Veröffentlichungsdatum',
+          sourceurl: 'Quell-URL',
+          transcript: {
+            hide: 'Transcript ausblenden',
+            show: 'Transcript einblenden'
+          },
           searchForm: {
             placeholder: 'Suche eingeben...'
           }

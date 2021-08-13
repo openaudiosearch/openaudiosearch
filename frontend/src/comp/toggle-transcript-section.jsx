@@ -23,14 +23,15 @@ export function ToggleTranscriptSection(props = {}) {
       <Box>
         <Button
           onClick={toggleTranscript}
+          borderRadius='0'
         >
           <Flex direction="row"> 
-            {show ? <FaChevronRight /> : <FaChevronDown />}
+            {show ? <FaChevronDown /> : <FaChevronRight />}
             {show ? t('transcript.hide', 'Hide transcript') : t('transcript.show', 'Show transcript')}
           </Flex>
         </Button>
         {show &&
-        <Box>
+        <Box bg='gray.100' p='4'>
           {transcript}
         </Box>
         }

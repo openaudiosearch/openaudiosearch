@@ -1,5 +1,5 @@
 import React from 'react'
-import { FaCog, FaPlay, FaTasks } from 'react-icons/fa'
+import { FaCog, FaPlay, FaTasks, FaExternalLinkAlt } from 'react-icons/fa'
 import {
   IconButton,
   Menu,
@@ -138,16 +138,19 @@ export function PostPage (props = {}) {
         {creators}
         {post.url &&
         <Link href={post.url} isExternal>
-          <Button>Original</Button>
+          <Button>{t('sourceurl', 'Source URL')} <FaExternalLinkAlt mx="2px" /></Button>
         </Link>
         }
       </Box>
 
-      <ToggleTranscriptSection post={post} />
+      {post.description &&
+        <Box>{post.description}</Box>
+      }
 
-      <pre>
-        {JSON.stringify(post, 0, 2)}
-      </pre>
+      <Box mt='2'>
+        <ToggleTranscriptSection post={post} />
+      </Box>
+
     </Flex>
   )
 }
