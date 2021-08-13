@@ -1,0 +1,7 @@
+[[frn.fields]]
+from = "frn:laenge"
+to = "media.duration"
+
+[[frn.fields]]
+from = "frn:licence"
+to = "licence"
