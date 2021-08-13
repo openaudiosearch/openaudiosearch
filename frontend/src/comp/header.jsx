@@ -33,6 +33,7 @@ function Navbar () {
   return (
     <nav>
       <Flex>
+        <NavLink to='/about'>{t('about', 'About')}</NavLink>
         <NavLink to='/search'>{t('search', 'Search')}</NavLink>
         <NavLink to='/jobs'>{t('jobs', 'Jobs')}</NavLink>
         <NavLink to='/importer'>{t('importer', 'Importer')}</NavLink>
