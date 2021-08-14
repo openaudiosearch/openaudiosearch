@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactJson from 'react-json-view'
-import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters, MultiRange } from '@appbaseio/reactivesearch'
+import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters, MultiRange, DynamicRangeSlider } from '@appbaseio/reactivesearch'
 import { Heading, Flex, Box, Spinner, Button, Text } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { useParams, Link, useHistory } from 'react-router-dom'
@@ -22,7 +22,7 @@ export default function SearchPage () {
   const queryStr = query || ''
   const decodedquery = decodeURIComponent(queryStr)
   const url = API_ENDPOINT + '/search'
-  const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator']
+  const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator', 'duration']
   const { t } = useTranslation()
   const history = useHistory()
   const filterButtonOpen =
@@ -141,16 +141,23 @@ export default function SearchPage () {
                   />
                 </Box>
                 <Box mb='30px'>
-                  <MultiRange
-                    componentId="DurationFilter"
-                    dataField="duration"
+                  <DynamicRangeSlider
+                    componentId="duration"
+                    dataField="media.duration"
                     nestedField="media"
-                    //data={
-                      //[{"start": 0, "end": 300, "label": "> 5 min"},
-                        //{"start": 301, "end": 900, "label": "Moderate"},
-                        //{"start": 901, "end": 1800, "label": "Pricey"},
-                        //{"start": 1800, "end": 3600, "label": "First Date"}]
-                    //}
+                    rangeLabels={(min, max) => (
+                      {
+                        "start": (min/60).toFixed() + " min",
+                          "end": (max/60).toFixed() + " min"
+                      }
+                    )}
+                    tooltipTrigger='hover'
+                    renderTooltipData={data => (
+                        <Text fontSize='sm'>{(data/60).toFixed()} min</Text>
+                    )}
+                    react={{
+                      and: facets.filter(f => f !== 'duration')
+                    }}
                     title="Duration"
                   />
                 </Box>
