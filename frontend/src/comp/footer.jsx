@@ -17,7 +17,7 @@ export function Footer () {
       <Center>
         <Box w={['90vw', '80vw', '750px', '750px']}>
 
-          <Flex direction='row' justify='start'>
+          <Flex direction={['column', 'column', 'row', 'row']} justify='start'>
             <Link to='/imprint'>
               <Text color='gray.400' py='3' pl='6' pr='10' fontSize='sm'>
                 {t('imprint', 'Imprint')}
@@ -31,9 +31,9 @@ export function Footer () {
             <Link to={{ pathname: 'https://github.com/openaudiosearch/openaudiosearch' }} target='_blank'>
               <Icon color='gray.400' as={FaGithub} my='15px' ml='6' mr='10' />
             </Link>
-            <Flex ml='6' mr='5'>
+            <Box py='3' pl='6' pr='10'>
               <Login />
-            </Flex>
+            </Box>
           </Flex>
         </Box>
       </Center>
