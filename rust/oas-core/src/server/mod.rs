@@ -19,10 +19,10 @@ const FRONTEND_DIR: include_dir::Dir = include_dir::include_dir!("../../frontend
 pub struct ServerOpts {
     /// Hostname to bind HTTP server to
     #[clap(long, env = "HTTP_HOSTNAME")]
-    host: Option<String>,
+    pub host: Option<String>,
     /// Hostname to bind server to
     #[clap(long, env = "HTTP_PORT")]
-    port: Option<u16>,
+    pub port: Option<u16>,
 }
 
 pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()> {

@@ -22,6 +22,7 @@
     "framer-motion": "^4",
     "i18next": "^20.4.0",
     "i18next-browser-languagedetector": "^6.1.2",
+    "inter-ui": "^3.19.3",
     "moment": "^2.29.1",
     "react": "^16.13.1",
     "react-beautiful-dnd": "^13.1.0",

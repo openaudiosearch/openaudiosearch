@@ -5,12 +5,13 @@ import { Heading, Flex, Box, Spinner, Button, Text } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { useParams, Link } from 'react-router-dom'
 import Moment from 'moment'
-import { FaFilter } from 'react-icons/fa'
+import { FaFilter, FaChevronDown, FaChevronRight } from 'react-icons/fa'
 import { PostButtons } from './post'
 import { TranscriptSnippet } from './transcript'
 import { useIsAdmin } from '../hooks/use-login'
 import { CgClose } from 'react-icons/cg'
 import { useTranslation } from 'react-i18next'
+import { MdChildFriendly } from 'react-icons/md'
 
 const { ResultListWrapper } = ReactiveList
 
@@ -22,21 +23,21 @@ export default function SearchPage () {
   const decodedquery = decodeURIComponent(queryStr)
   const url = API_ENDPOINT + '/search'
   const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator']
+  const { t } = useTranslation()
   const filterButtonOpen =
     <Flex direction='row'>
       <FaFilter />
       <Text ml='10px'>
-        Show Filter
+        {t('showFilter', 'Show Filter')}
       </Text>
     </Flex>
   const filterButtonClose =
     <Flex direction='row'>
       <CgClose />
       <Text ml='10px'>
-    Hide Filter
+        {t('hideFilter', 'Hide Filter')}
       </Text>
     </Flex>
-  const { t } = useTranslation()
 
   return (
     <Flex color='white'>
@@ -61,6 +62,7 @@ export default function SearchPage () {
               highlight
               queryFormat='and'
               fuzziness={0}
+              debounce={2000}
               react={{
                 and: facets.filter(f => f !== 'searchbox')
               }}
@@ -151,7 +153,7 @@ export default function SearchPage () {
                       <ResultListWrapper>
                         {
                           data.map((item, i) => (
-                            <ResultItem item={item} key={i} />
+                            <ResultItem item={item} key={i} showSnippets search />
                           ))
                         }
                       </ResultListWrapper>
@@ -167,8 +169,8 @@ export default function SearchPage () {
   )
 }
 
-function ResultItem (props) {
-  const { item } = props
+export function ResultItem (props) {
+  const { item, showSnippets, search } = props
   const isAdmin = useIsAdmin()
   const { t } = useTranslation()
 
@@ -192,14 +194,19 @@ function ResultItem (props) {
       boxShadow='md'
       my='3'
     >
-      <Flex
-        direction={['column', 'column', 'row', 'row']}
-        justify='space-between'
-        ml='3'
-        mr='3'
-      >
-        <Flex direction='column' mb='2'>
-          <Link to={'post/' + postId}>
+      <Flex direction='column' mx='3'>
+        <Flex
+          direction={['column', 'column', 'row', 'row']}
+          justify='space-between'
+        >
+          <Link to={{
+            pathname: '/post/' + postId,
+            state: {
+              fromSearch: search
+            }
+          }}
+          >
+
             <Heading
               size='md' my={4}
               dangerouslySetInnerHTML={{
@@ -207,24 +214,63 @@ function ResultItem (props) {
               }}
             />
           </Link>
-          <div>
-            <div>{t('by', 'by')} {item.creator}</div>
-            <div>{item.publisher}</div>
+          <Flex ml={[null, null, 4, 4]} mb={[1, 1, null, null]} align='center' justify='center'>
+            <PostButtons post={item} />
+          </Flex>
+        </Flex>
+        <div>
+          {item.publisher && <div>{t('by', 'by')} {item.publisher}</div>}
+          {item.datePublished &&
             <span>
               {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
-            </span>
-            <div>{item.description}</div>
-          </div>
-          <div>
-            {snippets}
-          </div>
-          {isAdmin && <ReactJson src={item} collapsed name={false} />}
-        </Flex>
-        <Flex ml={[null, null, 4, 4]} mt={[4, 4, null, null]} align='center' justify='center'>
-          <PostButtons post={item} />
-        </Flex>
+            </span>}
+          <div><CollapsedText>{item.description}</CollapsedText></div>
+        </div>
+        {showSnippets && snippets && <div>{snippets}</div>}
+        {isAdmin && <ReactJson src={item} collapsed name={false} />}
       </Flex>
     </Flex>
+  )
+}
+
+function CollapsedText (props) {
+  const { children, initialCollapsed = true, characterLength = 280 } = props
+  const [collapsed, setCollapsed] = React.useState(initialCollapsed)
+  const fullText = children || ''
+  const isCollapsible = fullText.length >= characterLength
+  const text = React.useMemo(() => {
+    if (!collapsed) return fullText
+    if (!isCollapsible) return fullText
+    const re = new RegExp(`^.{${characterLength}}\\w*`)
+    const matches = fullText.match(re)
+    if (matches && matches.length > 0) {
+      const slice = fullText.slice(0, matches[0].length)
+      return slice
+    }
+    return fullText
+  })
+  const { t } = useTranslation()
+
+  const buttonCollapse =
+    <Flex direction='row'>
+      {collapsed ? <Text color='secondary.600'>{t('more', 'More')}</Text> : <Text color='secondary.600'>{t('less', 'Less')}</Text>}
+      {collapsed ? <Box ml='5px' mt='1px'><FaChevronRight color='secondary.600' /></Box> : <Box ml='5px' mt='1px'><FaChevronDown color='secondary.600' /></Box>}
+    </Flex>
+
+  return (
+    <Text>
+      {text}
+      {isCollapsible && (
+        <Button
+          borderRadius='0'
+          ml='2'
+          variant='link'
+          onClick={e => setCollapsed(collapsed => !collapsed)}
+        >
+          {buttonCollapse}
+        </Button>
+      )}
+    </Text>
   )
 }
 

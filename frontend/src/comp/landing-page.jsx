@@ -6,6 +6,7 @@ import { Link, useHistory } from 'react-router-dom'
 import Moment from 'moment'
 import { useTranslation } from 'react-i18next'
 import { PostButtons } from './post'
+import { ResultItem } from './search'
 
 export default function LandingPage () {
   const url = API_ENDPOINT + '/search'
@@ -14,17 +15,15 @@ export default function LandingPage () {
   const { t } = useTranslation()
   return (
     <Center>
-      <Flex color='white' w={['90vw', '90vw', '70vw', '50vw']} align='center' justify='center'>
+      <Flex color='white' align='center' justify='center'>
         <ReactiveBase
           app='oas'
           url={url}
         >
           <Flex direction='column' align='center'>
             <Flex direction='column' align='center'>
-              <Flex direction='column' align='left' justify='left'>
-                <Heading as='h1' size='2xl' mb='7'>{t('openaudiosearch', 'Open Audio Search')}</Heading>
-                <Heading as='h2' size='md'>{t('slogan', 'The community radio search engine')}</Heading>
-              </Flex>
+              <Heading as='h1' size='2xl' mb='7' color='secondary.600'>{t('openaudiosearch', 'Open Audio Search')}</Heading>
+              <Heading as='h2' size='lg'>{t('slogan', 'The community radio search engine')}</Heading>
               <Center>
                 <Box w={['90vw', '80vw', '600px', '600px']} mt='6'>
                   <DataSearch
@@ -35,6 +34,7 @@ export default function LandingPage () {
                     autosuggest
                     queryFormat='and'
                     fuzziness={0}
+                    debounce={2000}
                     value={value}
                     onChange={(value, triggerQuery, event) => {
                       setValue(value)
@@ -47,7 +47,7 @@ export default function LandingPage () {
                 </Box>
               </Center>
             </Flex>
-            <Flex direction='column' align='left'>
+            <Flex direction='column' align='left' maxWidth='750px'>
               <Box>
                 <Heading as='h4' size='md' mt='20' mb='5' ml='5'>{t('discover', 'Discover')}</Heading>
               </Box>
@@ -66,7 +66,7 @@ export default function LandingPage () {
                     <Flex direction='column'>
                       {
                         data.map((item, i) => (
-                          <DiscoverItem item={item} key={i} />
+                          <ResultItem item={item} key={i} showSnippets={false} />
                         ))
                       }
                     </Flex>
@@ -78,37 +78,5 @@ export default function LandingPage () {
         </ReactiveBase>
       </Flex>
     </Center>
-  )
-}
-
-function DiscoverItem (props) {
-  const { item } = props
-  const postPath = '/post/' + item.$meta.id
-  const { t } = useTranslation()
-  return (
-    <Flex direction='column' border='2px' p='2' borderRadius='20px' borderColor='gray.200' boxShadow='md' my='3'>
-      <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' ml='3'>
-        <Flex direction='column' mb='2'>
-          <Link to={postPath}>
-            <Heading
-              size='md' my={4}
-              dangerouslySetInnerHTML={{
-                __html: item.headline
-              }}
-            />
-          </Link>
-          <div>
-            {item.publisher && <div>{t('by', 'by')} {item.publisher}</div>}
-            {item.datePublished &&
-              <span>
-                {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
-              </span>}
-          </div>
-        </Flex>
-        <Flex ml={[null, null, 4, 4]} mt={[4, 4, null, null]} align='center' justify='center'>
-          <PostButtons post={item} />
-        </Flex>
-      </Flex>
-    </Flex>
   )
 }

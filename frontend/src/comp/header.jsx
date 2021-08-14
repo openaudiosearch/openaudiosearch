@@ -1,10 +1,11 @@
 import React from 'react'
-import { Flex, Box, Heading } from '@chakra-ui/react'
+import { Flex, Box, Center, Text } from '@chakra-ui/react'
 import {
   Link,
   useRouteMatch
 } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import logo from '../../assets/oas_logo-5.svg'
 
 import { Login } from './login'
 
@@ -13,16 +14,20 @@ export function Header () {
 
   return (
     <Flex mb='4' bg='primary' color='white'>
-      <Link to='/'>
-        <Heading p='4' fontSize='xl' mr='4'>
-          {t('openaudiosearch', 'Open Audio Search')}
-        </Heading>
-      </Link>
-      <Navbar />
-      <Box flex={1} />
-      <Box py={4}>
-        <Login />
+      <Box w='200px' p='4'>
+        <Link to='/'>
+          <img src={logo} />
+        </Link>
       </Box>
+      <Center>
+        <Navbar />
+      </Center>
+      <Box flex={1} />
+      <Center>
+        <Box py={4} mr='5'>
+          <Login />
+        </Box>
+      </Center>
     </Flex>
   )
 }
@@ -33,28 +38,59 @@ function Navbar () {
   return (
     <nav>
       <Flex>
-        <NavLink to='/search'>{t('search', 'Search')}</NavLink>
-        <NavLink to='/jobs'>{t('jobs', 'Jobs')}</NavLink>
-        <NavLink to='/importer'>{t('importer', 'Importer')}</NavLink>
+        <NavLink
+          exact
+          to='/'
+          activeClassName='active-menu-item'
+        >
+          <Text fontSize='xl' fontWeight='bold'>
+            {t('discover', 'Discover')}
+          </Text>
+        </NavLink>
+        <NavLink to='/search'>
+          <Text fontSize='xl' fontWeight='bold'>
+            {t('search', 'Search')}
+          </Text>
+        </NavLink>
+        <NavLink to='/jobs'>
+          <Text fontSize='xl' fontWeight='bold'>
+            {t('jobs', 'Jobs')}
+          </Text>
+        </NavLink>
+        <NavLink to='/importer'>
+          <Text fontSize='xl' fontWeight='bold'>
+            {t('importer', 'Importer')}
+          </Text>
+        </NavLink>
       </Flex>
     </nav>
   )
 }
 
 function NavLink (props) {
-  const { to, children } = props
-  const match = useRouteMatch(to)
+  const { to, children, exact } = props
+  const match = useRouteMatch({
+    path: to,
+    exact
+  })
   const activeProps = {
-    bg: 'white',
-    color: 'black'
+    borderBottom: '3px solid',
+    borderColor: 'white',
+    color: 'white'
   }
-  const styleProps = match ? activeProps : {}
+  const styleProps = match ? activeProps : { ...activeProps, borderColor: 'primary', color: 'white' }
+  const hoverProps = {
+    ...activeProps,
+    borderColor: 'secondary.600',
+    color: 'secondary.600'
+  }
   return (
     <Link to={to}>
       <Box
-        p='4'
-        mr='4'
-        _hover={{ color: 'secondary.100' }}
+        p='1'
+        m='3'
+        mr='6'
+        _hover={hoverProps}
         {...styleProps}
       >
         {children}

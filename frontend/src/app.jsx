@@ -10,6 +10,8 @@ import Layout from './comp/layout'
 import { PlayerProvider } from './comp/player'
 import fetch from './lib/fetch'
 
+import 'inter-ui/inter.css'
+
 function App (props) {
   return (
     <Wrapper>
