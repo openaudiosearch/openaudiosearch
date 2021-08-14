@@ -3,7 +3,7 @@ import ReactJson from 'react-json-view'
 import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters } from '@appbaseio/reactivesearch'
 import { Heading, Flex, Box, Spinner, Button, Text } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useHistory } from 'react-router-dom'
 import Moment from 'moment'
 import { FaFilter, FaChevronDown, FaChevronRight } from 'react-icons/fa'
 import { PostButtons } from './post'
@@ -24,6 +24,7 @@ export default function SearchPage () {
   const url = API_ENDPOINT + '/search'
   const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator']
   const { t } = useTranslation()
+  const history = useHistory()
   const filterButtonOpen =
     <Flex direction='row'>
       <FaFilter />
@@ -67,6 +68,10 @@ export default function SearchPage () {
                 and: facets.filter(f => f !== 'searchbox')
               }}
               defaultValue={decodedquery}
+              onValueSelected={(value, cause, source) => {
+                const encoded = encodeURIComponent(value)
+                history.push('/search/' + encoded)
+              }}
             />
             <SelectedFilters showClearAll />
           </Box>
