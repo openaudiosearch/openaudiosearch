@@ -1,14 +1,11 @@
 use crate::couch::types::PutResponse;
 use crate::server::error::AppError;
 use crate::State;
-use oas_common::Record;
-use rocket::serde::json::Json;
-use rocket_okapi::openapi;
-
 use oas_common::util;
+use oas_common::{types, Record, TypedValue};
+use rocket::serde::json::Json;
 use rocket::{get, post, put};
-
-use oas_common::types;
+use rocket_okapi::openapi;
 
 /// Create a new feed
 #[openapi(tag = "Feed")]
@@ -51,6 +48,16 @@ pub async fn get_feed(
     state: &rocket::State<State>,
     id: String,
 ) -> Result<Json<Record<types::Feed>>, AppError> {
-    let feed = state.db.get_record(&id).await?;
+    let feed = state.db.get_record(&types::Feed::guid(&id)).await?;
     Ok(Json(feed))
+}
+
+/// Get all feeds
+#[openapi(tag = "Feed")]
+#[get("/feed")]
+pub async fn get_feeds(
+    state: &rocket::State<State>,
+) -> Result<Json<Vec<Record<types::Feed>>>, AppError> {
+    let feeds = state.db.get_all_records().await?;
+    Ok(Json(feeds))
 }

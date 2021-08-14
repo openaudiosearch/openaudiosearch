@@ -8,7 +8,7 @@ where
     D: Deserializer<'de>,
 {
     match deserializer.deserialize_any(DateVisitor) {
-        Ok(value) => Ok(Some(value)),
+        Ok(value) => Ok(value),
         Err(e) => Err(e),
     }
 }
@@ -111,13 +111,25 @@ impl<'de> de::Visitor<'de> for VecVisitor {
         formatter.write_str("a string with comma separated values or a single value")
     }
 
+    fn visit_unit<E>(self) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        Ok(vec![])
+    }
+
+    fn visit_none<E>(self) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        Ok(vec![])
+    }
+
     fn visit_str<E>(self, value: &str) -> Result<Vec<String>, E>
     where
         E: de::Error,
     {
-        let mut result = Vec::new();
-        result.push(value.into());
-        Ok(result)
+        Ok(vec![value.to_string()])
     }
 
     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
@@ -134,10 +146,24 @@ impl<'de> de::Visitor<'de> for VecVisitor {
 
 struct DateVisitor;
 impl<'de> de::Visitor<'de> for DateVisitor {
-    type Value = DateTime<Utc>;
+    type Value = Option<DateTime<Utc>>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         write!(formatter, "a datetime string")
+    }
+
+    fn visit_unit<E>(self) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        Ok(None)
+    }
+
+    fn visit_none<E>(self) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        Ok(None)
     }
 
     fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
@@ -145,13 +171,11 @@ impl<'de> de::Visitor<'de> for DateVisitor {
         E: de::Error,
     {
         match DateTime::parse_from_rfc2822(value) {
-            Ok(value) => Ok(value.with_timezone(&Utc)),
-            Err(_e) => {
-                match DateTime::parse_from_rfc3339(value) {
-                    Ok(value) => Ok(value.with_timezone(&Utc)),
-                    Err(e) => Err(E::custom(format!("Parse error {} for {}", e, value))),
-                }
-            }
+            Ok(value) => Ok(Some(value.with_timezone(&Utc))),
+            Err(_e) => match DateTime::parse_from_rfc3339(value) {
+                Ok(value) => Ok(Some(value.with_timezone(&Utc))),
+                Err(e) => Err(E::custom(format!("Parse error {} for {}", e, value))),
+            },
         }
     }
 }

@@ -84,6 +84,10 @@ impl Resolvable for Post {
 impl ElasticMapping for Post {
     fn elastic_mapping() -> serde_json::Value {
         json!({
+            "tasks": {
+                "type": "object",
+                "enabled": false
+            },
             "media": {
                 "type": "nested",
                 "include_in_parent": true,
@@ -208,6 +212,9 @@ impl ElasticMapping for Post {
                         "ignore_above":256
                     }
                 }
+            },
+            "feeds": {
+                "type":"keyword",
             }
         })
     }

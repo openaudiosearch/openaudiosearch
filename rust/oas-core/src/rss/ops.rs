@@ -154,7 +154,7 @@ pub async fn fetch_and_save_with_client(
     url: &Url,
     update: bool,
 ) -> RssResult<FetchedFeedPage> {
-    let mut feed = FeedWatcher::with_client(client, &url, None, Default::default()).unwrap();
+    let mut feed = FeedWatcher::with_client(client, &url, None, Default::default(), None).unwrap();
     feed.load().await?;
     let (put_result, records) = feed.save(&db, update).await?;
     let feed_page = FetchedFeedPage {
@@ -167,7 +167,7 @@ pub async fn fetch_and_save_with_client(
 }
 
 pub async fn fetch_and_save(db: &CouchDB, opts: &FetchOpts) -> RssResult<FetchedFeedPage> {
-    let mut feed = FeedWatcher::new(&opts.url, None, Default::default()).unwrap();
+    let mut feed = FeedWatcher::new(&opts.url, None, Default::default(), None).unwrap();
     feed.load().await?;
     let (put_result, records) = feed.save(&db, opts.update).await?;
     let feed_page = FetchedFeedPage {
