@@ -102,6 +102,8 @@ impl CeleryManager {
         Ok(res)
     }
 
+    // pub async fn post_result(&self,
+
     pub async fn transcribe_media(&self, media: &Record<Media>) -> anyhow::Result<String> {
         let celery = self.celery()?;
 

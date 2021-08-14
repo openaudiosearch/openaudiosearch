@@ -58,9 +58,12 @@ pub async fn patch_media(
 ) -> Result<PutResponse> {
     let db = &state.db;
     let guid = Media::guid(&id);
+    let patch: json_patch::Patch = serde_json::from_value(value.into_inner())?;
     let mut existing = db.get_doc(&guid).await?.into_untyped_record()?;
-    existing.merge_json_value(value.into_inner())?;
-    let record = existing.into_typed_record::<Media>()?;
+    let res = existing.apply_json_patch(&patch);
+    res?;
+    let res = existing.into_typed_record::<Media>();
+    let record = res?;
     let res = db.put_record(record).await?;
     Ok(Json(res))
 }

@@ -220,6 +220,15 @@ pub enum PutResult {
     Err(ErrorDetails),
 }
 
+impl PutResult {
+    pub fn as_err(&self) -> Option<&ErrorDetails> {
+        match self {
+            Self::Err(err) => Some(&err),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BulkGetResponse {
     pub results: Vec<BulkGetItem>,

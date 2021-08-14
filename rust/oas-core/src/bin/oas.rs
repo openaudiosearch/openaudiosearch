@@ -3,12 +3,13 @@ use clap::Clap;
 use futures::stream::StreamExt;
 use oas_common::types::Media;
 use oas_common::Record;
-use oas_core::rss::manager::{run_manager, FeedManagerOpts};
+use oas_core::rss::manager::FeedManagerOpts;
 use oas_core::server::{run_server, ServerOpts};
 use oas_core::types::Post;
 use oas_core::util::debug_print_records;
 use oas_core::{couch, index, rss, tasks};
 use oas_core::{Runtime, State};
+use std::env;
 use std::time;
 
 #[derive(Clap)]
@@ -39,6 +40,10 @@ struct Args {
     /// Path to mapping file
     #[clap(long, env = "MAPPING_FILE")]
     pub mapping_file: Option<String>,
+
+    /// Enable developer mode defaults
+    #[clap(long)]
+    pub dev: bool,
 }
 
 #[derive(Clap)]
@@ -58,6 +63,7 @@ enum Command {
     Task(tasks::TaskOpts),
     /// Run the HTTP API server
     Server(ServerOpts),
+    /// Delete all databases and indexes (dangerous!)
     Nuke,
     /// Run all services
     Run,
@@ -71,6 +77,12 @@ struct FeedCommands {
 }
 
 #[derive(Clap)]
+struct RefetchOpts {
+    /// Feed ID or URL
+    id_or_url: String,
+}
+
+#[derive(Clap)]
 enum FeedCommand {
     /// Fetch a feed by URL.
     Fetch(rss::ops::FetchOpts),
@@ -78,6 +90,8 @@ enum FeedCommand {
     Crawl(rss::ops::CrawlOpts),
     /// Watch on CouchDB changes stream for new feeds
     Watch(FeedManagerOpts),
+    /// Refetch a feed and update all records
+    Refetch(RefetchOpts),
 }
 
 #[derive(Clap)]
@@ -129,25 +143,42 @@ struct ListOpts {
     // json: bool,
 }
 
-fn setup() -> anyhow::Result<()> {
-    if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "oas=info")
+fn setup(args: &Args) -> anyhow::Result<()> {
+    if args.dev {
+        if env::var("RUST_LOG").is_err() {
+            env::set_var("RUST_LOG", "oas=debug")
+        }
+        if env::var("FRONTEND_PROXY").is_err() {
+            env::set_var("FRONTEND_PROXY", "http://localhost:4000")
+        }
+    }
+    if env::var("RUST_LOG").is_err() {
+        env::set_var("RUST_LOG", "oas=info")
     }
     env_logger::init();
     Ok(())
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    setup()?;
-    let args = Args::parse();
-
+fn state_from_args(args: &Args) -> anyhow::Result<State> {
     let db_manager = couch::CouchManager::with_url(args.couchdb_url.as_deref())?;
     let db = db_manager.record_db().clone();
     let index_manager = index::IndexManager::with_url(args.elasticsearch_url.as_deref())?;
-    let tasks = tasks::CeleryManager::with_url(args.redis_url.as_deref())?;
+    let task_manager = tasks::CeleryManager::with_url(args.redis_url.as_deref())?;
+    let feed_manager_opts = FeedManagerOpts {
+        mapping_file: args.mapping_file.clone(),
+    };
+    let feed_manager = rss::FeedManager::new(feed_manager_opts);
 
-    let state = State::new(db_manager, db, index_manager, tasks);
+    let state = State::new(db_manager, db, index_manager, task_manager, feed_manager);
+    Ok(state)
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
+    setup(&args)?;
+
+    let state = state_from_args(&args)?;
 
     let now = time::Instant::now();
     let result = match args.command {
@@ -188,9 +219,6 @@ async fn run_all(mut state: State, args: Args) -> anyhow::Result<()> {
         host: args.http_host,
         port: args.http_port,
     };
-    let feed_manager_opts = FeedManagerOpts {
-        mapping_file: args.mapping_file,
-    };
 
     state.init_all().await?;
 
@@ -205,7 +233,7 @@ async fn run_all(mut state: State, args: Args) -> anyhow::Result<()> {
     );
     runtime.spawn(
         "feed_watcher",
-        run_feed(state, FeedCommand::Watch(feed_manager_opts)),
+        state.feed_manager.clone().run_watch(state.db.clone()), // run_feed(state, FeedCommand::Watch(feed_manager_opts)),
     );
     // This calls std::process::exit() on ctrl_c signal.
     // TODO: We might need cancel signals into the tasks for some tasks.
@@ -243,18 +271,8 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn run_debug(state: State) -> anyhow::Result<()> {
+async fn run_debug(_state: State) -> anyhow::Result<()> {
     eprintln!("OAS debug -- nothing here");
-    tasks::changes::process_changes(state, false).await?;
-    // let id = std::env::var("ID").unwrap();
-    // let post_index = state.index_manager.post_index();
-    // let iters = 1000usize;
-    // for _ in 0..iters {
-    //     let now = time::Instant::now();
-    //     let res = post_index.find_posts_for_medias(&[&id]).await?;
-    //     eprintln!("res {:?}", res);
-    //     eprintln!("took {}", humantime::format_duration(now.elapsed()));
-    // }
     Ok(())
 }
 
@@ -323,8 +341,14 @@ async fn run_feed(state: State, command: FeedCommand) -> anyhow::Result<()> {
         FeedCommand::Crawl(opts) => {
             rss::ops::crawl_and_save(&state.db, &opts).await?;
         }
-        FeedCommand::Watch(opts) => {
-            run_manager(&state.db, opts).await?;
+        FeedCommand::Watch(_opts) => {
+            state.feed_manager.run_watch(state.db).await?;
+        }
+        FeedCommand::Refetch(opts) => {
+            state
+                .feed_manager
+                .refetch(&state.db, &opts.id_or_url)
+                .await?;
         }
     };
     Ok(())

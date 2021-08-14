@@ -1,6 +1,7 @@
 use crate::couch::{CouchDB, PutResult};
 use chrono::prelude::*;
 use convert_case::{Case, Casing};
+use oas_common::types::Feed;
 use oas_common::{types::Post, util};
 use oas_common::{Reference, UntypedRecord};
 use rss::extension::ExtensionMap;
@@ -18,6 +19,7 @@ pub mod mapping;
 pub mod ops;
 
 pub use error::{RssError, RssResult};
+pub use manager::FeedManager;
 pub use ops::{Crawler, FetchedFeedPage, Next};
 
 #[derive(Debug, Clone)]
@@ -27,6 +29,7 @@ pub struct FeedWatcher {
     channel: Option<Channel>,
     settings: FeedSettings,
     mapping: HashMap<String, String>,
+    feed_record: Option<Record<Feed>>,
 }
 
 impl FeedWatcher {
@@ -34,9 +37,10 @@ impl FeedWatcher {
         url: impl AsRef<str>,
         settings: Option<FeedSettings>,
         mapping: HashMap<String, String>,
+        feed_record: Option<Record<Feed>>,
     ) -> Result<Self, ParseError> {
         let client = reqwest::Client::new();
-        Self::with_client(client, url, settings, mapping)
+        Self::with_client(client, url, settings, mapping, feed_record)
     }
 
     pub fn with_client(
@@ -44,6 +48,7 @@ impl FeedWatcher {
         url: impl AsRef<str>,
         settings: Option<FeedSettings>,
         mapping: HashMap<String, String>,
+        feed_record: Option<Record<Feed>>,
     ) -> Result<Self, ParseError> {
         let url = url.as_ref().parse()?;
         let feed = Self {
@@ -52,6 +57,7 @@ impl FeedWatcher {
             channel: None,
             settings: settings.unwrap_or_default(),
             mapping,
+            feed_record,
         };
         Ok(feed)
     }
@@ -81,16 +87,30 @@ impl FeedWatcher {
             db.put_untyped_record_bulk(records.clone()).await?
         };
 
+        log::trace!("put result: {:?}", put_result);
+
         let (success, error): (Vec<_>, Vec<_>) = put_result
             .iter()
             .partition(|r| matches!(r, PutResult::Ok(_)));
 
         log::debug!(
-            "saved posts from feed {} ({} success, {} error)",
+            "saved posts from feed {} ({} success, {} exists or error)",
             self.url,
             success.len(),
             error.len()
         );
+        for error in error {
+            // save because of partition above.
+            let error = error.as_err().unwrap();
+            match error.error.as_str() {
+                "conflict" => {
+                    log::trace!("Skipped to save post from feed {}: exists", self.url(),);
+                }
+                _ => {
+                    log::error!("Failed to save post from feed {}: {}", self.url(), error);
+                }
+            }
+        }
         Ok((put_result, records))
     }
 
@@ -109,6 +129,29 @@ impl FeedWatcher {
         let posts = self.to_posts()?;
         let mut docs = vec![];
         for mut post in posts.into_iter() {
+            if let Some(record) = &self.feed_record {
+                // Assign feed reference on post.
+                post.value.feeds = vec![Reference::Id(record.guid().to_string())];
+                // Assign feed reference on medias.
+                let post_guid = post.guid().to_string();
+                if let Some(defaults) = &record.value.task_defaults {
+                    if let Some(task_settings) = &defaults.post {
+                        post.value.tasks = task_settings.clone();
+                    }
+                    if let Some(task_settings) = &defaults.media {
+                        for media in post.value.media.iter_mut() {
+                            if let Some(media) = media.record_mut() {
+                                media.value.tasks = task_settings.clone();
+                                media.value.posts.push(Reference::Id(post_guid.clone()));
+                                media
+                                    .value
+                                    .feeds
+                                    .push(Reference::Id(record.guid().to_string()));
+                            }
+                        }
+                    }
+                }
+            }
             let mut refs = post.extract_refs();
             docs.append(&mut refs);
             // TODO: Handle error?
@@ -209,15 +252,26 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
             .collect();
         mapped_fields_json.insert(
             "contentUrl".into(),
-            serde_json::Value::String(enclosure.url),
+            serde_json::Value::String(enclosure.url.clone()),
         );
         mapped_fields_json.insert(
             "encodingFormat".into(),
-            serde_json::Value::String(enclosure.mime_type),
+            serde_json::Value::String(enclosure.mime_type.clone()),
         );
         let media: Result<Media, serde_json::Error> =
             serde_json::from_value(serde_json::Value::Object(mapped_fields_json));
-        let media = media.unwrap_or_default();
+        let mut media = match media {
+            Ok(media) => media,
+            Err(err) => {
+                log::error!("Failed to map media record: {:?}", err);
+                Media::default()
+            }
+        };
+        media.content_url = enclosure.url;
+        media.encoding_format = Some(enclosure.mime_type);
+        if let Ok(length) = enclosure.length.parse::<u32>() {
+            media.content_size = Some(length);
+        }
         let media =
             Record::from_id_and_value(util::id_from_hashed_string(&media.content_url), media);
         let media_ref = Reference::Resolved(media);

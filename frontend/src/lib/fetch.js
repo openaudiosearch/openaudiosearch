@@ -61,6 +61,7 @@ async function betterFetch (url, opts = {}) {
   if (opts.requestType === 'json') {
     opts.body = JSON.stringify(opts.body)
     opts.headers['content-type'] = 'application/json'
+    opts.headers['accept'] = 'application/json'
   }
   if (opts.requestType === 'buffer') {
     opts.headers['content-type'] = 'application/octet-stream'

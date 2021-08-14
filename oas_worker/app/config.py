@@ -38,5 +38,9 @@ class Settings(BaseSettings):
     class Config:
         env_file = '.env'
 
+    # helper functions
+    def url(self, path):
+        return self.oas_url + path
+
 
 config = Settings()

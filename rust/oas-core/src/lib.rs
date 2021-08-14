@@ -12,6 +12,7 @@ pub mod server;
 pub mod tasks;
 pub mod util;
 
+use crate::rss::FeedManager;
 use couch::{CouchDB, CouchManager};
 pub use oas_common as common;
 pub use oas_common::{types, Record, Reference, TypedValue, UntypedRecord};
@@ -23,6 +24,7 @@ pub use runtime::Runtime;
 /// Elasticsearch). It should be cheap clone.
 #[derive(Clone, Debug)]
 pub struct State {
+    pub feed_manager: FeedManager,
     pub db_manager: CouchManager,
     pub db: couch::CouchDB,
     pub index_manager: index::IndexManager,
@@ -36,12 +38,14 @@ impl State {
         db: CouchDB,
         index_manager: index::IndexManager,
         tasks: tasks::CeleryManager,
+        feed_manager: FeedManager,
     ) -> Self {
         Self {
             db_manager,
             db,
             index_manager,
             tasks,
+            feed_manager,
             did_init: Arc::new(AtomicBool::new(false)),
         }
     }
@@ -60,6 +64,10 @@ impl State {
             .init()
             .await
             .context("Failed to initialize CouchDB.")?;
+        self.feed_manager
+            .init(&self.db)
+            .await
+            .context("Failed to initialize RSS feed watcher")?;
         self.index_manager
             .init(Default::default())
             .await

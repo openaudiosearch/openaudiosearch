@@ -1,7 +1,8 @@
 use anyhow::Context;
+use chrono::Utc;
 use futures::stream::StreamExt;
 use futures_batch::ChunksTimeoutStreamExt;
-use oas_common::task::TaskState;
+use oas_common::task::{TaskRunningState, TaskState};
 use oas_common::types::{Media, Post};
 use oas_common::{Record, RecordMap, Resolver, TypedValue, UntypedRecord};
 use serde::{Deserialize, Serialize};
@@ -66,6 +67,53 @@ fn last_seq_of_batch(batch: &[CouchResult<ChangeEvent>]) -> Option<String> {
     })
 }
 
+async fn process_post(
+    celery: &CeleryManager,
+    _db: &CouchDB,
+    record: Record<Post>,
+) -> anyhow::Result<()> {
+    if let Some(tasks) = record.task_states() {
+        if let Some(TaskState::Wanted) = &tasks.nlp {
+            let opts = serde_json::Value::Null;
+            celery
+                .send_task(taskdefs::nlp2::new(record.clone(), opts))
+                .await
+                .context("failed to send task")?;
+        }
+    }
+    Ok(())
+}
+
+async fn process_media(
+    celery: &CeleryManager,
+    db: &CouchDB,
+    record: Record<Media>,
+) -> anyhow::Result<()> {
+    if let Some(tasks) = record.task_states() {
+        if let Some(TaskState::Wanted) = &tasks.asr {
+            let task_id = celery
+                .transcribe_media(&record)
+                .await
+                .context("failed to send task")?;
+            let mut next_record = record.clone();
+            let state = TaskRunningState {
+                task_id: task_id.to_string(),
+                start: Utc::now(),
+            };
+            next_record.task_states_mut().unwrap().asr = Some(TaskState::Running(state));
+            db.put_record(next_record).await?;
+        }
+        if let Some(TaskState::Wanted) = &tasks.download {
+            let opts = serde_json::Value::Null;
+            celery
+                .send_task(taskdefs::download2::new(record.clone(), opts))
+                .await
+                .context("failed to send task")?;
+        }
+    }
+    Ok(())
+}
+
 pub async fn process_batch(
     celery: &CeleryManager,
     db: CouchDB,
@@ -78,37 +126,29 @@ pub async fn process_batch(
         .await
         .context("failed to resolve refs")?;
 
-    for record in posts {
-        if let Some(tasks) = record.task_states() {
-            if let Some(TaskState::Wanted) = &tasks.nlp {
-                let opts = serde_json::Value::Null;
-                celery
-                    .send_task(taskdefs::nlp2::new(record.clone(), opts))
-                    .await
-                    .context("failed to send task")?;
-            }
-        }
+    for record in posts.into_iter() {
+        let res = process_post(&celery, &db, record).await;
+        log_if_error(res);
     }
 
-    for record in medias {
-        if let Some(tasks) = record.task_states() {
-            if let Some(TaskState::Wanted) = &tasks.asr {
-                celery
-                    .transcribe_media(&record)
-                    .await
-                    .context("failed to send task")?;
-            }
-            if let Some(TaskState::Wanted) = &tasks.download {
-                let opts = serde_json::Value::Null;
-                celery
-                    .send_task(taskdefs::download2::new(record.clone(), opts))
-                    .await
-                    .context("failed to send task")?;
-            }
-        }
+    for record in medias.into_iter() {
+        // log::trace!(
+        //     "task process touch media {}, task states: {:?}",
+        //     record.id(),
+        //     record.task_states()
+        // );
+        let res = process_media(&celery, &db, record).await;
+        log_if_error(res);
     }
 
     Ok(())
+}
+
+fn log_if_error<A>(res: anyhow::Result<A>) {
+    match res {
+        Ok(_) => {}
+        Err(err) => log::error!("{:?}", err),
+    }
 }
 
 pub async fn get_latest_seq(db: &CouchDB) -> Option<String> {
@@ -124,16 +164,3 @@ pub async fn save_latest_seq(db: &CouchDB, latest_seq: String) -> anyhow::Result
     db.table::<TaskProcessState>().put(record).await?;
     Ok(())
 }
-
-// pub fn into_typ_buckets(
-//     records: Vec<UntypedRecord>,
-// ) -> HashMap<String, HashMap<String, UntypedRecord>> {
-//     let mut map = HashMap::new();
-//     for record in records {
-//         let entry = map
-//             .entry(record.typ().to_string())
-//             .or_insert_with(|| HashMap::new());
-//         entry.insert(record.typ().to_string(), record);
-//     }
-//     map
-// }
