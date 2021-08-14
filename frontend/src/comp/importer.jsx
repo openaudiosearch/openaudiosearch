@@ -36,12 +36,14 @@ import {
   FaCheck as SaveIcon
 } from 'react-icons/fa'
 import { useForm } from 'react-hook-form'
-import { Notice, Error } from './status'
+import { Notice, Error, LoginRequired } from './status'
 
 import fetch from '../lib/fetch'
+import { useIsAdmin } from '../hooks/use-login'
 
-export default function FeedPage (props) {
-  const [selectedJobId, setSelectedJobId] = useState(null)
+export default function FeedPage (props = {}) {
+  const isAdmin = useIsAdmin()
+  if (!isAdmin) return <LoginRequired />
   return (
     <Stack>
       <CreateFeed />

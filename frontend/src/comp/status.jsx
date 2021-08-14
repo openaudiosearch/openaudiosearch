@@ -6,6 +6,17 @@ import {
   AlertDescription,
 } from '@chakra-ui/react'
 
+export function LoginRequired (props = {}) {
+  const message = 'You need to login to access this page'
+  return (
+    <Alert status='warning'>
+      <AlertIcon />
+      {message}
+    </Alert>
+  )
+
+}
+
 export function Error (props) {
   const { error } = props
   if (!error) return null
