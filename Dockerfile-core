@@ -5,7 +5,7 @@ COPY frontend /app/frontend
 RUN yarn && yarn run build
 
 # use the cargo-chef base image
-FROM lukemathwalker/cargo-chef:latest-rust-1.53.0 as base
+FROM lukemathwalker/cargo-chef:latest-rust-1.54.0 as base
 RUN apt-get update && apt-get install -y libssl-dev
 
 # prepare the cargo-chef build
@@ -26,6 +26,7 @@ FROM base as builder
 WORKDIR app
 COPY Cargo.toml .
 COPY rust rust
+COPY config config
 # copy the built frontend
 COPY --from=frontend-build /app/frontend/dist frontend/dist
 # copy the built dependencies from previous image
@@ -36,7 +37,7 @@ RUN cargo build --release --bin oas
 
 # build the main image
 FROM debian:stable-slim as runtime
-RUN apt-get update && apt-get install -y libssl-dev curl
+RUN apt-get update && apt-get install -y curl
 WORKDIR app
 COPY --from=builder /app/target/release/oas /usr/local/bin
 CMD ["/usr/local/bin/oas", "run"]
