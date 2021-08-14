@@ -185,6 +185,13 @@ export default function SearchPage () {
                   dataField='dateModified'
                   componentId='SearchResults'
                   pagination
+                  sortOptions={[
+                    {label: 'Date (desc)', dataField: 'datePublished', sortBy: 'desc'},
+                    {label: 'Date (asc)', dataField: 'datePublished', sortBy: 'asc'},
+                    {label: 'Duration (desc)', dataField: 'media.duration', sortBy: 'desc'},
+                    {label: 'Duration (asc)', dataField: 'media.duration', sortBy: 'asc'},
+                  ]}
+                  defaultSortOption='Date (desc)'
                   react={{
                     and: facets
                   }}
