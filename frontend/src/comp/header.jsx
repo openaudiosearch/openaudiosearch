@@ -81,7 +81,7 @@ function Navbar () {
           </Text>
         </NavLink>
         <NavLink to='/about'>
-          <Text fontSize='xl' fontWeight='bold'>
+          <Text fontSize='lg' fontWeight='bold'>
             {t('about', 'About')}
           </Text>
         </NavLink>
