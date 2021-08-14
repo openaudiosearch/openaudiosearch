@@ -114,6 +114,12 @@ export function PostPage (props = {}) {
   const creators = post.creator.map((creator) => 
     <Tag key={creator} mr='1'>{creator}</Tag>  
   )
+  let contributors = []
+  if (post.contributor) {
+    contributors = post.contributor.map((contributor) => 
+      <Tag key={contributor} mr='1'>{contributor}</Tag>  
+    )
+  }
 
   return (
     <Flex direction="column" maxWidth='750px'>
@@ -146,9 +152,18 @@ export function PostPage (props = {}) {
       </Flex>
       <Box mt='2'>
         {post.publisher && <Text fontSize='sm'>{t('by', 'by')} {post.publisher}</Text>}
-        <Box ml='2'>
-          {creators}
-        </Box>
+        {post.creator.length > 0 &&
+          <Box ml='2'>
+            <Text>{t('creators', 'Creators')}:</Text>
+            {creators}
+          </Box>
+        }
+        {post.contributor &&
+          <Box ml='2'>
+            <Text>{t('contributors', 'Contributors')}:</Text>
+            {contributors}
+          </Box>
+        }
       </Box>
 
       {post.description &&
