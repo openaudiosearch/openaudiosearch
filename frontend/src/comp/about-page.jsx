@@ -11,10 +11,12 @@ export default function AboutPage () {
         <Flex ml='6' direction='column'>
           <Heading>About</Heading>
           <Heading as='h3' size='md' my='4'>Funding</Heading>
-          The development of Open Audio Search has been funded in round 9 of the
-          <Link href='https://prototypefund.de/' isExternal>
+          <Text>
+          The development of Open Audio Search has been funded in round 9 of the{' '}
+            <Link href='https://prototypefund.de/' isExternal>
             Prototype Fund
-          </Link>.
+            </Link>.
+          </Text>
           <Flex direction='row' align='end' justify='center'>
             <Box mr='10'>
               <Link href='https://prototypefund.de/' isExternal>
