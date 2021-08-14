@@ -1,9 +1,9 @@
 import React from 'react'
 import ReactJson from 'react-json-view'
-import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters } from '@appbaseio/reactivesearch'
+import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters, MultiRange, DynamicRangeSlider } from '@appbaseio/reactivesearch'
 import { Heading, Flex, Box, Spinner, Button, Text } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useHistory } from 'react-router-dom'
 import Moment from 'moment'
 import { FaFilter, FaChevronDown, FaChevronRight } from 'react-icons/fa'
 import { PostButtons } from './post'
@@ -22,8 +22,9 @@ export default function SearchPage () {
   const queryStr = query || ''
   const decodedquery = decodeURIComponent(queryStr)
   const url = API_ENDPOINT + '/search'
-  const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator']
+  const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator', 'duration']
   const { t } = useTranslation()
+  const history = useHistory()
   const filterButtonOpen =
     <Flex direction='row'>
       <FaFilter />
@@ -67,6 +68,10 @@ export default function SearchPage () {
                 and: facets.filter(f => f !== 'searchbox')
               }}
               defaultValue={decodedquery}
+              onValueSelected={(value, cause, source) => {
+                const encoded = encodeURIComponent(value)
+                history.push('/search/' + encoded)
+              }}
             />
             <SelectedFilters showClearAll />
           </Box>
@@ -135,6 +140,27 @@ export default function SearchPage () {
                     }}
                   />
                 </Box>
+                <Box mb='30px'>
+                  <DynamicRangeSlider
+                    componentId="duration"
+                    dataField="media.duration"
+                    nestedField="media"
+                    rangeLabels={(min, max) => (
+                      {
+                        "start": (min/60).toFixed() + " min",
+                          "end": (max/60).toFixed() + " min"
+                      }
+                    )}
+                    tooltipTrigger='hover'
+                    renderTooltipData={data => (
+                        <Text fontSize='sm'>{(data/60).toFixed()} min</Text>
+                    )}
+                    react={{
+                      and: facets.filter(f => f !== 'duration')
+                    }}
+                    title="Duration"
+                  />
+                </Box>
               </Flex>
             </Box>
             <Flex direction='column'>
@@ -184,6 +210,11 @@ export function ResultItem (props) {
 
   const postId = item.$meta.id
 
+  let duration = null
+  if (item.media.length > 0) {
+    duration = (item.media[0].duration/60).toFixed() + ' min'
+  }
+
   return (
     <Flex
       direction='column'
@@ -218,14 +249,18 @@ export function ResultItem (props) {
             <PostButtons post={item} />
           </Flex>
         </Flex>
-        <div>
-          {item.publisher && <div>{t('by', 'by')} {item.publisher}</div>}
-          {item.datePublished &&
-            <span>
-              {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
-            </span>}
-          <div><CollapsedText>{item.description}</CollapsedText></div>
-        </div>
+        <Flex direction='column'>
+          <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
+            {item.publisher && <Text mr='2' fontSize='sm'>{item.publisher}</Text>}
+            {item.datePublished &&
+              <Text mr='2' fontSize='sm'>
+                {Moment(item.datePublished).format('DD.MM.YYYY')}
+              </Text>}
+            {duration &&
+              <Text mr='2' fontSize='sm'>{duration}</Text>}
+          </Flex>
+          <Box mt='2'><CollapsedText>{item.description}</CollapsedText></Box>
+        </Flex>
         {showSnippets && snippets && <div>{snippets}</div>}
         {isAdmin && <ReactJson src={item} collapsed name={false} />}
       </Flex>
