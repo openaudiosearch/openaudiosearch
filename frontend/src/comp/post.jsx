@@ -145,10 +145,10 @@ export function PostPage (props = {}) {
             <Box>{t('backtosearch', 'Back to search')}</Box>
           </Button>
         </Flex>}
-      <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
-        <Flex direction='column'>
-          <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
-            <Flex direction={['column', 'column', 'row', 'row']}>
+      <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' w='100%'>
+        <Flex direction='column' w='100%'>
+          <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' w='100%'>
+            <Flex direction={['column', 'column', 'row', 'row']} w='100%'>
               {post.datePublished &&
                 <Text fontSize='sm' mr='2'>
                   {Moment(post.datePublished).format('DD.MM.YYYY')}
@@ -162,7 +162,7 @@ export function PostPage (props = {}) {
                 <Button size='xs'><Box>{t('sourceurl', 'Source URL')}</Box> <Box ml='10px' mb='3px'><FaExternalLinkAlt /></Box></Button>
               </Link>}
           </Flex>
-          <Flex direction={['column', 'column', 'row', 'row']} mt='2'>
+          <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%'>
             <Heading size='md'>{post.headline}</Heading>
             <Flex align='center' justify='center' ml='2'>
               <PostButtons post={post} />
@@ -170,7 +170,7 @@ export function PostPage (props = {}) {
           </Flex>
         </Flex>
       </Flex>
-      <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2'>
+      <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%'>
         {post.publisher && <Text mr='2' fontSize='sm'>{t('by', 'by')} {post.publisher}</Text>}
         {post.creator.length > 0 &&
           <Flex direction='row' mr='2'>
