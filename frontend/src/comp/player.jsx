@@ -3,26 +3,23 @@ import {
   Box,
   Flex,
   IconButton,
-  CircularProgress,
   Slider,
   SliderTrack,
   SliderFilledTrack,
   SliderThumb,
   Stack,
   Tooltip,
-  Button,
-  WrapItem,
   useSliderContext,
-  chakra
+  chakra,
+  Icon
 } from '@chakra-ui/react'
 import { cx } from "@chakra-ui/utils"
-import { FaPlay, FaPause, FaUndoAlt, FaRedoAlt } from 'react-icons/fa'
+import { FaPlay, FaPause } from 'react-icons/fa'
+import { RiArrowUpSFill } from 'react-icons/ri'
 import { useTranslation } from 'react-i18next'
 import { MdGraphicEq } from 'react-icons/md'
 
 import { API_ENDPOINT } from '../lib/config'
-
-import { SnippetList } from './search'
 
 import { parseTranscript } from './transcript'
 
@@ -259,8 +256,6 @@ export function Player (props = {}) {
       <Flex direction='column'>
       <Box px='3'>
         <strong>{headline || ''}</strong>
-        &nbsp;
-        {word}
       </Box>
         <Flex dir='row'>
           <PlayerButton
@@ -304,7 +299,6 @@ function Timeslider (props = {}) {
   const { pos, onChange, snippets } = props
   const [dragging, setDragging] = useState(false)
   const [draggingValue, setDraggingValue] = useState(null)
-  const state = usePlaystate()
 
   let value
   if (dragging && draggingValue) value = draggingValue
@@ -325,12 +319,7 @@ function Timeslider (props = {}) {
       <SliderThumb boxSize={6}>
         <Box color='secondary.500' as={MdGraphicEq} />
       </SliderThumb>
-      {snippets.map((snippet, index) => (
-          <SliderMark key={index} value={(snippet[0].start/state.duration)*100} w='10px' bg='tertiary.100'>
-            <Tooltip label={snippet.map((snippet) => snippet.word).join(' ')} placement="top">
-              <Box>&nbsp;</Box>
-            </Tooltip>
-          </SliderMark> ))}
+      <SliderSnippets snippets={snippets} />
     </Slider>
   )
 
@@ -370,6 +359,34 @@ function formatDuration (secs) {
 function pad (num) {
   if (String(num).length === 1) return '0' + num
   else return '' + num
+}
+
+function SliderSnippets (props = {}) {
+  const { snippets } = props
+  const state = usePlaystate()
+  const { setMark } = usePlayer()
+
+  function onMarkClick (mark) {
+    setMark(mark)
+  }
+
+  return (
+    <>
+      {snippets.map((snippet, index) => (
+          <SliderMark 
+            display={['none', 'block', 'block', 'block']}
+            key={index} 
+            value={(snippet[0].start/state.duration)*100} 
+            onClick={() => onMarkClick(snippet[0])}
+            mt='-5px'
+          >
+            <Tooltip label={snippet.map((snippet) => snippet.word).join(' ')} placement="top">
+              <Box><Icon as={RiArrowUpSFill} color='secondary.600' w='6' h='6'/></Box>
+            </Tooltip>
+          </SliderMark> 
+      ))}
+    </>
+  )
 }
 
 export const SliderMark = forwardRef((props, ref) => {
