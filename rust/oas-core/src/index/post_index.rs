@@ -1,8 +1,7 @@
 use anyhow::Context;
 use elasticsearch::Elasticsearch;
 use oas_common::types::{Media, Post, Transcript};
-use oas_common::{Record, RecordMap, Resolver};
-use oas_common::{TypedValue, UntypedRecord};
+use oas_common::{ElasticMapping, Record, RecordMap, Resolver, TypedValue, UntypedRecord};
 use serde_json::json;
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -18,8 +17,11 @@ pub struct PostIndex {
 }
 
 impl PostIndex {
-    pub fn new(index: Arc<Index>) -> Self {
-        Self { index }
+    pub fn new(client: Arc<Elasticsearch>, name: String) -> Self {
+        let index = Index::new(client, name, Record::<Post>::elastic_mapping());
+        Self {
+            index: Arc::new(index),
+        }
     }
 
     pub fn index(&self) -> &Arc<Index> {
@@ -37,7 +39,7 @@ impl PostIndex {
     /// Find all posts that reference any of a list of media ids.
     pub async fn find_posts_for_medias(
         &self,
-        media_ids: &[&str],
+        media_guids: &[&str],
     ) -> Result<Vec<String>, IndexError> {
         let query = json!({
             "query": {
@@ -45,7 +47,7 @@ impl PostIndex {
                     "path": "media",
                     "score_mode": "avg",
                     "query": {
-                        "terms": { "media.$meta.id": media_ids }
+                        "terms": { "media.$meta.guid": media_guids }
                     }
                 }
             }
@@ -114,7 +116,7 @@ impl PostIndex {
             affected_post_guids.iter().map(|s| s.as_str()).collect();
 
         log::trace!(
-            "Got affected {} posts: {}",
+            "Queried affected {} posts: {}",
             affected_post_guids.len(),
             affected_post_guids.join(", ")
         );
@@ -123,6 +125,8 @@ impl PostIndex {
             .get_many_records::<Post>(&affected_post_guids[..])
             .await
             .context("Failed to get posts for medias")?;
+
+        log::trace!("Loaded {} affected posts", affected_posts.len(),);
 
         for post in affected_posts.into_iter() {
             posts.insert(post.guid().to_string(), post);

@@ -1,11 +1,11 @@
 import React from 'react'
 import ReactJson from 'react-json-view'
-import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters } from '@appbaseio/reactivesearch'
+import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters, MultiRange, DynamicRangeSlider } from '@appbaseio/reactivesearch'
 import { Heading, Flex, Box, Spinner, Button, Text } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useHistory } from 'react-router-dom'
 import Moment from 'moment'
-import { FaFilter } from 'react-icons/fa'
+import { FaFilter, FaChevronDown, FaChevronRight } from 'react-icons/fa'
 import { PostButtons } from './post'
 import { TranscriptSnippet } from './transcript'
 import { useIsAdmin } from '../hooks/use-login'
@@ -22,22 +22,23 @@ export default function SearchPage () {
   const queryStr = query || ''
   const decodedquery = decodeURIComponent(queryStr)
   const url = API_ENDPOINT + '/search'
-  const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator']
+  const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator', 'duration']
+  const { t } = useTranslation()
+  const history = useHistory()
   const filterButtonOpen =
     <Flex direction='row'>
       <FaFilter />
       <Text ml='10px'>
-        Show Filter
+        {t('showFilter', 'Show Filter')}
       </Text>
     </Flex>
   const filterButtonClose =
     <Flex direction='row'>
       <CgClose />
       <Text ml='10px'>
-    Hide Filter
+        {t('hideFilter', 'Hide Filter')}
       </Text>
     </Flex>
-  const { t } = useTranslation()
 
   return (
     <Flex color='white'>
@@ -62,10 +63,15 @@ export default function SearchPage () {
               highlight
               queryFormat='and'
               fuzziness={0}
+              debounce={2000}
               react={{
                 and: facets.filter(f => f !== 'searchbox')
               }}
               defaultValue={decodedquery}
+              onValueSelected={(value, cause, source) => {
+                const encoded = encodeURIComponent(value)
+                history.push('/search/' + encoded)
+              }}
             />
             <SelectedFilters showClearAll />
           </Box>
@@ -128,10 +134,47 @@ export default function SearchPage () {
                     componentId='datePublished'
                     dataField='datePublished'
                     title={t('publishingdate', 'Publishing Date')}
-                    queryFormat='basic_date_time_no_millis'
+                    customQuery={
+                      function(value) {
+                        if (!value) return {}
+
+                        return {
+                          query: {
+                            range: {
+                              datePublished: {
+                                gte: value.start,
+                                lte: value.end,
+                                format: "yyyy-MM-dd"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
                     react={{
                       and: facets.filter(f => f !== 'datePublished')
                     }}
+                  />
+                </Box>
+                <Box mb='30px'>
+                  <DynamicRangeSlider
+                    componentId="duration"
+                    dataField="media.duration"
+                    nestedField="media"
+                    rangeLabels={(min, max) => (
+                      {
+                        "start": (min/60).toFixed() + " min",
+                          "end": (max/60).toFixed() + " min"
+                      }
+                    )}
+                    tooltipTrigger='hover'
+                    renderTooltipData={data => (
+                        <Text fontSize='sm'>{(data/60).toFixed()} min</Text>
+                    )}
+                    react={{
+                      and: facets.filter(f => f !== 'duration')
+                    }}
+                    title="Duration"
                   />
                 </Box>
               </Flex>
@@ -142,6 +185,13 @@ export default function SearchPage () {
                   dataField='dateModified'
                   componentId='SearchResults'
                   pagination
+                  sortOptions={[
+                    {label: 'Date (desc)', dataField: 'datePublished', sortBy: 'desc'},
+                    {label: 'Date (asc)', dataField: 'datePublished', sortBy: 'asc'},
+                    {label: 'Duration (desc)', dataField: 'media.duration', sortBy: 'desc'},
+                    {label: 'Duration (asc)', dataField: 'media.duration', sortBy: 'asc'},
+                  ]}
+                  defaultSortOption='Date (desc)'
                   react={{
                     and: facets
                   }}
@@ -152,7 +202,7 @@ export default function SearchPage () {
                       <ResultListWrapper>
                         {
                           data.map((item, i) => (
-                            <ResultItem item={item} key={i} showSnippets />
+                            <ResultItem item={item} key={i} showSnippets search />
                           ))
                         }
                       </ResultListWrapper>
@@ -169,7 +219,7 @@ export default function SearchPage () {
 }
 
 export function ResultItem (props) {
-  const { item, showSnippets } = props
+  const { item, showSnippets, search } = props
   const isAdmin = useIsAdmin()
   const { t } = useTranslation()
 
@@ -183,6 +233,11 @@ export function ResultItem (props) {
 
   const postId = item.$meta.id
 
+  let duration = null
+  if (item.media.length > 0) {
+    duration = (item.media[0].duration/60).toFixed() + ' min'
+  }
+
   return (
     <Flex
       direction='column'
@@ -193,14 +248,19 @@ export function ResultItem (props) {
       boxShadow='md'
       my='3'
     >
-      <Flex
-        direction={['column', 'column', 'row', 'row']}
-        justify='space-between'
-        ml='3'
-        mr='3'
-      >
-        <Flex direction='column' mb='2'>
-          <Link to={'post/' + postId}>
+      <Flex direction='column' mx='3'>
+        <Flex
+          direction={['column', 'column', 'row', 'row']}
+          justify='space-between'
+        >
+          <Link to={{
+            pathname: '/post/' + postId,
+            state: {
+              fromSearch: search
+            }
+          }}
+          >
+
             <Heading
               size='md' my={4}
               dangerouslySetInnerHTML={{
@@ -208,20 +268,24 @@ export function ResultItem (props) {
               }}
             />
           </Link>
-          <div>
-            {item.publisher && <div>{t('by', 'by')} {item.publisher}</div>}
+          <Flex ml={[null, null, 4, 4]} mb={[1, 1, null, null]} align='center' justify='center'>
+            <PostButtons post={item} />
+          </Flex>
+        </Flex>
+        <Flex direction='column'>
+          <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
+            {item.publisher && <Text mr='2' fontSize='sm'>{item.publisher}</Text>}
             {item.datePublished &&
-              <span>
-                {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
-              </span>}
-            <div><CollapsedText>{item.description}</CollapsedText></div>
-          </div>
-          {showSnippets && snippets && <div>{snippets}</div>}
-          {isAdmin && <ReactJson src={item} collapsed name={false} />}
+              <Text mr='2' fontSize='sm'>
+                {Moment(item.datePublished).format('DD.MM.YYYY')}
+              </Text>}
+            {duration &&
+              <Text mr='2' fontSize='sm'>{duration}</Text>}
+          </Flex>
+          <Box mt='2'><CollapsedText>{item.description}</CollapsedText></Box>
         </Flex>
-        <Flex ml={[null, null, 4, 4]} mt={[4, 4, null, null]} align='center' justify='center'>
-          <PostButtons post={item} />
-        </Flex>
+        {showSnippets && snippets && <div>{snippets}</div>}
+        {isAdmin && <ReactJson src={item} collapsed name={false} />}
       </Flex>
     </Flex>
   )
@@ -243,22 +307,32 @@ function CollapsedText (props) {
     }
     return fullText
   })
+  const { t } = useTranslation()
 
-  const buttonLabel = collapsed ? 'Expand' : 'Collapse'
+  const buttonCollapse =
+    <Flex direction='row'>
+      {collapsed ? <Text color='secondary.600'>{t('more', 'More')}</Text> : <Text color='secondary.600'>{t('less', 'Less')}</Text>}
+      {collapsed ? <Box ml='5px' mt='1px'><FaChevronRight color='secondary.600' /></Box> : <Box ml='5px' mt='1px'><FaChevronDown color='secondary.600' /></Box>}
+    </Flex>
 
   return (
     <Text>
       {text}
       {isCollapsible && (
-        <Button ml='2' variant='link' onClick={e => setCollapsed(collapsed => !collapsed)}>
-          {buttonLabel}
+        <Button
+          borderRadius='0'
+          ml='2'
+          variant='link'
+          onClick={e => setCollapsed(collapsed => !collapsed)}
+        >
+          {buttonCollapse}
         </Button>
       )}
     </Text>
   )
 }
 
-function SnippetList (props = {}) {
+export function SnippetList (props = {}) {
   const { fieldname, snippets, post } = props
   return (
     <Box p={2}>

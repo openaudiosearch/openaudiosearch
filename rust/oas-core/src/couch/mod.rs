@@ -202,9 +202,10 @@ impl CouchDB {
             return Ok(DocList::default());
         }
         let mut params = HashMap::new();
-        params.insert("include_docs", serde_json::to_value("true").unwrap());
-        let keys: String = ids.join(",");
-        params.insert("keys", serde_json::to_value(keys).unwrap());
+        params.insert("include_docs", serde_json::to_string(&true).unwrap());
+        // let keys: String = ids.join(",");
+        // params.insert("keys", serde_json::to_value(keys).unwrap());
+        params.insert("keys", serde_json::to_string(ids).unwrap());
         self.get_all_with_params(&params).await
     }
 
@@ -226,7 +227,8 @@ impl CouchDB {
     /// Get all docs while passing a map of params.
     pub async fn get_all_with_params(&self, params: &impl Serialize) -> Result<DocList> {
         let req = self.request(Method::GET, "_all_docs").query(params);
-        let docs: DocList = self.send(req).await?;
+        let docs: Value = self.send(req).await?;
+        let docs: DocList = serde_json::from_value(docs)?;
         Ok(docs)
     }
 

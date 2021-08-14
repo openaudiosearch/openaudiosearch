@@ -4,10 +4,8 @@ use crate::record::TypedValue;
 use crate::reference::{self, Reference};
 use crate::ser;
 use crate::task::{TaskObject, TaskState};
-use crate::Resolvable;
-use crate::Resolver;
-use crate::UntypedRecord;
 use crate::{ElasticMapping, MissingRefsError};
+use crate::{Record, Resolvable, Resolver, UntypedRecord};
 use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -81,12 +79,12 @@ impl Resolvable for Post {
 }
 
 impl ElasticMapping for Post {
-    fn elastic_mapping() -> Option<serde_json::Value> {
-        Some(json!({
+    fn elastic_mapping() -> serde_json::Value {
+        json!({
             "media": {
                 "type": "nested",
                 "include_in_parent": true,
-                "properties": Media::elastic_mapping().unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
+                "properties": Record::<Media>::elastic_mapping()
             },
             "transcript": {
                 "type": "text",
@@ -208,6 +206,6 @@ impl ElasticMapping for Post {
                     }
                 }
             }
-        }))
+        })
     }
 }

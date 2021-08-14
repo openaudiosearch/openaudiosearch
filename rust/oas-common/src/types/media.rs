@@ -68,8 +68,8 @@ impl TypedValue for Media {
 impl Mappable for Media {}
 
 impl ElasticMapping for Media {
-    fn elastic_mapping() -> Option<serde_json::Value> {
-        Some(json!({
+    fn elastic_mapping() -> serde_json::Value {
+        json!({
             "contentUrl":{
                 "type":"text",
             },
@@ -85,7 +85,7 @@ impl ElasticMapping for Media {
             "transcript": {
                 "type": "object"
             }
-        }))
+        })
     }
 }
 

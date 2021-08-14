@@ -1,6 +1,6 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
+import i18n from 'i18next'
+import { initReactI18next } from 'react-i18next'
+import LanguageDetector from 'i18next-browser-languagedetector'
 
 i18n
   // detect user language
@@ -14,7 +14,7 @@ i18n
     debug: true,
     fallbackLng: 'en',
     interpolation: {
-      escapeValue: false, // not needed for react as it escapes by default
+      escapeValue: false // not needed for react as it escapes by default
     },
     resources: {
       en: {
@@ -41,11 +41,15 @@ i18n
           },
           searchForm: {
             placeholder: 'Suche eingeben...'
-          }
+          },
+          more: 'Mehr',
+          less: 'Weniger',
+          about: 'About',
+          imprint: 'Impressum'
 
         }
       }
     }
-  });
+  })
 
-export default i18n;
+export default i18n
