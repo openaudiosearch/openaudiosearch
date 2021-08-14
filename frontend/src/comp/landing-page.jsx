@@ -1,6 +1,6 @@
 import React from 'react'
 import { DataSearch, ReactiveBase, ReactiveList } from '@appbaseio/reactivesearch'
-import { Heading, Flex, Box, Spinner, Center } from '@chakra-ui/react'
+import { Heading, Flex, Box, Spinner, Center, SimpleGrid } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { Link, useHistory } from 'react-router-dom'
 import Moment from 'moment'
@@ -57,19 +57,20 @@ export default function LandingPage () {
                 componentId='DiscoverItems'
                 infiniteScroll={false}
                 showResultStats={false}
-                size={6}
+                size={10}
+                pagination={true}
                 scrollOnChange={false}
               >
                 {({ data, error, loading, ...args }) => {
                   if (loading) return <Spinner size='xl' />
                   return (
-                    <Flex direction='column'>
+                    <SimpleGrid columns={[1, 1, 2, 2]} spacing={10}>
                       {
                         data.map((item, i) => (
                           <ResultItem item={item} key={i} showSnippets={false} />
                         ))
                       }
-                    </Flex>
+                    </SimpleGrid>
                   )
                 }}
               </ReactiveList>
