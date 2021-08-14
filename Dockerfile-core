@@ -5,8 +5,7 @@ COPY frontend /app/frontend
 RUN yarn && yarn run build
 
 # use the cargo-chef base image
-FROM lukemathwalker/cargo-chef:latest-rust-1.54.0 as base
-RUN apt-get update && apt-get install -y libssl-dev
+FROM lukemathwalker/cargo-chef:latest-rust-1-slim as base
 
 # prepare the cargo-chef build
 FROM base as planner
