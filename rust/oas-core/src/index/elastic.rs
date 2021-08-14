@@ -9,8 +9,7 @@ use elasticsearch::{
 };
 use elasticsearch::{GetParts, IndexParts, SearchParts, UpdateByQueryParts};
 use http::StatusCode;
-use oas_common::types::Post;
-use oas_common::{ElasticMapping, Record, TypedValue, UntypedRecord};
+use oas_common::{Record, TypedValue, UntypedRecord};
 use rocket::serde::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -29,14 +28,20 @@ use super::IndexError;
 pub struct Index {
     client: Arc<Elasticsearch>,
     index: String,
+    mapping: serde_json::Value,
 }
 
 impl Index {
     /// Create a new Index client from an Elasticsearch client and index name.
-    pub fn with_client_and_name(client: Arc<Elasticsearch>, name: impl ToString) -> Self {
+    pub fn new(
+        client: Arc<Elasticsearch>,
+        name: impl ToString,
+        mapping: serde_json::Value,
+    ) -> Self {
         Self {
             client,
             index: name.to_string(),
+            mapping,
         }
     }
 
@@ -60,8 +65,8 @@ impl Index {
     /// This creates the elasticsearch index with the default index mapping if it does not exists. It should be called before calling other
     /// methods on the client.
     pub async fn ensure_index(&self, delete: bool) -> Result<(), IndexError> {
-        let mapping = get_default_mapping();
-        create_index_if_not_exists(&self.client, &self.index, delete, mapping).await?;
+        let mapping = wrap_mapping_properties(self.mapping.clone());
+        create_index_if_not_exists(&self.client, &self.index, delete, &mapping).await?;
         Ok(())
     }
 
@@ -410,7 +415,7 @@ async fn create_index_if_not_exists(
     client: &Elasticsearch,
     name: &str,
     delete: bool,
-    mapping: serde_json::Value,
+    mapping: &serde_json::Value,
 ) -> Result<(), IndexError> {
     let exists = client
         .indices()
@@ -505,11 +510,10 @@ pub fn create_client(addr: Option<String>) -> Result<Elasticsearch, Error> {
     Ok(Elasticsearch::new(transport))
 }
 
-fn get_default_mapping() -> serde_json::Value {
-    let post_mapping = Record::<Post>::elastic_mapping();
+pub fn wrap_mapping_properties(properties: serde_json::Value) -> serde_json::Value {
     json!({
         "mappings": {
-            "properties": post_mapping
+            "properties": properties
         },
         "settings": {
             "analysis": {
