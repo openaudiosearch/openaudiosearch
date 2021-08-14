@@ -26,8 +26,8 @@ export function Footer () {
       <Center>
         <Box w={['90vw', '80vw', '750px', '750px']}>
 
-          <Flex direction='row' justify='start'>
-            <ChakraLink to='/about' as={Link}>
+          <Flex direction={['column', 'column', 'row', 'row']} justify='start'>
+            <ChakraLink to='/imprint' as={Link}>
               <FooterLinkText>
                 {t('imprint', 'Imprint')}
               </FooterLinkText>
@@ -43,17 +43,15 @@ export function Footer () {
                   <Icon as={FaGithub} fontSize='lg' mr='2' />
                   Source code
                </FooterLinkText>
-    </Flex>
+              </Flex>
             </ChakraLink>
-            <Login>
-              <ChakraLink>
-                <FooterLinkText>
+            <FooterLinkText>
+              <Login>
+                <ChakraLink>
                   {t('login', 'Login')}
-                </FooterLinkText>
-              </ChakraLink>
-            </Login>
-            <Flex ml='6' mr='5'>
-            </Flex>
+                </ChakraLink>
+              </Login>
+             </FooterLinkText>
           </Flex>
         </Box>
       </Center>
