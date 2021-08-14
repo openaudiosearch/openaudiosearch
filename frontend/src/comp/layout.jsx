@@ -44,6 +44,7 @@ function PlayerFooter (props) {
       height={height}
       bg='primary'
       color='white'
+      zIndex='50'
     >
       <Player />
     </Box>
