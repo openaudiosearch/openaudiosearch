@@ -1,8 +1,7 @@
 use anyhow::Context;
 use elasticsearch::Elasticsearch;
 use oas_common::types::{Media, Post, Transcript};
-use oas_common::{Record, RecordMap, Resolver};
-use oas_common::{TypedValue, UntypedRecord};
+use oas_common::{ElasticMapping, Record, RecordMap, Resolver, TypedValue, UntypedRecord};
 use serde_json::json;
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -18,8 +17,11 @@ pub struct PostIndex {
 }
 
 impl PostIndex {
-    pub fn new(index: Arc<Index>) -> Self {
-        Self { index }
+    pub fn new(client: Arc<Elasticsearch>, name: String) -> Self {
+        let index = Index::new(client, name, Record::<Post>::elastic_mapping());
+        Self {
+            index: Arc::new(index),
+        }
     }
 
     pub fn index(&self) -> &Arc<Index> {
