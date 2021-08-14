@@ -1,17 +1,21 @@
 use crate::mapping::Mappable;
 use crate::record::TypedValue;
 use crate::task::{TaskObject, TaskState};
-use crate::ElasticMapping;
+use crate::{ElasticMapping, Reference};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use crate::ser;
 
+use super::{Feed, Post};
+
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Media {
     pub content_url: String,
+    // File size in bytes.
+    pub content_size: Option<u32>,
     pub encoding_format: Option<String>,
     #[serde(default)]
     #[serde(deserialize_with = "ser::deserialize_duration")]
@@ -24,6 +28,11 @@ pub struct Media {
 
     #[serde(default)]
     pub tasks: MediaTasks,
+
+    #[serde(default)]
+    pub feeds: Vec<Reference<Feed>>,
+    #[serde(default)]
+    pub posts: Vec<Reference<Post>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
@@ -70,6 +79,10 @@ impl Mappable for Media {}
 impl ElasticMapping for Media {
     fn elastic_mapping() -> serde_json::Value {
         json!({
+            "tasks": {
+                "type": "object",
+                "enabled": false
+            },
             "contentUrl":{
                 "type":"text",
             },

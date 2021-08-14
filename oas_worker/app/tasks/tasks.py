@@ -2,6 +2,7 @@ import os
 import json
 import httpx
 import subprocess
+import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 from base64 import b32encode
@@ -42,11 +43,13 @@ def url_to_path(url: str) -> str:
     target_name = f'{parsed_url.netloc}/{url_hash[:2]}/{url_hash[2:]}'
     return target_name
 
+
 @app.task(name="transcribe")
 def transcribe(args: dict, opts: dict):
     print("start transcribe task with args", args, "opts", opts)
     media_url = args['media_url']
     media_id = args['media_id']
+    
     nlp_opts = {'pipeline': 'ner'}
     result = chain(
         download.s({'media_url': media_url, 'media_id': media_id }),
@@ -159,16 +162,28 @@ def nlp(args, opts):
     return args
 
 
-@app.task(name="save_media")
-def save_media(args):
+@app.task(bind=True, name="save_media")
+def save_media(self, args):
+    task_id = self.request.id.__str__()
     media_id = args['opts']['media_id']
-    url = f"{config.oas_url}/media/{media_id}"
-    data = {
-        "transcript": args['asr'],
-        "nlp": args['nlp']
-    };
-    res = httpx.patch(url, json=data)
+    transcript = args['asr']
+    nlp = args['nlp']
+
+    task_state = {
+        "state": "finished",
+        "taskId": task_id,
+        "success": True,
+    }
+    patch = [
+        { "op": "replace", "path": "/transcript", "value": transcript },
+        { "op": "replace", "path": "/nlp", "value": nlp },
+        { "op": "replace", "path": "/tasks/asr", "value": task_state },
+    ]
+
+    url = config.url(f"/media/{media_id}")
+    res = httpx.patch(url, json=patch)
     res = res.json()
+
     print("res", res)
     return res
 
@@ -176,9 +191,38 @@ def save_media(args):
 def nlp2(args, opts):
     post = args
     print("START NLP", post)
-    url = f"{config.oas_url}/media/{media_id}"
 
 @app.task(name="download2")
 def download2(args, opts):
     media = args
     print("START DOWNLOAD", media)
+
+@app.task(bind=True, name="transcribe_mock")
+def transcribe_mock(self, args: dict, opts: dict):
+    media_url = args['media_url']
+    media_id = args['media_id']
+
+    url = f"{config.oas_url}/media/{media_id}"
+    transcript = {
+        "text": "foo bar baz",
+        "parts": [
+            { "start": 0.2, "end": 1.0, "conf": 1.0, "word": "foo" },
+            { "start": 0.2, "end": 1.0, "conf": 1.0, "word": "foo" },
+            { "start": 0.2, "end": 1.0, "conf": 1.0, "word": "foo" },
+        ]
+    }
+    task_state = {
+        "state": "finished",
+        "taskId": self.request.id.__str__(),
+        "success": True,
+        "took": 100
+    }
+    patch = [
+        { "op": "replace", "path": "/transcript", "value": transcript },
+        { "op": "replace", "path": "/tasks/asr", "value": task_state },
+    ]
+    print(json.dumps(patch));
+    res = httpx.patch(url, json=patch)
+    res = res.json()
+    print("res", res)
+    return res

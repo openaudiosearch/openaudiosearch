@@ -1,7 +1,8 @@
 use crate::State;
 use clap::Clap;
 use rocket::fairing::{Fairing, Info, Kind};
-use rocket::{catchers, Orbit, Rocket};
+use rocket::http::Header;
+use rocket::{catchers, Orbit, Request, Rocket};
 use rocket_okapi::routes_with_openapi;
 use rocket_okapi::swagger_ui::{make_swagger_ui, SwaggerUIConfig};
 
@@ -67,6 +68,7 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 handlers::feed::put_feed,
                 handlers::feed::get_feed,
                 handlers::feed::post_feed,
+                handlers::feed::get_feeds,
                 // /search routes
                 handlers::search::search,
                 // task routes
@@ -106,7 +108,7 @@ impl Fairing for OasFairing {
     fn info(&self) -> Info {
         Info {
             name: "OAS logging",
-            kind: Kind::Liftoff,
+            kind: Kind::Liftoff | Kind::Request,
         }
         /* ... */
     }
@@ -123,9 +125,19 @@ impl Fairing for OasFairing {
         /* ... */
     }
 
-    // async fn on_request(&self, req: &mut Request<'_>, data: &mut Data<'_>) {
-    //     [> ... <]
-    // }
+    async fn on_request(&self, req: &mut Request<'_>, _data: &mut rocket::data::Data<'_>) {
+        // Answer API requests with JSON (changes the error handler)
+        if req.uri().path().starts_with("/api") {
+            req.replace_header(Header::new("accept", "application/json"));
+        }
+        // req.add_header(Header::new("accept", "application/json"));
+        // match req.headers().get_one("accept") {
+        //     None | Some(header) if header == "*/*" => {
+        //     },
+        //     _ => {}
+        // }
+        // && req.headers().get_one("accept").is_none() {
+    }
 
     // async fn on_response<'r>(&self, req: &'r Request<'_>, res: &mut Response<'r>) {
     //     [> ... <]

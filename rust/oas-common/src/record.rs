@@ -20,6 +20,8 @@ pub enum EncodingError {
     SerdeJson(#[from] serde_json::Error),
     #[error("Serialization did not return an object")]
     NotAnObject,
+    #[error("Invalid patch")]
+    Patch(#[from] json_patch::PatchError),
 }
 
 /// An error that occurs while decoding a record.
@@ -35,6 +37,7 @@ pub enum DecodingError {
 
 /// Record metadata.
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct RecordMeta {
     guid: String,
     #[serde(rename = "type")]
@@ -45,7 +48,10 @@ pub struct RecordMeta {
     // seq: u32,
     // version: u32,
     // timestamp: u32,
+    // tasks: HashMap<TaskName, TaskState>,
 }
+
+// pub type TaskName = String;
 
 impl ElasticMapping for RecordMeta {
     fn elastic_mapping() -> serde_json::Value {
@@ -214,6 +220,22 @@ impl UntypedRecord {
                 Ok(())
             }
             _ => Err(EncodingError::NotAnObject),
+        }
+    }
+
+    pub fn apply_json_patch(&mut self, patch: &json_patch::Patch) -> Result<(), EncodingError> {
+        let mut value = Value::Object(self.value.clone());
+        let res = json_patch::patch(&mut value, &patch);
+        eprintln!("PATCH RES {:#?}", res);
+        match res {
+            Ok(_) => match value {
+                Value::Object(value) => {
+                    self.value = value;
+                    Ok(())
+                }
+                _ => Err(EncodingError::NotAnObject.into()),
+            },
+            Err(err) => Err(err.into()),
         }
     }
 }

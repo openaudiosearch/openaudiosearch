@@ -251,11 +251,24 @@ impl CouchDB {
             }
         }
         let req = self.request(Method::PUT, &id).json(&doc);
-        self.send(req).await
+        let res = self.send(req).await;
+        if let Err(err) = &res {
+            log::trace!("[{}] put ERR for {}: {:?}", self.config.database, id, err);
+        } else {
+            log::trace!("[{}] put OK for {}", self.config.database, id);
+        }
+        res
     }
 
     /// Put a list of docs into the database in a single bulk operation.
     pub async fn put_bulk(&self, docs: Vec<Doc>) -> Result<Vec<PutResult>> {
+        let ids: Vec<_> = docs.iter().map(|d| d.id()).collect();
+        log::trace!(
+            "[{}] bulk put start for {}: {:?}",
+            self.config.database,
+            ids.len(),
+            ids
+        );
         let body = serde_json::json!({ "docs": docs });
         let req = self.request(Method::POST, "_bulk_docs").json(&body);
         let res: Vec<PutResult> = self.send(req).await?;
@@ -264,10 +277,19 @@ impl CouchDB {
         for res in res.iter() {
             match res {
                 PutResult::Ok(_) => ok += 1,
-                PutResult::Err(_) => errors += 1,
+                PutResult::Err(err) => {
+                    log::trace!("[{}] bulk put ERR: {}", self.config.database, err);
+                    errors += 1;
+                }
             }
         }
-        log::debug!("put {} ({} ok, {} err)", res.len(), ok, errors);
+        log::debug!(
+            "[{}] bulk put {} ({} OK, {} ERR)",
+            self.config.database,
+            res.len(),
+            ok,
+            errors
+        );
         Ok(res)
     }
 
@@ -418,6 +440,12 @@ impl CouchDB {
         // let id = T::guid(id);
         let doc = self.get_doc(&id).await?;
         let record = doc.into_typed_record::<T>()?;
+        Ok(record)
+    }
+
+    pub async fn get_record_untyped(&self, guid: &str) -> Result<UntypedRecord> {
+        let doc = self.get_doc(&guid).await?;
+        let record = doc.into_untyped_record()?;
         Ok(record)
     }
 
