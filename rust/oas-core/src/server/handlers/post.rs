@@ -7,6 +7,7 @@ use serde_json::Value;
 
 use crate::couch::PutResponse;
 use crate::server::error::Result;
+use crate::server::auth::AdminUser;
 
 /// Get a post record by id.
 #[openapi(tag = "Post")]
@@ -21,6 +22,7 @@ pub async fn get_post(state: &rocket::State<crate::State>, id: String) -> Result
 #[openapi(tag = "Post")]
 #[post("/post", data = "<value>")]
 pub async fn post_post(
+    _user: AdminUser,
     state: &rocket::State<crate::State>,
     value: Json<Post>,
 ) -> Result<PutResponse> {
@@ -36,6 +38,7 @@ pub async fn post_post(
 #[openapi(tag = "Post")]
 #[put("/post/<id>", data = "<value>")]
 pub async fn put_post(
+    _user: AdminUser,
     state: &rocket::State<crate::State>,
     id: String,
     value: Json<Post>,
@@ -50,6 +53,7 @@ pub async fn put_post(
 #[openapi(tag = "Post")]
 #[patch("/post/<id>", data = "<value>")]
 pub async fn patch_post(
+    _user: AdminUser,
     state: &rocket::State<crate::State>,
     id: String,
     value: Json<Value>,

@@ -9,11 +9,14 @@ use oas_common::util;
 use rocket::{get, post, put};
 
 use oas_common::types;
+use crate::server::auth::AdminUser;
+
 
 /// Create a new feed
 #[openapi(tag = "Feed")]
 #[post("/feed", data = "<body>")]
 pub async fn post_feed(
+    _user: AdminUser,
     state: &rocket::State<State>,
     body: Json<types::Feed>,
 ) -> Result<Json<PutResponse>, AppError> {
@@ -33,6 +36,7 @@ pub async fn post_feed(
 #[openapi(tag = "Feed")]
 #[put("/feed/<id>", data = "<body>")]
 pub async fn put_feed(
+    _user: AdminUser,
     state: &rocket::State<State>,
     id: String,
     body: Json<types::Feed>,

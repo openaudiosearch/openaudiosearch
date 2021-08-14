@@ -7,6 +7,7 @@ use serde_json::Value;
 
 use crate::couch::Doc;
 use crate::server::error::{AppError, Result};
+use crate::server::auth::AdminUser;
 
 // pub fn routes() -> Vec<Route> {
 //     routes![get_record, post_record]
@@ -27,6 +28,7 @@ pub async fn get_record(state: &rocket::State<crate::State>, guid: String) -> Re
 #[openapi(skip)]
 #[post("/record", data = "<record>")]
 pub async fn post_record(
+    _user: AdminUser,
     state: &rocket::State<crate::State>,
     record: Json<UntypedRecord>,
 ) -> Result<serde_json::Value> {
