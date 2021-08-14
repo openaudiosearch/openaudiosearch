@@ -1,5 +1,5 @@
 import React from 'react'
-import { FaCog, FaPlay, FaTasks, FaExternalLinkAlt } from 'react-icons/fa'
+import { FaCog, FaPlay, FaTasks, FaExternalLinkAlt, FaChevronLeft } from 'react-icons/fa'
 import {
   IconButton,
   Menu,
@@ -14,7 +14,7 @@ import {
   Tag,
   Text,
 } from '@chakra-ui/react'
-import { useParams } from 'react-router'
+import { useParams, useLocation, useHistory } from 'react-router'
 
 import { usePlayer } from './player'
 import { useIsAdmin } from '../hooks/use-login'
@@ -106,6 +106,12 @@ export function PostPage (props = {}) {
   const { postId } = useParams()
   const { post } = usePost(postId)
   const { t } = useTranslation()
+  const history = useHistory()
+  const location = useLocation()
+  let fromSearch = false
+  if (location.state) {
+    fromSearch = location.state.fromSearch
+  } 
   if (!post) return null
   
   const genres = post.genre.map((genre) => 
@@ -123,16 +129,23 @@ export function PostPage (props = {}) {
 
   return (
     <Flex direction="column" maxWidth='750px'>
+      {fromSearch && 
+        <Flex direction="row" w='100%' mb='2'>
+          <Button onClick={() => history.goBack()} size='sm' variant='ghost'>
+            <Box mr='2'><FaChevronLeft /></Box>
+            <Box>{t('backtosearch', 'Back to search')}</Box>
+          </Button>
+        </Flex>}
       <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
         <Flex direction="column">
-          <Flex direction="row" justify='space-between'>
-            <Flex direction="row">
+          <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
+            <Flex direction={['column', 'column', 'row', 'row']}>
               { post.datePublished &&
-              <Text fontSize='sm'>
+              <Text fontSize='sm' mr='2'>
                 {Moment(post.datePublished).format('DD.MM.YYYY')}
               </Text>
               }
-              <Box ml='2'>
+              <Box>
                 {genres}
               </Box>
             </Flex>
@@ -142,7 +155,7 @@ export function PostPage (props = {}) {
             </Link>
             }
           </Flex>
-          <Flex direction='row' mt='2'>
+          <Flex direction={['column', 'column', 'row', 'row']} mt='2'>
             <Heading size='md'>{post.headline}</Heading>
             <Flex align='center' justify='center' ml='2'>
               <PostButtons post={post} />
@@ -150,21 +163,21 @@ export function PostPage (props = {}) {
           </Flex>
         </Flex>
       </Flex>
-      <Box mt='2'>
-        {post.publisher && <Text fontSize='sm'>{t('by', 'by')} {post.publisher}</Text>}
+      <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2'>
+        {post.publisher && <Text mr='2' fontSize='sm'>{t('by', 'by')} {post.publisher}</Text>}
         {post.creator.length > 0 &&
-          <Box ml='2'>
-            <Text>{t('creators', 'Creators')}:</Text>
+          <Flex direction='row' mr='2'>
+            <Text fontSize='sm' mr='1'>{t('creators', 'Creators')}:</Text>
             {creators}
-          </Box>
+          </Flex>
         }
         {post.contributor &&
-          <Box ml='2'>
-            <Text>{t('contributors', 'Contributors')}:</Text>
+          <Flex direction='row' mr='2'>
+            <Text fontSize='sm' mr='1'>{t('contributors', 'Contributors')}:</Text>
             {contributors}
-          </Box>
+          </Flex>
         }
-      </Box>
+      </Flex>
 
       {post.description &&
         <Box mt='2'>{post.description}</Box>

@@ -199,7 +199,12 @@ function ResultItem (props) {
         mr='3'
       >
         <Flex direction='column' mb='2'>
-          <Link to={'post/' + postId}>
+          <Link to={{
+            pathname: '/post/' + postId,
+            state: {
+              fromSearch: true
+            }
+          }}>
             <Heading
               size='md' my={4}
               dangerouslySetInnerHTML={{
