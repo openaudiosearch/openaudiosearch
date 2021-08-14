@@ -70,7 +70,6 @@ function Navbar () {
         <NavLink
           exact
           to='/'
-          activeClassName='active-menu-item'
         >
           <Text fontSize='lg' fontWeight='bold'>
             {t('discover', 'Discover')}
@@ -79,6 +78,11 @@ function Navbar () {
         <NavLink to='/search'>
           <Text fontSize='lg' fontWeight='bold'>
             {t('search', 'Search')}
+          </Text>
+        </NavLink>
+        <NavLink to='/about'>
+          <Text fontSize='xl' fontWeight='bold'>
+            {t('about', 'About')}
           </Text>
         </NavLink>
         {/* <NavLink to='/jobs'>

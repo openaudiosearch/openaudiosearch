@@ -11,12 +11,16 @@ import ImporterPage from './importer'
 import LandingPage from './landing-page'
 import { PostPage } from './post'
 import ImprintPage from './imprint'
+import AboutPage from './about-page'
 
 export function Routes () {
   return (
     <Switch>
       <Route path='/jobs'>
         <JobsPage />
+      </Route>
+      <Route path='/about'>
+        <AboutPage />
       </Route>
       <Route path='/search/:query'>
         <SearchPage />

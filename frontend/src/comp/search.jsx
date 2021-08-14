@@ -62,6 +62,7 @@ export default function SearchPage () {
               highlight
               queryFormat='and'
               fuzziness={0}
+              debounce={2000}
               react={{
                 and: facets.filter(f => f !== 'searchbox')
               }}
@@ -273,7 +274,7 @@ function CollapsedText (props) {
   )
 }
 
-function SnippetList (props = {}) {
+export function SnippetList (props = {}) {
   const { fieldname, snippets, post } = props
   return (
     <Box p={2}>

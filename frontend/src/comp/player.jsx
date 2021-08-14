@@ -1,20 +1,27 @@
-import React, { useState, useContext, useMemo, useRef, useCallback, useEffect } from 'react'
+import React, { useState, useContext, useMemo, useRef, useCallback, useEffect, forwardRef } from 'react'
 import {
   Box,
   Flex,
   IconButton,
-  CircularProgress,
   Slider,
   SliderTrack,
   SliderFilledTrack,
   SliderThumb,
-  Stack
+  Stack,
+  Tooltip,
+  useSliderContext,
+  chakra,
+  Icon
 } from '@chakra-ui/react'
-import { FaPlay, FaPause, FaUndoAlt, FaRedoAlt } from 'react-icons/fa'
+import { cx } from "@chakra-ui/utils"
+import { FaPlay, FaPause } from 'react-icons/fa'
+import { RiArrowUpSFill } from 'react-icons/ri'
 import { useTranslation } from 'react-i18next'
 import { MdGraphicEq } from 'react-icons/md'
 
 import { API_ENDPOINT } from '../lib/config'
+
+import { parseTranscript } from './transcript'
 
 // Get the audio content URL for a media
 function mediaContentURL (media) {
@@ -238,29 +245,35 @@ export function Player (props = {}) {
     audio.currentTime = nextTime
   }
 
+  let snippets = []
+  if (post && post.highlight && post.highlight.transcript) {
+    console.log(post.highlight.transcript)
+    snippets = post.highlight.transcript.map((snippet) => parseTranscript(snippet))
+  }
+
   return (
     <Stack p={2} bg='primary' color='white'>
+      <Flex direction='column'>
       <Box px='3'>
         <strong>{headline || ''}</strong>
-        &nbsp;
-        {word}
       </Box>
-      <Flex dir='row'>
-        <PlayerButton
-          label={state.playing ? t('pause', 'Pause') : t('play', 'Play')}
-          onClick={togglePlay}
-          icon={<Box pl='1px'>{state.playing ? <FaPause /> : <FaPlay />}</Box>}
-          disabled={!state.canplay}
-        />
-        <Box p={2}>
-          {formatDuration(state.currentTime)}
-        </Box>
-        <Box p={2} flex={1}>
-          <Timeslider pos={posPercent} onChange={setPosPercent} />
-        </Box>
-        <Box p={2}>
-          {formatDuration(state.duration)}
-        </Box>
+        <Flex dir='row'>
+          <PlayerButton
+            label={state.playing ? t('pause', 'Pause') : t('play', 'Play')}
+            onClick={togglePlay}
+            icon={<Box pl='1px'>{state.playing ? <FaPause /> : <FaPlay />}</Box>}
+            disabled={!state.canplay}
+          />
+          <Box p={2} w={100}>
+            {formatDuration(state.currentTime)}
+          </Box>
+          <Box p={2} flex={1}>
+            <Timeslider pos={posPercent} onChange={setPosPercent} snippets={snippets} />
+          </Box>
+          <Box p={2}>
+            {formatDuration(state.duration)}
+          </Box>
+        </Flex>
       </Flex>
     </Stack>
   )
@@ -283,13 +296,14 @@ function PlayerButton (props = {}) {
 }
 
 function Timeslider (props = {}) {
-  const { pos, onChange } = props
+  const { pos, onChange, snippets } = props
   const [dragging, setDragging] = useState(false)
   const [draggingValue, setDraggingValue] = useState(null)
 
   let value
   if (dragging && draggingValue) value = draggingValue
   else value = pos * 100
+
   return (
     <Slider
       aria-label='slider-ex-1'
@@ -305,6 +319,7 @@ function Timeslider (props = {}) {
       <SliderThumb boxSize={6}>
         <Box color='secondary.500' as={MdGraphicEq} />
       </SliderThumb>
+      <SliderSnippets snippets={snippets} />
     </Slider>
   )
 
@@ -345,3 +360,43 @@ function pad (num) {
   if (String(num).length === 1) return '0' + num
   else return '' + num
 }
+
+function SliderSnippets (props = {}) {
+  const { snippets } = props
+  const state = usePlaystate()
+  const { setMark } = usePlayer()
+
+  function onMarkClick (mark) {
+    setMark(mark)
+  }
+
+  return (
+    <>
+      {snippets.map((snippet, index) => (
+          <SliderMark 
+            display={['none', 'block', 'block', 'block']}
+            key={index} 
+            value={(snippet[0].start/state.duration)*100} 
+            onClick={() => onMarkClick(snippet[0])}
+            mt='-5px'
+          >
+            <Tooltip label={snippet.map((snippet) => snippet.word).join(' ')} placement="top">
+              <Box><Icon as={RiArrowUpSFill} color='secondary.600' w='6' h='6'/></Box>
+            </Tooltip>
+          </SliderMark> 
+      ))}
+    </>
+  )
+}
+
+export const SliderMark = forwardRef((props, ref) => {
+  const { getMarkerProps } = useSliderContext()
+  const markProps = getMarkerProps(props, ref)
+  markProps.style.pointerEvents = 'all'
+  return (
+    <chakra.div
+      {...markProps}
+      className={cx("chakra-slider__marker", props.className)}
+    />
+  )
+})

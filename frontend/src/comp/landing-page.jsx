@@ -34,6 +34,7 @@ export default function LandingPage () {
                     autosuggest
                     queryFormat='and'
                     fuzziness={0}
+                    debounce={2000}
                     value={value}
                     onChange={(value, triggerQuery, event) => {
                       setValue(value)
