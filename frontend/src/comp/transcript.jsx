@@ -92,7 +92,7 @@ export function TranscriptWord (props) {
   return <span style={style}>{word}&nbsp;</span>
 }
 
-function parseTranscript (value) {
+export function parseTranscript (value) {
   const tokens = value.split(' ')
   return tokens.map((token) => {
     let [word, meta] = token.split('|')
