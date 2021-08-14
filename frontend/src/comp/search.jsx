@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactJson from 'react-json-view'
-import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters } from '@appbaseio/reactivesearch'
+import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters, MultiRange } from '@appbaseio/reactivesearch'
 import { Heading, Flex, Box, Spinner, Button, Text } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { useParams, Link, useHistory } from 'react-router-dom'
@@ -138,6 +138,20 @@ export default function SearchPage () {
                     react={{
                       and: facets.filter(f => f !== 'datePublished')
                     }}
+                  />
+                </Box>
+                <Box mb='30px'>
+                  <MultiRange
+                    componentId="DurationFilter"
+                    dataField="duration"
+                    nestedField="media"
+                    //data={
+                      //[{"start": 0, "end": 300, "label": "> 5 min"},
+                        //{"start": 301, "end": 900, "label": "Moderate"},
+                        //{"start": 901, "end": 1800, "label": "Pricey"},
+                        //{"start": 1800, "end": 3600, "label": "First Date"}]
+                    //}
+                    title="Duration"
                   />
                 </Box>
               </Flex>
