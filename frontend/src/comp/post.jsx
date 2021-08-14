@@ -117,9 +117,9 @@ export function PostPage (props = {}) {
 
   return (
     <Flex direction="column" maxWidth='750px'>
-      <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
-        <Flex direction="column">
-          <Flex direction="row" justify='space-between'>
+      <Flex direction={['column', 'column', 'row', 'row']} w='100%' justify='space-between'>
+        <Flex direction="column" w='100%'>
+          <Flex direction="row" w='100%' justify='space-between'>
             <Flex direction="row">
               { post.datePublished &&
               <Text fontSize='sm'>
@@ -136,7 +136,7 @@ export function PostPage (props = {}) {
             </Link>
             }
           </Flex>
-          <Flex direction='row' mt='2'>
+          <Flex direction='row' mt='2' w='100%' justify='space-between'>
             <Heading size='md'>{post.headline}</Heading>
             <Flex align='center' justify='center' ml='2'>
               <PostButtons post={post} />
