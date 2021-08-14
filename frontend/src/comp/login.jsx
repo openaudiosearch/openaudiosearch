@@ -18,12 +18,13 @@ import { useForm } from 'react-hook-form'
 import fetch from '../lib/fetch'
 
 export function Login (props = {}) {
+  const { children } = props
   const { handleSubmit, register, formState, isSubmitting } = useForm()
   const { data, error } = useSWR('/login')
   // if (error) return <Error error={error} />
   if (!data && !error) return <Spinner />
   if (data && data.ok) return <LoginInfo />
-  else return <LoginFormModal />
+  else return <LoginFormModal>{children}</LoginFormModal>
 }
 
 function LoginForm (props = {}) {
@@ -63,10 +64,22 @@ function LoginForm (props = {}) {
 }
 
 function LoginFormModal (props = {}) {
+  const { children } = props
   const { isOpen, onOpen, onClose } = useDisclosure()
+  function onClick (e) {
+    e.preventDefault()
+    onOpen()
+  }
+  let button
+  if (children) {
+    button = React.cloneElement(children, { onClick: onOpen })
+  } else {
+    button = <Button variant='link' onClick={onOpen}>Login</Button>
+  }
+
   return (
     <>
-      <Button variant='link' onClick={onOpen}>Login</Button>
+      {button}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
