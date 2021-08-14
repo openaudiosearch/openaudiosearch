@@ -42,7 +42,7 @@ function PlayerFooter (props) {
       left='0'
       right='0'
       height={height}
-      bg='black'
+      bg='primary'
       color='white'
     >
       <Player />
