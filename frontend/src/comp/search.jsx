@@ -134,7 +134,23 @@ export default function SearchPage () {
                     componentId='datePublished'
                     dataField='datePublished'
                     title={t('publishingdate', 'Publishing Date')}
-                    queryFormat='basic_date_time_no_millis'
+                    customQuery={
+                      function(value) {
+                        if (!value) return {}
+
+                        return {
+                          query: {
+                            range: {
+                              datePublished: {
+                                gte: value.start,
+                                lte: value.end,
+                                format: "yyyy-MM-dd"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
                     react={{
                       and: facets.filter(f => f !== 'datePublished')
                     }}
@@ -169,6 +185,13 @@ export default function SearchPage () {
                   dataField='dateModified'
                   componentId='SearchResults'
                   pagination
+                  sortOptions={[
+                    {label: 'Date (desc)', dataField: 'datePublished', sortBy: 'desc'},
+                    {label: 'Date (asc)', dataField: 'datePublished', sortBy: 'asc'},
+                    {label: 'Duration (desc)', dataField: 'media.duration', sortBy: 'desc'},
+                    {label: 'Duration (asc)', dataField: 'media.duration', sortBy: 'asc'},
+                  ]}
+                  defaultSortOption='Date (desc)'
                   react={{
                     and: facets
                   }}
