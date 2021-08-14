@@ -12,7 +12,7 @@ import {
   Link,
   Button,
   Tag,
-  Text,
+  Text
 } from '@chakra-ui/react'
 import { useParams } from 'react-router'
 
@@ -90,8 +90,12 @@ export function PostPlayButton (props = {}) {
       aria-label={t('playthispost', 'Play this post')}
       icon={<FaPlay />}
       isRound
-      color='secondary.500'
+      color='white'
+      bg='secondary.600'
       shadow='md'
+      _hover={{
+        bg: 'tertiary.600'
+      }}
       {...rest}
     />
   )
@@ -107,34 +111,32 @@ export function PostPage (props = {}) {
   const { post } = usePost(postId)
   const { t } = useTranslation()
   if (!post) return null
-  
-  const genres = post.genre.map((genre) => 
-    <Tag key={genre} mr='1'>{genre}</Tag>  
+
+  const genres = post.genre.map((genre) =>
+    <Tag key={genre} mr='1'>{genre}</Tag>
   )
-  const creators = post.creator.map((creator) => 
-    <Tag key={creator} mr='1'>{creator}</Tag>  
+  const creators = post.creator.map((creator) =>
+    <Tag key={creator} mr='1'>{creator}</Tag>
   )
 
   return (
-    <Flex direction="column" maxWidth='750px'>
+    <Flex direction='column' maxWidth='750px'>
       <Flex direction={['column', 'column', 'row', 'row']} w='100%' justify='space-between'>
-        <Flex direction="column" w='100%'>
-          <Flex direction="row" w='100%' justify='space-between'>
-            <Flex direction="row">
-              { post.datePublished &&
-              <Text fontSize='sm'>
-                {Moment(post.datePublished).format('DD.MM.YYYY')}
-              </Text>
-              }
+        <Flex direction='column' w='100%'>
+          <Flex direction='row' w='100%' justify='space-between'>
+            <Flex direction='row'>
+              {post.datePublished &&
+                <Text fontSize='sm'>
+                  {Moment(post.datePublished).format('DD.MM.YYYY')}
+                </Text>}
               <Box ml='2'>
                 {genres}
               </Box>
             </Flex>
             {post.url &&
-            <Link href={post.url} isExternal>
-              <Button size='xs'><Box>{t('sourceurl', 'Source URL')}</Box> <Box ml='10px' mb='3px'><FaExternalLinkAlt /></Box></Button>
-            </Link>
-            }
+              <Link href={post.url} isExternal>
+                <Button size='xs'><Box>{t('sourceurl', 'Source URL')}</Box> <Box ml='10px' mb='3px'><FaExternalLinkAlt /></Box></Button>
+              </Link>}
           </Flex>
           <Flex direction='row' mt='2' w='100%' justify='space-between'>
             <Heading size='md'>{post.headline}</Heading>
@@ -152,8 +154,7 @@ export function PostPage (props = {}) {
       </Box>
 
       {post.description &&
-        <Box mt='2'>{post.description}</Box>
-      }
+        <Box mt='2'>{post.description}</Box>}
 
       <Flex direction='row' justify='space-between' mt='4'>
         <ToggleTranscriptSection post={post} />
