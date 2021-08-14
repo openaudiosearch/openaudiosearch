@@ -17,12 +17,14 @@ pub type Result<T> = std::result::Result<T, CouchError>;
 
 pub(crate) mod changes;
 pub(crate) mod error;
+mod manager;
 pub mod resolver;
 mod table;
 pub(crate) mod types;
 
 pub use changes::ChangesStream;
 pub use error::CouchError;
+pub use manager::*;
 pub use types::*;
 
 use self::table::Table;
@@ -126,6 +128,7 @@ pub struct CouchDB {
 
 impl CouchDB {
     /// Create a new client with config.
+    /// TODO: Remove Ok-wrapping
     pub fn with_config(config: Config) -> anyhow::Result<Self> {
         let client = reqwest::Client::new();
 
@@ -133,6 +136,13 @@ impl CouchDB {
             config: Arc::new(config),
             client: Arc::new(client),
         })
+    }
+
+    pub fn with_config_and_client(config: Config, client: reqwest::Client) -> Self {
+        Self {
+            config: Arc::new(config),
+            client: Arc::new(client),
+        }
     }
 
     /// Create a new client with a CouchDB URL.
@@ -155,13 +165,19 @@ impl CouchDB {
     ///
     /// This creates the database if it does not exists. It should be called before calling other
     /// methods on the client.
-    pub async fn init(&self) -> Result<()> {
+    pub async fn init(&self) -> anyhow::Result<()> {
         let res: Result<Value> = self.send(self.request(Method::GET, "")).await;
         match res {
-            Ok(_res) => Ok(()),
+            Ok(_res) => {
+                log::trace!("check database {}: ok", self.config.database);
+                Ok(())
+            }
             Err(_) => {
                 let req = self.request(Method::PUT, "");
-                self.send(req).await
+                let _res: serde_json::Value = self.send(req).await.with_context(|| {
+                    format!("Failed to create database {}", self.config.database)
+                })?;
+                Ok(())
             }
         }
     }

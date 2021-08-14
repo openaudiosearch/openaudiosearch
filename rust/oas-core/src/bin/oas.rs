@@ -142,15 +142,12 @@ async fn main() -> anyhow::Result<()> {
     setup()?;
     let args = Args::parse();
 
-    let db = couch::CouchDB::with_url(args.couchdb_url.as_deref())?;
+    let db_manager = couch::CouchManager::with_url(args.couchdb_url.as_deref())?;
+    let db = db_manager.record_db().clone();
     let index_manager = index::IndexManager::with_url(args.elasticsearch_url.as_deref())?;
     let tasks = tasks::CeleryManager::with_url(args.redis_url.as_deref())?;
 
-    let state = State {
-        db,
-        index_manager,
-        tasks,
-    };
+    let state = State::new(db_manager, db, index_manager, tasks);
 
     let now = time::Instant::now();
     let result = match args.command {
@@ -177,7 +174,7 @@ async fn run_nuke(state: State, _args: Args) -> anyhow::Result<()> {
     let input = Input::<String>::new().interact_text()?;
     if &input == "nuke!" {
         println!("Deleting CouchDB");
-        let _ = state.db.destroy_and_init().await;
+        let _ = state.db_manager.destroy_and_init().await;
         println!("Deleting Elasticsearch");
         let _ = state.index_manager.destroy_and_init().await;
     } else {
@@ -202,11 +199,10 @@ async fn run_all(mut state: State, args: Args) -> anyhow::Result<()> {
     runtime.spawn("server", run_server(state.clone(), server_opts));
     runtime.spawn("index", run_index(state.clone(), IndexOpts::run_forever()));
     // Spawn task watcher.
-    // TODO: Enable
-    // runtime.spawn(
-    //     "tasks",
-    //     tasks::changes::process_changes(state.tasks.clone(), state.db.clone(), true),
-    // );
+    runtime.spawn(
+        "tasks",
+        tasks::changes::process_changes(state.clone(), true),
+    );
     runtime.spawn(
         "feed_watcher",
         run_feed(state, FeedCommand::Watch(feed_manager_opts)),
@@ -249,7 +245,7 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
 
 async fn run_debug(state: State) -> anyhow::Result<()> {
     eprintln!("OAS debug -- nothing here");
-    tasks::changes::process_changes(state.tasks, state.db, false).await?;
+    tasks::changes::process_changes(state, false).await?;
     // let id = std::env::var("ID").unwrap();
     // let post_index = state.index_manager.post_index();
     // let iters = 1000usize;

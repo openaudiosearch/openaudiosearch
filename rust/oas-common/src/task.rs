@@ -6,9 +6,11 @@ use crate::TypedValue;
 pub type TaskId = String;
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub enum TaskState {
     None,
     Wanted,
+    // WaitingFor(OtherTaskToFinish),
     Running(TaskId),
     Finished(TaskId),
 }

@@ -11,6 +11,7 @@ use super::taskdefs;
 use super::CeleryManager;
 use crate::couch::changes::changes_into_untyped_records;
 use crate::couch::{ChangeEvent, CouchDB, CouchResult};
+use crate::State;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct TaskProcessState {
@@ -23,12 +24,13 @@ impl TypedValue for TaskProcessState {
 
 const TASK_STATE_ID: &str = "default";
 
-pub async fn process_changes(
-    celery: CeleryManager,
-    db: CouchDB,
-    infinite: bool,
-) -> anyhow::Result<()> {
-    let latest_seq = get_latest_seq(&db).await;
+pub async fn process_changes(state: State, infinite: bool) -> anyhow::Result<()> {
+    let db = state.db_manager.record_db();
+    let celery = state.tasks;
+    let meta_db = state.db_manager.meta_db();
+
+    let latest_seq = get_latest_seq(&meta_db).await;
+    log::debug!("start task process at couchdb seq {:?}", latest_seq);
     let mut changes = db.changes(latest_seq.clone());
     changes.set_infinite(infinite);
 
@@ -42,11 +44,16 @@ pub async fn process_changes(
         process_batch(&celery, db.clone(), batch)
             .await
             .context("Failed to process changes batch for tasks")?;
-        if let Some(latest_seq) = last_seq {
-            let latest_seq = latest_seq.to_string();
-            save_latest_seq(&db, latest_seq)
-                .await
-                .context("Failed to save task meta state to CouchDB")?;
+        if let Some(next_latest_seq) = last_seq {
+            if &next_latest_seq != latest_seq.as_deref().unwrap_or("") {
+                log::trace!(
+                    "save task process state at couchdb seq: {}",
+                    next_latest_seq
+                );
+                save_latest_seq(&meta_db, next_latest_seq)
+                    .await
+                    .context("Failed to save task meta state to CouchDB")?;
+            }
         }
     }
     Ok(())
