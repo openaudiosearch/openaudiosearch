@@ -43,7 +43,9 @@ i18n
             placeholder: 'Suche eingeben...'
           },
           more: 'Mehr',
-          less: 'Weniger'
+          less: 'Weniger',
+          about: 'About',
+          imprint: 'Impressum'
 
         }
       }
