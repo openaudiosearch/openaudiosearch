@@ -152,7 +152,7 @@ export default function SearchPage () {
                       <ResultListWrapper>
                         {
                           data.map((item, i) => (
-                            <ResultItem item={item} key={i} showSnippets />
+                            <ResultItem item={item} key={i} showSnippets search />
                           ))
                         }
                       </ResultListWrapper>
@@ -169,7 +169,7 @@ export default function SearchPage () {
 }
 
 export function ResultItem (props) {
-  const { item, showSnippets } = props
+  const { item, showSnippets, search } = props
   const isAdmin = useIsAdmin()
   const { t } = useTranslation()
 
@@ -200,7 +200,12 @@ export function ResultItem (props) {
         mr='3'
       >
         <Flex direction='column' mb='2'>
-          <Link to={'post/' + postId}>
+          <Link to={{
+            pathname: '/post/' + postId,
+            state: {
+              fromSearch: search 
+            }
+          }}>
             <Heading
               size='md' my={4}
               dangerouslySetInnerHTML={{
