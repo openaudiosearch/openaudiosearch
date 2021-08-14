@@ -62,6 +62,7 @@ export default function SearchPage () {
               highlight
               queryFormat='and'
               fuzziness={0}
+              debounce={2000}
               react={{
                 and: facets.filter(f => f !== 'searchbox')
               }}
