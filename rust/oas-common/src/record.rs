@@ -1,13 +1,14 @@
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::any::Any;
 use std::convert::TryFrom;
 use std::fmt;
 use thiserror::Error;
 
-use crate::{MissingRefsError, Resolvable, Resolver};
+use crate::task::TaskObject;
+use crate::{ElasticMapping, MissingRefsError, Resolvable, Resolver};
 
 pub type Object = serde_json::Map<String, serde_json::Value>;
 pub type Record<T> = TypedRecord<T>;
@@ -39,10 +40,27 @@ pub struct RecordMeta {
     #[serde(rename = "type")]
     typ: String,
     id: String,
-    source: String,
-    seq: u32,
-    version: u32,
-    timestamp: u32,
+    // TODO: Add more metadata?
+    // source: String,
+    // seq: u32,
+    // version: u32,
+    // timestamp: u32,
+}
+
+impl ElasticMapping for RecordMeta {
+    fn elastic_mapping() -> serde_json::Value {
+        serde_json::json!({
+            "guid": {
+                "type": "keyword"
+            },
+            "id": {
+                "type": "keyword"
+            },
+            "typ": {
+                "type": "keyword"
+            }
+        })
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -80,7 +98,9 @@ impl ValidationError {
 }
 
 /// A trait to implement on value structs for typed [Record]s.
-pub trait TypedValue: fmt::Debug + Any + Serialize + DeserializeOwned + std::clone::Clone {
+pub trait TypedValue:
+    fmt::Debug + Any + Serialize + DeserializeOwned + std::clone::Clone + Send
+{
     /// A string to uniquely identify this record type.
     const NAME: &'static str;
 
@@ -129,8 +149,15 @@ impl UntypedRecord {
         Ok(Self { meta, value })
     }
 
-    /// Convert this untyped record into a typed [Record].
     pub fn into_typed_record<T: TypedValue + DeserializeOwned + Clone + 'static>(
+        self,
+    ) -> Result<TypedRecord<T>, DecodingError> {
+        self.into_typed()
+    }
+
+    /// Convert this untyped record into a typed [Record].
+    /// #[deprecated(note = "use into_typed")]
+    pub fn into_typed<T: TypedValue + DeserializeOwned + Clone + 'static>(
         self,
     ) -> Result<TypedRecord<T>, DecodingError> {
         if self.meta.typ.as_str() != T::NAME {
@@ -223,6 +250,19 @@ where
     pub meta: RecordMeta,
     #[serde(flatten)]
     pub value: T,
+}
+
+impl<T> TypedRecord<T>
+where
+    T: TaskObject,
+{
+    pub fn task_states(&self) -> Option<&<T as TaskObject>::TaskStates> {
+        self.value.task_states()
+    }
+
+    pub fn task_states_mut(&mut self) -> Option<&mut <T as TaskObject>::TaskStates> {
+        self.value.task_states_mut()
+    }
 }
 
 impl<T> TypedRecord<T>
@@ -320,6 +360,37 @@ where
     /// back to IDs.
     pub fn extract_refs(&mut self) -> Vec<UntypedRecord> {
         self.value.extract_refs()
+    }
+}
+
+impl<T> ElasticMapping for TypedRecord<T>
+where
+    T: ElasticMapping + Clone,
+{
+    fn elastic_mapping() -> serde_json::Value {
+        let meta = RecordMeta::elastic_mapping();
+        let meta = to_object(meta).unwrap();
+        let inner = T::elastic_mapping();
+        if !inner.is_object() {
+            Value::Null
+        } else {
+            let mut object = to_object(inner).unwrap();
+            object.insert(
+                "$meta".to_string(),
+                json!({
+                    "type": "object",
+                    "properties":  Value::Object(meta)
+                }),
+            );
+            Value::Object(object)
+        }
+    }
+}
+
+fn to_object(value: Value) -> Option<Object> {
+    match value {
+        Value::Object(object) => Some(object),
+        _ => None,
     }
 }
 

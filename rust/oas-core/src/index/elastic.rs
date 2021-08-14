@@ -9,8 +9,7 @@ use elasticsearch::{
 };
 use elasticsearch::{GetParts, IndexParts, SearchParts, UpdateByQueryParts};
 use http::StatusCode;
-use oas_common::types::Post;
-use oas_common::{ElasticMapping, Record, TypedValue, UntypedRecord};
+use oas_common::{Record, TypedValue, UntypedRecord};
 use rocket::serde::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -29,14 +28,20 @@ use super::IndexError;
 pub struct Index {
     client: Arc<Elasticsearch>,
     index: String,
+    mapping: serde_json::Value,
 }
 
 impl Index {
     /// Create a new Index client from an Elasticsearch client and index name.
-    pub fn with_client_and_name(client: Arc<Elasticsearch>, name: impl ToString) -> Self {
+    pub fn new(
+        client: Arc<Elasticsearch>,
+        name: impl ToString,
+        mapping: serde_json::Value,
+    ) -> Self {
         Self {
             client,
             index: name.to_string(),
+            mapping,
         }
     }
 
@@ -60,8 +65,8 @@ impl Index {
     /// This creates the elasticsearch index with the default index mapping if it does not exists. It should be called before calling other
     /// methods on the client.
     pub async fn ensure_index(&self, delete: bool) -> Result<(), IndexError> {
-        let mapping = get_default_mapping();
-        create_index_if_not_exists(&self.client, &self.index, delete, mapping).await?;
+        let mapping = wrap_mapping_properties(self.mapping.clone());
+        create_index_if_not_exists(&self.client, &self.index, delete, &mapping).await?;
         Ok(())
     }
 
@@ -289,16 +294,19 @@ async fn check_error(
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct BulkPutResponse {
-    took: u32,
-    errors: bool,
-    items: Vec<BulkPutResponseAction>,
+    pub took: u32,
+    pub errors: bool,
+    pub items: Vec<BulkPutResponseAction>,
 }
 
 impl BulkPutResponse {
-    fn stats(&self) -> BulkPutStats {
+    pub fn stats(&self) -> BulkPutStats {
         let mut stats = BulkPutStats::default();
         for item in self.items.iter() {
-            if let Some(_) = &item.inner().error {
+            if let Some(error) = &item.inner().error {
+                if stats.first_error.is_none() {
+                    stats.first_error = Some((item.inner().id.clone(), error.clone()));
+                }
                 stats.errors += 1;
             } else {
                 match item.inner().result {
@@ -310,6 +318,17 @@ impl BulkPutResponse {
             }
         }
         stats
+    }
+
+    // TODO: Remove clones.
+    pub fn errors(&self) -> impl Iterator<Item = (String, BulkPutResponseError)> + '_ {
+        self.items.iter().filter_map(|ref item| {
+            if let Some(ref error) = item.inner().error {
+                Some((item.inner().id.to_string(), error.clone()))
+            } else {
+                None
+            }
+        })
     }
 
     fn summarize(&self) -> String {
@@ -328,10 +347,11 @@ impl BulkPutResponse {
 
 #[derive(Debug, Default)]
 pub struct BulkPutStats {
-    errors: usize,
-    created: usize,
-    deleted: usize,
-    updated: usize,
+    pub errors: usize,
+    pub created: usize,
+    pub deleted: usize,
+    pub updated: usize,
+    pub first_error: Option<(String, BulkPutResponseError)>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -357,29 +377,29 @@ impl BulkPutResponseAction {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BulkPutResponseItem {
     #[serde(rename = "_id")]
-    id: String,
+    pub id: String,
     #[serde(rename = "_index")]
-    index: String,
+    pub index: String,
     #[serde(rename = "_version")]
-    version: Option<u64>,
+    pub version: Option<u64>,
     #[serde(rename = "_seq_no")]
-    seq_no: Option<u64>,
+    pub seq_no: Option<u64>,
 
     #[serde(rename = "_shards")]
-    shards: Option<serde_json::Value>,
+    pub shards: Option<serde_json::Value>,
 
-    status: u64,
-    result: Option<BulkPutResponseResult>,
-    error: Option<BulkPutResponseError>,
+    pub status: u64,
+    pub result: Option<BulkPutResponseResult>,
+    pub error: Option<BulkPutResponseError>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct BulkPutResponseError {
-    r#type: String,
-    reason: String,
-    index_uuid: Option<String>,
-    shard: Option<String>,
-    index: Option<String>,
+    pub r#type: String,
+    pub reason: String,
+    pub index_uuid: Option<String>,
+    pub shard: Option<String>,
+    pub index: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -395,7 +415,7 @@ async fn create_index_if_not_exists(
     client: &Elasticsearch,
     name: &str,
     delete: bool,
-    mapping: serde_json::Value,
+    mapping: &serde_json::Value,
 ) -> Result<(), IndexError> {
     let exists = client
         .indices()
@@ -490,11 +510,10 @@ pub fn create_client(addr: Option<String>) -> Result<Elasticsearch, Error> {
     Ok(Elasticsearch::new(transport))
 }
 
-fn get_default_mapping() -> serde_json::Value {
-    let post_mapping = Post::elastic_mapping();
+pub fn wrap_mapping_properties(properties: serde_json::Value) -> serde_json::Value {
     json!({
         "mappings": {
-            "properties": post_mapping
+            "properties": properties
         },
         "settings": {
             "analysis": {

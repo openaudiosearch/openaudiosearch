@@ -9,6 +9,8 @@ use tokio::fs::{metadata, read_to_string};
 
 pub type AllMappings = HashMap<String, String>;
 
+const DEFAULT_MAPPING: &str = include_str!("../../../../config/mapping.toml");
+
 #[derive(Debug)]
 pub struct MappingManager {
     mappings: HashMap<String, Mapping>,
@@ -54,14 +56,22 @@ impl MappingManager {
     }
 
     pub async fn init(&mut self) -> anyhow::Result<()> {
+        // Use path that was passed in (via command line arguments)
         if self.path == None {
             self.path = mapping_path().await;
         }
+        // Use a default path if it exists.
+        // This checks for user system-dependent config path, e.g. on linux:
+        // ~/.config/openaudiosearch/mapping.toml and /etc/openaudiosearch/mapping.toml
         if let Some(path) = &self.path {
             let contents = read_to_string(&path)
                 .await
                 .with_context(|| format!("File not found: {}", path.as_path().to_str().unwrap()))?;
             let mapping: HashMap<String, Mapping> = toml::from_str(&contents)?;
+            self.mappings = mapping;
+        // Use default mapping (included at compile time)
+        } else {
+            let mapping: HashMap<String, Mapping> = toml::from_str(&DEFAULT_MAPPING)?;
             self.mappings = mapping;
         }
         Ok(())

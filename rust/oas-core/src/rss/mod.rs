@@ -1,4 +1,6 @@
 use crate::couch::{CouchDB, PutResult};
+use chrono::prelude::*;
+use convert_case::{Case, Casing};
 use oas_common::{types::Post, util};
 use oas_common::{Reference, UntypedRecord};
 use rss::extension::ExtensionMap;
@@ -67,12 +69,16 @@ impl FeedWatcher {
         }
     }
 
-    pub async fn save(&mut self, db: &CouchDB, update: bool) -> Result<(), RssError> {
+    pub async fn save(
+        &mut self,
+        db: &CouchDB,
+        update: bool,
+    ) -> Result<(Vec<PutResult>, Vec<UntypedRecord>), RssError> {
         let records = self.to_post_and_media_records()?;
         let put_result = if update {
-            db.put_untyped_record_bulk_update(records).await?
+            db.put_untyped_record_bulk_update(records.clone()).await?
         } else {
-            db.put_untyped_record_bulk(records).await?
+            db.put_untyped_record_bulk(records.clone()).await?
         };
 
         let (success, error): (Vec<_>, Vec<_>) = put_result
@@ -85,7 +91,7 @@ impl FeedWatcher {
             success.len(),
             error.len()
         );
-        Ok(())
+        Ok((put_result, records))
     }
 
     pub async fn load(&mut self) -> Result<(), RssError> {
@@ -139,14 +145,15 @@ impl FeedWatcher {
         }
     }
 }
+
 fn resolve_extensions(
     extensions: &rss::extension::ExtensionMap,
     mapping: &HashMap<String, String>,
 ) -> HashMap<String, String> {
     let result: HashMap<String, String> = mapping
         .iter()
-        .filter_map(|(rss_ext_key, target_key)| {
-            let mut parts = rss_ext_key.split(":");
+        .filter_map(|(from_key, target_key)| {
+            let mut parts = from_key.split(":");
             match (parts.next(), parts.next()) {
                 (Some(prefix), Some(suffix)) => {
                     let value = extensions
@@ -161,6 +168,7 @@ fn resolve_extensions(
             }
         })
         .collect();
+
     result
 }
 
@@ -170,13 +178,15 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
     // values will be set on this struct manually (see below.)
     // TODO: implement mapping management (load mapping, save mapping)
     let extensions: &ExtensionMap = item.extensions();
+
     let mapped_fields = resolve_extensions(extensions, mapping);
+    //log::debug!("resolve_extensions result: {:#?}", mapped_fields);
     let mut post = {
         //let mapped_fields  = mapped_fields.into_iter().filter(|(k,_v)| !(k.starts_with("media.")));
         let mapped_fields_json: serde_json::Map<String, serde_json::Value> = mapped_fields
             .clone()
             .into_iter()
-            .map(|(k, v)| (k, serde_json::Value::String(v)))
+            .map(|(k, v)| (k.to_case(Case::Camel), serde_json::Value::String(v)))
             .filter(|(k, _v)| !(k.starts_with("media.")))
             .collect();
         let post: Result<Post, serde_json::Error> =
@@ -193,7 +203,7 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
             .map(|(k, v)| {
                 let arr: Vec<&str> = k.split(".").collect();
                 let v = serde_json::Value::String(v);
-                let k = arr[1].into();
+                let k = arr[1].to_case(Case::Camel);
                 (k, v)
             })
             .collect();
@@ -218,15 +228,26 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
 
     // Set standard properties from the RSS item on the Post.
     let guid = item.guid.clone();
-    post.headline = item.title.clone();
     post.url = item.link.clone();
     post.identifier = guid.as_ref().map(|guid| guid.value().to_string());
     post.media = media;
-    if let Some(rfc_2822_date) = item.pub_date {
-        if let Ok(date) = chrono::DateTime::parse_from_rfc2822(&rfc_2822_date) {
-            post.date_published = Some(date.to_rfc3339());
+
+    if post.headline.is_none() {
+        post.headline = item.title.clone();
+    }
+
+    if post.date_published.is_none() {
+        if let Some(rfc_2822_date) = item.pub_date {
+            if let Ok(date) = chrono::DateTime::parse_from_rfc2822(&rfc_2822_date) {
+                post.date_published = Some(date.with_timezone(&Utc));
+            }
         }
     }
+
+    if post.description.is_none() {
+        post.description = item.description;
+    }
+
     if let Some(creator) = item.author {
         post.creator.push(creator.to_string());
     }

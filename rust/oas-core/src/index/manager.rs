@@ -5,6 +5,7 @@
 //! CouchDB seq that was indexed.
 
 use crate::couch::CouchDB;
+use anyhow::Context;
 use elasticsearch::Elasticsearch;
 use futures::stream::StreamExt;
 use futures_batch::ChunksTimeoutStreamExt;
@@ -18,7 +19,7 @@ use super::{elastic, Config, Index, PostIndex};
 /// Prefix used for all indexes created by OAS.
 pub const DEFAULT_PREFIX: &str = "oas";
 /// Name of the meta index.
-pub const META_INDEX_NAME: &str = "_meta";
+pub const META_INDEX_NAME: &str = "meta";
 /// Name of the data index.
 pub const DATA_INDEX_NAME: &str = "data";
 /// Doc ID for the index state.
@@ -82,7 +83,9 @@ struct MetaIndex {
 }
 
 impl MetaIndex {
-    pub fn with_index(index: Index) -> Self {
+    pub fn new(client: Arc<Elasticsearch>, name: String) -> Self {
+        let mapping = serde_json::Value::Object(Default::default());
+        let index = Index::new(client, name, mapping);
         Self { index }
     }
 
@@ -114,12 +117,10 @@ impl IndexManager {
 
         let prefix = config.prefix.as_deref().unwrap_or(DEFAULT_PREFIX);
         let meta_index_name = format!("{}.{}", prefix, META_INDEX_NAME);
-        let meta_index_client = Index::with_client_and_name(client.clone(), meta_index_name);
-        let meta_index = MetaIndex::with_index(meta_index_client);
+        let meta_index = MetaIndex::new(client.clone(), meta_index_name);
 
-        let data_index_name = format!("{}.{}", prefix, DATA_INDEX_NAME);
-        let post_index_client = Index::with_client_and_name(client.clone(), data_index_name);
-        let post_index = PostIndex::new(Arc::new(post_index_client));
+        let post_index_name = format!("{}.{}", prefix, DATA_INDEX_NAME);
+        let post_index = PostIndex::new(client.clone(), post_index_name);
 
         Ok(Self {
             config,
@@ -144,6 +145,10 @@ impl IndexManager {
         self.meta_index.index.ensure_index(opts.delete_meta).await?;
         self.post_index.index.ensure_index(opts.delete_data).await?;
         Ok(())
+    }
+
+    pub async fn destroy_and_init(&self) -> anyhow::Result<()> {
+        self.init(InitOpts::delete_all()).await
     }
 
     pub fn post_index(&self) -> &Arc<PostIndex> {
@@ -180,8 +185,14 @@ impl IndexManager {
                 .into_iter()
                 .filter_map(|ev| ev.doc.and_then(|doc| doc.into_untyped_record().ok()))
                 .collect();
-            self.post_index.index_changes(&db, &records[..]).await?;
-            self.meta_index.set_latest_indexed_seq(latest_seq).await?;
+            self.post_index
+                .index_changes(&db, &records[..])
+                .await
+                .context("Failed to index changes")?;
+            self.meta_index
+                .set_latest_indexed_seq(latest_seq)
+                .await
+                .context("Failed to update index meta state")?;
             log::debug!("indexed {} (latest seq {:?})", len, latest_seq);
         }
 

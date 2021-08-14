@@ -1,16 +1,15 @@
+use super::{Feed, Media};
 use crate::mapping::Mappable;
 use crate::record::TypedValue;
 use crate::reference::{self, Reference};
-use crate::Resolvable;
-use crate::Resolver;
-use crate::UntypedRecord;
+use crate::ser;
+use crate::task::{TaskObject, TaskState};
 use crate::{ElasticMapping, MissingRefsError};
+use crate::{Record, Resolvable, Resolver, UntypedRecord};
+use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-use super::Media;
-// use super::Feed;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -20,24 +19,31 @@ pub struct Post {
     pub r#abstract: Option<String>,
     pub contributor: Option<String>,
     pub url: Option<String>,
-    pub date_published: Option<String>,
-    pub date_modified: Option<String>,
+    #[serde(default, deserialize_with = "ser::deserialize_date")]
+    pub date_published: Option<DateTime<Utc>>,
+    #[serde(default, deserialize_with = "ser::deserialize_date")]
+    pub date_modified: Option<DateTime<Utc>>,
     pub description: Option<String>,
     pub in_language: Option<String>,
     pub licence: Option<String>,
     pub publisher: Option<String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "ser::deserialize_multiple")]
     pub genre: Vec<String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "ser::deserialize_multiple")]
     pub creator: Vec<String>,
     #[serde(default)]
     pub media: Vec<Reference<Media>>,
-    // #[serde(default)]
-    // pub feed: Reference<Feed>,
+
+    #[serde(default)]
+    pub feeds: Vec<Reference<Feed>>,
+
     pub transcript: Option<String>,
 
     #[serde(flatten)]
     pub other: serde_json::Map<String, serde_json::Value>,
+
+    #[serde(default)]
+    pub tasks: PostTasks,
 }
 
 impl TypedValue for Post {
@@ -45,6 +51,21 @@ impl TypedValue for Post {
 }
 
 impl Mappable for Post {}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
+pub struct PostTasks {
+    pub nlp: Option<TaskState>,
+}
+
+impl TaskObject for Post {
+    type TaskStates = PostTasks;
+    fn task_states(&self) -> Option<&Self::TaskStates> {
+        Some(&self.tasks)
+    }
+    fn task_states_mut(&mut self) -> Option<&mut Self::TaskStates> {
+        Some(&mut self.tasks)
+    }
+}
 
 #[async_trait::async_trait]
 impl Resolvable for Post {
@@ -61,12 +82,12 @@ impl Resolvable for Post {
 }
 
 impl ElasticMapping for Post {
-    fn elastic_mapping() -> Option<serde_json::Value> {
-        Some(json!({
+    fn elastic_mapping() -> serde_json::Value {
+        json!({
             "media": {
                 "type": "nested",
                 "include_in_parent": true,
-                "properties": Media::elastic_mapping().unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
+                "properties": Record::<Media>::elastic_mapping()
             },
             "transcript": {
                 "type": "text",
@@ -188,6 +209,6 @@ impl ElasticMapping for Post {
                     }
                 }
             }
-        }))
+        })
     }
 }

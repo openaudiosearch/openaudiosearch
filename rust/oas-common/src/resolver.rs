@@ -40,7 +40,10 @@ pub trait Resolver {
         results
     }
 
-    async fn resolve_all_refs<T: Resolvable + Send>(&self, records: &mut [Record<T>])
+    async fn resolve_all_refs<T: Resolvable + Send>(
+        &self,
+        records: &mut [Record<T>],
+    ) -> Result<(), MissingRefsError>
     where
         Self: Sized + Send,
     {
@@ -48,7 +51,17 @@ pub trait Resolver {
             .iter_mut()
             .map(|record| record.resolve_refs(&*self))
             .collect();
-        let _ = futures_util::future::join_all(futs).await;
+        let results = futures_util::future::join_all(futs).await;
+        let errs: Vec<ResolveError> = results
+            .into_iter()
+            .filter_map(|r| r.err())
+            .map(|e| e.0)
+            .flatten()
+            .collect();
+        match errs.is_empty() {
+            true => Ok(()),
+            false => Err(MissingRefsError(errs)),
+        }
     }
 
     /// Resolve a list of references.
@@ -135,6 +148,6 @@ impl<T: TypedValue> From<ResolveError> for Reference<T> {
 impl std::error::Error for ResolveError {}
 impl fmt::Display for ResolveError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Failed to resolve {}: {}", self.id, self.error)
+        write!(f, "Failed to resolve {}: {:?}", self.id, self.error)
     }
 }

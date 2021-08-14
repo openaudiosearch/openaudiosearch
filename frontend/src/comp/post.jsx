@@ -1,5 +1,5 @@
 import React from 'react'
-import { FaCog, FaPlay, FaTasks, FaExternalLinkAlt } from 'react-icons/fa'
+import { FaCog, FaPlay, FaTasks, FaExternalLinkAlt, FaChevronLeft } from 'react-icons/fa'
 import {
   IconButton,
   Menu,
@@ -12,9 +12,9 @@ import {
   Link,
   Button,
   Tag,
-  Text,
+  Text
 } from '@chakra-ui/react'
-import { useParams } from 'react-router'
+import { useParams, useLocation, useHistory } from 'react-router'
 
 import { usePlayer } from './player'
 import { useIsAdmin } from '../hooks/use-login'
@@ -90,8 +90,12 @@ export function PostPlayButton (props = {}) {
       aria-label={t('playthispost', 'Play this post')}
       icon={<FaPlay />}
       isRound
-      color='secondary.500'
+      color='white'
+      bg='secondary.600'
       shadow='md'
+      _hover={{
+        bg: 'tertiary.600'
+      }}
       {...rest}
     />
   )
@@ -106,51 +110,81 @@ export function PostPage (props = {}) {
   const { postId } = useParams()
   const { post } = usePost(postId)
   const { t } = useTranslation()
+  const history = useHistory()
+  const location = useLocation()
+  let fromSearch = false
+  if (location.state) {
+    fromSearch = location.state.fromSearch
+  }
   if (!post) return null
-  
-  const genres = post.genre.map((genre) => 
-    <Tag key={genre}>{genre}</Tag>  
+
+  const genres = post.genre.map((genre) =>
+    <Tag key={genre} mr='1'>{genre}</Tag>
   )
-  const creators = post.creator.map((creator) => 
-    <Tag key={creator}>{creator}</Tag>  
+  const creators = post.creator.map((creator) =>
+    <Tag key={creator} mr='1'>{creator}</Tag>
   )
+  let contributors = []
+  if (post.contributor) {
+    contributors = post.contributor.map((contributor) =>
+      <Tag key={contributor} mr='1'>{contributor}</Tag>
+    )
+  }
 
   return (
-    <Flex direction="column">
+    <Flex direction='column' maxWidth='750px'>
+      {fromSearch &&
+        <Flex direction='row' w='100%' mb='2'>
+          <Button onClick={() => history.goBack()} size='sm' variant='ghost'>
+            <Box mr='2'><FaChevronLeft /></Box>
+            <Box>{t('backtosearch', 'Back to search')}</Box>
+          </Button>
+        </Flex>}
       <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
-        <Flex direction="column">
-          <Flex direction="row">
-            { post.datePublished &&
-            <span>
-              {Moment(post.datePublished).format('DD.MM.YYYY')}
-            </span>
-            }
-            <Box ml='2'>
-              {genres}
-            </Box>
+        <Flex direction='column'>
+          <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
+            <Flex direction={['column', 'column', 'row', 'row']}>
+              {post.datePublished &&
+                <Text fontSize='sm' mr='2'>
+                  {Moment(post.datePublished).format('DD.MM.YYYY')}
+                </Text>}
+              <Box>
+                {genres}
+              </Box>
+            </Flex>
+            {post.url &&
+              <Link href={post.url} isExternal>
+                <Button size='xs'><Box>{t('sourceurl', 'Source URL')}</Box> <Box ml='10px' mb='3px'><FaExternalLinkAlt /></Box></Button>
+              </Link>}
           </Flex>
-          <Heading>{post.headline}</Heading>
-        </Flex>
-        <Flex align='center' justify='center'>
-          <PostButtons post={post} />
+          <Flex direction={['column', 'column', 'row', 'row']} mt='2'>
+            <Heading size='md'>{post.headline}</Heading>
+            <Flex align='center' justify='center' ml='2'>
+              <PostButtons post={post} />
+            </Flex>
+          </Flex>
         </Flex>
       </Flex>
-      <Box>
-        {creators}
-        {post.url &&
-        <Link href={post.url} isExternal>
-          <Button>{t('sourceurl', 'Source URL')} <FaExternalLinkAlt mx="2px" /></Button>
-        </Link>
-        }
-      </Box>
+      <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2'>
+        {post.publisher && <Text mr='2' fontSize='sm'>{t('by', 'by')} {post.publisher}</Text>}
+        {post.creator.length > 0 &&
+          <Flex direction='row' mr='2'>
+            <Text fontSize='sm' mr='1'>{t('creators', 'Creators')}:</Text>
+            {creators}
+          </Flex>}
+        {post.contributor &&
+          <Flex direction='row' mr='2'>
+            <Text fontSize='sm' mr='1'>{t('contributors', 'Contributors')}:</Text>
+            {contributors}
+          </Flex>}
+      </Flex>
 
       {post.description &&
-        <Box>{post.description}</Box>
-      }
+        <Box mt='2'>{post.description}</Box>}
 
-      <Box mt='2'>
+      <Flex direction='row' justify='space-between' mt='4'>
         <ToggleTranscriptSection post={post} />
-      </Box>
+      </Flex>
 
     </Flex>
   )
