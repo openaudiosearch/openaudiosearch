@@ -131,6 +131,11 @@ export function PostPage (props = {}) {
     )
   }
 
+  let duration = null
+  if (post.media.length > 0) {
+    duration = (post.media[0].duration/60).toFixed() + ' min'
+  }
+
   return (
     <Flex direction='column' maxWidth='750px'>
       {fromSearch &&
@@ -178,6 +183,11 @@ export function PostPage (props = {}) {
             {contributors}
           </Flex>}
       </Flex>
+      {duration &&
+        <Flex direction='row' mt='2'>
+          <Text fontSize='sm'>{duration}</Text>
+        </Flex>
+      }
 
       {post.description &&
         <Box mt='2'>{post.description}</Box>}
