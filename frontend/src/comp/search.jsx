@@ -134,7 +134,23 @@ export default function SearchPage () {
                     componentId='datePublished'
                     dataField='datePublished'
                     title={t('publishingdate', 'Publishing Date')}
-                    queryFormat='basic_date_time_no_millis'
+                    customQuery={
+                      function(value) {
+                        if (!value) return {}
+
+                        return {
+                          query: {
+                            range: {
+                              datePublished: {
+                                gte: value.start,
+                                lte: value.end,
+                                format: "yyyy-MM-dd"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
                     react={{
                       and: facets.filter(f => f !== 'datePublished')
                     }}
