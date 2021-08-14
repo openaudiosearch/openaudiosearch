@@ -13,7 +13,7 @@ import {
   chakra,
   Icon
 } from '@chakra-ui/react'
-import { cx } from "@chakra-ui/utils"
+import { cx } from '@chakra-ui/utils'
 import { FaPlay, FaPause } from 'react-icons/fa'
 import { RiArrowUpSFill } from 'react-icons/ri'
 import { useTranslation } from 'react-i18next'
@@ -254,9 +254,9 @@ export function Player (props = {}) {
   return (
     <Stack p={2} bg='primary' color='white'>
       <Flex direction='column'>
-      <Box px='3'>
-        <strong>{headline || ''}</strong>
-      </Box>
+        <Box px='3'>
+          <strong>{headline || ''}</strong>
+        </Box>
         <Flex dir='row'>
           <PlayerButton
             label={state.playing ? t('pause', 'Pause') : t('play', 'Play')}
@@ -373,17 +373,17 @@ function SliderSnippets (props = {}) {
   return (
     <>
       {snippets.map((snippet, index) => (
-          <SliderMark 
-            display={['none', 'block', 'block', 'block']}
-            key={index} 
-            value={(snippet[0].start/state.duration)*100} 
-            onClick={() => onMarkClick(snippet[0])}
-            mt='-5px'
-          >
-            <Tooltip label={snippet.map((snippet) => snippet.word).join(' ')} placement="top">
-              <Box><Icon as={RiArrowUpSFill} color='secondary.600' w='6' h='6'/></Box>
-            </Tooltip>
-          </SliderMark> 
+        <SliderMark
+          display={['none', 'block', 'block', 'block']}
+          key={index}
+          value={(snippet[0].start / state.duration) * 100}
+          onClick={() => onMarkClick(snippet[0])}
+          mt='-5px'
+        >
+          <Tooltip label={snippet.map((snippet) => snippet.word).join(' ')} placement='top'>
+            <Box><Icon as={RiArrowUpSFill} color='secondary.600' w='6' h='6' /></Box>
+          </Tooltip>
+        </SliderMark>
       ))}
     </>
   )
@@ -396,7 +396,7 @@ export const SliderMark = forwardRef((props, ref) => {
   return (
     <chakra.div
       {...markProps}
-      className={cx("chakra-slider__marker", props.className)}
+      className={cx('chakra-slider__marker', props.className)}
     />
   )
 })

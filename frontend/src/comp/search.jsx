@@ -79,7 +79,8 @@ export default function SearchPage () {
           <Flex direction={['column', 'column', 'row', 'row']} justify-content='flex-start'>
             <Button
               aria-label='FilterMenu'
-              display={{ base: 'flex', md: 'none' }}
+              // display={{ base: 'flex', md: 'none' }}
+              display={['flex', 'flex', 'none', 'none']}
               onClick={toggleMenu}
               // icon={show ? <CgClose /> : <FiMenu />}
               shadow='md'
@@ -90,8 +91,10 @@ export default function SearchPage () {
               {show ? filterButtonClose : filterButtonOpen}
             </Button>
             <Box
-              display={{ base: show ? 'flex' : 'none', md: 'block' }}
-              flexBasis={{ base: '100%', md: 'auto' }}
+              // display={{ base: show ? 'flex' : 'none', md: 'block' }}
+              display={[show ? 'flex' : 'none', show ? 'flex' : 'none', 'block', 'block']}
+              // flexBasis={{ base: '100%', md: 'auto' }}
+              flexBasis={['100%', '100%', 'auto', 'auto']}
             >
               <Flex
                 direction='column'
@@ -135,7 +138,7 @@ export default function SearchPage () {
                     dataField='datePublished'
                     title={t('publishingdate', 'Publishing Date')}
                     customQuery={
-                      function(value) {
+                      function (value) {
                         if (!value) return {}
 
                         return {
@@ -144,12 +147,12 @@ export default function SearchPage () {
                               datePublished: {
                                 gte: value.start,
                                 lte: value.end,
-                                format: "yyyy-MM-dd"
+                                format: 'yyyy-MM-dd'
                               }
                             }
                           }
                         }
-                      }
+                    }
                     }
                     react={{
                       and: facets.filter(f => f !== 'datePublished')
@@ -158,23 +161,23 @@ export default function SearchPage () {
                 </Box>
                 <Box mb='30px'>
                   <DynamicRangeSlider
-                    componentId="duration"
-                    dataField="media.duration"
-                    nestedField="media"
+                    componentId='duration'
+                    dataField='media.duration'
+                    nestedField='media'
                     rangeLabels={(min, max) => (
                       {
-                        "start": (min/60).toFixed() + " min",
-                          "end": (max/60).toFixed() + " min"
+                        start: (min / 60).toFixed() + ' min',
+                        end: (max / 60).toFixed() + ' min'
                       }
                     )}
                     tooltipTrigger='hover'
                     renderTooltipData={data => (
-                        <Text fontSize='sm'>{(data/60).toFixed()} min</Text>
+                      <Text fontSize='sm'>{(data / 60).toFixed()} min</Text>
                     )}
                     react={{
                       and: facets.filter(f => f !== 'duration')
                     }}
-                    title="Duration"
+                    title='Duration'
                   />
                 </Box>
               </Flex>
@@ -186,10 +189,10 @@ export default function SearchPage () {
                   componentId='SearchResults'
                   pagination
                   sortOptions={[
-                    {label: 'Date (desc)', dataField: 'datePublished', sortBy: 'desc'},
-                    {label: 'Date (asc)', dataField: 'datePublished', sortBy: 'asc'},
-                    {label: 'Duration (desc)', dataField: 'media.duration', sortBy: 'desc'},
-                    {label: 'Duration (asc)', dataField: 'media.duration', sortBy: 'asc'},
+                    { label: 'Date (desc)', dataField: 'datePublished', sortBy: 'desc' },
+                    { label: 'Date (asc)', dataField: 'datePublished', sortBy: 'asc' },
+                    { label: 'Duration (desc)', dataField: 'media.duration', sortBy: 'desc' },
+                    { label: 'Duration (asc)', dataField: 'media.duration', sortBy: 'asc' }
                   ]}
                   defaultSortOption='Date (desc)'
                   react={{
@@ -235,7 +238,7 @@ export function ResultItem (props) {
 
   let duration = null
   if (item.media.length > 0) {
-    duration = (item.media[0].duration/60).toFixed() + ' min'
+    duration = (item.media[0].duration / 60).toFixed() + ' min'
   }
 
   return (
