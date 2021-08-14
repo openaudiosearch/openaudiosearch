@@ -15,7 +15,7 @@ export default function LandingPage () {
   const { t } = useTranslation()
   return (
     <Center>
-      <Flex color='white' w={['90vw', '90vw', '70vw', '50vw']} align='center' justify='center'>
+      <Flex color='white' align='center' justify='center'>
         <ReactiveBase
           app='oas'
           url={url}
@@ -46,7 +46,7 @@ export default function LandingPage () {
                 </Box>
               </Center>
             </Flex>
-            <Flex direction='column' align='left'>
+            <Flex direction='column' align='left' maxWidth='750px'>
               <Box>
                 <Heading as='h4' size='md' mt='20' mb='5' ml='5'>{t('discover', 'Discover')}</Heading>
               </Box>

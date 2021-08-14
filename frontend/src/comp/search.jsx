@@ -193,7 +193,7 @@ export function ResultItem (props) {
       boxShadow='md'
       my='3'
     >
-      <Flex direction='column' mb='2' mx='3'>
+      <Flex direction='column' mx='3'>
         <Flex
           direction={['column', 'column', 'row', 'row']}
           justify='space-between'
@@ -213,7 +213,7 @@ export function ResultItem (props) {
               }}
             />
           </Link>
-          <Flex ml={[null, null, 4, 4]} my={[1, 1, null, null]} align='center' justify='center'>
+          <Flex ml={[null, null, 4, 4]} mb={[1, 1, null, null]} align='center' justify='center'>
             <PostButtons post={item} />
           </Flex>
         </Flex>
