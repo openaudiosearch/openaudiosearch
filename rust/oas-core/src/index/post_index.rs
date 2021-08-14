@@ -1,10 +1,10 @@
 use anyhow::Context;
 use elasticsearch::Elasticsearch;
 use oas_common::types::{Media, Post, Transcript};
-use oas_common::{Record, Resolver};
+use oas_common::{Record, RecordMap, Resolver};
 use oas_common::{TypedValue, UntypedRecord};
 use serde_json::json;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::sync::Arc;
 use std::time;
 
@@ -77,50 +77,59 @@ impl PostIndex {
         changes: &[UntypedRecord],
     ) -> anyhow::Result<()> {
         let now = time::Instant::now();
-        let mut posts = HashMap::new();
-        let mut medias_with_posts = HashSet::new();
-        let mut medias_without_posts = HashSet::new();
-        for record in changes {
-            match record.typ() {
-                Media::NAME => {
-                    medias_without_posts.insert(record.guid().to_string());
-                }
-                Post::NAME => {
-                    match  record.clone().into_typed_record::<Post>() {
-                        Ok(record) => {
-                            for media in &record.value.media {
-                                medias_with_posts.insert(media.id().to_string());
-                            }
-                            posts.insert(record.guid().to_string(), record);
-                        }
-                        Err(err) => {
-                            log::error!("Failed to upcast record {}: {:?}", record.guid(), err);
-                        }
-                    }
-                }
-                _ => {}
-            }
-        }
-        let direct_posts_len = posts.len();
+        let mut sorted =
+            RecordMap::from_untyped(changes.to_vec()).context("Failed to upcast records")?;
+        let mut posts = sorted.into_hashmap::<Post>();
+        let medias = sorted.into_hashmap::<Media>();
+        let posts_from_changes_len = posts.len();
 
-        // Collect the posts for all medias that are in the changes batch and are not referenced
-        // from posts in this changes batch.
-        let medias_without_posts = medias_without_posts.difference(&medias_with_posts);
-        let medias_without_posts: Vec<_> = medias_without_posts.map(|s| s.as_str()).collect();
-        let missing_post_ids = self
-            .find_posts_for_medias(&medias_without_posts[..])
-            .await?;
-        let missing_post_ids: Vec<&str> = missing_post_ids.iter().map(|s| s.as_str()).collect();
-        let missing_posts = db
-            .get_many_records::<Post>(&missing_post_ids[..])
+        let medias_in_posts: HashSet<String> = posts
+            .values()
+            .map(|post| post.value.media.iter())
+            .flatten()
+            .map(|media| media.guid().to_string())
+            .collect();
+
+        let media_guids_without_posts: Vec<&str> = medias
+            .iter()
+            .filter_map(|(guid, _record)| {
+                if !medias_in_posts.contains(guid.as_str()) {
+                    Some(guid.as_str())
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        log::trace!(
+            "Query for affected posts for medias: {}",
+            media_guids_without_posts.join(", ")
+        );
+
+        let affected_post_guids = self
+            .find_posts_for_medias(&media_guids_without_posts[..])
+            .await
+            .context("Failed to query for affected posts")?;
+        let affected_post_guids: Vec<&str> =
+            affected_post_guids.iter().map(|s| s.as_str()).collect();
+
+        log::trace!(
+            "Got affected {} posts: {}",
+            affected_post_guids.len(),
+            affected_post_guids.join(", ")
+        );
+
+        let affected_posts = db
+            .get_many_records::<Post>(&affected_post_guids[..])
             .await
             .context("Failed to get posts for medias")?;
 
-        for post in missing_posts.into_iter() {
+        for post in affected_posts.into_iter() {
             posts.insert(post.guid().to_string(), post);
         }
 
         let mut posts: Vec<_> = posts.into_iter().map(|(_id, v)| v).collect();
+        log::trace!("About to index {} posts", posts.len());
 
         // Resolve all unresolved media references.
         let resolve_result = db.resolve_all_refs(&mut posts.as_mut_slice()).await;
@@ -147,13 +156,14 @@ impl PostIndex {
         let res = res.context("Failed to write records to index")?;
         let stats = res.stats();
         log::debug!(
-            "indexed {} changes in {} (errors {}, {} post direct updates, {} media updates resulting in {} post updates)", 
+            "indexed {} changes as {} posts in {} (errors {}, {} post direct updates, {} media updates resulting in {} post updates)", 
             changes.len(),
+            posts.len(),
             humantime::format_duration(now.elapsed()),
             stats.errors,
-            direct_posts_len,
-            medias_without_posts.len(),
-            missing_post_ids.len()
+            posts_from_changes_len,
+            medias.len(),
+            posts.len() - posts_from_changes_len
         );
 
         Ok(())

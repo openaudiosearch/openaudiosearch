@@ -147,6 +147,10 @@ impl IndexManager {
         Ok(())
     }
 
+    pub async fn destroy_and_init(&self) -> anyhow::Result<()> {
+        self.init(InitOpts::delete_all()).await
+    }
+
     pub fn post_index(&self) -> &Arc<PostIndex> {
         &self.post_index
     }

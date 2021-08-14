@@ -17,12 +17,17 @@ pub type Result<T> = std::result::Result<T, CouchError>;
 
 pub(crate) mod changes;
 pub(crate) mod error;
+mod manager;
 pub mod resolver;
+mod table;
 pub(crate) mod types;
 
 pub use changes::ChangesStream;
 pub use error::CouchError;
+pub use manager::*;
 pub use types::*;
+
+use self::table::Table;
 
 pub const DEFAULT_DATABASE: &str = "oas";
 pub const DEFAULT_HOST: &str = "http://localhost:5984";
@@ -117,25 +122,27 @@ impl Config {
 /// database.
 #[derive(Debug, Clone)]
 pub struct CouchDB {
-    config: Config,
+    config: Arc<Config>,
     client: Arc<reqwest::Client>,
-    base_url: String,
 }
 
 impl CouchDB {
     /// Create a new client with config.
+    /// TODO: Remove Ok-wrapping
     pub fn with_config(config: Config) -> anyhow::Result<Self> {
-        // let logger = Logger {};
-        let base_url = format!("{}/{}/", config.host, config.database);
-        let base_url = Url::parse(&base_url)?;
-        let base_url = base_url.to_string();
         let client = reqwest::Client::new();
 
         Ok(Self {
-            config,
+            config: Arc::new(config),
             client: Arc::new(client),
-            base_url,
         })
+    }
+
+    pub fn with_config_and_client(config: Config, client: reqwest::Client) -> Self {
+        Self {
+            config: Arc::new(config),
+            client: Arc::new(client),
+        }
     }
 
     /// Create a new client with a CouchDB URL.
@@ -158,15 +165,28 @@ impl CouchDB {
     ///
     /// This creates the database if it does not exists. It should be called before calling other
     /// methods on the client.
-    pub async fn init(&self) -> Result<()> {
+    pub async fn init(&self) -> anyhow::Result<()> {
         let res: Result<Value> = self.send(self.request(Method::GET, "")).await;
         match res {
-            Ok(_res) => Ok(()),
+            Ok(_res) => {
+                log::trace!("check database {}: ok", self.config.database);
+                Ok(())
+            }
             Err(_) => {
                 let req = self.request(Method::PUT, "");
-                self.send(req).await
+                let _res: serde_json::Value = self.send(req).await.with_context(|| {
+                    format!("Failed to create database {}", self.config.database)
+                })?;
+                Ok(())
             }
         }
+    }
+
+    pub async fn destroy_and_init(&self) -> Result<()> {
+        let req = self.request(Method::DELETE, "");
+        let _: Result<()> = self.send(req).await;
+        let req = self.request(Method::PUT, "");
+        self.send(req).await
     }
 
     /// Get all docs from the database.
@@ -367,6 +387,12 @@ impl CouchDB {
     }
 }
 
+impl CouchDB {
+    pub fn table<T: TypedValue>(&self) -> Table<T> {
+        Table::new(self.clone())
+    }
+}
+
 /// Methods on the CouchDB client that directly take or return [Record]s.
 impl CouchDB {
     /// Get all records with the type from the database.
@@ -387,14 +413,17 @@ impl CouchDB {
     /// let record = db.get_record::<Media>("someidstring").await?;
     /// ```
     pub async fn get_record<T: TypedValue>(&self, id: &str) -> Result<Record<T>> {
-        let doc = self.get_doc(id).await?;
+        // let id = T::guid(id);
+        let doc = self.get_doc(&id).await?;
         let record = doc.into_typed_record::<T>()?;
         Ok(record)
     }
 
     pub async fn get_many_records<T: TypedValue>(&self, ids: &[&str]) -> Result<Vec<Record<T>>> {
+        // let ids: Vec<String> = ids.iter().map(|id| T::guid(id)).collect();
+        // let ids: Vec<&str> = ids.iter().map(|id| id.as_str()).collect();
         let rows = self
-            .get_many(ids)
+            .get_many(&ids[..])
             .await?
             .rows
             .into_iter()

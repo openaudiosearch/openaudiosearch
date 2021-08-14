@@ -1,7 +1,9 @@
+use super::{Feed, Media};
 use crate::mapping::Mappable;
 use crate::record::TypedValue;
 use crate::reference::{self, Reference};
 use crate::ser;
+use crate::task::{TaskObject, TaskState};
 use crate::Resolvable;
 use crate::Resolver;
 use crate::UntypedRecord;
@@ -10,9 +12,6 @@ use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-use super::Media;
-// use super::Feed;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -36,12 +35,17 @@ pub struct Post {
     pub creator: Vec<String>,
     #[serde(default)]
     pub media: Vec<Reference<Media>>,
-    // #[serde(default)]
-    // pub feed: Reference<Feed>,
+
+    #[serde(default)]
+    pub feeds: Vec<Reference<Feed>>,
+
     pub transcript: Option<String>,
 
     #[serde(flatten)]
     pub other: serde_json::Map<String, serde_json::Value>,
+
+    #[serde(default)]
+    pub tasks: PostTasks,
 }
 
 impl TypedValue for Post {
@@ -49,6 +53,21 @@ impl TypedValue for Post {
 }
 
 impl Mappable for Post {}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
+pub struct PostTasks {
+    pub nlp: Option<TaskState>,
+}
+
+impl TaskObject for Post {
+    type TaskStates = PostTasks;
+    fn task_states(&self) -> Option<&Self::TaskStates> {
+        Some(&self.tasks)
+    }
+    fn task_states_mut(&mut self) -> Option<&mut Self::TaskStates> {
+        Some(&mut self.tasks)
+    }
+}
 
 #[async_trait::async_trait]
 impl Resolvable for Post {

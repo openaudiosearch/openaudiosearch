@@ -1,4 +1,5 @@
 use celery::broker::RedisBroker;
+use celery::task::Signature;
 use celery::{broker::Broker, prelude::CeleryError, Celery};
 use clap::Clap;
 use oas_common::{
@@ -9,8 +10,14 @@ use serde_json::{json, Value};
 use std::fmt;
 use std::sync::Arc;
 
+mod taskdefs;
+
 use crate::couch::CouchDB;
 use crate::State;
+
+// use self::changes::process_changes;
+
+pub mod changes;
 
 pub const DEFAULT_REDIS_URL: &str = "redis://127.0.0.1:6379/";
 
@@ -25,18 +32,6 @@ impl Config {
     pub fn from_redis_url_or_default(redis_url: Option<&str>) -> Self {
         let redis_url = redis_url.unwrap_or(DEFAULT_REDIS_URL).to_string();
         Self { redis_url }
-    }
-}
-
-mod celery_tasks {
-    #![allow(unused)]
-
-    use celery::task::TaskResult;
-    use serde_json::Value;
-
-    #[celery::task()]
-    pub fn transcribe(args: Value, opts: Value) -> TaskResult<Value> {
-        Ok(Value::Null)
     }
 }
 
@@ -88,11 +83,57 @@ impl CeleryManager {
         Ok(())
     }
 
+    pub fn celery(&self) -> Result<&Arc<Celery<RedisBroker>>, CeleryError> {
+        self.celery
+            .as_ref()
+            .ok_or_else(|| CeleryError::ForcedShutdown)
+    }
+
+    pub async fn send_task<T: celery::task::Task>(
+        &self,
+        task_sig: Signature<T>,
+    ) -> Result<celery::task::AsyncResult, CeleryError> {
+        let res = self.celery()?.send_task(task_sig).await?;
+        log::debug!(
+            "created task {} with id {}",
+            Signature::<T>::task_name(),
+            res.task_id
+        );
+        Ok(res)
+    }
+
     pub async fn transcribe_media(&self, media: &Record<Media>) -> anyhow::Result<String> {
-        if self.celery.is_none() {
-            anyhow::bail!("CeleryManager is not initialized");
-        }
-        create_transcribe_task(self.celery.as_ref().unwrap(), media).await
+        let celery = self.celery()?;
+
+        let args = json!({
+            "media_url": &media.value.content_url,
+            "media_id": media.id()
+        });
+        let opts = Value::Object(Default::default());
+        let res = celery
+            .send_task(taskdefs::transcribe::new(args, opts))
+            .await?;
+        log::debug!(
+            "Create asr task for media {} (task id {})",
+            media.id(),
+            res.task_id
+        );
+        Ok(res.task_id)
+    }
+
+    pub async fn nlp_post(&self, post: &Record<Post>) -> anyhow::Result<String> {
+        let celery = self.celery()?;
+
+        let opts = Value::Object(Default::default());
+        let res = celery
+            .send_task(taskdefs::nlp2::new(post.clone(), opts))
+            .await?;
+        log::debug!(
+            "Create nlp task for post {} (task id {})",
+            post.id(),
+            res.task_id
+        );
+        Ok(res.task_id)
     }
 }
 
@@ -101,7 +142,9 @@ pub async fn create_celery_app(config: &Config) -> Result<Arc<Celery<RedisBroker
     let app = celery::app!(
         broker = RedisBroker { url },
         tasks = [
-            celery_tasks::transcribe
+            taskdefs::transcribe,
+            taskdefs::download2,
+            taskdefs::nlp2,
         ],
         task_routes = [
             "*" => "celery",
@@ -190,8 +233,6 @@ where
         "media_id": media.id()
     });
     let opts = Value::Object(Default::default());
-    let res = app
-        .send_task(celery_tasks::transcribe::new(args, opts))
-        .await?;
+    let res = app.send_task(taskdefs::transcribe::new(args, opts)).await?;
     Ok(res.task_id)
 }
