@@ -247,6 +247,10 @@ export function ResultItem (props) {
       borderColor='gray.200'
       boxShadow='md'
       my='3'
+      overflow='hidden'
+      overflowWrap='break-word'
+      wordBreak='break-word'
+      w='100%'
     >
       <Flex direction='column' mx='3'>
         <Flex
