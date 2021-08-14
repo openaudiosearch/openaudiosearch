@@ -210,6 +210,11 @@ export function ResultItem (props) {
 
   const postId = item.$meta.id
 
+  let duration = null
+  if (item.media.length > 0) {
+    duration = (item.media[0].duration/60).toFixed() + ' min'
+  }
+
   return (
     <Flex
       direction='column'
@@ -244,14 +249,18 @@ export function ResultItem (props) {
             <PostButtons post={item} />
           </Flex>
         </Flex>
-        <div>
-          {item.publisher && <div>{t('by', 'by')} {item.publisher}</div>}
-          {item.datePublished &&
-            <span>
-              {t('publishedon', 'published on')}: {Moment(item.datePublished).format('DD.MM.YYYY')}
-            </span>}
-          <div><CollapsedText>{item.description}</CollapsedText></div>
-        </div>
+        <Flex direction='column'>
+          <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
+            {item.publisher && <Text mr='2' fontSize='sm'>{item.publisher}</Text>}
+            {item.datePublished &&
+              <Text mr='2' fontSize='sm'>
+                {Moment(item.datePublished).format('DD.MM.YYYY')}
+              </Text>}
+            {duration &&
+              <Text mr='2' fontSize='sm'>{duration}</Text>}
+          </Flex>
+          <Box mt='2'><CollapsedText>{item.description}</CollapsedText></Box>
+        </Flex>
         {showSnippets && snippets && <div>{snippets}</div>}
         {isAdmin && <ReactJson src={item} collapsed name={false} />}
       </Flex>
