@@ -10,6 +10,7 @@ import SearchPage from './search'
 import ImporterPage from './importer'
 import LandingPage from './landing-page'
 import { PostPage } from './post'
+import ImprintPage from './imprint'
 import AboutPage from './about-page'
 
 export function Routes () {
@@ -32,6 +33,9 @@ export function Routes () {
       </Route>
       <Route path='/post/:postId'>
         <PostPage />
+      </Route>
+      <Route path='/imprint'>
+        <ImprintPage />
       </Route>
       <Route path='/'>
         <LandingPage />

@@ -4,6 +4,7 @@ import { Stack, Box } from '@chakra-ui/react'
 import { Player, usePlayer } from './player'
 import { Header } from './header'
 import { Routes } from './routes'
+import { Footer } from './footer'
 
 export default function Layout (props = {}) {
   const { track } = usePlayer()
@@ -17,8 +18,9 @@ export default function Layout (props = {}) {
       >
         <Header />
         <Main flex='1' />
+        <Footer />
       </Stack>
-      <Footer height={footerHeight} />
+      <PlayerFooter height={footerHeight} />
     </>
   )
 }
@@ -31,7 +33,7 @@ function Main (props) {
   )
 }
 
-function Footer (props) {
+function PlayerFooter (props) {
   const { height = '10rem' } = props
   return (
     <Box
