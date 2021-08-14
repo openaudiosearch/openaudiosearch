@@ -1,5 +1,5 @@
 import React from 'react'
-import { Flex, Box, Text, Icon, Center, Divider } from '@chakra-ui/react'
+import { Flex, Box, Text, Icon, Center, Divider, Link as ChakraLink } from '@chakra-ui/react'
 import {
   Link
 } from 'react-router-dom'
@@ -28,9 +28,9 @@ export function Footer () {
                 {t('about', 'About us')}
               </Text>
             </Link>
-            <Link to={{ pathname: 'https://github.com/openaudiosearch/openaudiosearch' }} target='_blank'>
+            <ChakraLink href='https://github.com/openaudiosearch/openaudiosearch' isExternal>
               <Icon color='gray.400' as={FaGithub} my='15px' ml='6' mr='10' />
-            </Link>
+            </ChakraLink>
             <Box py='3' pl='6' pr='10'>
               <Login />
             </Box>

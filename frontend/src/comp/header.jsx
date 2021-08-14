@@ -96,12 +96,6 @@ function Navbar () {
               {t('importer', 'Importer')}
             </Text>
           </NavLink>}
-        <Box flex={1} />
-        <Center>
-          <Flex py={['2', '4', '4', '4']} mr='5'>
-            <Login />
-          </Flex>
-        </Center>
       </Flex>
     </nav>
   )

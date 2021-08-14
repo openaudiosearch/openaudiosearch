@@ -22,15 +22,15 @@ export default function LandingPage () {
         >
           <Flex direction='column' align='center'>
             <Flex direction='column' align='center'>
-              <Heading as='h1' size='2xl' mb='7' color='secondary.600'>{t('openaudiosearch', 'Open Audio Search')}</Heading>
-              <Heading as='h2' size='lg'>{t('slogan', 'The community radio search engine')}</Heading>
+              <Heading as='h1' size='2xl' mt={[2, 2, 4, 4]}  mb='8' color='secondary.600'>{t('openaudiosearch', 'Open Audio Search')}</Heading>
+              <Heading as='h2' size='lg' fontWeight='normal' mb='2'>{t('slogan', 'The community media search engine')}</Heading>
               <Center>
                 <Box w={['90vw', '80vw', '600px', '600px']} mt='6'>
                   <DataSearch
                     componentId='searchbox'
                     dataField={['headline', 'description', 'transcript']}
                     fieldWeights={[5, 2, 1]}
-                    placeholder={t('searchForm.placeholder', 'Search for radio broadcasts')}
+                    placeholder={t('searchForm.placeholder', 'Search for community media')}
                     autosuggest
                     queryFormat='and'
                     fuzziness={0}
