@@ -62,7 +62,9 @@ impl CouchManager {
             self.db("_global_changes", false).init(),
         ])
         .await;
-        eprintln!("system db created res {:?}", res);
+        for err in res.into_iter().filter_map(|r| r.err()) {
+            log::warn!("Failed to ensure system CouchDB: {}", err);
+        }
 
         let res =
             futures::future::join_all(vec![self.record_db().init(), self.meta_db().init()]).await;

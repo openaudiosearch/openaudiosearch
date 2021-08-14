@@ -37,7 +37,7 @@ impl PostIndex {
     /// Find all posts that reference any of a list of media ids.
     pub async fn find_posts_for_medias(
         &self,
-        media_ids: &[&str],
+        media_guids: &[&str],
     ) -> Result<Vec<String>, IndexError> {
         let query = json!({
             "query": {
@@ -45,7 +45,7 @@ impl PostIndex {
                     "path": "media",
                     "score_mode": "avg",
                     "query": {
-                        "terms": { "media.$meta.id": media_ids }
+                        "terms": { "media.$meta.guid": media_guids }
                     }
                 }
             }
@@ -114,7 +114,7 @@ impl PostIndex {
             affected_post_guids.iter().map(|s| s.as_str()).collect();
 
         log::trace!(
-            "Got affected {} posts: {}",
+            "Queried affected {} posts: {}",
             affected_post_guids.len(),
             affected_post_guids.join(", ")
         );
@@ -123,6 +123,8 @@ impl PostIndex {
             .get_many_records::<Post>(&affected_post_guids[..])
             .await
             .context("Failed to get posts for medias")?;
+
+        log::trace!("Loaded {} affected posts", affected_posts.len(),);
 
         for post in affected_posts.into_iter() {
             posts.insert(post.guid().to_string(), post);

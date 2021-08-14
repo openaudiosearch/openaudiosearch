@@ -1,14 +1,14 @@
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::any::Any;
 use std::convert::TryFrom;
 use std::fmt;
 use thiserror::Error;
 
 use crate::task::TaskObject;
-use crate::{MissingRefsError, Resolvable, Resolver};
+use crate::{ElasticMapping, MissingRefsError, Resolvable, Resolver};
 
 pub type Object = serde_json::Map<String, serde_json::Value>;
 pub type Record<T> = TypedRecord<T>;
@@ -45,6 +45,22 @@ pub struct RecordMeta {
     // seq: u32,
     // version: u32,
     // timestamp: u32,
+}
+
+impl ElasticMapping for RecordMeta {
+    fn elastic_mapping() -> serde_json::Value {
+        serde_json::json!({
+            "guid": {
+                "type": "keyword"
+            },
+            "id": {
+                "type": "keyword"
+            },
+            "typ": {
+                "type": "keyword"
+            }
+        })
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -344,6 +360,37 @@ where
     /// back to IDs.
     pub fn extract_refs(&mut self) -> Vec<UntypedRecord> {
         self.value.extract_refs()
+    }
+}
+
+impl<T> ElasticMapping for TypedRecord<T>
+where
+    T: ElasticMapping + Clone,
+{
+    fn elastic_mapping() -> serde_json::Value {
+        let meta = RecordMeta::elastic_mapping();
+        let meta = to_object(meta).unwrap();
+        let inner = T::elastic_mapping();
+        if !inner.is_object() {
+            Value::Null
+        } else {
+            let mut object = to_object(inner).unwrap();
+            object.insert(
+                "$meta".to_string(),
+                json!({
+                    "type": "object",
+                    "properties":  Value::Object(meta)
+                }),
+            );
+            Value::Object(object)
+        }
+    }
+}
+
+fn to_object(value: Value) -> Option<Object> {
+    match value {
+        Value::Object(object) => Some(object),
+        _ => None,
     }
 }
 

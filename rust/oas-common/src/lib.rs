@@ -16,5 +16,5 @@ pub use reference::*;
 pub use resolver::*;
 
 pub trait ElasticMapping {
-    fn elastic_mapping() -> Option<serde_json::Value>;
+    fn elastic_mapping() -> serde_json::Value;
 }

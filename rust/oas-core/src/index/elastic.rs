@@ -506,7 +506,7 @@ pub fn create_client(addr: Option<String>) -> Result<Elasticsearch, Error> {
 }
 
 fn get_default_mapping() -> serde_json::Value {
-    let post_mapping = Post::elastic_mapping();
+    let post_mapping = Record::<Post>::elastic_mapping();
     json!({
         "mappings": {
             "properties": post_mapping
