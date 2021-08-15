@@ -15,7 +15,6 @@ import { MdChildFriendly } from 'react-icons/md'
 
 const { ResultListWrapper } = ReactiveList
 
-
 // function useQuery () {
 //     return new URLSearchParams(useLocation().search);
 // }
@@ -294,6 +293,7 @@ export function ResultItem (props) {
         <Flex
           direction={['column', 'column', 'row', 'row']}
           justify='space-between'
+          my={4}
         >
           <Link to={{
             pathname: '/post/' + postId,
@@ -304,13 +304,13 @@ export function ResultItem (props) {
           >
 
             <Heading
-              size='md' my={4}
+              size='md'
               dangerouslySetInnerHTML={{
                 __html: item.headline
               }}
             />
           </Link>
-          <Flex ml={[null, null, 4, 4]} mb={[1, 1, null, null]} align='center' justify='center'>
+          <Flex ml={[null, null, 4, 4]} mb={[1, 1, null, null]} align='flex-start' justify='flex-start'>
             <PostButtons post={item} />
           </Flex>
         </Flex>
