@@ -17,6 +17,19 @@ function FooterLinkText (props = {}) {
   )
 }
 
+function FooterLink (props) {
+  const { link, text, icon, external } = props
+  return (
+    <ChakraLink href={link} isExternal={external}>
+      <Flex>
+        <FooterLinkText>
+          <Icon as={icon} mr='2' />
+          {text}
+        </FooterLinkText>
+      </Flex>
+    </ChakraLink>)
+}
+
 export function Footer () {
   const { t } = useTranslation()
 
@@ -27,28 +40,28 @@ export function Footer () {
         <Box w={['90vw', '80vw', '750px', '750px']}>
 
           <Flex direction={['column', 'column', 'row', 'row']}>
-            <ChakraLink href='https://github.com/openaudiosearch/openaudiosearch' isExternal>
-              <Flex>
-                <FooterLinkText>
-                  <Icon as={FaGithub} mr='2' />
-                  Source code
-                </FooterLinkText>
-              </Flex>
-            </ChakraLink>
-            <ChakraLink href='https://discord.gg/GjdQjxrPJB' isExternal>
-              <Flex>
-                <FooterLinkText>
-                  <Icon as={FaDiscord} mr='2' />
-                  Join us on discord
-                </FooterLinkText>
-              </Flex>
-            </ChakraLink>
-            <ChakraLink to='/about' as={Link}>
-              <FooterLinkText>
-                <Icon as={FaRegNewspaper} mr='2' />
-                {t('about', 'About us')}
-              </FooterLinkText>
-            </ChakraLink>
+            <FooterLink
+              link='https://github.com/openaudiosearch/openaudiosearch'
+              text='Source code'
+              icon={FaGithub}
+              external
+            />
+            <FooterLink
+              link='https://discord.gg/GjdQjxrPJB'
+              text='Join us on discord'
+              icon={FaDiscord}
+              external
+            />
+            <FooterLink
+              link='/about'
+              text={t('about', 'About us')}
+              icon={FaRegNewspaper}
+            />
+            <FooterLink
+              link='/imprint'
+              text={t('imprint', 'Imprint')}
+              icon={FaInfoCircle}
+            />
             <FooterLinkText>
               <Login>
                 <ChakraLink>
@@ -57,12 +70,6 @@ export function Footer () {
                 </ChakraLink>
               </Login>
             </FooterLinkText>
-            <ChakraLink to='/imprint' as={Link}>
-              <FooterLinkText>
-                <Icon as={FaInfoCircle} mr='2' />
-                {t('imprint', 'Imprint')}
-              </FooterLinkText>
-            </ChakraLink>
           </Flex>
         </Box>
       </Center>
