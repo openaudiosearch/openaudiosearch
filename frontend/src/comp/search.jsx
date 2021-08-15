@@ -40,6 +40,8 @@ export default function SearchPage () {
       </Text>
     </Flex>
 
+  const multilistStyle = { marginBottom: '30px' }
+
   return (
     <Flex color='white'>
       <ReactiveBase
@@ -102,8 +104,9 @@ export default function SearchPage () {
                 mr={[null, null, '50px', '50px']}
                 mb={['30px', '30px', null, null]}
               >
-                <Box mb='30px'>
+                <Box>
                   <MultiList
+                    style={multilistStyle}
                     title={t('publisher', 'Publisher')}
                     componentId='publisher'
                     dataField='publisher.keyword'
@@ -112,8 +115,9 @@ export default function SearchPage () {
                     }}
                   />
                 </Box>
-                <Box mb='30px'>
+                <Box>
                   <MultiList
+                    style={multilistStyle}
                     title={t('creator', 'Creator')}
                     componentId='creator'
                     dataField='creator.keyword'
@@ -122,8 +126,9 @@ export default function SearchPage () {
                     }}
                   />
                 </Box>
-                <Box mb='30px'>
+                <Box>
                   <MultiList
+                    style={multilistStyle}
                     title={t('genre', 'Genre')}
                     componentId='genre'
                     dataField='genre.keyword'
@@ -132,8 +137,9 @@ export default function SearchPage () {
                     }}
                   />
                 </Box>
-                <Box mb='30px'>
+                <Box>
                   <DateRange
+                    style={multilistStyle}
                     componentId='datePublished'
                     dataField='datePublished'
                     title={t('publishingdate', 'Publishing Date')}
@@ -159,8 +165,9 @@ export default function SearchPage () {
                     }}
                   />
                 </Box>
-                <Box mb='30px'>
+                <Box>
                   <DynamicRangeSlider
+                    style={multilistStyle}
                     componentId='duration'
                     dataField='media.duration'
                     nestedField='media'
@@ -246,7 +253,7 @@ export function ResultItem (props) {
       direction='column'
       border='2px'
       p='2'
-      borderRadius='20px'
+      borderRadius='10px'
       borderColor='gray.200'
       boxShadow='md'
       my='3'

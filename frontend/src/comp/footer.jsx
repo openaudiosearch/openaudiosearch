@@ -8,6 +8,15 @@ import { FaGithub } from 'react-icons/fa'
 import { useTranslation } from 'react-i18next'
 import { Login } from './login'
 
+function FooterLinkText (props = {}) {
+  const { children } = props
+  return (
+    <Text color='gray.500' _hover={{ color: 'gray.600' }} py='3' pl='6' pr='10' fontSize='sm'>
+      {children}
+    </Text>
+  )
+}
+
 export function Footer () {
   const { t } = useTranslation()
 
@@ -17,23 +26,32 @@ export function Footer () {
       <Center>
         <Box w={['90vw', '80vw', '750px', '750px']}>
 
-          <Flex direction='row' justify='start'>
-            <Link to='/imprint'>
-              <Text color='gray.400' py='3' pl='6' pr='10' fontSize='sm'>
+          <Flex direction={['column', 'column', 'row', 'row']} justify='start'>
+            <ChakraLink to='/imprint' as={Link}>
+              <FooterLinkText>
                 {t('imprint', 'Imprint')}
-              </Text>
-            </Link>
-            <Link to='/about'>
-              <Text color='gray.400' py='3' pl='6' pr='10' fontSize='sm'>
-                {t('about', 'About us')}
-              </Text>
-            </Link>
-            <ChakraLink href='https://github.com/openaudiosearch/openaudiosearch' isExternal>
-              <Icon color='gray.400' as={FaGithub} my='15px' ml='6' mr='10' />
+              </FooterLinkText>
             </ChakraLink>
-            <Flex ml='6' mr='5'>
-              <Login />
-            </Flex>
+            <ChakraLink to='/about' as={Link}>
+              <FooterLinkText>
+                {t('about', 'About us')}
+              </FooterLinkText>
+            </ChakraLink>
+            <ChakraLink href='https://github.com/openaudiosearch/openaudiosearch' isExternal>
+              <Flex>
+               <FooterLinkText>
+                  <Icon as={FaGithub} fontSize='lg' mr='2' />
+                  Source code
+               </FooterLinkText>
+              </Flex>
+            </ChakraLink>
+            <FooterLinkText>
+              <Login>
+                <ChakraLink>
+                  {t('login', 'Login')}
+                </ChakraLink>
+              </Login>
+             </FooterLinkText>
           </Flex>
         </Box>
       </Center>

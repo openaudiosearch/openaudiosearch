@@ -11,7 +11,8 @@ import {
   Tooltip,
   useSliderContext,
   chakra,
-  Icon
+  Icon,
+  Text
 } from '@chakra-ui/react'
 import { cx } from '@chakra-ui/utils'
 import { FaPlay, FaPause } from 'react-icons/fa'
@@ -255,7 +256,7 @@ export function Player (props = {}) {
     <Stack p={2} bg='primary' color='white'>
       <Flex direction='column'>
         <Box px='3'>
-          <strong>{headline || ''}</strong>
+          <Text noOfLines='2'>{headline || ''}</Text>
         </Box>
         <Flex dir='row'>
           <PlayerButton
