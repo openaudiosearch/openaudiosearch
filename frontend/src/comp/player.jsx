@@ -265,7 +265,7 @@ export function Player (props = {}) {
             <Text fontSize='lg' noOfLines='2'>{headline || ''}</Text>
           </Link>
         </Box>
-        <Flex dir='row'>
+        <Flex dir='row' p='3'>
           <PlayerButton
             label={state.playing ? t('pause', 'Pause') : t('play', 'Play')}
             onClick={togglePlay}
@@ -319,17 +319,17 @@ function Timeslider (props = {}) {
   else value = pos * 100
 
   const tooltipStyle = {
-    px: "8px",
-    py: "2px",
-    bg: "#222",
+    px: '8px',
+    py: '2px',
+    bg: '#222',
     color: 'white',
     fontSize: 'xl',
-    borderRadius: "sm",
-    fontWeight: "medium",
-    fontSize: "sm",
-    boxShadow: "md",
-    maxW: "320px",
-    zIndex: "1000",
+    borderRadius: 'sm',
+    fontWeight: 'medium',
+    fontSize: 'sm',
+    boxShadow: 'md',
+    maxW: '320px',
+    zIndex: '1000'
   }
 
   const displayTime = formatDuration(duration * value / 100)
