@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Heading, Center, Image, Box, Link, Flex, FormControl, FormLabel, FormHelperText, Textarea, Input, Text, Alert, AlertIcon } from '@chakra-ui/react'
 import prototypeLogo from '../../assets/PrototypeFund-P-Logo.svg'
 import cbaLogo from '../../assets/cba_logo.svg'
+import arsoLogo from '../../assets/arso.png'
 import netideeLogo from '../../assets/netidee-Projekte-Logo.jpg'
 
 export default function AboutPage () {
@@ -9,13 +10,24 @@ export default function AboutPage () {
     <Center>
       <Box w={['90vw', '80vw', '750px', '750px']}>
         <Flex ml='6' direction='column'>
-          <Heading>About</Heading>
+          <Heading fontSize='xl' mb='8'>About</Heading>
+          <Text>
+            Open Audio Search is an open source project by <Link href="https://arso.xyz" isExternal>arso collective</Link> and <Link href="https://cba.fro.at/" isExternal>cba - community broadcasting archive</Link>.
+          </Text>
+          <Flex py='8' justify='center'>
+            <Link title='arso collective' display='block' mr='8' href='https://arso.xyz/' isExternal>
+              <Image src={arsoLogo} w='100px' />
+            </Link>
+            <Link tile='CBA' display='block' href='https://cba.fro.at/' isExternal>
+              <Image src={cbaLogo} w='100px' />
+            </Link>
+          </Flex>
+          <Text>
+            Read about how to run your own instance, the technical details, and how to contribute to the project in our <Link href="https://github.com/openaudiosearch/openaudiosearch/blob/main/README.md" isExternal>README</Link>
+          </Text>
           <Heading as='h3' size='md' my='4'>Funding</Heading>
           <Text>
-          The development of Open Audio Search has been funded in round 9 of the{' '}
-            <Link href='https://prototypefund.de/' isExternal>
-            Prototype Fund
-            </Link>.
+          The development of Open Audio Search has been supported by
           </Text>
           <Flex direction='row' align='end' justify='center'>
             <Box mr='10'>
@@ -29,11 +41,6 @@ export default function AboutPage () {
               </Link>
             </Box>
           </Flex>
-          <Heading as='h3' size='md' my='4'>Partner</Heading>
-          <Link href='https://cba.fro.at/' isExternal>
-            <Image src={cbaLogo} w='100px' />
-          </Link>
-
           <Flex direction='column' my='4'>
             <Heading as='h3' size='md'>Feedback</Heading>
             <FeedbackForm />
