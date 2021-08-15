@@ -11,9 +11,9 @@ import { Login } from './login'
 function FooterLinkText (props = {}) {
   const { children } = props
   return (
-    <Text color='gray.500' _hover={{ color: 'gray.600' }} py='3' pl='6' pr='10' fontSize='sm'>
+    <Box color='gray.500' _hover={{ color: 'gray.600' }} py='3' pl='6' pr='10' fontSize='sm'>
       {children}
-    </Text>
+    </Box>
   )
 }
 

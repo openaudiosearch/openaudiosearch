@@ -3,7 +3,7 @@ import ReactJson from 'react-json-view'
 import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters, MultiRange, DynamicRangeSlider } from '@appbaseio/reactivesearch'
 import { Heading, Flex, Box, Spinner, Button, Text } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
-import { useParams, Link, useHistory } from 'react-router-dom'
+import { useParams, Link, useHistory, useLocation } from 'react-router-dom'
 import Moment from 'moment'
 import { FaFilter, FaChevronDown, FaChevronRight } from 'react-icons/fa'
 import { PostButtons } from './post'
@@ -15,12 +15,15 @@ import { MdChildFriendly } from 'react-icons/md'
 
 const { ResultListWrapper } = ReactiveList
 
+
+// function useQuery () {
+//     return new URLSearchParams(useLocation().search);
+// }
+
 export default function SearchPage () {
   const [show, setShow] = React.useState(false)
   const toggleMenu = () => setShow(!show)
-  const { query } = useParams()
-  const queryStr = query || ''
-  const decodedquery = decodeURIComponent(queryStr)
+  const location = useLocation()
   const url = API_ENDPOINT + '/search'
   const facets = ['searchbox', 'genre', 'datePublished', 'publisher', 'creator', 'duration']
   const { t } = useTranslation()
@@ -42,9 +45,31 @@ export default function SearchPage () {
 
   const multilistStyle = { marginBottom: '30px' }
 
+  function customHighlight (props) {
+    return {
+      highlight: {
+        // fragment_size: 200,
+        // number_of_fragments: 2,
+        // type: "fvh",
+        // fields: {
+        //   transcript: {},
+        //   headline: {},
+        //   description: {}
+        // }
+        // pre_tags: ['<mark>'],
+        // post_tags: ['</mark>'],
+        // fields: {
+        //     text: {},
+        //     title: {},
+        // },
+      }
+    }
+  }
+
   return (
     <Flex color='white'>
       <ReactiveBase
+        getSearchParams={() => location.search}
         app='oas'
         url={url}
       >
@@ -69,11 +94,8 @@ export default function SearchPage () {
               react={{
                 and: facets.filter(f => f !== 'searchbox')
               }}
-              defaultValue={decodedquery}
-              onValueSelected={(value, cause, source) => {
-                const encoded = encodeURIComponent(value)
-                history.push('/search/' + encoded)
-              }}
+              defaultValue=''
+              URLParams
             />
             <SelectedFilters showClearAll />
           </Box>
@@ -110,6 +132,7 @@ export default function SearchPage () {
                     title={t('publisher', 'Publisher')}
                     componentId='publisher'
                     dataField='publisher.keyword'
+                    URLParams
                     react={{
                       and: facets.filter(f => f !== 'publisher')
                     }}
@@ -121,6 +144,7 @@ export default function SearchPage () {
                     title={t('creator', 'Creator')}
                     componentId='creator'
                     dataField='creator.keyword'
+                    URLParams
                     react={{
                       and: facets.filter(f => f !== 'creator')
                     }}
@@ -132,6 +156,7 @@ export default function SearchPage () {
                     title={t('genre', 'Genre')}
                     componentId='genre'
                     dataField='genre.keyword'
+                    URLParams
                     react={{
                       and: facets.filter(f => f !== 'genre')
                     }}
@@ -143,6 +168,7 @@ export default function SearchPage () {
                     componentId='datePublished'
                     dataField='datePublished'
                     title={t('publishingdate', 'Publishing Date')}
+                    URLParams
                     customQuery={
                       function (value) {
                         if (!value) return {}
@@ -178,6 +204,7 @@ export default function SearchPage () {
                       }
                     )}
                     tooltipTrigger='hover'
+                    URLParams
                     renderTooltipData={data => (
                       <Text fontSize='sm'>{(data / 60).toFixed()} min</Text>
                     )}
@@ -202,6 +229,7 @@ export default function SearchPage () {
                     { label: 'Duration (asc)', dataField: 'media.duration', sortBy: 'asc' }
                   ]}
                   defaultSortOption='Date (desc)'
+                  URLParams
                   react={{
                     and: facets
                   }}

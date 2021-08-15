@@ -221,6 +221,7 @@ function useAudioElement (props = {}) {
 export function Player (props = {}) {
   const { track, mark, post } = usePlayer()
   const state = usePlaystate()
+  const [draggingPos, setDraggingPos] = React.useState(null)
   const { audio } = state
 
   const { start = 0, end = 0, word = '' } = mark || {}
@@ -247,12 +248,13 @@ export function Player (props = {}) {
 
   let snippets = []
   if (post && post.highlight && post.highlight.transcript) {
-    console.log(post.highlight.transcript)
     snippets = post.highlight.transcript.map((snippet) => parseTranscript(snippet))
   }
 
+  const displayTime = draggingPos ? state.duration * draggingPos : state.currentTime
+
   return (
-    <Stack p={2} bg='primary' color='white'>
+    <Stack p={2} bg='primary' color='white' zIndex='100'>
       <Flex direction='column'>
         <Box px='3'>
           <strong>{headline || ''}</strong>
@@ -265,10 +267,16 @@ export function Player (props = {}) {
             disabled={!state.canplay}
           />
           <Box p={2} w={100}>
-            {formatDuration(state.currentTime)}
+            {formatDuration(displayTime)}
           </Box>
           <Box p={2} flex={1}>
-            <Timeslider pos={posPercent} onChange={setPosPercent} snippets={snippets} />
+            <Timeslider
+              duration={state.duration}
+              pos={posPercent}
+              onChange={setPosPercent}
+              snippets={snippets}
+              onDraggingChange={setDraggingPos}
+            />
           </Box>
           <Box p={2}>
             {formatDuration(state.duration)}
@@ -296,7 +304,7 @@ function PlayerButton (props = {}) {
 }
 
 function Timeslider (props = {}) {
-  const { pos, onChange, snippets } = props
+  const { pos, duration, onChange, onDraggingChange, snippets } = props
   const [dragging, setDragging] = useState(false)
   const [draggingValue, setDraggingValue] = useState(null)
 
@@ -304,6 +312,21 @@ function Timeslider (props = {}) {
   if (dragging && draggingValue) value = draggingValue
   else value = pos * 100
 
+  const tooltipStyle = {
+    px: "8px",
+    py: "2px",
+    bg: "var(--tooltip-bg)",
+    color: 'white',
+    fontSize: 'lg',
+    borderRadius: "sm",
+    fontWeight: "medium",
+    fontSize: "sm",
+    boxShadow: "md",
+    maxW: "320px",
+    zIndex: "1000",
+  }
+
+  const displayTime = formatDuration(duration * value / 100)
   return (
     <Slider
       aria-label='slider-ex-1'
@@ -312,12 +335,20 @@ function Timeslider (props = {}) {
       onChangeStart={onChangeStart}
       onChangeEnd={onChangeEnd}
       onChange={onSliderChange}
+      position='relative'
     >
       <SliderTrack bg='white'>
         <SliderFilledTrack bg='secondary.500' />
       </SliderTrack>
       <SliderThumb boxSize={6}>
-        <Box color='secondary.500' as={MdGraphicEq} />
+        <Box position='relative'>
+          <Box color='secondary.500' as={MdGraphicEq} />
+          {dragging && (
+            <Box {...tooltipStyle} position='absolute' top='-2rem' left='-1rem'>
+              {displayTime}
+            </Box>
+          )}
+        </Box>
       </SliderThumb>
       <SliderSnippets snippets={snippets} />
     </Slider>
@@ -331,6 +362,7 @@ function Timeslider (props = {}) {
     if (!dragging) return
     setDragging(false)
     setPlayerPos(value)
+    if (onDraggingChange) onDraggingChange(null)
   }
 
   function setPlayerPos (value) {
@@ -341,6 +373,7 @@ function Timeslider (props = {}) {
   function onSliderChange (value) {
     if (dragging) {
       setDraggingValue(value)
+      if (onDraggingChange) onDraggingChange(value / 100)
     } else {
       setPlayerPos(value)
     }
@@ -365,9 +398,25 @@ function SliderSnippets (props = {}) {
   const { snippets } = props
   const state = usePlaystate()
   const { setMark } = usePlayer()
+  if (!state.duration) return null
 
   function onMarkClick (mark) {
     setMark(mark)
+  }
+
+  function findStart (parts) {
+    for (const snippet of parts) {
+      if (snippet.start !== undefined) return Number(snippet.start)
+    }
+    return 0
+  }
+
+  function snippetPosition (parts) {
+    return (findStart(parts) / state.duration) * 100
+  }
+
+  function snippetLabel (parts) {
+    return parts.map((snippet) => snippet.word || '').join(' ')
   }
 
   return (
@@ -376,12 +425,12 @@ function SliderSnippets (props = {}) {
         <SliderMark
           display={['none', 'block', 'block', 'block']}
           key={index}
-          value={(snippet[0].start / state.duration) * 100}
+          value={snippetPosition(snippet)}
           onClick={() => onMarkClick(snippet[0])}
           mt='-5px'
         >
-          <Tooltip label={snippet.map((snippet) => snippet.word).join(' ')} placement='top'>
-            <Box><Icon as={RiArrowUpSFill} color='secondary.600' w='6' h='6' /></Box>
+          <Tooltip label={snippetLabel(snippet)} placement='top' zIndex='10000'>
+            <Box><Icon as={RiArrowUpSFill} color='secondary.600' w='8' h='10' /></Box>
           </Tooltip>
         </SliderMark>
       ))}
