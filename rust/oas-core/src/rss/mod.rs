@@ -239,7 +239,7 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
     };
 
     // If the RSS item has an enclosure set create a Media record that will be referenced by the post.
-    let media = if let Some(enclosure) = item.enclosure {
+    let media = if let Some(enclosure) = item.clone().enclosure {
         let mut mapped_fields_json: serde_json::Map<String, serde_json::Value> = mapped_fields
             .into_iter()
             .filter(|(k, _v)| k.starts_with("media."))
@@ -288,6 +288,26 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
 
     if post.headline.is_none() {
         post.headline = item.title.clone();
+    }
+
+    let dublin_core_ext = item.dublin_core_ext();
+    let itunes_ext = item.itunes_ext();
+
+    if post.genre.is_empty() {
+        if let Some(ext) = itunes_ext {
+            post.genre = ext
+                .keywords()
+                .unwrap_or_default()
+                .split(",")
+                .map(|a| a.to_string())
+                .collect::<Vec<String>>();
+        }
+    }
+
+    if post.creator.is_empty() {
+        if let Some(ext) = dublin_core_ext {
+            post.creator = ext.creators().to_vec();
+        }
     }
 
     if post.date_published.is_none() {

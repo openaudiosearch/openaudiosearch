@@ -29,3 +29,15 @@ to = "date_modified"
 [[frn.fields]]
 from = "pubDate"
 to = "date_published"
+
+[[cba.fields]]
+from = "cba:duration"
+to = "media.duration"
+
+[[cba.fields]]
+from = "cba:teaser"
+to = "abstract"
+
+[[cba.fields]]
+from = "cba:teaser"
+to = "abstract"

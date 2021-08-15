@@ -26,7 +26,7 @@ pub struct Post {
     #[serde(default, deserialize_with = "ser::deserialize_date")]
     pub date_modified: Option<DateTime<Utc>>,
     #[serde(default, deserialize_with = "ser::deserialize_multiple")]
-    pub contributor:Vec<String>,
+    pub contributor: Vec<String>,
     pub publisher: Option<String>,
     #[serde(default, deserialize_with = "ser::deserialize_multiple")]
     pub genre: Vec<String>,
