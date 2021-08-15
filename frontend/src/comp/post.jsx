@@ -120,12 +120,20 @@ export function PostPage (props = {}) {
   }
   if (!post) return null
 
-  const genres = post.genre.map((genre) =>
-    <Tag key={genre} mr='1'>{genre}</Tag>
-  )
-  const creators = post.creator.map((creator) =>
-    <Tag key={creator} mr='1'>{creator}</Tag>
-  )
+  const genres =
+    <>
+      {post.genre.map((genre) =>(
+        <Tag key={genre} mr='1'>{genre}</Tag>
+      ))}
+    </>
+
+  const creators = 
+    <>
+      {post.creator.map((creator) => (
+        <Tag key={creator} mr='1'>{creator}</Tag>
+      ))}
+    </>
+
   let contributors = []
   if (post.contributor) {
     contributors = post.contributor.map((contributor) =>
