@@ -83,10 +83,17 @@ impl ElasticMapping for Media {
                 "type": "object",
                 "enabled": false
             },
+            "transcript": {
+                "type": "object",
+                "enabled": false
+            },
             "contentUrl":{
-                "type":"text",
+                "type":"text"
             },
             "duration": {
+                "type": "float"
+            },
+            "contentSize": {
                 "type": "float"
             },
             "encodingFormat": {
@@ -95,9 +102,12 @@ impl ElasticMapping for Media {
             "nlp": {
                 "type": "object"
             },
-            "transcript": {
-                "type": "object"
-            }
+            "posts": {
+                "type": "keyword"
+            },
+            "feeds": {
+                "type": "keyword"
+            },
         })
     }
 }

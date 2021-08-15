@@ -17,6 +17,7 @@ pub struct FeedSettings {
     /// Interval to check for feed updates (in seconds)
     pub check_interval: u64,
     /// Try to crawl the feed backwards by increasing an offset query parameter
+    #[serde(default)]
     pub crawl_backwards: bool,
 }
 

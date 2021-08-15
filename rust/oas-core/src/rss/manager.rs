@@ -61,6 +61,10 @@ impl FeedManager {
     pub async fn run_watch(self, db: CouchDB) -> anyhow::Result<()> {
         run_watch(self, db).await
     }
+
+    // pub async fn run_crawl(self, db: CouchDB) -> anyhow::Result<()> {
+    // run_crawl(self, db).await
+    // }
 }
 
 #[derive(Debug)]
@@ -117,6 +121,7 @@ impl FeedManagerInner {
         Ok(())
     }
 }
+
 async fn run_watch(manager: FeedManager, db: CouchDB) -> anyhow::Result<()> {
     let tasks = start_feed_tasks(&manager, db.clone()).await?;
     let mapping = {
