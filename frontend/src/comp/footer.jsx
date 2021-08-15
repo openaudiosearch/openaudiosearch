@@ -46,7 +46,7 @@ export function Footer () {
               external
             />
             <FooterLink
-              href='https://discord.gg/GjdQjxrPJB'
+              href='https://discord.openaudiosearch.org'
               text='Join us on discord'
               icon={FaDiscord}
               external
