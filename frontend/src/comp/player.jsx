@@ -12,13 +12,15 @@ import {
   useSliderContext,
   chakra,
   Icon,
-  Text
+  Text,
+  Link as ChakraLink
 } from '@chakra-ui/react'
 import { cx } from '@chakra-ui/utils'
 import { FaPlay, FaPause } from 'react-icons/fa'
 import { RiArrowUpSFill } from 'react-icons/ri'
 import { useTranslation } from 'react-i18next'
 import { MdGraphicEq } from 'react-icons/md'
+import { Link } from 'react-router-dom'
 
 import { API_ENDPOINT } from '../lib/config'
 
@@ -254,11 +256,14 @@ export function Player (props = {}) {
 
   const displayTime = draggingPos ? state.duration * draggingPos : state.currentTime
 
+  const postId = post && post.$meta.id
   return (
     <Stack p={2} bg='primary' color='white' zIndex='100'>
       <Flex direction='column'>
         <Box px='3'>
-          <Text noOfLines='2'>{headline || ''}</Text>
+          <Link to={{ pathname: '/post/' + postId }}>
+            <Text fontSize='lg' noOfLines='2'>{headline || ''}</Text>
+          </Link>
         </Box>
         <Flex dir='row'>
           <PlayerButton
@@ -316,9 +321,9 @@ function Timeslider (props = {}) {
   const tooltipStyle = {
     px: "8px",
     py: "2px",
-    bg: "var(--tooltip-bg)",
+    bg: "#222",
     color: 'white',
-    fontSize: 'lg',
+    fontSize: 'xl',
     borderRadius: "sm",
     fontWeight: "medium",
     fontSize: "sm",

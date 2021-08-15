@@ -18,9 +18,9 @@ function FooterLinkText (props = {}) {
 }
 
 function FooterLink (props) {
-  const { link, text, icon, external } = props
+  const { to, href, text, icon, external, as } = props
   return (
-    <ChakraLink href={link} isExternal={external}>
+    <ChakraLink href={href} to={to} isExternal={external} as={as}>
       <Flex>
         <FooterLinkText>
           <Icon as={icon} mr='2' />
@@ -40,24 +40,26 @@ export function Footer () {
         <Box>
           <Flex direction={['column', 'column', 'row', 'row']}>
             <FooterLink
-              link='https://github.com/openaudiosearch/openaudiosearch'
+              href='https://github.com/openaudiosearch/openaudiosearch'
               text='Source code'
               icon={FaGithub}
               external
             />
             <FooterLink
-              link='https://discord.gg/GjdQjxrPJB'
+              href='https://discord.openaudiosearch.org'
               text='Join us on discord'
               icon={FaDiscord}
               external
             />
             <FooterLink
-              link='/about'
+              as={Link}
+              to='/about'
               text={t('about', 'About us')}
               icon={FaRegNewspaper}
             />
             <FooterLink
-              link='/imprint'
+              as={Link}
+              to='/imprint'
               text={t('imprint', 'Imprint')}
               icon={FaInfoCircle}
             />
