@@ -36,11 +36,32 @@ Open Audio Search is still **in development**. No API stability guarantees yet. 
 
 ### Installation with docker
 
-This project includes a Dockerfile to build a docker image for the backend and worker. It also includes a `docker-compose.yml` file to easily launch OAS together with Elastic Search and Redis.
+Requirements: [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/). You'll need a quite recent version of both.
 
-To get started, install [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/). You'll need a quite recent version of both.
 
-Then, run the following commands:
+#### Use prebuilt nightly images
+
+We provide `nightly` Docker images which are built and pushed to Docker Hub after each commit to the `main` branch. We will provide stable images once we reach our first beta release.
+
+For a quick start, copy [`docker-compose.nightly.yml`](https://raw.githubusercontent.com/openaudiosearch/openaudiosearch/main/docker-compose.nightly.yml) to an empty directory and start it with Docker Compose. This will download the latest images for the backend and worker and start them together with CouchDB, Elasticsearch and Redis.
+
+```
+mkdir openaudiosearch && cd openaudiosearch
+wget https://raw.githubusercontent.com/openaudiosearch/openaudiosearch/main/docker-compose.nightly.yml
+docker-compose -f docker-compose.nightly.yml up
+```
+
+For the speech recognition to work you will need to download the models first. Run this command once, it will download the models into the `./data/oas` volume:
+
+```sh
+docker-compose exec worker python download_models.py
+```
+
+#### Build Docker images from source
+
+This project includes a Dockerfile to build docker images for the backend and worker. It also includes a `docker-compose.yml` file to easily launch OAS together with CouchDB, Elasticsearch and Redis.
+
+Then, the following commands will build the Docker image from source and start it together with all required services.
 ```sh
 git clone https://github.com/openaudiosearch/openaudiosearch
 cd open-audio-search
@@ -50,10 +71,6 @@ docker-compose up
 
 It takes a little while for Elastic to start up. Then, the OAS user interface and API are available at [`http://localhost:8080`](http://localhost:8080).
 
-For the speech recognition to work, you'll need to download the models. Run this command once, it will download the models into the `./data/oas` volume:
-```sh
-docker-compose exec worker python download_models.py
-```
 
 Elastic Search wants quite a lot of free disc space. If the threshold is not met, it refuses to do anything. Run the script at `oas_worker/scripts/elastic-disable-threshold.sh` to disable the disc threshold (does not persist across Elastic restarts):
 ``` sh
@@ -64,17 +81,67 @@ docker-compose exec worker bash scripts/elastic-disable-threshold.sh
 
 OAS is configured through environment variables or command line arguments. The following table lists all environment variables. Some apply to both the core and the worker, and some only to either.
 
-|variable|default|applies to|description|
-|-|-|-|-|
-|`ADMIN_PASSWORD`|`password`|core|Default password for `admin` user|
-|`STORAGE_PATH`|`./data/oas`|worker|Storage path for models, cached files and other assets|
-|`REDIS_URL`|`redis://localhost:6379/0`|both|URL to Redis server|
-|`ELASTICSEARCH_URL`|`http://localhost:9200/`|core|URL to Elasticsearch server (trailing slash is required)|
-|`ELASTICSEARCH_PREFIX`|`oas`|core|Prefix for all Elasticsearch indexes created by OAS|
-|`COUCHDB_URL`|`http://admin:password@localhost:5984/oas`|core|URL to CouchDB server and database|
-|`HTTP_HOST`|`0.0.0.0`|core|Interface for the HTTP server to bind to|
-|`HTTP_PORT`|`8080`|core|Port for HTTP server to listen on|
-|`FRONTEND_PROXY`||core|If set to a HTTP URL, all requests for the web UI are proxied to this address|
+#### `OAS_ADMIN_PASSWORD`
+
+default: `password`
+applies to: core
+
+Default password for `admin` user.
+
+
+#### `STORAGE_PATH`
+
+default: `./data/oas`
+applies to: worker
+
+Storage path for models, cached files and other assets.
+
+
+#### `REDIS_URL`
+
+default: `redis://localhost:6379/0`
+applies to: both
+
+URL to Redis server
+
+
+#### `ELASTICSEARCH_URL`
+
+default: `http://localhost:9200/oas`
+applies to: core
+
+URL to Elasticsearch server and index prefix
+
+
+#### `COUCHDB_URL`
+
+default: `http://admin:password@localhost:5984/oas`
+applies to: core
+
+URL to CouchDB server and database prefix
+
+
+#### `HTTP_HOST`
+
+default: `0.0.0.0`
+applies to: core
+
+Interface for the HTTP server to bind to
+
+
+#### `HTTP_PORT`
+
+default: `8080`
+applies to: core
+
+Port for HTTP server to listen on
+
+
+#### `FRONTEND_PROXY`
+
+applies to: core
+
+If set to a HTTP URL, all requests for the web UI are proxied to this address
 
 
 ## Development and local setup
@@ -94,23 +161,24 @@ git clone https://github.com/openaudiosearch/openaudiosearch
 docker-compose -f docker-compose.dev.yml up
 ```
 
-*Build an run the core*
-
-Compile and run the Rust core, while setting an environment variable to proxy the web UI from a local development server (see below):
-```sh
-FRONTEND_PROXY="https://localhost:4000" cargo run -- run
-```
-
-To build and test in release mode, use
-```sh
-cargo run --release -- run
-```
-
 *Run the frontend in development mode* 
 ```sh
 cd frontend
 yarn
 yarn start
+```
+
+*Build an run the core*
+
+Compile and run the Rust core, while setting an environment variable to proxy the web UI from a local development server (see below):
+```sh
+cargo run -- --dev run
+```
+The `--dev` argument enables debug logging (`RUST_LOG=oas=debug`) and sets `FRONTEND_PROXY=http://localhost:4000`
+
+To build and test in release mode, use
+```sh
+cargo run --release -- run
 ```
 
 *Run the worker*
