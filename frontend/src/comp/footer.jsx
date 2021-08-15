@@ -11,9 +11,9 @@ import { Login } from './login'
 function FooterLinkText (props = {}) {
   const { children } = props
   return (
-    <Text color='gray.500' _hover={{ color: 'gray.600' }} py='3' pl='6' pr='10' fontSize='xs'>
+    <Box color='gray.500' _hover={{ color: 'gray.600' }} py='3' pl='6' pr='10' fontSize='sm'>
       {children}
-    </Text>
+    </Box>
   )
 }
 
@@ -37,8 +37,7 @@ export function Footer () {
     <Flex direction='column'>
       <Divider color='gray.300' />
       <Center>
-        <Box w={['90vw', '80vw', '750px', '750px']}>
-
+        <Box>
           <Flex direction={['column', 'column', 'row', 'row']}>
             <FooterLink
               link='https://github.com/openaudiosearch/openaudiosearch'

@@ -41,7 +41,7 @@ export default function LandingPage () {
                     }}
                     onValueSelected={(value, cause, source) => {
                       const encoded = encodeURIComponent(value)
-                      history.push('/search/' + encoded)
+                      history.push(`/search/?searchbox="${encoded}"`)
                     }}
                   />
                 </Box>
