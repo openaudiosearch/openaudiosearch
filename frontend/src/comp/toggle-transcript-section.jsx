@@ -14,7 +14,6 @@ export function ToggleTranscriptSection (props = {}) {
     return null
   })
   const { t } = useTranslation()
-  console.log(transcript)
 
   return (
     <Box>
@@ -31,7 +30,7 @@ export function ToggleTranscriptSection (props = {}) {
           </Button>
           {show &&
             <Box bg='gray.100' p='4'>
-              {transcript}
+              {transcript.map((t, i) => <span key={i}>{t}</span>)}
             </Box>}
         </Box>}
     </Box>

@@ -5,7 +5,7 @@ COPY frontend /app/frontend
 RUN yarn && yarn run build
 
 # use the cargo-chef base image
-FROM lukemathwalker/cargo-chef:latest-rust-1-slim as base
+FROM lukemathwalker/cargo-chef:0.1.23-alpha.0-rust-1.54.0-slim-buster as base
 
 # prepare the cargo-chef build
 FROM base as planner
