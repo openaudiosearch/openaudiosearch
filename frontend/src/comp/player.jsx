@@ -405,6 +405,7 @@ function SliderSnippets (props = {}) {
   const state = usePlaystate()
   const { setMark } = usePlayer()
   if (!state.duration) return null
+  if (!snippets || !snippets.length) return null
 
   function onMarkClick (mark) {
     setMark(mark)
