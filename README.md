@@ -69,10 +69,10 @@ docker-compose build
 docker-compose up
 ```
 
-It takes a little while for Elastic to start up. Then, the OAS user interface and API are available at [`http://localhost:8080`](http://localhost:8080).
+It takes a little while for Elasticsearch to start up. Then, the OAS user interface and API are available at [`http://localhost:8080`](http://localhost:8080).
 
 
-Elastic Search wants quite a lot of free disc space. If the threshold is not met, it refuses to do anything. Run the script at `oas_worker/scripts/elastic-disable-threshold.sh` to disable the disc threshold (does not persist across Elastic restarts):
+Elasticsearch wants quite a lot of free disc space. If the threshold is not met, it refuses to do anything. Run the script at `oas_worker/scripts/elastic-disable-threshold.sh` to disable the disc threshold (does not persist across Elasticsearch restarts):
 ``` sh
 docker-compose exec worker bash scripts/elastic-disable-threshold.sh
 ```
