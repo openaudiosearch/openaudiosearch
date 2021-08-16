@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactJson from 'react-json-view'
 import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters, MultiRange, DynamicRangeSlider } from '@appbaseio/reactivesearch'
-import { Heading, Flex, Box, Spinner, Button, Text } from '@chakra-ui/react'
+import { Heading, Flex, Box, Spinner, Button, Text, chakra } from '@chakra-ui/react'
 import { API_ENDPOINT } from '../lib/config'
 import { useParams, Link, useHistory, useLocation } from 'react-router-dom'
 import Moment from 'moment'
@@ -263,7 +263,7 @@ export function ResultItem (props) {
   const snippets = (
     <>
       {Object.entries(item.highlight).map(([fieldname, snippets]) => (
-        <SnippetList key={fieldname} fieldname={fieldname} snippets={snippets} post={item} />
+        <SnippetList onlyTranscript key={fieldname} fieldname={fieldname} snippets={snippets} post={item} />
       ))}
     </>
   )
@@ -283,6 +283,7 @@ export function ResultItem (props) {
       borderRadius='10px'
       borderColor='gray.200'
       boxShadow='md'
+      bg='white'
       my='3'
       overflow='hidden'
       overflowWrap='break-word'
@@ -302,13 +303,9 @@ export function ResultItem (props) {
             }
           }}
           >
-
-            <Heading
-              size='md'
-              dangerouslySetInnerHTML={{
-                __html: item.headline
-              }}
-            />
+            <Heading size='md'>
+              <TextWithMarks>{item.headline}</TextWithMarks>
+            </Heading>
           </Link>
           <Flex ml={[null, null, 4, 4]} mb={[1, 1, null, null]} align='flex-start' justify='flex-start'>
             <PostButtons post={item} />
@@ -324,7 +321,11 @@ export function ResultItem (props) {
             {duration &&
               <Text mr='2' fontSize='sm'>{duration}</Text>}
           </Flex>
-          <Box mt='2'><CollapsedText>{item.description}</CollapsedText></Box>
+          <Box mt='2'>
+            <CollapsedText render={text => <TextWithMarks>{text}</TextWithMarks>}>
+              {item.description}
+            </CollapsedText>
+          </Box>
         </Flex>
         {showSnippets && snippets && <div>{snippets}</div>}
         {isAdmin && <ReactJson src={item} collapsed name={false} />}
@@ -333,8 +334,33 @@ export function ResultItem (props) {
   )
 }
 
+export function TextWithMarks (props = {}) {
+  let { children, text, style = {}, markAs, ...rest } = props
+  text = text || children
+  if (!text) return null
+  const markIn = '<mark>'
+  const markOut = '</mark>'
+  const idxIn = text.indexOf(markIn)
+  const idxOut = text.indexOf(markOut)
+  if (idxIn === -1 && idxOut === -1) return text
+  const before = text.slice(0, idxIn)
+  const within = text.slice(idxIn + markIn.length, idxOut)
+  const after = text.slice(idxOut + markOut.length)
+  // const Comp = props.markAs || chakra.span
+  const markStyle = { bg: 'highlightMark' }
+  return (
+    <Box as='span'>
+      {before}
+      <Box as='mark' {...markStyle}>
+        {within}
+      </Box>
+      {after}
+    </Box>
+  )
+}
+
 function CollapsedText (props) {
-  const { children, initialCollapsed = true, characterLength = 280 } = props
+  const { children, render, initialCollapsed = true, characterLength = 280 } = props
   const [collapsed, setCollapsed] = React.useState(initialCollapsed)
   const fullText = children || ''
   const isCollapsible = fullText.length >= characterLength
@@ -351,6 +377,12 @@ function CollapsedText (props) {
   })
   const { t } = useTranslation()
 
+  const renderedText = React.useMemo(() => {
+    if (!text) return null
+    if (!render) return text
+    return render(text)
+  }, [text, render])
+
   const buttonCollapse =
     <Flex direction='row'>
       {collapsed ? <Text color='secondary.600'>{t('more', 'More')}</Text> : <Text color='secondary.600'>{t('less', 'Less')}</Text>}
@@ -359,7 +391,7 @@ function CollapsedText (props) {
 
   return (
     <Text>
-      {text}
+      {renderedText}
       {isCollapsible && (
         <Button
           borderRadius='0'
@@ -375,10 +407,10 @@ function CollapsedText (props) {
 }
 
 export function SnippetList (props = {}) {
-  const { fieldname, snippets, post } = props
+  const { fieldname, snippets, post, onlyTranscript } = props
+  if (onlyTranscript && fieldname !== 'transcript') return null
   return (
     <Box p={2}>
-      <em>{fieldname}: &nbsp;</em>
       {snippets.map((snippet, i) => (
         <Snippet key={i} post={post} fieldname={fieldname} snippet={snippet} />
       ))}
@@ -394,19 +426,7 @@ function Snippet (props = {}) {
     )
   } else {
     return (
-      <HighlightMark>{snippet}</HighlightMark>
+      <TextWithMarks>{snippet}</TextWithMarks>
     )
   }
-}
-
-function HighlightMark (props = {}) {
-  // TODO: Parse mark and do not use dangerouslySetInnerHTML
-  return (
-    <Box
-      display='inline' css='mark { background: rgba(255,255,0,0.3) }'
-      dangerouslySetInnerHTML={{
-        __html: props.children
-      }}
-    />
-  )
 }

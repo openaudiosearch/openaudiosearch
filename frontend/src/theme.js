@@ -29,7 +29,8 @@ export default function createTheme (props = {}) {
       main: '#aa00ea',
       bg: {
         screen: '#F7FAFC'
-      }
+      },
+      highlightMark: '#edf'
       // brand: {
       //   100: "#f7fafc",
       //   // ...
@@ -37,6 +38,6 @@ export default function createTheme (props = {}) {
       // },
     }
   })
-  console.log(theme)
+  // console.log('theme', theme)
   return theme
 }

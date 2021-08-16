@@ -35,7 +35,7 @@ export function TranscriptSnippet (props) {
 
   return (
     <Tooltip label='Click to play'>
-        <Box onClick={onClick} style={style} position='relative'>
+      <Box onClick={onClick} style={style} _hover={{ bg: 'gray.50'}} position='relative'>
         {renderedWords}
         <Icon as={FaVolumeUp} ml='2' mr='2' color='gray.400' />
         <chakra.span fontSize='sm' color='gray.600'>{formatDuration(mark.start)}</chakra.span>
