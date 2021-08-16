@@ -147,10 +147,20 @@ impl PostIndex {
             _ => {}
         }
 
-        // Build the transcript for a post.
         for post in posts.iter_mut() {
+            // Build the transcript for a post.
             if let Some(transcript) = generate_transcript_for_post(&post) {
                 post.value.transcript = Some(transcript);
+            }
+
+            // Don't index the original transcript.
+            for media in post
+                .value
+                .media
+                .iter_mut()
+                .filter_map(|media| media.record_mut())
+            {
+                media.value.transcript = None;
             }
         }
 
