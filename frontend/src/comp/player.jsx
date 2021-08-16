@@ -24,7 +24,7 @@ import { Link } from 'react-router-dom'
 
 import { API_ENDPOINT } from '../lib/config'
 
-import { parseTranscript } from './transcript'
+import { parseTranscriptSentence } from './transcript'
 
 // Get the audio content URL for a media
 function mediaContentURL (media) {
@@ -74,7 +74,7 @@ export function PlayerProvider (props) {
     if (!audio || !track) return
     let pos = 0
     if (mark && mark !== lastMark) {
-      pos = mark.start
+      pos = Number(mark.start)
       setLastMark(mark)
     }
     audio.currentTime = pos
@@ -249,10 +249,10 @@ export function Player (props = {}) {
     audio.currentTime = nextTime
   }
 
-  let snippets = []
-  if (post && post.highlight && post.highlight.transcript) {
-    snippets = post.highlight.transcript.map((snippet) => parseTranscript(snippet))
-  }
+  const snippets = React.useMemo(() => {
+    if (!post || !post.highlight || !post.highlight.transcript) return null
+    return post.highlight.transcript.map(snippet => parseTranscriptSentence(snippet))
+  }, [post])
 
   const displayTime = draggingPos ? state.duration * draggingPos : state.currentTime
 
@@ -386,7 +386,7 @@ function Timeslider (props = {}) {
   }
 }
 
-function formatDuration (secs) {
+export function formatDuration (secs) {
   if (!secs) secs = 0
   const h = Math.floor(secs / 3600)
   const m = Math.floor((secs - h * 3600) / 60)
@@ -410,19 +410,8 @@ function SliderSnippets (props = {}) {
     setMark(mark)
   }
 
-  function findStart (parts) {
-    for (const snippet of parts) {
-      if (snippet.start !== undefined) return Number(snippet.start)
-    }
-    return 0
-  }
-
-  function snippetPosition (parts) {
-    return (findStart(parts) / state.duration) * 100
-  }
-
-  function snippetLabel (parts) {
-    return parts.map((snippet) => snippet.word || '').join(' ')
+  function snippetPosition (snippet) {
+    return (snippet.start / state.duration) * 100
   }
 
   return (
@@ -432,11 +421,13 @@ function SliderSnippets (props = {}) {
           display={['none', 'block', 'block', 'block']}
           key={index}
           value={snippetPosition(snippet)}
-          onClick={() => onMarkClick(snippet[0])}
-          mt='-5px'
+          onClick={() => onMarkClick(snippet)}
+          mt='-6px'
         >
-          <Tooltip label={snippetLabel(snippet)} placement='top' zIndex='10000'>
-            <Box><Icon as={RiArrowUpSFill} color='secondary.600' w='8' h='10' /></Box>
+          <Tooltip label={snippet.sentence} placement='top' zIndex='10000'>
+            <Box>
+            <Icon as={RiArrowUpSFill} color='secondary.600' w='10' h='12' _hover={{ color: 'secondary.200' }} />
+            </Box>
           </Tooltip>
         </SliderMark>
       ))}

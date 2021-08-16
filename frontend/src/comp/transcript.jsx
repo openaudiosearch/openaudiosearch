@@ -1,32 +1,27 @@
-import { Box } from '@chakra-ui/react'
+import { chakra, Box, Icon, Tooltip, Divider } from '@chakra-ui/react'
 import React from 'react'
-import { usePlayer, usePlayerRegionIfPlaying } from './player'
+import { usePlayer, usePlayerRegionIfPlaying, formatDuration } from './player'
+import { FaVolumeUp } from 'react-icons/fa'
 
 export function TranscriptSnippet (props) {
   const { post, snippet } = props
 
   const { setTrack, setMark, setPost } = usePlayer()
 
-  console.log('SNIPPET', snippet)
-  const words = React.useMemo(() => parseTranscript(snippet), [snippet])
-  console.log('WORDS', words)
   const [didPlay, setDidPlay] = React.useState(false)
 
   const mark = React.useMemo(() => {
-    const firstMeta = words.filter(word => word.start !== undefined && word.end !== undefined)[0]
-    const { id, start } = firstMeta
-    const lastMeta = [...words].reverse().filter(word => word.end !== undefined)[0]
-    const { end } = lastMeta
-    const sentence = words.map(word => word.word).join(' ')
-    return { id, start, end, sentence }
-  }, [words])
+    return parseTranscriptSentence(snippet)
+  }, [snippet])
+
+  const { id, start, end, sentence, words } = mark
 
   const track = post.media[Number(mark.id)]
 
   const style = {
     display: 'inline-block',
     border: '1px solid #eee',
-    padding: '2px 5px',
+    padding: '2px 10px',
     margin: '5px 5px 0 5px',
     cursor: 'pointer',
     borderRadius: '10px'
@@ -39,10 +34,14 @@ export function TranscriptSnippet (props) {
   ), [words])
 
   return (
-    <Box onClick={onClick} style={style} position='relative'>
-      {renderedWords}
-      <TranscriptPlayingOverlay track={track} mark={mark} />
-    </Box>
+    <Tooltip label='Click to play'>
+        <Box onClick={onClick} style={style} position='relative'>
+        {renderedWords}
+        <Icon as={FaVolumeUp} ml='2' mr='2' color='gray.400' />
+        <chakra.span fontSize='sm' color='gray.600'>{formatDuration(mark.start)}</chakra.span>
+        <TranscriptPlayingOverlay track={track} mark={mark} />
+      </Box>
+    </Tooltip>
   )
 
   function onClick (e) {
@@ -69,10 +68,10 @@ function TranscriptPlayingOverlay (props) {
     left: '0px',
     top: '0px',
     bottom: '0px',
-    backgroundColor: 'rgba(255, 0, 255, 0.15)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
     zIndex: 10,
-    width: (percentPlaying * 100) + '%',
-    transition: 'width linear .5s'
+    width: (percentPlaying * 100) + '%'
+    // transition: 'width linear .5s'
   }
   return (
     <div style={overlayStyle} />
@@ -88,13 +87,22 @@ export function TranscriptWord (props) {
     cursor: 'pointer',
     color: `rgba(0,0,0,${alpha})`
   }
-  if (highlightWord) {
-    style.background = 'yellow'
-  }
-  return <span style={style}>{word}&nbsp;</span>
+  let bg = 'transparent'
+  if (highlightWord) bg = 'highlightMark'
+  return <Box as='span' bg={bg} style={style}>{word}&nbsp;</Box>
 }
 
-export function parseTranscript (value) {
+export function parseTranscriptSentence (value) {
+  const words = parseTranscriptWords(value)
+  const firstMeta = words.filter(word => word.start !== undefined && word.end !== undefined)[0]
+  const { id, start } = firstMeta
+  const lastMeta = [...words].reverse().filter(word => word.end !== undefined)[0]
+  const { end } = lastMeta
+  const sentence = words.map(word => word.word).join(' ')
+  return { id, start, end, sentence, words }
+}
+
+export function parseTranscriptWords (value) {
   const tokens = value.split(' ')
   return tokens.map((token) => {
     let highlightWord = false
