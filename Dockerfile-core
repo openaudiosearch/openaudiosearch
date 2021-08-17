@@ -35,7 +35,7 @@ ENV BUILD_FRONTEND="0"
 RUN cargo build --release --bin oas
 
 # build the main image
-FROM debian:stable-slim as runtime
+FROM debian:buster-slim as runtime
 RUN apt-get update && apt-get install -y curl
 WORKDIR app
 COPY --from=builder /app/target/release/oas /usr/local/bin
