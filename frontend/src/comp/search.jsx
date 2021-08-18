@@ -275,6 +275,8 @@ export function ResultItem (props) {
     duration = (item.media[0].duration / 60).toFixed() + ' min'
   }
 
+  const description = React.useMemo(() => stripHTML(item.description), [item.description])
+
   return (
     <Flex
       direction='column'
@@ -323,7 +325,7 @@ export function ResultItem (props) {
           </Flex>
           <Box mt='2'>
             <CollapsedText render={text => <TextWithMarks>{text}</TextWithMarks>}>
-              {item.description}
+              {description}
             </CollapsedText>
           </Box>
         </Flex>
@@ -333,6 +335,21 @@ export function ResultItem (props) {
     </Flex>
   )
 }
+
+function Sanitize (props = {}) {
+  const { children } = props
+  const sanitized = React.useMemo(() => {
+    return stripHTML(children)
+  }, [children])
+  return sanitized || ''
+}
+
+function stripHTML (html) {
+  if (!html) return ''
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  return doc.body.textContent || ''
+}
+
 
 export function TextWithMarks (props = {}) {
   let { children, text, style = {}, markAs, ...rest } = props

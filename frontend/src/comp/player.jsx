@@ -323,7 +323,6 @@ function Timeslider (props = {}) {
     py: '2px',
     bg: '#222',
     color: 'white',
-    fontSize: 'xl',
     borderRadius: 'sm',
     fontWeight: 'medium',
     fontSize: 'sm',
