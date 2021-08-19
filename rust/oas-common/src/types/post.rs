@@ -39,7 +39,6 @@ pub struct Post {
     pub transcript: Option<String>,
     #[serde(flatten)]
     pub other: serde_json::Map<String, serde_json::Value>,
-    #[serde(default)]
     pub tasks: PostTasks,
 }
 
@@ -51,7 +50,8 @@ impl Mappable for Post {}
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 pub struct PostTasks {
-    pub nlp: Option<TaskState>,
+    #[serde(deserialize_with = "ser::deserialize_null_default")]
+    pub nlp: TaskState,
 }
 
 impl TaskObject for Post {

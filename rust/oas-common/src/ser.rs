@@ -1,7 +1,16 @@
 use chrono::prelude::*;
-use serde::{de, Deserializer};
+use serde::{de, de::Deserialize, Deserializer};
 use std::fmt;
 use std::str::FromStr;
+
+pub fn deserialize_null_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    T: Default + Deserialize<'de>,
+    D: Deserializer<'de>,
+{
+    let opt = Option::deserialize(deserializer)?;
+    Ok(opt.unwrap_or_default())
+}
 
 pub fn deserialize_date<'de, D>(deserializer: D) -> Result<Option<DateTime<Utc>>, D::Error>
 where

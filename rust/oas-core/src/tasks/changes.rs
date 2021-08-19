@@ -73,7 +73,7 @@ async fn process_post(
     record: Record<Post>,
 ) -> anyhow::Result<()> {
     if let Some(tasks) = record.task_states() {
-        if let Some(TaskState::Wanted) = &tasks.nlp {
+        if let TaskState::Wanted = &tasks.nlp {
             let opts = serde_json::Value::Null;
             celery
                 .send_task(taskdefs::nlp2::new(record.clone(), opts))
@@ -90,7 +90,7 @@ async fn process_media(
     record: Record<Media>,
 ) -> anyhow::Result<()> {
     if let Some(tasks) = record.task_states() {
-        if let Some(TaskState::Wanted) = &tasks.asr {
+        if let TaskState::Wanted = &tasks.asr {
             let task_id = celery
                 .transcribe_media(&record)
                 .await
@@ -100,10 +100,10 @@ async fn process_media(
                 task_id: task_id.to_string(),
                 start: Utc::now(),
             };
-            next_record.task_states_mut().unwrap().asr = Some(TaskState::Running(state));
+            next_record.task_states_mut().unwrap().asr = TaskState::Running(state);
             db.put_record(next_record).await?;
         }
-        if let Some(TaskState::Wanted) = &tasks.download {
+        if let TaskState::Wanted = &tasks.download {
             let opts = serde_json::Value::Null;
             celery
                 .send_task(taskdefs::download2::new(record.clone(), opts))

@@ -38,6 +38,7 @@ pub enum AppError {
 
 impl<'r> Responder<'r, 'static> for AppError {
     fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
+        log::debug!("{:?}", self);
         let code = match &self {
             AppError::Couch(err) => map_u16_status(err.status_code()),
             AppError::Http(code, _) => *code,
