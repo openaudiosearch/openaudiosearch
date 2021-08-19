@@ -8,6 +8,8 @@ use serde_json::Value;
 use crate::couch::PutResponse;
 use crate::server::error::{AppError, Result};
 use crate::server::proxy;
+use crate::server::auth::AdminUser;
+
 
 // pub fn routes() -> Vec<Route> {
 //     routes![get_media, post_media, put_media, patch_media]
@@ -25,6 +27,7 @@ pub async fn get_media(state: &rocket::State<crate::State>, id: String) -> Resul
 #[openapi(tag = "Media")]
 #[post("/media", data = "<value>")]
 pub async fn post_media(
+    _user: AdminUser,
     state: &rocket::State<crate::State>,
     value: Json<Media>,
 ) -> Result<PutResponse> {
@@ -38,6 +41,7 @@ pub async fn post_media(
 #[openapi(tag = "Media")]
 #[put("/media/<id>", data = "<value>")]
 pub async fn put_media(
+    _user: AdminUser,
     state: &rocket::State<crate::State>,
     id: String,
     value: Json<Media>,
@@ -52,6 +56,7 @@ pub async fn put_media(
 #[openapi(tag = "Media")]
 #[patch("/media/<id>", data = "<value>")]
 pub async fn patch_media(
+    _user: AdminUser,
     state: &rocket::State<crate::State>,
     id: String,
     value: Json<Value>,

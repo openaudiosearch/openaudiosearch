@@ -1,15 +1,16 @@
+use crate::server::auth::AdminUser;
 use crate::server::error::AppError;
 use crate::State;
 use oas_common::{types::Media, TypedValue};
+use rocket::post;
 use rocket::serde::json::Json;
 use rocket_okapi::openapi;
 
-use rocket::post;
-
-/// Create a new feed
+/// Create a new transcribe job for media
 #[openapi(tag = "Task")]
 #[post("/task/transcribe-media/<id>")]
 pub async fn post_transcribe_media(
+    _user: AdminUser,
     state: &rocket::State<State>,
     id: String,
 ) -> Result<Json<String>, AppError> {
