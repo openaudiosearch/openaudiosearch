@@ -1,23 +1,101 @@
 import React from 'react'
 import ReactJson from 'react-json-view'
 import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters, MultiRange, DynamicRangeSlider } from '@appbaseio/reactivesearch'
-import { Heading, Flex, Box, Spinner, Button, Text, chakra } from '@chakra-ui/react'
-import { API_ENDPOINT } from '../lib/config'
+import { Heading, Flex, Box, Spinner, Button, Text, chakra, IconButton, Input, InputGroup, InputLeftElement } from '@chakra-ui/react'
 import { useParams, Link, useHistory, useLocation } from 'react-router-dom'
 import Moment from 'moment'
-import { FaFilter, FaChevronDown, FaChevronRight } from 'react-icons/fa'
+import { useTranslation } from 'react-i18next'
+import { CgClose } from 'react-icons/cg'
+import { FaFilter, FaChevronDown, FaChevronRight, FaSearch } from 'react-icons/fa'
+import { MdChildFriendly } from 'react-icons/md'
+
+import { API_ENDPOINT } from '../lib/config'
 import { PostButtons } from './post'
 import { TranscriptSnippet } from './transcript'
 import { useIsAdmin } from '../hooks/use-login'
-import { CgClose } from 'react-icons/cg'
-import { useTranslation } from 'react-i18next'
-import { MdChildFriendly } from 'react-icons/md'
 
 const { ResultListWrapper } = ReactiveList
 
-// function useQuery () {
-//     return new URLSearchParams(useLocation().search);
-// }
+
+// A simple component that displays a search box. All props are passed through
+// to the input element.
+export function SearchInput (props = {}) {
+  return (
+    <InputGroup>
+      <InputLeftElement pointerEvents='none' children={<FaSearch />} />
+      <Input
+        bg='white'
+        {...props}
+      />
+    </InputGroup>
+  )
+}
+
+// This renders an input element, and on submit forwards to the search page
+// with the search word applied.
+export function GoToSearchBox (props = {}) {
+  const [value, setValue] = React.useState('')
+  const history = useHistory()
+  function onSubmit (e) {
+    e.preventDefault()
+    const encoded = encodeURIComponent(value)
+    history.push(`/search/?searchbox="${encoded}"`)
+
+  }
+  return (
+    <Flex as='form' onSubmit={onSubmit}>
+      <SearchInput
+        bg='white'
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        placeholder='Search for community media'
+        name='searchbox'
+      />
+    </Flex>
+  )
+}
+
+// A custom data search component.
+//
+// This renders the search box using chakra components. 
+// Reactivesearch does not seem to have a reliable way to take over rendering
+// regulary, so we do render the DataSearch component but with "display: none",
+// so it's hidden completely via CSS. The DataSearch component is then used in
+// "controlled" mode, so the query value is forwarded to the datasearch component.
+//
+// TODO: Find out if reactivesearch really does not have a cleaner way to do this.
+export function CustomDataSearch (props = {}) {
+  const [queryValue, setQueryValue] = React.useState('')
+  const [inputValue, setInputValue] = React.useState('')
+  const [storedTriggerQuery, setStoredTriggerQuery] = React.useState(null)
+
+  function onChange (nextQueryValue, triggerQuery, event) {
+    if (triggerQuery) setStoredTriggerQuery({ triggerQuery })
+    setQueryValue(nextQueryValue)
+    setInputValue(nextQueryValue)
+  }
+
+  function onSubmit (e) {
+    e.preventDefault()
+    setQueryValue(inputValue)
+  }
+
+  const dataSearchStyle = { display: 'none' }
+
+  return (
+    <>
+      <Flex as='form' onSubmit={onSubmit} flex={1}>
+        <SearchInput
+          bg='white'
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
+          placeholder='Search for community media'
+        />
+      </Flex>
+      <DataSearch style={dataSearchStyle} {...props} onChange={onChange} value={queryValue} />
+    </>
+  )
+}
 
 export default function SearchPage () {
   const [show, setShow] = React.useState(false)
@@ -80,21 +158,20 @@ export default function SearchPage () {
             ml={[null, null, '350px', '350px']}
             mt='6'
           >
-            <DataSearch
+            <CustomDataSearch
               componentId='searchbox'
               dataField={['headline', 'description', 'transcript']}
               fieldWeights={[5, 1]}
               placeholder={t('searchForm.placeholder', 'Search for radio broadcasts')}
-              autosuggest
               highlight
+              autosuggest={false}
               queryFormat='and'
               fuzziness={0}
-              debounce={2000}
               react={{
                 and: facets.filter(f => f !== 'searchbox')
               }}
               defaultValue=''
-              URLParams
+              URLParams={true}
             />
             <SelectedFilters showClearAll />
           </Box>

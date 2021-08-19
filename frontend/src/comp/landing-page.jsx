@@ -6,12 +6,10 @@ import { Link, useHistory } from 'react-router-dom'
 import Moment from 'moment'
 import { useTranslation } from 'react-i18next'
 import { PostButtons } from './post'
-import { ResultItem } from './search'
+import { ResultItem, GoToSearchBox } from './search'
 
 export default function LandingPage () {
   const url = API_ENDPOINT + '/search'
-  const [value, setValue] = React.useState('')
-  const history = useHistory()
   const { t } = useTranslation()
   return (
     <Center>
@@ -26,24 +24,7 @@ export default function LandingPage () {
               <Heading as='h2' size='lg' fontWeight='normal' mb='2'>{t('slogan', 'The community media search engine')}</Heading>
               <Center>
                 <Box w={['90vw', '80vw', '600px', '600px']} mt='6'>
-                  <DataSearch
-                    componentId='searchbox'
-                    dataField={['headline', 'description', 'transcript']}
-                    fieldWeights={[5, 2, 1]}
-                    placeholder={t('searchForm.placeholder', 'Search for community media')}
-                    autosuggest
-                    queryFormat='and'
-                    fuzziness={0}
-                    debounce={2000}
-                    value={value}
-                    onChange={(value, triggerQuery, event) => {
-                      setValue(value)
-                    }}
-                    onValueSelected={(value, cause, source) => {
-                      const encoded = encodeURIComponent(value)
-                      history.push(`/search/?searchbox="${encoded}"`)
-                    }}
-                  />
+                  <GoToSearchBox />
                 </Box>
               </Center>
             </Flex>

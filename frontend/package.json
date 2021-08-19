@@ -13,7 +13,7 @@
   "author": "",
   "license": "GPL-3.0",
   "dependencies": {
-    "@appbaseio/reactivesearch": "^3.17.0",
+    "@appbaseio/reactivesearch": "^3.22.0",
     "@chakra-ui/react": "^1.6.4",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
