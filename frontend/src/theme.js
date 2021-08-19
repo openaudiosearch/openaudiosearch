@@ -15,9 +15,10 @@ export default function createTheme (props = {}) {
     colors: {
       primary: '#260A4A',
       secondary: {
-        // 700: '#9672EB',
-        600: '#9672EB',
+        700: '#4619ae',
+        600: '#4619ae',
         500: '#9672EB',
+        300: '#CEA8FF',
         200: '#CEA8FF',
         100: '#CEA8FF',
         50: '#CEA8FF'
@@ -36,6 +37,13 @@ export default function createTheme (props = {}) {
       //   // ...
       //   900: "#1a202c",
       // },
+    },
+    components: {
+      Link: {
+        baseStyle: {
+          color: 'secondary.600'
+        }
+      }
     }
   })
   // console.log('theme', theme)

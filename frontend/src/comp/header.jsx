@@ -1,5 +1,6 @@
 import React from 'react'
 import { Flex, Box, Text, Button, Center } from '@chakra-ui/react'
+import { jsx, css } from '@emotion/core'
 import {
   Link,
   useRouteMatch
@@ -11,6 +12,29 @@ import logo from '../../assets/oas_logo-5.svg'
 
 import { Login } from './login'
 import { useIsAdmin } from '../hooks/use-login'
+
+const BADGE_STYLE = css`
+  position: absolute;
+  background: #ffaacc;
+  color: #000;
+  font-size: 12px;
+  line-height: 12px;
+  padding: 5px 3px;
+  transform: rotate(-22.5deg);
+  border-radius: 10px;
+  // width: 90px;
+  width: 140px;
+  text-align: center;
+  left: -33px;
+  top: 5px;
+  // left: 120px;
+  // top: 10px;
+`
+function DemoBadge (props) {
+  return (
+    <Box css={BADGE_STYLE}>alpha demo</Box>
+  )
+}
 
 export function Header () {
   const [show, setShow] = React.useState(false)
@@ -28,7 +52,8 @@ export function Header () {
       justify={['space-between', 'start', 'start', 'start']}
     >
       <Flex direction={['column', 'row', 'row', 'row']}>
-        <Box w='200px' p='4' pb={['0', '4', '4', '4']} align='left'>
+        <Box w='200px' p='4' pb={['0', '4', '4', '4']} align='left' position='relative'>
+          <DemoBadge />
           <Link to='/'>
             <img src={logo} />
           </Link>
@@ -108,15 +133,15 @@ function NavLink (props) {
     exact
   })
   const activeProps = {
-    borderBottom: '3px solid',
+    borderBottom: '2px solid',
     borderColor: 'white',
     color: 'white'
   }
   const styleProps = match ? activeProps : { ...activeProps, borderColor: 'primary', color: 'white' }
   const hoverProps = {
     ...activeProps,
-    borderColor: 'secondary.600',
-    color: 'secondary.600'
+    borderColor: 'secondary.300',
+    color: 'secondary.300'
   }
   return (
     <Link to={to}>
