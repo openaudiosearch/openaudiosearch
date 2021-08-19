@@ -15,7 +15,8 @@ import { useIsAdmin } from '../hooks/use-login'
 
 const BADGE_STYLE = css`
   position: absolute;
-  background: #ffaacc;
+  // background: #ffaacc;
+  background: rgba(255,255,255,0.7);
   color: #000;
   font-size: 12px;
   line-height: 12px;
@@ -24,8 +25,9 @@ const BADGE_STYLE = css`
   border-radius: 10px;
   width: 140px;
   text-align: center;
-  left: -33px;
-  top: 5px;
+  left: -36px;
+  top: 4px;
+  pointer-events: none;
 `
 
 function DemoBadge (props) {

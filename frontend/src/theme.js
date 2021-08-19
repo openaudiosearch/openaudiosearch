@@ -15,8 +15,8 @@ export default function createTheme (props = {}) {
     colors: {
       primary: '#260A4A',
       secondary: {
-        700: '#4619ae',
-        600: '#4619ae',
+        // 700: '#4619ae',
+        600: '#9672EB',
         500: '#9672EB',
         300: '#CEA8FF',
         200: '#CEA8FF',
