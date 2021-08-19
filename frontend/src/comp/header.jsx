@@ -22,14 +22,12 @@ const BADGE_STYLE = css`
   padding: 5px 3px;
   transform: rotate(-22.5deg);
   border-radius: 10px;
-  // width: 90px;
   width: 140px;
   text-align: center;
   left: -33px;
   top: 5px;
-  // left: 120px;
-  // top: 10px;
 `
+
 function DemoBadge (props) {
   return (
     <Box css={BADGE_STYLE}>alpha demo</Box>
@@ -52,7 +50,7 @@ export function Header () {
       justify={['space-between', 'start', 'start', 'start']}
     >
       <Flex direction={['column', 'row', 'row', 'row']}>
-        <Box w='200px' p='4' pb={['0', '4', '4', '4']} align='left' position='relative'>
+        <Box w='200px' px='4' py='4' pb={['0', '2', '2', '2']} align='left' position='relative'>
           <DemoBadge />
           <Link to='/'>
             <img src={logo} />
@@ -89,7 +87,7 @@ function Navbar () {
   return (
     <nav>
       <Flex
-        py={['0', '4', '4', '4']}
+        py={['0', '2', '2', '2']}
         direction={['column', 'row', 'row', 'row']}
       >
         <NavLink
