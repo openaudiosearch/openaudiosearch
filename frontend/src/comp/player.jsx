@@ -423,6 +423,7 @@ function SliderSnippets (props = {}) {
           value={snippetPosition(snippet)}
           onClick={() => onMarkClick(snippet)}
           mt='-6px'
+          ml='13px'
         >
           <Tooltip label={snippet.sentence} placement='top' zIndex='10000'>
             <Box>
