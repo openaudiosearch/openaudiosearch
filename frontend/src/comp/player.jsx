@@ -70,7 +70,7 @@ export function PlayerProvider (props) {
   const { audio, element, ...state } = useAudioElement({ src })
 
   // Jump player position whenever a mark is being set or the track is changed.
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (!audio || !track) return
     let pos = 0
     if (mark && mark !== lastMark) {
@@ -156,7 +156,7 @@ function useAudioElement (props = {}) {
 
   const audio = ref.current
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (!audio) return
     audio.src = src
   }, [audio, src])
