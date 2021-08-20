@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     model_path: str = ''
     log_level: str = 'info'
 
-    oas_url: str = 'http://localhost:8080/api/v1'
+    oas_url: str = 'http://admin:password@localhost:8080/api/v1'
     redis_url: RedisDsn = 'redis://localhost:6379/0'
 
     # set to 1 to enable development mode

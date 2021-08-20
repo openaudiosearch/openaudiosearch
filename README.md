@@ -88,6 +88,12 @@ applies to: core
 
 Default password for `admin` user.
 
+#### `OAS_URL`
+
+default: `http://admin:password@localhost:8080/api/v1`
+applies to: worker
+
+HTTP URL of the OAS core API, including a valid username and password.
 
 #### `STORAGE_PATH`
 
