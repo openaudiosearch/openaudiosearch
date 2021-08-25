@@ -7,8 +7,9 @@ use std::collections::HashMap;
 use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
-use std::time;
+use std::time::{self, Duration};
 use tokio::io::AsyncBufReadExt;
+use tokio::time::{sleep, Sleep};
 use tokio_stream::wrappers::LinesStream;
 use tokio_util::io::StreamReader;
 
@@ -35,9 +36,13 @@ pub struct ChangesStream {
     state: ChangesStreamState,
     params: HashMap<String, String>,
     infinite: bool,
+    retries: usize,
+    max_retries: usize,
+    retry_timeout: Duration,
 }
 
 enum ChangesStreamState {
+    Retrying(Pin<Box<Sleep>>),
     Idle,
     Requesting(Pin<Box<dyn Future<Output = CouchResult<Response>> + Send + 'static>>),
     Reading(Pin<Box<dyn Stream<Item = io::Result<String>> + Send + 'static>>),
@@ -65,6 +70,9 @@ impl ChangesStream {
             state: ChangesStreamState::Idle,
             infinite: false,
             last_seq,
+            retries: 0,
+            max_retries: 10,
+            retry_timeout: Duration::from_millis(100),
         }
     }
 
@@ -141,17 +149,30 @@ impl Stream for ChangesStream {
     type Item = CouchResult<ChangeEvent>;
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         loop {
-            self.state = match self.state {
+            let retries_exceeded = self.retries >= self.max_retries;
+            match self.state {
+                ChangesStreamState::Retrying(ref mut sleep) => {
+                    if retries_exceeded {
+                        return Poll::Ready(None);
+                    }
+                    ready!(sleep.as_mut().poll(cx));
+                    self.retries += 1;
+                    self.state = ChangesStreamState::Idle;
+                }
                 ChangesStreamState::Idle => {
                     let mut params = self.params.clone();
                     if let Some(seq) = &self.last_seq {
                         params.insert("since".to_string(), seq.clone());
                     }
                     let fut = get_changes(self.db.clone(), params);
-                    ChangesStreamState::Requesting(Box::pin(fut))
+                    self.state = ChangesStreamState::Requesting(Box::pin(fut));
                 }
                 ChangesStreamState::Requesting(ref mut fut) => match ready!(fut.poll_unpin(cx)) {
-                    Err(err) => return Poll::Ready(Some(Err(err))),
+                    Err(err) => {
+                        self.state =
+                            ChangesStreamState::Retrying(Box::pin(sleep(self.retry_timeout)));
+                        return Poll::Ready(Some(Err(err)));
+                    }
                     Ok(res) => match res.status().is_success() {
                         true => {
                             let stream = res
@@ -159,9 +180,11 @@ impl Stream for ChangesStream {
                                 .map_err(|err| io::Error::new(io::ErrorKind::Other, err));
                             let reader = StreamReader::new(stream);
                             let lines = Box::pin(LinesStream::new(reader.lines()));
-                            ChangesStreamState::Reading(lines)
+                            self.state = ChangesStreamState::Reading(lines)
                         }
                         false => {
+                            self.state =
+                                ChangesStreamState::Retrying(Box::pin(sleep(self.retry_timeout)));
                             return Poll::Ready(Some(Err(CouchError::Couch(
                                 res.status(),
                                 ErrorDetails::new(
@@ -169,14 +192,16 @@ impl Stream for ChangesStream {
                                     "",
                                     None,
                                 ),
-                            ))))
+                            ))));
                         }
                     },
                 },
                 ChangesStreamState::Reading(ref mut lines) => {
                     let line = ready!(lines.poll_next_unpin(cx));
                     match line {
-                        None => ChangesStreamState::Idle,
+                        None => {
+                            self.state = ChangesStreamState::Idle;
+                        }
                         Some(Err(err)) => {
                             let message = format!("{}", err);
                             let inner = err
@@ -184,12 +209,18 @@ impl Stream for ChangesStream {
                                 .and_then(|err| err.downcast::<reqwest::Error>().ok());
                             match inner {
                                 Some(reqwest_err) if reqwest_err.is_timeout() && self.infinite => {
-                                    ChangesStreamState::Idle
+                                    self.state = ChangesStreamState::Idle;
                                 }
                                 Some(reqwest_err) => {
+                                    self.state = ChangesStreamState::Retrying(Box::pin(sleep(
+                                        self.retry_timeout,
+                                    )));
                                     return Poll::Ready(Some(Err(CouchError::Http(*reqwest_err))));
                                 }
                                 _ => {
+                                    self.state = ChangesStreamState::Retrying(Box::pin(sleep(
+                                        self.retry_timeout,
+                                    )));
                                     return Poll::Ready(Some(Err(CouchError::Other(format!(
                                         "{}",
                                         message
@@ -201,16 +232,20 @@ impl Stream for ChangesStream {
                         Some(Ok(line)) => match serde_json::from_str::<Event>(&line) {
                             Ok(Event::Change(event)) => {
                                 self.last_seq = Some(event.seq.clone());
+                                self.retries = 0;
                                 return Poll::Ready(Some(Ok(event)));
                             }
                             Ok(Event::Finished(event)) => {
                                 self.last_seq = Some(event.last_seq.clone());
+                                self.state = ChangesStreamState::Idle;
                                 if !self.infinite {
                                     return Poll::Ready(None);
                                 }
-                                ChangesStreamState::Idle
                             }
                             Err(e) => {
+                                self.state = ChangesStreamState::Retrying(Box::pin(sleep(
+                                    self.retry_timeout,
+                                )));
                                 return Poll::Ready(Some(Err(e.into())));
                             }
                         },
