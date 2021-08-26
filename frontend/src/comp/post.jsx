@@ -18,6 +18,7 @@ import {
 } from '@chakra-ui/react'
 import { useParams, useLocation, useHistory } from 'react-router'
 
+import { stripHTML } from '../lib/sanitize'
 import { usePlayer } from './player'
 import { useIsAdmin } from '../hooks/use-login'
 import { usePost } from '../hooks/use-post'
@@ -111,14 +112,20 @@ export function PostPlayButton (props = {}) {
 export function PostPage (props = {}) {
   const { postId } = useParams()
   const { post } = usePost(postId)
+  if (!post) return null
+  return <PostPageInner {...props} post={post} />
+}
+
+export function PostPageInner (props = {}) {
+  const { post } = props
   const { t } = useTranslation()
   const history = useHistory()
   const location = useLocation()
+
   let fromSearch = false
   if (location.state) {
     fromSearch = location.state.fromSearch
   }
-  if (!post) return null
 
   const genres =
     <>
@@ -145,6 +152,7 @@ export function PostPage (props = {}) {
   if (post.media.length > 0) {
     duration = (post.media[0].duration / 60).toFixed() + ' min'
   }
+  const description = React.useMemo(() => stripHTML(post.description), [post.description])
 
   return (
     <Center>
@@ -200,8 +208,7 @@ export function PostPage (props = {}) {
               <Text fontSize='sm'>{duration}</Text>
             </Flex>}
 
-          {post.description &&
-            <Box mt='2'>{post.description}</Box>}
+            <Box mt='2'>{description}</Box>
 
           <Flex direction='row' justify='space-between' mt='4'>
             <ToggleTranscriptSection post={post} />
