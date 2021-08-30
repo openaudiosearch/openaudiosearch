@@ -10,6 +10,7 @@ import { FaFilter, FaChevronDown, FaChevronRight, FaSearch } from 'react-icons/f
 import { MdChildFriendly } from 'react-icons/md'
 
 import { API_ENDPOINT } from '../lib/config'
+import { stripHTML } from '../lib/sanitize'
 import { PostButtons } from './post'
 import { TranscriptSnippet } from './transcript'
 import { useIsAdmin } from '../hooks/use-login'
@@ -413,20 +414,13 @@ export function ResultItem (props) {
   )
 }
 
-function Sanitize (props = {}) {
+export function Sanitize (props = {}) {
   const { children } = props
   const sanitized = React.useMemo(() => {
     return stripHTML(children)
   }, [children])
   return sanitized || ''
 }
-
-function stripHTML (html) {
-  if (!html) return ''
-  const doc = new DOMParser().parseFromString(html, 'text/html')
-  return doc.body.textContent || ''
-}
-
 
 export function TextWithMarks (props = {}) {
   let { children, text, style = {}, markAs, ...rest } = props
