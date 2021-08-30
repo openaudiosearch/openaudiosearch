@@ -46,6 +46,9 @@ pub struct TaskOpts {
     /// Add latest media file
     #[clap(short, long)]
     latest: bool,
+    /// Add all medias that don't have a transcript yet.
+    #[clap(short, long)]
+    missing: bool,
 }
 
 #[derive(Clone)]
@@ -183,6 +186,20 @@ pub async fn load_medias_for_task_opts(
                 .filter_map(|r| r.into_record())
                 .collect()
         }
+        TaskOpts { missing: true, .. } => db
+            .get_all_with_prefix(Media::NAME)
+            .await?
+            .into_typed_records::<Media>()
+            .into_iter()
+            .filter_map(|r| r.ok())
+            .filter_map(|r| {
+                if r.value.transcript.is_none() {
+                    Some(r)
+                } else {
+                    None
+                }
+            })
+            .collect(),
         TaskOpts { latest: true, .. } => db
             .get_all_with_prefix(Media::NAME)
             .await?
@@ -205,6 +222,7 @@ pub async fn run_celery(mut state: State, opts: TaskOpts) -> anyhow::Result<()> 
         anyhow::bail!("No media found")
     }
 
+    println!("Creating tasks for {} medias", medias.len());
     for media in medias {
         match state.tasks.transcribe_media(&media).await {
             Ok(task_id) => println!(
