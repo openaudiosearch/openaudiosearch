@@ -38,16 +38,16 @@ impl Config {
 #[derive(Clap)]
 pub struct TaskOpts {
     /// Media ID to enqueue
-    #[clap(short, long)]
-    media_id: Option<String>,
+    #[clap(long)]
+    media: Option<String>,
     /// Post ID to enqueue
-    #[clap(short, long)]
-    post_id: Option<String>,
+    #[clap(long)]
+    post: Option<String>,
     /// Add latest media file
-    #[clap(short, long)]
+    #[clap(long)]
     latest: bool,
     /// Add all medias that don't have a transcript yet.
-    #[clap(short, long)]
+    #[clap(long)]
     missing: bool,
 }
 
@@ -167,15 +167,15 @@ pub async fn load_medias_for_task_opts(
 ) -> anyhow::Result<Vec<Record<Media>>> {
     let medias: Vec<Record<Media>> = match opts {
         TaskOpts {
-            post_id: None,
-            media_id: Some(id),
+            post: None,
+            media: Some(id),
             ..
         } => {
             vec![db.get_record::<Media>(&Media::guid(&id)).await?]
         }
         TaskOpts {
-            media_id: None,
-            post_id: Some(id),
+            media: None,
+            post: Some(id),
             ..
         } => {
             let mut post = db.get_record::<Post>(&Post::guid(&id)).await?;
@@ -187,26 +187,16 @@ pub async fn load_medias_for_task_opts(
                 .collect()
         }
         TaskOpts { missing: true, .. } => db
-            .get_all_with_prefix(Media::NAME)
+            .table::<Media>()
+            .get_all()
             .await?
-            .into_typed_records::<Media>()
             .into_iter()
-            .filter_map(|r| r.ok())
-            .filter_map(|r| {
-                if r.value.transcript.is_none() {
-                    Some(r)
-                } else {
-                    None
-                }
+            .filter_map(|r| match r.value.transcript {
+                None => Some(r),
+                Some(_) => None,
             })
             .collect(),
-        TaskOpts { latest: true, .. } => db
-            .get_all_with_prefix(Media::NAME)
-            .await?
-            .into_typed_records()
-            .into_iter()
-            .filter_map(|r| r.ok())
-            .collect(),
+        TaskOpts { latest: true, .. } => db.table::<Media>().get_all().await?,
         _ => {
             anyhow::bail!("Invalid or ambigous options")
         }

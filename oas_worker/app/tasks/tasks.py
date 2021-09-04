@@ -1,4 +1,5 @@
 import os
+import time
 import json
 import httpx
 import subprocess
@@ -46,21 +47,25 @@ def url_to_path(url: str) -> str:
 
 @app.task(name="transcribe")
 def transcribe(args: dict, opts: dict):
-    print("start transcribe task with args", args, "opts", opts)
     media_url = args['media_url']
     media_id = args['media_id']
+    print("start transcribe task for media " + media_id)
     
-    nlp_opts = {'pipeline': 'ner'}
+    nlp_opts = { 'media_id': media_id, 'pipeline': 'ner'}
+    asr_opts = { 'media_id': media_id, 'engine': 'vosk'}
+    download_opts = { 'media_url': media_url, 'media_id': media_id }
+    prepare_opts = { 'media_id': media_id, 'samplerate': 16000 }
+    save_task_state_opts = { 'media_id': media_id }
+
     result = chain(
-        download.s({'media_url': media_url, 'media_id': media_id }),
-        prepare.s({'samplerate': 16000}),
-        asr.s({'engine': 'vosk'}),
+        download.s(download_opts),
+        prepare.s(prepare_opts),
+        asr.s(asr_opts),
         nlp.s(nlp_opts),
-        save_media.s()
+        save_task_state.s(save_task_state_opts)
         )()
     return result
     
-
 @app.task(name="download")
 def download(opts):
     args = {"opts": opts}
@@ -144,8 +149,21 @@ def asr(args, opts):
         config.storage_path, 'models')
     model_path = os.path.join(model_base_path, config.model)
     if engine == "vosk":
-        result = transcribe_vosk(args["prepare"]["file_path"], model_path)
+        # transcribe with vosk
+
+        start = time.time()
+        result = transcribe_vosk(opts["media_id"], args["prepare"]["file_path"], model_path)
+        end = time.time()
+
+        # send change to core
+        patch = [
+            { "op": "replace", "path": "/transcript", "value": result },
+        ]
+        res = patch_media(opts['media_id'], patch)
+
+        # pass result on to next task
         args["asr"] = result
+        args["took"] = end - start
         return args
     elif engine == "deepspeech":
         raise NotImplementedError("ASR using deepspeech is not available yet")
@@ -158,71 +176,61 @@ def asr(args, opts):
 def nlp(args, opts):
     spacy = SpacyPipe(opts['pipeline'])
     res = spacy.run(args['asr']['text'])
-    args['nlp'] = res
+    patch = [
+        { "op": "replace", "path": "/nlp", "value": res },
+    ]
+    res = patch_media(opts['media_id'], patch)
+    print("res", res)
     return args
 
-
-@app.task(bind=True, name="save_media")
-def save_media(self, args):
+@app.task(bind=True, name="save_task_state")
+def save_task_state(self, args, opts):
     task_id = self.request.id.__str__()
-    media_id = args['opts']['media_id']
-    transcript = args['asr']
-    nlp = args['nlp']
-
     task_state = {
         "state": "finished",
         "taskId": task_id,
         "success": True,
+        "took": args["took"]
     }
     patch = [
-        { "op": "replace", "path": "/transcript", "value": transcript },
-        { "op": "replace", "path": "/nlp", "value": nlp },
         { "op": "replace", "path": "/tasks/asr", "value": task_state },
     ]
+    res = patch_media(opts['media_id'], patch)
+    print("res", res)
+    return res
 
+def patch_media(media_id, patch):
     url = config.url(f"/media/{media_id}")
     res = httpx.patch(url, json=patch)
     res = res.json()
-
-    print("res", res)
     return res
 
-@app.task(name="nlp2")
-def nlp2(args, opts):
-    post = args
-    print("START NLP", post)
+#  @app.task(bind=True, name="transcribe_mock")
+#  def transcribe_mock(self, args: dict, opts: dict):
+#      media_url = args['media_url']
+#      media_id = args['media_id']
 
-@app.task(name="download2")
-def download2(args, opts):
-    media = args
-    print("START DOWNLOAD", media)
-
-@app.task(bind=True, name="transcribe_mock")
-def transcribe_mock(self, args: dict, opts: dict):
-    media_url = args['media_url']
-    media_id = args['media_id']
-
-    url = f"{config.oas_url}/media/{media_id}"
-    transcript = {
-        "text": "foo bar baz",
-        "parts": [
-            { "start": 0.2, "end": 1.0, "conf": 1.0, "word": "foo" },
-            { "start": 0.2, "end": 1.0, "conf": 1.0, "word": "foo" },
-            { "start": 0.2, "end": 1.0, "conf": 1.0, "word": "foo" },
-        ]
-    }
-    task_state = {
-        "state": "finished",
-        "taskId": self.request.id.__str__(),
-        "success": True,
-        "took": 100
-    }
-    patch = [
-        { "op": "replace", "path": "/transcript", "value": transcript },
-        { "op": "replace", "path": "/tasks/asr", "value": task_state },
-    ]
-    print(json.dumps(patch));
-    res = httpx.patch(url, json=patch)
-    res = res.json()
-    print("res", res)
-    return res
+#      url = f"{config.oas_url}/media/{media_id}"
+#      transcript = {
+#          "text": "foo bar baz",
+#          "parts": [
+#              { "start": 0.2, "end": 1.0, "conf": 1.0, "word": "foo" },
+#              { "start": 0.2, "end": 1.0, "conf": 1.0, "word": "foo" },
+#              { "start": 0.2, "end": 1.0, "conf": 1.0, "word": "foo" },
+#          ]
+#      }
+#      task_state = {
+#          "state": "finished",
+#          "taskId": self.request.id.__str__(),
+#          "success": True,
+#          "took": 100
+#      }
+#      patch = [
+#          { "op": "replace", "path": "/transcript", "value": transcript },
+#          { "op": "replace", "path": "/tasks/asr", "value": task_state },
+#      ]
+#      print(json.dumps(patch));
+#      res = httpx.patch(url, json=patch)
+#      res = res.json()
+#      print("res", res)
+#      return res

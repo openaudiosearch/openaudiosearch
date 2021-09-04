@@ -1,6 +1,7 @@
 use chrono::prelude::*;
 use serde::{de, de::Deserialize, Deserializer};
 use std::fmt;
+use std::marker::PhantomData;
 use std::str::FromStr;
 
 pub fn deserialize_null_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
@@ -186,5 +187,96 @@ impl<'de> de::Visitor<'de> for DateVisitor {
                 Err(e) => Err(E::custom(format!("Parse error {} for {}", e, value))),
             },
         }
+    }
+}
+
+pub fn deserialize_multiple_objects<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    struct MultiVisitor<T>(PhantomData<T>);
+
+    impl<'de, T: Deserialize<'de>> de::Visitor<'de> for MultiVisitor<T> {
+        type Value = Vec<T>;
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("an array of objects or a single object")
+        }
+
+        fn visit_unit<E>(self) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(vec![])
+        }
+
+        fn visit_none<E>(self) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(vec![])
+        }
+
+        fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+        where
+            A: de::MapAccess<'de>,
+        {
+            match Deserialize::deserialize(de::value::MapAccessDeserializer::new(map)) {
+                Ok(value) => Ok(vec![value]),
+                Err(err) => Err(err),
+            }
+        }
+
+        fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
+        where
+            A: de::SeqAccess<'de>,
+        {
+            Deserialize::deserialize(de::value::SeqAccessDeserializer::new(seq))
+        }
+    }
+
+    deserializer.deserialize_any(MultiVisitor::<T>(PhantomData))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde::Deserialize;
+    #[test]
+    fn deserialize_one_or_vec() {
+        #[derive(Deserialize, Debug)]
+        struct Element {
+            title: String,
+            count: usize,
+        }
+
+        #[derive(Deserialize, Debug)]
+        struct Root {
+            cardinality: String,
+            #[serde(deserialize_with = "deserialize_multiple_objects")]
+            els: Vec<Element>,
+        }
+
+        let src1 = r#"
+        {
+            "cardinality": "many",
+            "els": [
+                { "title": "first", "count": 1 },
+                { "title": "second", "count": 2 }
+            ]
+        }
+        "#;
+
+        let src2 = r#"
+        {
+            "cardinality": "single",
+            "els": { "title": "first", "count": 1 }
+        }
+        "#;
+
+        let res1: Root = serde_json::from_str(src1).expect("failed to deserialize many");
+        let res2: Root = serde_json::from_str(src2).expect("failed to deserialize single");
+        eprintln!("res1 {:#?}", res1);
+        eprintln!("res2 {:#?}", res2);
     }
 }

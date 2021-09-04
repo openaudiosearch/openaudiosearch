@@ -4,7 +4,7 @@ import json
 
 model = None
 
-def transcribe_vosk(audio_file_path, model_path):
+def transcribe_vosk(media_id, audio_file_path, model_path):
     global model
     if not model:
         model = Model(model_path)
@@ -22,13 +22,18 @@ def transcribe_vosk(audio_file_path, model_path):
     if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getcomptype() != "NONE":
         raise ValueError('Audio file must be WAV format mono PCM.')
 
+    frame_chunk_len = 4000
+    frames = wf.getnframes()
+    count = 0
     while True:
-        data = wf.readframes(4000)
+        data = wf.readframes(frame_chunk_len)
+        count += frame_chunk_len
         if len(data) == 0:
             break
         if rec.AcceptWaveform(data):
             result = json.loads(rec.Result())
-            print("RESULT", result)
+            print(media_id + ' at ' + str(round((count/frames) * 100, 2)) + '%')
+            #  print("RESULT", result)
             text = result['text']
             transcript = transcript + ' ' + result['text']
             if 'result' in result:

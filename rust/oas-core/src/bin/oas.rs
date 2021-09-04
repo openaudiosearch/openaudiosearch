@@ -136,11 +136,13 @@ struct SearchOpts {
 
 #[derive(Clap)]
 struct ListOpts {
-    /// ID prefix (type)
-    prefix: Option<String>,
-    // Output as JSON
-    // #[clap(long)]
-    // json: bool,
+    /// Type ("post", "media", "feed").
+    typ: String,
+    /// Only display the number of items.
+    #[clap(long)]
+    count: bool, // Output as JSON
+                 // #[clap(long)]
+                 // json: bool
 }
 
 fn setup(args: &Args) -> anyhow::Result<()> {
@@ -259,15 +261,38 @@ async fn run_task(state: State, opts: tasks::TaskOpts) -> anyhow::Result<()> {
 
 async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
     let db = state.db;
-    let docs = match opts.prefix {
-        Some(prefix) => db.get_all_with_prefix(&prefix).await?,
-        None => db.get_all().await?,
+    let records = match opts.typ.as_str() {
+        "media" => {
+            let records = db.table::<Media>().get_all().await?;
+            records
+                .into_iter()
+                .map(|r| serde_json::to_value(r))
+                .collect::<Vec<_>>()
+        }
+        "post" => {
+            let records = db.table::<Media>().get_all().await?;
+            records
+                .into_iter()
+                .map(|r| serde_json::to_value(r))
+                .collect::<Vec<_>>()
+        }
+        "feed" => {
+            let records = db.table::<Media>().get_all().await?;
+            records
+                .into_iter()
+                .map(|r| serde_json::to_value(r))
+                .collect::<Vec<_>>()
+        }
+        _ => vec![],
     };
-    let len = docs.rows.len();
-    for doc in docs.rows() {
-        println!("{}", serde_json::to_string(&doc).unwrap());
+    if opts.count {
+        println!("{}", records.len());
+        return Ok(());
     }
-    log::info!("total {}", len);
+    for record in records {
+        println!("{}", serde_json::to_string(&record.unwrap()).unwrap());
+    }
+    // log::info!("total {}", len);
     Ok(())
 }
 
