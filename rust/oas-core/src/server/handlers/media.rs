@@ -6,10 +6,9 @@ use rocket_okapi::openapi;
 use serde_json::Value;
 
 use crate::couch::PutResponse;
+use crate::server::auth::AdminUser;
 use crate::server::error::{AppError, Result};
 use crate::server::proxy;
-use crate::server::auth::AdminUser;
-
 
 // pub fn routes() -> Vec<Route> {
 //     routes![get_media, post_media, put_media, patch_media]
@@ -63,6 +62,7 @@ pub async fn patch_media(
 ) -> Result<PutResponse> {
     let db = &state.db;
     let guid = Media::guid(&id);
+
     let patch: json_patch::Patch = serde_json::from_value(value.into_inner())?;
     let mut existing = db.get_doc(&guid).await?.into_untyped_record()?;
     let res = existing.apply_json_patch(&patch);

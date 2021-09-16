@@ -6,8 +6,8 @@ use rocket_okapi::openapi;
 use serde_json::Value;
 
 use crate::couch::PutResponse;
-use crate::server::error::Result;
 use crate::server::auth::AdminUser;
+use crate::server::error::Result;
 
 /// Get a post record by id.
 #[openapi(tag = "Post")]
@@ -60,8 +60,11 @@ pub async fn patch_post(
 ) -> Result<PutResponse> {
     let db = &state.db;
     let guid = Post::guid(&id);
+
+    let patch: json_patch::Patch = serde_json::from_value(value.into_inner())?;
     let mut existing = db.get_doc(&guid).await?.into_untyped_record()?;
-    existing.merge_json_value(value.into_inner())?;
+
+    existing.apply_json_patch(&patch)?;
     let record = existing.into_typed_record::<Post>()?;
     let res = db.put_record(record).await?;
     Ok(Json(res))

@@ -21,22 +21,34 @@ pub struct Post {
     pub in_language: Option<String>,
     pub licence: Option<String>,
     pub url: Option<String>,
+
     #[serde(default, deserialize_with = "ser::deserialize_date")]
     pub date_published: Option<DateTime<Utc>>,
+
     #[serde(default, deserialize_with = "ser::deserialize_date")]
     pub date_modified: Option<DateTime<Utc>>,
+
     #[serde(default, deserialize_with = "ser::deserialize_multiple")]
     pub contributor: Vec<String>,
+
     pub publisher: Option<String>,
+
     #[serde(default, deserialize_with = "ser::deserialize_multiple")]
     pub genre: Vec<String>,
+
     #[serde(default, deserialize_with = "ser::deserialize_multiple")]
     pub creator: Vec<String>,
+
     #[serde(default)]
     pub media: Vec<Reference<Media>>,
+
     #[serde(default)]
     pub feeds: Vec<Reference<Feed>>,
+
     pub transcript: Option<String>,
+
+    pub nlp: Option<serde_json::Value>,
+
     #[serde(flatten)]
     pub other: serde_json::Map<String, serde_json::Value>,
     pub tasks: PostTasks,

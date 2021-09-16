@@ -4,7 +4,7 @@ use crate::task::{TaskObject, TaskState};
 use crate::{ElasticMapping, Reference};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, Value};
 
 use crate::ser;
 
@@ -21,10 +21,10 @@ pub struct Media {
     #[serde(deserialize_with = "ser::deserialize_duration")]
     pub duration: Option<f32>,
     pub transcript: Option<Transcript>,
-    pub nlp: Option<serde_json::Value>,
+    pub nlp: Option<Value>,
 
     #[serde(flatten)]
-    pub other: serde_json::Map<String, serde_json::Value>,
+    pub other: serde_json::Map<String, Value>,
 
     #[serde(default)]
     pub tasks: MediaTasks,
@@ -72,6 +72,12 @@ pub struct TranscriptPart {
     pub start: f32,
     pub end: f32,
     pub word: String,
+}
+
+impl TranscriptPart {
+    pub fn duration(&self) -> f32 {
+        self.end - self.start
+    }
 }
 
 impl TypedValue for Media {
