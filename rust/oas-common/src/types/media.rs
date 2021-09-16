@@ -38,8 +38,10 @@ pub struct Media {
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 pub struct MediaTasks {
     #[serde(deserialize_with = "ser::deserialize_null_default")]
+    #[serde(default)]
     pub download: TaskState,
     #[serde(deserialize_with = "ser::deserialize_null_default")]
+    #[serde(default)]
     pub asr: TaskState,
 }
 
