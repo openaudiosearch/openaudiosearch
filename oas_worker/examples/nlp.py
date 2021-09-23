@@ -48,15 +48,15 @@ if __name__ == "__main__":
     # print("Post: ")
     # print(post)
 
-    # Do nlp stuff
+    # Do NLP stuff
     nlp_result = nlp(post)
-    print(nlp_result)
     # nlp_result = { "keywords": ["foo", "bazoo"] }
 
     # Output nlp stuff
     patch = [
         { "op": "add", "path": "/nlp", "value": nlp_result },
     ]
-    res = patch_post(post_id, patch)
-    print("Result: ")
-    print(res) #FIXME where's the result?
+    patch_post(post_id, patch)
+    
+    res = get_post(post_id)
+    print(f"Result:\n{res['nlp']}")
