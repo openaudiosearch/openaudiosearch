@@ -26,7 +26,7 @@ def get_post(post_id):
 def nlp(post):
     text = post["description"]
 
-    spacy = SpacyPipe(["ner"]) #FIXME kw extract impl
+    spacy = SpacyPipe(["kwe"]) #FIXME kw extract impl
     res = spacy.run(text)
 
     # debug
@@ -57,6 +57,6 @@ if __name__ == "__main__":
         { "op": "add", "path": "/nlp", "value": nlp_result },
     ]
     patch_post(post_id, patch)
-    
+
     res = get_post(post_id)
     print(f"Result:\n{res['nlp']}")

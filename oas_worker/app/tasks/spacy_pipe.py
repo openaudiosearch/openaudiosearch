@@ -67,6 +67,7 @@ class SpacyPipe():
         pos = []
         missed = []
         lemma = []
+        keywords = []
         if "ner" in self.pipeline:
             for ent in doc.ents:
                 ner.append((ent.text, ent.label_))
@@ -81,10 +82,15 @@ class SpacyPipe():
                         missed.append(token.text)
                 if "lemma" in self.pipeline:
                     lemma.append(token.text, token.lemma)
+
+        if "kwe" in self.pipeline:
+            keywords = list(doc.vocab.strings)[:10] #FIXME do KWE here
+
         return {"lemma":lemma, 
                 "ner":ner, 
                 "pos":pos, 
-                "missed":missed}
+                "missed":missed,
+                "keywords":keywords}
 
     def create_token(self, word):
         return self.nlp.vocab.strings[word]
