@@ -26,7 +26,7 @@ def get_post(post_id):
 def nlp(post):
     text = post["description"]
 
-    spacy = SpacyPipe(["kwe"]) #FIXME kw extract impl
+    spacy = SpacyPipe(["ner", "textrank"])
     res = spacy.run(text)
 
     # debug
