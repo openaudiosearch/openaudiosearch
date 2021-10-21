@@ -223,7 +223,7 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
     let extensions: &ExtensionMap = item.extensions();
 
     let mapped_fields = resolve_extensions(extensions, mapping);
-    //log::debug!("resolve_extensions result: {:#?}", mapped_fields);
+    // log::debug!("resolve_extensions result: {:#?}", mapped_fields);
     let mut post = {
         //let mapped_fields  = mapped_fields.into_iter().filter(|(k,_v)| !(k.starts_with("media.")));
         let mapped_fields_json: serde_json::Map<String, serde_json::Value> = mapped_fields
@@ -232,11 +232,14 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
             .map(|(k, v)| (k.to_case(Case::Camel), serde_json::Value::String(v)))
             .filter(|(k, _v)| !(k.starts_with("media.")))
             .collect();
+        // log::debug!("mapped fields result {:#?}", mapped_fields_json);
         let post: Result<Post, serde_json::Error> =
             serde_json::from_value(serde_json::Value::Object(mapped_fields_json));
+        // log::debug!("post result after parse {:#?}", post);
         let post = post.unwrap_or_default();
         post
     };
+    // log::debug!("post after mapping {:#?}", post);
 
     // If the RSS item has an enclosure set create a Media record that will be referenced by the post.
     let media = if let Some(enclosure) = item.clone().enclosure {
