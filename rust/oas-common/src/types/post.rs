@@ -116,12 +116,6 @@ impl ElasticMapping for Post {
             },
             "contentUrl":{
                 "type":"text",
-                "fields":{
-                    "keyword":{
-                        "type":"keyword",
-                        "ignore_above":256
-                    }
-                }
             },
             "contributor":{
                 "properties":{
@@ -154,12 +148,6 @@ impl ElasticMapping for Post {
             "description":{
                 "type":"text",
                 "analyzer": "german",
-                "fields":{
-                    "keyword":{
-                        "type":"keyword",
-                        "ignore_above":256
-                    }
-                }
             },
             "genre":{
                 "type":"text",
@@ -173,12 +161,6 @@ impl ElasticMapping for Post {
             "headline":{
                 "type":"text",
                 "analyzer": "german",
-                "fields":{
-                    "keyword":{
-                        "type":"keyword",
-                        "ignore_above":256
-                    }
-                }
             },
             "identifier":{
                 "type":"keyword",
@@ -212,12 +194,6 @@ impl ElasticMapping for Post {
             },
             "url":{
                 "type":"text",
-                "fields":{
-                    "keyword":{
-                        "type":"keyword",
-                        "ignore_above":256
-                    }
-                }
             },
             "feeds": {
                 "type":"keyword",
