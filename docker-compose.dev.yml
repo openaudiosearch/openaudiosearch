@@ -39,6 +39,15 @@ services:
     volumes:
       - ./data/couch:/opt/couchdb/data
 
+
+  ocypod:
+    image: davechallis/ocypod:latest
+    volumes:
+      - ./ocypod.toml:/etc/ocypod.toml:ro
+    command: /etc/ocypod.toml
+    ports:
+      - 8023:8023
+
   
   # dejavu "The Missing Web UI for Elasticsearch"
   # See https://github.com/appbaseio/dejavu

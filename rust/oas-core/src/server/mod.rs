@@ -78,7 +78,12 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 auth::get_login,
                 auth::logout,
                 auth::register,
-                auth::private
+                auth::private,
+                // job routes
+                handlers::job::get_job,
+                handlers::job::post_job,
+                handlers::job::work_job,
+                handlers::job::patch_job
             ],
         )
         .mount(

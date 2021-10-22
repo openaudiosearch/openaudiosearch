@@ -228,8 +228,12 @@ impl CouchDB {
     pub async fn get_all_with_params(&self, params: &impl Serialize) -> Result<DocList> {
         let req = self.request(Method::GET, "_all_docs").query(params);
         let docs: Value = self.send(req).await?;
-        let docs: DocList = serde_json::from_value(docs)?;
-        Ok(docs)
+        // TODO: This is a very unclean way to check for not found...
+        let docs: serde_json::Result<DocList> = serde_json::from_value(docs);
+        match docs {
+            Ok(docs) => Ok(docs),
+            Err(_) => Err(CouchError::NotFound),
+        }
     }
 
     /// Get a doc from the id by its id.
@@ -463,9 +467,9 @@ impl CouchDB {
     }
 
     pub async fn get_many_records_untyped(&self, ids: &[&str]) -> Result<Vec<UntypedRecord>> {
-        let rows = self
-            .get_many(ids)
-            .await?
+        let res = self.get_many(&ids[..]).await;
+        let res = res?;
+        let rows = res
             .rows
             .into_iter()
             .filter_map(|doc| doc.doc.into_untyped_record().ok())

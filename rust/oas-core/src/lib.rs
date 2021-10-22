@@ -6,6 +6,7 @@ use anyhow::Context;
 pub mod couch;
 // pub mod couch2;
 pub mod index;
+pub mod jobs;
 pub mod rss;
 mod runtime;
 pub mod server;
@@ -29,6 +30,7 @@ pub struct State {
     pub db: couch::CouchDB,
     pub index_manager: index::IndexManager,
     pub tasks: tasks::CeleryManager,
+    pub jobs: jobs::JobManager,
     did_init: Arc<AtomicBool>,
 }
 
@@ -39,6 +41,7 @@ impl State {
         index_manager: index::IndexManager,
         tasks: tasks::CeleryManager,
         feed_manager: FeedManager,
+        jobs: jobs::JobManager,
     ) -> Self {
         Self {
             db_manager,
@@ -46,6 +49,7 @@ impl State {
             index_manager,
             tasks,
             feed_manager,
+            jobs,
             did_init: Arc::new(AtomicBool::new(false)),
         }
     }

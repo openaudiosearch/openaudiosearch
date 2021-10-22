@@ -25,6 +25,7 @@ vosk = "^0.3.30"
 loguru = "^0.5.3"
 httpx = "^0.18.1"
 celery = {extras = ["redis"], version = "^5.1"}
+mpire = "^2.3.0"
 
 [tool.poetry.dev-dependencies]
 rope = "^0.18.0"
