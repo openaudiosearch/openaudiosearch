@@ -40,7 +40,7 @@ okapi = { version = "0.6.0-alpha-1" }
 tokio-stream = { version = "0.1.6", features = ["io-util"] }
 futures-batch = "0.6.0"
 humantime = "2.1.0"
-chrono = "0.4.19"
+chrono = { version = "0.4.19", features=["serde"] }
 bytes = "1.0.1"
 include_dir = "0.6.1"
 uuid = { version = "0.8.2", features = ["v4"] }

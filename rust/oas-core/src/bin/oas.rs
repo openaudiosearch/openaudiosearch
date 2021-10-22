@@ -7,7 +7,7 @@ use oas_core::rss::manager::FeedManagerOpts;
 use oas_core::server::{run_server, ServerOpts};
 use oas_core::types::Post;
 use oas_core::util::debug_print_records;
-use oas_core::{couch, index, rss, tasks};
+use oas_core::{couch, index, jobs, rss, tasks};
 use oas_core::{Runtime, State};
 use std::env;
 use std::time;
@@ -171,7 +171,17 @@ fn state_from_args(args: &Args) -> anyhow::Result<State> {
     };
     let feed_manager = rss::FeedManager::new(feed_manager_opts);
 
-    let state = State::new(db_manager, db, index_manager, task_manager, feed_manager);
+    let ocypod_url = "http://localhost:8023".to_string();
+    let job_manager = jobs::JobManager::new(db_manager.record_db().clone(), ocypod_url);
+
+    let state = State::new(
+        db_manager,
+        db,
+        index_manager,
+        task_manager,
+        feed_manager,
+        job_manager,
+    );
     Ok(state)
 }
 

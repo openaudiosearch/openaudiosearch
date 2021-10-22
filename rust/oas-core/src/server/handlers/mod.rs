@@ -1,4 +1,5 @@
 pub mod feed;
+pub mod job;
 pub mod media;
 pub mod post;
 pub mod record;

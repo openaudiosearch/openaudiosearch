@@ -1,17 +1,14 @@
 use anyhow::Context;
-use chrono::Utc;
 use futures::stream::StreamExt;
 use futures_batch::ChunksTimeoutStreamExt;
-use oas_common::task::{TaskRunningState, TaskState};
 use oas_common::types::{Media, Post};
 use oas_common::{Record, RecordMap, Resolver, TypedValue, UntypedRecord};
 use serde::{Deserialize, Serialize};
 use std::time;
 
-use super::taskdefs;
-use super::CeleryManager;
 use crate::couch::changes::changes_into_untyped_records;
 use crate::couch::{ChangeEvent, CouchDB, CouchResult};
+use crate::jobs::{typs as job_typs, JobInfo};
 use crate::State;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -27,7 +24,6 @@ const TASK_STATE_ID: &str = "default";
 
 pub async fn process_changes(state: State, infinite: bool) -> anyhow::Result<()> {
     let db = state.db_manager.record_db();
-    let celery = state.tasks;
     let meta_db = state.db_manager.meta_db();
 
     let latest_seq = get_latest_seq(&meta_db).await;
@@ -40,9 +36,10 @@ pub async fn process_changes(state: State, infinite: bool) -> anyhow::Result<()>
     let mut changes = changes.chunks_timeout(batch_max_len, batch_timeout);
 
     while let Some(batch) = changes.next().await {
+        // eprintln!("got batch with len {}", batch.len());
         let last_seq = last_seq_of_batch(&batch);
         let batch = changes_into_untyped_records(batch);
-        process_batch(&celery, db.clone(), batch)
+        process_batch(&state, batch)
             .await
             .context("Failed to process changes batch for tasks")?;
         if let Some(next_latest_seq) = last_seq {
@@ -67,78 +64,98 @@ fn last_seq_of_batch(batch: &[CouchResult<ChangeEvent>]) -> Option<String> {
     })
 }
 
-async fn process_post(
-    celery: &CeleryManager,
-    _db: &CouchDB,
-    record: Record<Post>,
-) -> anyhow::Result<()> {
-    if let Some(tasks) = record.task_states() {
-        if let TaskState::Wanted = &tasks.nlp {
-            let opts = serde_json::Value::Null;
-            celery
-                .send_task(taskdefs::nlp2::new(record.clone(), opts))
-                .await
-                .context("failed to send task")?;
-        }
-    }
-    Ok(())
-}
-
-async fn process_media(
-    celery: &CeleryManager,
-    db: &CouchDB,
-    record: Record<Media>,
-) -> anyhow::Result<()> {
-    if let Some(tasks) = record.task_states() {
-        if let TaskState::Wanted = &tasks.asr {
-            let task_id = celery
-                .transcribe_media(&record)
-                .await
-                .context("failed to send task")?;
-            let mut next_record = record.clone();
-            let state = TaskRunningState {
-                task_id: task_id.to_string(),
-                start: Utc::now(),
-            };
-            next_record.task_states_mut().unwrap().asr = TaskState::Running(state);
-            db.put_record(next_record).await?;
-        }
-        if let TaskState::Wanted = &tasks.download {
-            let opts = serde_json::Value::Null;
-            celery
-                .send_task(taskdefs::download2::new(record.clone(), opts))
-                .await
-                .context("failed to send task")?;
-        }
-    }
-    Ok(())
-}
-
-pub async fn process_batch(
-    celery: &CeleryManager,
-    db: CouchDB,
-    batch: Vec<UntypedRecord>,
-) -> anyhow::Result<()> {
+pub async fn process_batch(state: &State, batch: Vec<UntypedRecord>) -> anyhow::Result<()> {
+    // eprintln!("start with {}", batch.len());
     let mut sorted = RecordMap::from_untyped(batch)?;
     let mut posts = sorted.into_vec::<Post>();
     let medias = sorted.into_vec::<Media>();
-    db.resolve_all_refs(&mut posts)
+    state
+        .db
+        .resolve_all_refs(&mut posts)
         .await
         .context("failed to resolve refs")?;
 
     for record in posts.into_iter() {
-        let res = process_post(&celery, &db, record).await;
+        let res = process_post(&state, record).await;
         log_if_error(res);
     }
 
     for record in medias.into_iter() {
-        // log::trace!(
-        //     "task process touch media {}, task states: {:?}",
-        //     record.id(),
-        //     record.task_states()
-        // );
-        let res = process_media(&celery, &db, record).await;
+        let res = process_media(&state, record).await;
         log_if_error(res);
+    }
+
+    Ok(())
+}
+
+async fn get_job<T: TypedValue>(state: &State, record: &Record<T>, typ: &str) -> Option<JobInfo> {
+    let job_id = record.meta().latest_job(typ);
+    if let Some(id) = job_id {
+        state.jobs.get_job(id).await.ok()
+    } else {
+        None
+    }
+}
+
+async fn process_post(state: &State, record: Record<Post>) -> anyhow::Result<()> {
+    // eprintln!("process record {}", record.guid());
+    let nlp_job = get_job(&state, &record, job_typs::NLP).await;
+    // check all media asr jobs
+    let mut asr_jobs = vec![];
+    for media in record.value.media.iter() {
+        if let Some(record) = media.record() {
+            let asr_job = get_job(&state, &record, job_typs::ASR).await;
+            asr_jobs.push(asr_job);
+        }
+    }
+
+    // logic is: if there's any asr job that completed later than the latest nlp job a new nlp job
+    // should be created.
+    let needs_nlp = match nlp_job {
+        None => true,
+        Some(nlp_job) => match nlp_job.status.pending() {
+            true => false,
+            false => {
+                let mut needs_nlp = false;
+                for asr_job in asr_jobs {
+                    needs_nlp |= match asr_job {
+                        None => false,
+                        Some(asr_job) => match asr_job.ended_later_than(&nlp_job) {
+                            Some(true) => true,
+                            Some(false) | None => false,
+                        },
+                    };
+                }
+                needs_nlp
+            }
+        },
+    };
+
+    // eprintln!(" -- record {} needs nlp? {}", record.guid(), needs_nlp);
+
+    if needs_nlp {
+        let job = job_typs::nlp_job(&record);
+        state.jobs.create_job(job).await?;
+    }
+
+    Ok(())
+}
+
+async fn process_media(state: &State, record: Record<Media>) -> anyhow::Result<()> {
+    // eprintln!("process record {}", record.guid());
+    let needs_asr = match record.value.transcript {
+        Some(_) => false,
+        None => match record.meta().latest_job(job_typs::ASR) {
+            Some(_job_id) => false,
+            None => true,
+        },
+    };
+
+    // eprintln!(" -- record {} needs asr? {}", record.guid(), needs_asr);
+
+    if needs_asr {
+        let job = job_typs::asr_job(&record);
+        state.jobs.create_job(job).await?;
     }
 
     Ok(())

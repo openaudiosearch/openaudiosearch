@@ -3,6 +3,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::any::Any;
+use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt;
 use thiserror::Error;
@@ -43,15 +44,41 @@ pub struct RecordMeta {
     #[serde(rename = "type")]
     typ: String,
     id: String,
-    // TODO: Add more metadata?
-    // source: String,
-    // seq: u32,
-    // version: u32,
-    // timestamp: u32,
-    // tasks: HashMap<TaskName, TaskState>,
+
+    #[serde(default)]
+    jobs: JobMap, // TODO: Add more metadata?
+                  // source: String,
+                  // seq: u32,
+                  // version: u32,
+                  // timestamp: u32,
+                  // tasks: HashMap<TaskName, TaskState>
 }
 
-// pub type TaskName = String;
+impl RecordMeta {
+    pub fn insert_job(&mut self, typ: &str, id: u64) {
+        self.jobs
+            .entry(typ.to_string())
+            .or_insert_with(|| vec![])
+            .push(id);
+    }
+
+    pub fn jobs(&self, typ: &str) -> Option<&Vec<u64>> {
+        self.jobs.get(typ)
+    }
+
+    pub fn latest_job(&self, typ: &str) -> Option<u64> {
+        self.jobs.get(typ).and_then(|vec| vec.last().map(|x| *x))
+    }
+
+    pub fn latest_jobs(&self) -> HashMap<String, u64> {
+        self.jobs
+            .iter()
+            .filter_map(|(typ, jobs)| jobs.last().map(|id| (typ.to_string(), *id)))
+            .collect()
+    }
+}
+
+pub type JobMap = HashMap<String, Vec<u64>>;
 
 impl ElasticMapping for RecordMeta {
     fn elastic_mapping() -> serde_json::Value {
@@ -64,7 +91,7 @@ impl ElasticMapping for RecordMeta {
             },
             "typ": {
                 "type": "keyword"
-            }
+            },
         })
     }
 }
@@ -205,6 +232,16 @@ impl UntypedRecord {
         &self.meta.typ
     }
 
+    // Get a reference to the record meta.
+    pub fn meta(&self) -> &RecordMeta {
+        &self.meta
+    }
+
+    // Get a mutable reference to the record meta.
+    pub fn meta_mut(&mut self) -> &mut RecordMeta {
+        &mut self.meta
+    }
+
     /// Merge this record's value with another JSON value.
     pub fn merge_json_value(
         &mut self,
@@ -226,7 +263,6 @@ impl UntypedRecord {
     pub fn apply_json_patch(&mut self, patch: &json_patch::Patch) -> Result<(), EncodingError> {
         let mut value = Value::Object(self.value.clone());
         let res = json_patch::patch(&mut value, &patch);
-        eprintln!("PATCH RES {:#?}", res);
         match res {
             Ok(_) => match value {
                 Value::Object(value) => {
@@ -304,6 +340,16 @@ where
     /// Get the typ of the record.
     pub fn typ(&self) -> &str {
         &self.meta.typ
+    }
+
+    // Get a reference to the record meta.
+    pub fn meta(&self) -> &RecordMeta {
+        &self.meta
+    }
+
+    // Get a mutable reference to the record meta.
+    pub fn meta_mut(&mut self) -> &mut RecordMeta {
+        &mut self.meta
     }
 
     /// Create a new record from an id and a value.
