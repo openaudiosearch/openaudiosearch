@@ -74,10 +74,14 @@ export function PostButtons (props = {}) {
   const { post } = props
   if (!post) return null
   return (
-    <>
-      <PostPlayButton post={post} />
-      <PostTaskMenuButton post={post} />
-    </>
+    <Flex direction='row' justify='space-between'>
+      <Flex mr='3'>
+        <PostPlayButton post={post} />
+      </Flex>
+      <Flex>
+        <PostTaskMenuButton post={post} />
+      </Flex>
+    </Flex>
   )
 }
 
@@ -127,9 +131,13 @@ export function PostPageInner (props = {}) {
     fromSearch = location.state.fromSearch
   }
 
-  const genres =
+  // Trim items and remove empty and duplicate items from list
+  let genres = [... new Set(post.genre.filter(function(gen) {
+    return gen.length > 0;
+  }).map((genre) => genre.trim()))]
+  genres =
     <>
-      {post.genre.map((genre) =>(
+      {genres.map((genre) => (
         <Tag key={genre} mr='1'>{genre}</Tag>
       ))}
     </>
@@ -173,9 +181,10 @@ export function PostPageInner (props = {}) {
                     <Text fontSize='sm' mr='2'>
                       {Moment(post.datePublished).format('DD.MM.YYYY')}
                     </Text>}
-                  <Box>
-                    {genres}
-                  </Box>
+                  {post.genre.length > 0 &&
+                    <Box>
+                      {genres}
+                    </Box>}
                 </Flex>
                 {post.url &&
                   <Link href={post.url} isExternal>
@@ -184,20 +193,18 @@ export function PostPageInner (props = {}) {
               </Flex>
               <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%'>
                 <Heading size='md'>{post.headline}</Heading>
-                <Flex align='center' justify='center' ml='2'>
-                  <PostButtons post={post} />
-                </Flex>
+                <PostButtons post={post} />
               </Flex>
             </Flex>
           </Flex>
           <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%'>
-            {post.publisher && <Text mr='2' fontSize='sm'>{t('by', 'by')} {post.publisher}</Text>}
+            {post.publisher && <Text mr='2' fontSize='sm'>{t('by', 'by')}{post.publisher}</Text>}
             {post.creator.length > 0 &&
               <Flex direction='row' mr='2'>
                 <Text fontSize='sm' mr='1'>{t('creators', 'Creators')}:</Text>
                 {creators}
               </Flex>}
-            {post.contributor &&
+            {post.contributor && contributors.length > 0 &&
               <Flex direction='row' mr='2'>
                 <Text fontSize='sm' mr='1'>{t('contributors', 'Contributors')}:</Text>
                 {contributors}

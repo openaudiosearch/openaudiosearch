@@ -387,19 +387,21 @@ export function ResultItem (props) {
               <TextWithMarks>{item.headline}</TextWithMarks>
             </Heading>
           </Link>
-          <Flex ml={[null, null, 4, 4]} mb={[1, 1, null, null]} align='flex-start' justify='flex-start'>
+          <Flex ml={[null, null, 4, 4]} mb={[1, 1, null, null]} mt={[4, 4, null, null]} align='flex-start' justify='flex-start'>
             <PostButtons post={item} />
           </Flex>
         </Flex>
         <Flex direction='column'>
-          <Flex direction={['column', 'column', 'row', 'row']} justify='space-between'>
+          <Flex direction='column' justify='space-between'>
             {item.publisher && <Text mr='2' fontSize='sm'>{item.publisher}</Text>}
-            {item.datePublished &&
-              <Text mr='2' fontSize='sm'>
-                {Moment(item.datePublished).format('DD.MM.YYYY')}
-              </Text>}
-            {duration &&
+            <Flex direction='row' justify='space-between'>
+              {item.datePublished &&
+                <Text mr='2' fontSize='sm'>
+                  {Moment(item.datePublished).format('DD.MM.YYYY')}
+                </Text>}
+              {duration &&
               <Text mr='2' fontSize='sm'>{duration}</Text>}
+            </Flex>
           </Flex>
           <Box mt='2'>
             <CollapsedText render={text => <TextWithMarks>{text}</TextWithMarks>}>
@@ -455,11 +457,11 @@ function CollapsedText (props) {
   const text = React.useMemo(() => {
     if (!collapsed) return fullText
     if (!isCollapsible) return fullText
-    const re = new RegExp(`^.{${characterLength}}\\w*`)
+    const re = new RegExp(`^[\\s\\S]{${characterLength}}\\w*`)
     const matches = fullText.match(re)
     if (matches && matches.length > 0) {
       const slice = fullText.slice(0, matches[0].length)
-      return slice
+      return slice + "..."
     }
     return fullText
   })
@@ -478,19 +480,21 @@ function CollapsedText (props) {
     </Flex>
 
   return (
+    <Flex direction = 'column' alignItems='flex-end' justify='space-between'>
     <Text>
       {renderedText}
+    </Text>
       {isCollapsible && (
         <Button
           borderRadius='0'
-          ml='2'
+          mt='1'
           variant='link'
           onClick={e => setCollapsed(collapsed => !collapsed)}
         >
           {buttonCollapse}
         </Button>
       )}
-    </Text>
+    </Flex>
   )
 }
 

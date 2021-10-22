@@ -51,6 +51,7 @@ pub struct Post {
 
     #[serde(flatten)]
     pub other: serde_json::Map<String, serde_json::Value>,
+    #[serde(default)]
     pub tasks: PostTasks,
 }
 
