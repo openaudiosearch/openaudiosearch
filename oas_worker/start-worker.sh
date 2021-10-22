@@ -1,2 +1,2 @@
 #!/bin/sh
-poetry run celery -A app.tasks.tasks worker --loglevel=DEBUG --concurrency=$CONCURRENCY
+poetry run celery -A app.tasks.tasks worker --loglevel=DEBUG --concurrency=${CONCURRENCY:=1}

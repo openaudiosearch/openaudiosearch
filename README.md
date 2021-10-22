@@ -149,6 +149,13 @@ applies to: core
 
 If set to a HTTP URL, all requests for the web UI are proxied to this address
 
+#### `CONCURRENCY`
+
+default: `1`
+applies to: worker
+
+Sets the number of worker processes/threads.
+
 
 ## Development and local setup
 
