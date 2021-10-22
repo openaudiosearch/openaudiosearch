@@ -520,10 +520,14 @@ pub fn wrap_mapping_properties(properties: serde_json::Value) -> serde_json::Val
                 "analyzer": {
                     "payload_delimiter": {
                         "tokenizer": "whitespace",
-                        "filter": [ "payload_delimiter_filter" ]
+                        "filter": [ "lowercase", "oas_stemmer", "payload_delimiter_filter" ]
                     }
                 },
                 "filter": {
+                    "oas_stemmer": {
+                       "type": "stemmer",
+                       "language": "light_german"
+                    },
                     "payload_delimiter_filter": {
                         "type": "delimited_payload",
                         "delimiter": "|",

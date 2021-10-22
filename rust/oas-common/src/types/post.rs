@@ -153,6 +153,7 @@ impl ElasticMapping for Post {
             },
             "description":{
                 "type":"text",
+                "analyzer": "german",
                 "fields":{
                     "keyword":{
                         "type":"keyword",
@@ -171,6 +172,7 @@ impl ElasticMapping for Post {
             },
             "headline":{
                 "type":"text",
+                "analyzer": "german",
                 "fields":{
                     "keyword":{
                         "type":"keyword",
