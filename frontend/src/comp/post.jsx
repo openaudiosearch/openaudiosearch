@@ -131,11 +131,13 @@ export function PostPageInner (props = {}) {
     fromSearch = location.state.fromSearch
   }
 
-  const genres =
-    <>
-      {post.genre.filter(function(gen) {
+  // Trim items and remove empty and duplicate items from list
+  let genres = [... new Set(post.genre.filter(function(gen) {
     return gen.length > 0;
-  }).map((genre) => (
+  }).map((genre) => genre.trim()))]
+  genres =
+    <>
+      {genres.map((genre) => (
         <Tag key={genre} mr='1'>{genre}</Tag>
       ))}
     </>
