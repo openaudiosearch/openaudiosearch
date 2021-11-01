@@ -64,7 +64,7 @@ This project includes a Dockerfile to build docker images for the backend and wo
 Then, the following commands will build the Docker image from source and start it together with all required services.
 ```sh
 git clone https://github.com/openaudiosearch/openaudiosearch
-cd open-audio-search
+cd openaudiosearch
 docker-compose build
 docker-compose up
 ```
