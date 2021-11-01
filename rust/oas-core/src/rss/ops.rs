@@ -1,4 +1,4 @@
-use clap::Clap;
+use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use url::Url;
@@ -21,7 +21,7 @@ pub trait Crawler: Send + Sync {
     }
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub struct FetchOpts {
     /// Feed URL
     url: Url,
@@ -30,7 +30,7 @@ pub struct FetchOpts {
     update: bool,
 }
 
-#[derive(Clap, Serialize, Deserialize)]
+#[derive(Parser, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CrawlOpts {
     /// Feed URL to ingest

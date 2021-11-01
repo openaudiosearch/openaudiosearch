@@ -1,7 +1,7 @@
 use celery::broker::RedisBroker;
 use celery::task::Signature;
 use celery::{broker::Broker, prelude::CeleryError, Celery};
-use clap::Clap;
+use clap::Parser;
 use oas_common::{
     types::{Media, Post},
     Record, TypedValue,
@@ -35,7 +35,7 @@ impl Config {
     }
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub struct TaskOpts {
     /// Media ID to enqueue
     #[clap(long)]

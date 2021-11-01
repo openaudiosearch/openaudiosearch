@@ -1,5 +1,5 @@
 use crate::State;
-use clap::Clap;
+use clap::Parser;
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{catchers, Orbit, Request, Rocket};
@@ -16,7 +16,7 @@ const DEFAULT_PORT: u16 = 8080;
 const DEFAULT_HOST: &str = "0.0.0.0";
 const FRONTEND_DIR: include_dir::Dir = include_dir::include_dir!("../../frontend/dist");
 
-#[derive(Clap, Default, Clone, Debug)]
+#[derive(Parser, Default, Clone, Debug)]
 pub struct ServerOpts {
     /// Hostname to bind HTTP server to
     #[clap(long, env = "HTTP_HOSTNAME")]

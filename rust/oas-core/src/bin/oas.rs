@@ -1,5 +1,5 @@
 use anyhow::Context;
-use clap::Clap;
+use clap::Parser;
 use futures::stream::StreamExt;
 use oas_common::types::Media;
 use oas_common::Record;
@@ -12,7 +12,7 @@ use oas_core::{Runtime, State};
 use std::env;
 use std::time;
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct Args {
     #[clap(subcommand)]
     pub command: Command,
@@ -46,7 +46,7 @@ struct Args {
     pub dev: bool,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 enum Command {
     /// Watch and show print changes from the CouchDB feed
     Watch(WatchOpts),
@@ -69,20 +69,20 @@ enum Command {
     Run,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct FeedCommands {
     /// Subcommand
     #[clap(subcommand)]
     command: FeedCommand,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct RefetchOpts {
     /// Feed ID or URL
     id_or_url: String,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 enum FeedCommand {
     /// Fetch a feed by URL.
     Fetch(rss::ops::FetchOpts),
@@ -94,7 +94,7 @@ enum FeedCommand {
     Refetch(RefetchOpts),
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct IndexOpts {
     /// Run forever in daemon mode
     #[clap(short, long)]
@@ -119,13 +119,13 @@ impl IndexOpts {
     }
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct WatchOpts {
     /// Rev to start the watch stream at.
     since: Option<String>,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct SearchOpts {
     /// Search query
     query: String,
@@ -134,7 +134,7 @@ struct SearchOpts {
     json: bool,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct ListOpts {
     /// Type ("post", "media", "feed").
     typ: String,

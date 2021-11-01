@@ -1,10 +1,10 @@
-use clap::Clap;
+use clap::Parser;
 use url::Url;
 
 pub const DEFAULT_PREFIX: &str = "oas";
 
 /// ElasticSearch config.
-#[derive(Clap, Debug, Clone)]
+#[derive(Parser, Debug, Clone)]
 pub struct Config {
     /// Elasticsearch server URL
     #[clap(long, env = "ELASTICSEARCH_URL")]

@@ -1,4 +1,4 @@
-use clap::Clap;
+use clap::Parser;
 use oas_common::types;
 use oas_common::types::Feed;
 use oas_common::util::id_from_hashed_string;
@@ -17,7 +17,7 @@ use crate::couch::CouchDB;
 type Task<T> = JoinHandle<Result<T, RssError>>;
 // type Store = HashMap<String, TypedRecord<types::Feed>>;
 
-#[derive(Debug, Clone, Default, Clap)]
+#[derive(Debug, Clone, Default, Parser)]
 pub struct FeedManagerOpts {
     #[clap(long)]
     pub mapping_file: Option<String>,

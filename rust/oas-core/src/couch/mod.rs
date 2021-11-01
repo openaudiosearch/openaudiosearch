@@ -1,5 +1,5 @@
 use anyhow::Context;
-use clap::Clap;
+use clap::Parser;
 use oas_common::UntypedRecord;
 use oas_common::{Record, TypedValue};
 use reqwest::{Method, RequestBuilder};
@@ -34,7 +34,7 @@ pub const DEFAULT_HOST: &str = "http://localhost:5984";
 // pub const DEFAULT_PORT: u16 = 5984;
 
 /// CouchDB config.
-#[derive(Clap, Debug, Clone)]
+#[derive(Parser, Debug, Clone)]
 pub struct Config {
     /// CouchDB hostname
     #[clap(long, env = "COUCHDB_HOST", default_value = "http://localhost:5984")]
