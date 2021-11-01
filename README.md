@@ -54,7 +54,7 @@ docker-compose -f docker-compose.nightly.yml up
 For the speech recognition to work you will need to download the models first. Run this command once, it will download the models into the `./data/oas` volume:
 
 ```sh
-docker-compose exec worker python download_models.py
+docker-compose -f docker-compose.nightly.yml exec worker python download_models.py
 ```
 
 #### Build Docker images from source
