@@ -52,14 +52,12 @@ def transcribe(args: dict, opts: dict):
     print("start transcribe task for media " + media_id)
     
     nlp_opts = { 'media_id': media_id, 'pipeline': 'ner'}
-    asr_opts = { 'media_id': media_id, 'engine': 'vosk'}
+    asr_opts = { 'media_id': media_id, 'engine': 'vosk', 'samplerate': 16000}
     download_opts = { 'media_url': media_url, 'media_id': media_id }
-    prepare_opts = { 'media_id': media_id, 'samplerate': 16000 }
     save_task_state_opts = { 'media_id': media_id }
 
     result = chain(
         download.s(download_opts),
-        prepare.s(prepare_opts),
         asr.s(asr_opts),
         nlp.s(nlp_opts),
         save_task_state.s(save_task_state_opts)
@@ -124,32 +122,11 @@ def download(opts):
         args['download'] = {"file_path": target_path, "source_url": url}
         return args
 
-@app.task(name="prepare")
-def prepare(args, opts):
-    samplerate = opts['samplerate']
-<<<<<<< HEAD
-    dst = file_path(f'task/prepare/{prepare.request.id}/processed.wav')
-    # TODO: Find out why this pydub segment does not work.
-    # sound = AudioSegment.from_file(args.file_path)
-    # sound.set_frame_rate(opts.samplerate)
-    # sound.set_channels(1)
-    # sound.export(dst, format="wav")
-=======
-    temp_wav = file_path(f'task/prepare/{asr.request.id}/processed.wav')
- 
->>>>>>> b12213dbb... delete prepared wav files
-    subprocess.call(['ffmpeg', '-i',
-                     args["download"]["file_path"],
-                     '-hide_banner', '-loglevel', 'error',
-                     '-ar', str(samplerate), '-ac', '1', temp_wav],
-                    stdout=subprocess.PIPE)
-    args['prepare'] = {'file_path': dst}
-    return args
-
 @app.task(name="asr")
 def asr(args, opts):
     engine = opts['engine']
-
+    samplerate = opts['samplerate']
+    temp_wav = file_path(f'task/prepare/{asr.request.id}/processed.wav')
     model_base_path = config.model_path or os.path.join(
         config.storage_path, 'models')
     model_path = os.path.join(model_base_path, config.model)
@@ -157,11 +134,6 @@ def asr(args, opts):
         # transcribe with vosk
 
         start = time.time()
-<<<<<<< HEAD
-        result = transcribe_vosk(opts["media_id"], args["prepare"]["file_path"], model_path)
-        end = time.time()
-
-=======
         result = transcribe_vosk(opts["media_id"], temp_wav, model_path)
         end = time.time()
         dir = os.path.dirname(temp_wav)
@@ -170,7 +142,6 @@ def asr(args, opts):
             os.rmdir(dir)
         else:
             print("Error: %s dir not found" % dir, )
->>>>>>> b12213dbb... delete prepared wav files
         # send change to core
         patch = [
             { "op": "replace", "path": "/transcript", "value": result },
