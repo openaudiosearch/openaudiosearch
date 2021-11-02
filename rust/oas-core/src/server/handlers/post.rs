@@ -27,7 +27,7 @@ pub async fn post_post(
     value: Json<Post>,
 ) -> Result<PutResponse> {
     let mut value = value.into_inner();
-    let id = value.identifier.unwrap_or_else(|| util::id_from_uuid());
+    let id = value.identifier.unwrap_or_else(util::id_from_uuid);
     value.identifier = Some(id.clone());
     let record = Record::from_id_and_value(id, value);
     let res = state.db.put_record(record).await?;

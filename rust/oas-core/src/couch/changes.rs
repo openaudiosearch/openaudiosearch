@@ -146,11 +146,11 @@ impl ChangesStream {
         // let batch_timeout = BATCH_TIMEOUT;
         // let batch_max_len = BATCH_MAX_LEN;
         let changes = self.chunks_timeout(opts.max_len, opts.timeout);
-        let changes = changes.map(|batch| UntypedRecordBatch {
+        
+        changes.map(|batch| UntypedRecordBatch {
             last_seq: get_last_seq(&batch[..]),
             records: changes_into_untyped_records(batch),
-        });
-        changes
+        })
     }
 }
 
@@ -285,10 +285,7 @@ impl Stream for ChangesStream {
                                     self.state = ChangesStreamState::Retrying(Box::pin(sleep(
                                         self.retry_timeout,
                                     )));
-                                    return Poll::Ready(Some(Err(CouchError::Other(format!(
-                                        "{}",
-                                        message
-                                    )))));
+                                    return Poll::Ready(Some(Err(CouchError::Other(message))));
                                 }
                             }
                         }

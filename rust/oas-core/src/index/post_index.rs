@@ -29,7 +29,7 @@ impl PostIndex {
     }
 
     pub fn client(&self) -> &Elasticsearch {
-        &self.index().client()
+        self.index().client()
     }
 
     pub fn name(&self) -> &str {
@@ -149,7 +149,7 @@ impl PostIndex {
 
         for post in posts.iter_mut() {
             // Build the transcript for a post.
-            if let Some(transcript) = generate_transcript_for_post(&post) {
+            if let Some(transcript) = generate_transcript_for_post(post) {
                 post.value.transcript = Some(transcript);
             }
 
@@ -223,7 +223,7 @@ fn generate_transcript_for_post(post: &Record<Post>) -> Option<String> {
     for (i, media_ref) in post.value.media.iter().enumerate() {
         if let Some(media_record) = media_ref.record() {
             if let Some(transcript) = &media_record.value.transcript {
-                let media_transcript = generate_transcript_token_string(&transcript, i);
+                let media_transcript = generate_transcript_token_string(transcript, i);
                 post_transcript += " ";
                 post_transcript += &media_transcript;
             }
@@ -245,8 +245,8 @@ fn generate_transcript_token_string(transcript: &Transcript, id: usize) -> Strin
         );
         tokens.push(token);
     }
-    let merged = tokens.join(" ");
-    merged
+    
+    tokens.join(" ")
 }
 
 // fn transform_post_for_elastic(post: &Record<Post>) -> serde_json::Result<serde_json::Value> {

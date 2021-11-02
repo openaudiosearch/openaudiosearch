@@ -56,7 +56,7 @@ impl<'de> Deserialize<'de> for Guid {
             where
                 E: serde::de::Error,
             {
-                Guid::from_str(&v).map_err(|e| E::custom(format!("{}", e)))
+                Guid::from_str(v).map_err(|e| E::custom(format!("{}", e)))
             }
         }
         deserializer.deserialize_str(GuidVisitor)
@@ -116,7 +116,7 @@ impl FromStr for Guid {
         if parts.len() == 2 {
             let typ = parts[0];
             let id = parts[1];
-            if s.len() != typ.len() + id.len() + SEPERATOR.len() {
+            if s.len() != (typ.len() + id.len() + SEPERATOR.len()) {
                 Err(GuidParseError)
             } else if id.is_empty() || typ.is_empty() {
                 Err(GuidParseError)
@@ -147,7 +147,7 @@ mod tests {
     #[test]
     fn parse_guid() {
         let s = "media_pic1312";
-        let guid = Guid::from_str(&s).expect("failed to parse uid");
+        let guid = Guid::from_str(s).expect("failed to parse uid");
         assert_eq!(guid.typ(), "media");
         assert_eq!(guid.id(), "pic1312");
         let invalid = [
@@ -161,7 +161,7 @@ mod tests {
             "foo_bar_",
         ];
         for s in invalid.iter() {
-            assert_eq!(Guid::from_str(&s).err(), Some(GuidParseError),);
+            assert_eq!(Guid::from_str(s).err(), Some(GuidParseError),);
         }
     }
 
@@ -177,12 +177,12 @@ mod tests {
         assert_eq!(x.guid.typ(), "foo");
         assert_eq!(x.guid.id(), "bar");
         let ser = serde_json::to_string(&x).expect("failed to serialize");
-        assert_eq!(ser, fmtjson(&src), "json does not match");
+        assert_eq!(ser, fmtjson(src), "json does not match");
     }
 
     fn fmtjson(json: &str) -> String {
         serde_json::to_string(
-            &serde_json::from_str::<serde_json::Value>(&json).expect("failed to parse"),
+            &serde_json::from_str::<serde_json::Value>(json).expect("failed to parse"),
         )
         .expect("failed to serialize")
     }

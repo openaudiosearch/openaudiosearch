@@ -99,13 +99,13 @@ impl<'de> de::Visitor<'de> for F32Visitor {
         if let Ok(float) = float {
             Ok(Some(float))
         } else {
-            let mut split: Vec<&str> = value.split(":").collect();
+            let mut split: Vec<&str> = value.split(':').collect();
             split[..].reverse();
 
             let mut factor = 1.;
             let mut result = 0.;
             for part in split {
-                let part: f32 = f32::from_str(&part).map_err(de::Error::custom)?;
+                let part: f32 = f32::from_str(part).map_err(de::Error::custom)?;
                 result += part * factor;
                 factor *= 60.;
             }

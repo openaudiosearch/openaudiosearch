@@ -39,7 +39,7 @@ where
     where
         T: Resolvable + Send,
     {
-        let mut records = self.get_bulk(&ids).await?;
+        let mut records = self.get_bulk(ids).await?;
         self.db.resolve_all_refs(&mut records).await?;
         Ok(records)
     }

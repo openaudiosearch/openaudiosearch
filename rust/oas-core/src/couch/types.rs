@@ -223,7 +223,7 @@ pub enum PutResult {
 impl PutResult {
     pub fn as_err(&self) -> Option<&ErrorDetails> {
         match self {
-            Self::Err(err) => Some(&err),
+            Self::Err(err) => Some(err),
             _ => None,
         }
     }

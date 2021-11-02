@@ -25,7 +25,7 @@ impl IncludedStaticDir {
 impl Into<Vec<Route>> for IncludedStaticDir {
     fn into(self) -> Vec<Route> {
         let mut route = Route::ranked(self.rank, Method::Get, "/<path..>", self);
-        route.name = Some(format!("IncludedStaticDir").into());
+        route.name = Some("IncludedStaticDir".to_string().into());
         vec![route]
     }
 }
@@ -45,7 +45,7 @@ impl Handler for IncludedStaticDir {
                 if path.to_str() == Some("") || path.is_dir() {
                     path.push("index.html");
                 }
-                serve_from_included_static_dir(req, data, &self.dir, path)
+                serve_from_included_static_dir(req, data, self.dir, path)
             }
             None => Outcome::forward(data),
         }

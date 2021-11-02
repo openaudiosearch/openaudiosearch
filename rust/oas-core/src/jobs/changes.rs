@@ -32,12 +32,12 @@ pub async fn process_batch(state: &State, batch: Vec<UntypedRecord>) -> anyhow::
         .context("failed to resolve refs")?;
 
     for record in posts.into_iter() {
-        let res = process_post(&state, record).await;
+        let res = process_post(state, record).await;
         log_if_error(res);
     }
 
     for record in medias.into_iter() {
-        let res = process_media(&state, record).await;
+        let res = process_media(state, record).await;
         log_if_error(res);
     }
 
@@ -51,7 +51,7 @@ async fn process_post(state: &State, record: Record<Post>) -> anyhow::Result<()>
     let mut asr_jobs = vec![];
     for media in record.value.media.iter() {
         if let Some(record) = media.record() {
-            let asr_job = get_job(&state.jobs, &record, job_typs::ASR).await;
+            let asr_job = get_job(&state.jobs, record, job_typs::ASR).await;
             asr_jobs.push(asr_job);
         }
     }

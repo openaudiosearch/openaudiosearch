@@ -74,7 +74,7 @@ impl Config {
 
     pub fn from_url_or_default(url: Option<&str>) -> anyhow::Result<Self> {
         if let Some(url) = url {
-            Self::from_url(&url)
+            Self::from_url(url)
         } else {
             Ok(Self::default())
         }
@@ -83,7 +83,7 @@ impl Config {
     pub fn from_url(url: &str) -> anyhow::Result<Self> {
         let url: Url = url
             .parse()
-            .with_context(|| format!("Failed to parse CouchDB URL"))?;
+            .with_context(|| "Failed to parse CouchDB URL".to_string())?;
         let host = if let Some(host) = url.host() {
             if let Some(port) = url.port() {
                 format!("{}://{}:{}", url.scheme(), host, port)
@@ -101,10 +101,10 @@ impl Config {
         let password = url.password().map(|p| p.to_string());
         let first_segment = url
             .path_segments()
-            .map(|mut segments| segments.nth(0).map(|s| s.to_string()))
+            .map(|mut segments| segments.next().map(|s| s.to_string()))
             .flatten();
         let database = if let Some(first_segment) = first_segment {
-            first_segment.to_string()
+            first_segment
         } else {
             DEFAULT_DATABASE.to_string()
         };
@@ -444,13 +444,13 @@ impl CouchDB {
     /// ```
     pub async fn get_record<T: TypedValue>(&self, id: &str) -> Result<Record<T>> {
         // let id = T::guid(id);
-        let doc = self.get_doc(&id).await?;
+        let doc = self.get_doc(id).await?;
         let record = doc.into_typed_record::<T>()?;
         Ok(record)
     }
 
     pub async fn get_record_untyped(&self, guid: &str) -> Result<UntypedRecord> {
-        let doc = self.get_doc(&guid).await?;
+        let doc = self.get_doc(guid).await?;
         let record = doc.into_untyped_record()?;
         Ok(record)
     }
@@ -459,7 +459,7 @@ impl CouchDB {
         // let ids: Vec<String> = ids.iter().map(|id| T::guid(id)).collect();
         // let ids: Vec<&str> = ids.iter().map(|id| id.as_str()).collect();
         let rows = self
-            .get_many(&ids[..])
+            .get_many(ids)
             .await?
             .rows
             .into_iter()
@@ -469,7 +469,7 @@ impl CouchDB {
     }
 
     pub async fn get_many_records_untyped(&self, ids: &[&str]) -> Result<Vec<UntypedRecord>> {
-        let res = self.get_many(&ids[..]).await;
+        let res = self.get_many(ids).await;
         let res = res?;
         let rows = res
             .rows
@@ -536,7 +536,7 @@ impl CouchDB {
         let mut changed_records = vec![];
         for mut record in records.into_iter() {
             if let Some(patch) = patches.get(record.guid()) {
-                let success = record.apply_json_patch(&patch);
+                let success = record.apply_json_patch(patch);
                 if let Ok(_) = success {
                     changed_records.push(record)
                 }
