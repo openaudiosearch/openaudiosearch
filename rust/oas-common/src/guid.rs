@@ -116,9 +116,10 @@ impl FromStr for Guid {
         if parts.len() == 2 {
             let typ = parts[0];
             let id = parts[1];
-            if s.len() != (typ.len() + id.len() + SEPERATOR.len()) {
-                Err(GuidParseError)
-            } else if id.is_empty() || typ.is_empty() {
+            if (s.len() != (typ.len() + id.len() + SEPERATOR.len()))
+                || id.is_empty()
+                || typ.is_empty()
+            {
                 Err(GuidParseError)
             } else {
                 Ok(Self {

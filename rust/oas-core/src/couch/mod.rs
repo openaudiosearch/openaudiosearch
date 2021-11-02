@@ -566,7 +566,7 @@ impl CouchDB {
         for mut record in records.into_iter() {
             if let Some(patch) = patches.get(record.guid()) {
                 let success = record.apply_json_patch(patch);
-                if let Ok(_) = success {
+                if success.is_ok() {
                     changed_records.push(record)
                 }
             }

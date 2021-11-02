@@ -141,12 +141,12 @@ impl ChangesStream {
 
     pub fn batched_untyped_records(
         self,
-        opts: BatchOpts,
+        opts: &BatchOpts,
     ) -> impl Stream<Item = UntypedRecordBatch> {
         // let batch_timeout = BATCH_TIMEOUT;
         // let batch_max_len = BATCH_MAX_LEN;
         let changes = self.chunks_timeout(opts.max_len, opts.timeout);
-        
+
         changes.map(|batch| UntypedRecordBatch {
             last_seq: get_last_seq(&batch[..]),
             records: changes_into_untyped_records(batch),
