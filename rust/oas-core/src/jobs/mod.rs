@@ -25,6 +25,10 @@ impl JobManager {
         Self { db, client }
     }
 
+    pub(super) fn client(&self) -> &OcypodClient {
+        &self.client
+    }
+
     pub async fn create_job(&self, job: JobCreateRequest) -> anyhow::Result<ocypod::JobId> {
         let typ = job.typ;
         let queues = self.client.get_queues().await?;
@@ -41,19 +45,8 @@ impl JobManager {
         }
 
         // Push the job onto the job queue.
-        let guids = job.subjects.clone();
-        let guids: Vec<&str> = guids.iter().map(|s| s.as_str()).collect();
-
         let job = ocypod::JobCreate::with_tags(job.args, job.subjects);
         let job_id = self.client.put_job(&typ, job).await?;
-
-        // Load subjects and save the job id for each subject.
-        // TODO: This should be somehow atomic.
-        let mut records = self.db.get_many_records_untyped(&guids[..]).await?;
-        for record in records.iter_mut() {
-            record.meta_mut().insert_job(&typ, job_id);
-        }
-        self.db.put_untyped_record_bulk_update(records).await?;
 
         Ok(job_id)
     }
@@ -80,6 +73,14 @@ impl JobManager {
 
     pub async fn all_jobs(&self, filter: Option<JobFilter>) -> anyhow::Result<Vec<JobInfo>> {
         self.client.all_jobs(filter).await
+    }
+
+    pub async fn pending_jobs(&self, tag: &str, typ: &str) -> anyhow::Result<Vec<JobInfo>> {
+        let filter = JobFilter::default()
+            .with_queue(typ)
+            .with_status(JobStatus::Queued);
+        let pending_jobs = self.client().load_tag_filtered(tag, filter).await?;
+        Ok(pending_jobs)
     }
 
     pub async fn set_progress(&self, job_id: JobId, req: JobProgressRequest) -> anyhow::Result<()> {
@@ -110,11 +111,24 @@ impl JobManager {
         job_id: ocypod::JobId,
         req: JobCompletedRequest,
     ) -> anyhow::Result<()> {
-        let changed_guids = if let Some(patches) = req.patches {
-            self.db.apply_patches(patches).await?
-        } else {
-            vec![]
-        };
+        let job = self.job(job_id).await?;
+        let mut patches = req.patches.unwrap_or_default();
+        // Insert all tagged records into the changes to later
+        // add the completed job id.
+        ensure_entries(&mut patches, &job.tags);
+        let tags = job.tags.clone();
+        let typ = job.queue.clone();
+        let changed_guids = self
+            .db
+            .apply_patches_with_callback(patches, move |records| {
+                for record in records
+                    .iter_mut()
+                    .filter(|r| tags.iter().any(|tag| tag == r.guid()))
+                {
+                    record.meta_mut().jobs_mut().insert_completed(&typ, job_id);
+                }
+            })
+            .await?;
         log::debug!(
             "Job {} completed with {} patches ({}) and meta `{}`",
             job_id,
@@ -135,6 +149,19 @@ impl JobManager {
             .await;
         res?;
         Ok(())
+    }
+}
+
+fn ensure_entries(
+    patches: &mut HashMap<String, Patch>,
+    guids: impl IntoIterator<Item = impl AsRef<str>>,
+) {
+    // Insert all tagged records into the changes to later
+    // add the completed job id.
+    for tag in guids.into_iter() {
+        if !patches.contains_key(tag.as_ref()) {
+            patches.insert(tag.as_ref().to_string(), Patch(vec![]));
+        }
     }
 }
 

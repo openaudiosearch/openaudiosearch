@@ -104,6 +104,35 @@ impl OcypodClient {
         Ok(jobs)
     }
 
+    pub async fn load_tag_filtered(
+        &self,
+        tag: &str,
+        filter: JobFilter,
+    ) -> anyhow::Result<Vec<JobInfo>> {
+        let url = format!("{}/tag/{}", self.base_url, tag);
+        let res = self.client.get(&url).send().await?;
+        check_response(&res)?;
+        let res: Vec<JobId> = res.json().await?;
+        let jobs = self.load_filtered(res, filter).await?;
+        Ok(jobs)
+    }
+
+    pub async fn load_filtered(
+        &self,
+        ids: Vec<JobId>,
+        filter: JobFilter,
+    ) -> anyhow::Result<Vec<JobInfo>> {
+        let mut res = vec![];
+        // TODO: Parallelize.
+        for id in ids {
+            let job = self.get_job(id).await?;
+            if filter.matches(&job) {
+                res.push(job);
+            }
+        }
+        Ok(res)
+    }
+
     pub async fn all_jobs(&self, filter: Option<JobFilter>) -> anyhow::Result<Vec<JobInfo>> {
         let queues = match filter {
             Some(JobFilter { ref queue, .. }) if !queue.is_empty() => queue.clone(),
@@ -151,7 +180,7 @@ fn check_response(res: &reqwest::Response) -> anyhow::Result<()> {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default)]
 pub struct JobFilter {
     #[serde(default)]
     pub queue: Vec<String>,
@@ -161,6 +190,32 @@ pub struct JobFilter {
     // pub limit: usize,
     // #[serde(default)]
     // pub offset: usize,
+}
+
+impl JobFilter {
+    pub fn new(queue: Vec<String>, status: Vec<JobStatus>) -> Self {
+        Self { queue, status }
+    }
+
+    pub fn with_queue(mut self, queue: impl ToString) -> Self {
+        self.queue.push(queue.to_string());
+        self
+    }
+
+    pub fn with_status(mut self, status: JobStatus) -> Self {
+        self.status.push(status);
+        self
+    }
+
+    pub fn matches(&self, job: &JobInfo) -> bool {
+        if !self.status.is_empty() && !self.status.contains(&job.status) {
+            return false;
+        }
+        if !self.queue.is_empty() && !self.queue.contains(&job.queue) {
+            return false;
+        }
+        true
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]

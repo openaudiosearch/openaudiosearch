@@ -3,13 +3,11 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::any::Any;
-use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt;
 use thiserror::Error;
 
-use crate::task::TaskObject;
-use crate::{ElasticMapping, MissingRefsError, Resolvable, Resolver};
+use crate::{ElasticMapping, JobsLog, MissingRefsError, Resolvable, Resolver};
 
 pub type Object = serde_json::Map<String, serde_json::Value>;
 pub type Record<T> = TypedRecord<T>;
@@ -46,39 +44,23 @@ pub struct RecordMeta {
     id: String,
 
     #[serde(default)]
-    jobs: JobMap, // TODO: Add more metadata?
-                  // source: String,
-                  // seq: u32,
-                  // version: u32,
-                  // timestamp: u32,
-                  // tasks: HashMap<TaskName, TaskState>
+    jobs: JobsLog, // TODO: Add more metadata?
+                   // source: String,
+                   // seq: u32,
+                   // version: u32,
+                   // timestamp: u32,
+                   // tasks: HashMap<TaskName, TaskState>
 }
 
 impl RecordMeta {
-    pub fn insert_job(&mut self, typ: &str, id: u64) {
-        self.jobs
-            .entry(typ.to_string())
-            .or_insert_with(std::vec::Vec::new)
-            .push(id);
+    pub fn jobs(&self) -> &JobsLog {
+        &self.jobs
     }
 
-    pub fn jobs(&self, typ: &str) -> Option<&Vec<u64>> {
-        self.jobs.get(typ)
-    }
-
-    pub fn latest_job(&self, typ: &str) -> Option<u64> {
-        self.jobs.get(typ).and_then(|vec| vec.last().copied())
-    }
-
-    pub fn latest_jobs(&self) -> HashMap<String, u64> {
-        self.jobs
-            .iter()
-            .filter_map(|(typ, jobs)| jobs.last().map(|id| (typ.to_string(), *id)))
-            .collect()
+    pub fn jobs_mut(&mut self) -> &mut JobsLog {
+        &mut self.jobs
     }
 }
-
-pub type JobMap = HashMap<String, Vec<u64>>;
 
 impl ElasticMapping for RecordMeta {
     fn elastic_mapping() -> serde_json::Value {
@@ -308,19 +290,6 @@ where
     pub meta: RecordMeta,
     #[serde(flatten)]
     pub value: T,
-}
-
-impl<T> TypedRecord<T>
-where
-    T: TaskObject,
-{
-    pub fn task_states(&self) -> Option<&<T as TaskObject>::TaskStates> {
-        self.value.task_states()
-    }
-
-    pub fn task_states_mut(&mut self) -> Option<&mut <T as TaskObject>::TaskStates> {
-        self.value.task_states_mut()
-    }
 }
 
 impl<T> TypedRecord<T>

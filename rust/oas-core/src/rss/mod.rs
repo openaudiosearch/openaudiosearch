@@ -129,26 +129,29 @@ impl FeedWatcher {
         let posts = self.to_posts()?;
         let mut docs = vec![];
         for mut post in posts.into_iter() {
-            if let Some(record) = &self.feed_record {
+            if let Some(feed) = &self.feed_record {
                 // Assign feed reference on post.
-                post.value.feeds = vec![Reference::Id(record.guid().to_string())];
+                post.value.feeds = vec![Reference::Id(feed.guid().to_string())];
                 // Assign feed reference on medias.
                 let post_guid = post.guid().to_string();
-                if let Some(defaults) = &record.value.task_defaults {
-                    if let Some(task_settings) = &defaults.post {
-                        post.value.tasks = task_settings.clone();
-                    }
-                    if let Some(task_settings) = &defaults.media {
-                        for media in post.value.media.iter_mut() {
-                            if let Some(media) = media.record_mut() {
-                                media.value.tasks = task_settings.clone();
-                                media.value.posts.push(Reference::Id(post_guid.clone()));
-                                media
-                                    .value
-                                    .feeds
-                                    .push(Reference::Id(record.guid().to_string()));
-                            }
-                        }
+                // Copy post job settings.
+                if !feed.value.post_jobs.is_empty() {
+                    post.meta_mut()
+                        .jobs_mut()
+                        .copy_settings(&feed.value.post_jobs);
+                }
+                // Copy media job settings and add references to media.
+                if !feed.value.media_jobs.is_empty() {
+                    for media in post.value.media.iter_mut().filter_map(|r| r.record_mut()) {
+                        media
+                            .meta_mut()
+                            .jobs_mut()
+                            .copy_settings(&feed.value.media_jobs);
+                        media.value.posts.push(Reference::Id(post_guid.clone()));
+                        media
+                            .value
+                            .feeds
+                            .push(Reference::Id(feed.guid().to_string()));
                     }
                 }
             }
@@ -236,7 +239,7 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
         let post: Result<Post, serde_json::Error> =
             serde_json::from_value(serde_json::Value::Object(mapped_fields_json));
         // log::debug!("post result after parse {:#?}", post);
-        
+
         post.unwrap_or_default()
     };
     // log::debug!("post after mapping {:#?}", post);
