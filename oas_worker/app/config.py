@@ -23,7 +23,7 @@ def default_frontend_path():
 class Settings(BaseSettings):
     # general settings
     storage_path: str = default_data_dir()
-    model: str = 'vosk-model-de-0.6'
+    model: str = 'vosk-model-de-0.21'
     model_path: str = ''
     log_level: str = 'info'
 
