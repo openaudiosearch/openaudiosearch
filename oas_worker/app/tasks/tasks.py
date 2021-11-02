@@ -49,17 +49,16 @@ def url_to_path(url: str) -> str:
 def transcribe(args: dict, opts: dict):
     media_url = args['media_url']
     media_id = args['media_id']
+    
     print("start transcribe task for media " + media_id)
     
     nlp_opts = { 'media_id': media_id, 'pipeline': 'ner'}
-    asr_opts = { 'media_id': media_id, 'engine': 'vosk'}
+    asr_opts = { 'media_id': media_id, 'engine': 'vosk', 'samplerate': 16000}
     download_opts = { 'media_url': media_url, 'media_id': media_id }
-    prepare_opts = { 'media_id': media_id, 'samplerate': 16000 }
     save_task_state_opts = { 'media_id': media_id }
 
     result = chain(
         download.s(download_opts),
-        prepare.s(prepare_opts),
         asr.s(asr_opts),
         nlp.s(nlp_opts),
         save_task_state.s(save_task_state_opts)
@@ -124,23 +123,6 @@ def download(opts):
         args['download'] = {"file_path": target_path, "source_url": url}
         return args
 
-@app.task(name="prepare")
-def prepare(args, opts):
-    samplerate = opts['samplerate']
-    dst = file_path(f'task/prepare/{prepare.request.id}/processed.wav')
-    # TODO: Find out why this pydub segment does not work.
-    # sound = AudioSegment.from_file(args.file_path)
-    # sound.set_frame_rate(opts.samplerate)
-    # sound.set_channels(1)
-    # sound.export(dst, format="wav")
-    subprocess.call(['ffmpeg', '-i',
-                     args["download"]["file_path"],
-                     '-hide_banner', '-loglevel', 'error',
-                     '-ar', str(samplerate), '-ac', '1', dst],
-                    stdout=subprocess.PIPE)
-    args['prepare'] = {'file_path': dst}
-    return args
-
 @app.task(name="asr")
 def asr(args, opts):
     engine = opts['engine']
@@ -148,13 +130,22 @@ def asr(args, opts):
     model_base_path = config.model_path or os.path.join(
         config.storage_path, 'models')
     model_path = os.path.join(model_base_path, config.model)
+
+    samplerate = opts['samplerate']
+    dst = file_path(f'task/prepare/{prepare.request.id}/processed.wav')
+ 
+    subprocess.call(['ffmpeg', '-i',
+                     args["download"]["file_path"],
+                     '-hide_banner', '-loglevel', 'error',
+                     '-ar', str(samplerate), '-ac', '1', dst],
+                    stdout=subprocess.PIPE)
     if engine == "vosk":
         # transcribe with vosk
 
         start = time.time()
-        result = transcribe_vosk(opts["media_id"], args["prepare"]["file_path"], model_path)
+        result = transcribe_vosk(opts["media_id"], dst, model_path)
         end = time.time()
-
+        os.remove(dst)
         # send change to core
         patch = [
             { "op": "replace", "path": "/transcript", "value": result },
