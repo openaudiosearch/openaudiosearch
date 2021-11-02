@@ -5,6 +5,3 @@ log_level = "debug"
 
 [redis]
 url = "redis://redis"
-
-[queue.default]
-timeout = "10m"

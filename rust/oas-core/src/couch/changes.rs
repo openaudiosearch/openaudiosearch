@@ -3,7 +3,10 @@ use futures::{Future, Stream};
 use futures_batch::ChunksTimeoutStreamExt;
 use oas_common::UntypedRecord;
 use reqwest::{Method, Response};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt;
 use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -12,6 +15,8 @@ use tokio::io::AsyncBufReadExt;
 use tokio::time::{sleep, Sleep};
 use tokio_stream::wrappers::LinesStream;
 use tokio_util::io::StreamReader;
+use tracing::{error, warn};
+use tracing_attributes::instrument;
 
 use crate::couch::ErrorDetails;
 
@@ -30,11 +35,13 @@ const COUCH_MAX_TIMEOUT: usize = 60000;
 /// The stream for the `_changes` endpoint.
 ///
 /// This is returned from [Database::changes].
+#[derive(Debug)]
 pub struct ChangesStream {
     last_seq: Option<String>,
     db: CouchDB,
     state: ChangesStreamState,
     params: HashMap<String, String>,
+    body: Option<serde_json::Value>,
     infinite: bool,
     retries: usize,
     max_retries: usize,
@@ -46,6 +53,17 @@ enum ChangesStreamState {
     Idle,
     Requesting(Pin<Box<dyn Future<Output = CouchResult<Response>> + Send + 'static>>),
     Reading(Pin<Box<dyn Stream<Item = io::Result<String>> + Send + 'static>>),
+}
+
+impl fmt::Debug for ChangesStreamState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Retrying(_) => write!(f, "Retrying"),
+            Self::Idle => write!(f, "Idle"),
+            Self::Requesting(_) => write!(f, "Requesting"),
+            Self::Reading(_) => write!(f, "Reading"),
+        }
+    }
 }
 
 impl ChangesStream {
@@ -73,6 +91,7 @@ impl ChangesStream {
             retries: 0,
             max_retries: 10,
             retry_timeout: Duration::from_millis(100),
+            body: None,
         }
     }
 
@@ -94,6 +113,18 @@ impl ChangesStream {
         self.params.insert("timeout".to_string(), timeout);
     }
 
+    /// Set a selector to filter the changes stream.
+    ///
+    /// See https://docs.couchdb.org/en/stable/api/database/changes.html#selector for details.
+    pub fn set_selector(&mut self, selector: serde_json::Value) {
+        self.set_param("filter", "_selector");
+        self.body = Some(selector);
+    }
+
+    pub fn set_param(&mut self, key: impl ToString, value: impl ToString) {
+        self.params.insert(key.to_string(), value.to_string());
+    }
+
     /// Get the last retrieved seq.
     pub fn last_seq(&self) -> &Option<String> {
         &self.last_seq
@@ -108,10 +139,13 @@ impl ChangesStream {
     //     RecordChangesStream::new(self)
     // }
 
-    pub fn batched_untyped_records(self) -> impl Stream<Item = UntypedRecordBatch> {
-        let batch_timeout = BATCH_TIMEOUT;
-        let batch_max_len = BATCH_MAX_LEN;
-        let changes = self.chunks_timeout(batch_max_len, batch_timeout);
+    pub fn batched_untyped_records(
+        self,
+        opts: BatchOpts,
+    ) -> impl Stream<Item = UntypedRecordBatch> {
+        // let batch_timeout = BATCH_TIMEOUT;
+        // let batch_max_len = BATCH_MAX_LEN;
+        let changes = self.chunks_timeout(opts.max_len, opts.timeout);
         let changes = changes.map(|batch| UntypedRecordBatch {
             last_seq: get_last_seq(&batch[..]),
             records: changes_into_untyped_records(batch),
@@ -120,12 +154,29 @@ impl ChangesStream {
     }
 }
 
+pub struct BatchOpts {
+    pub timeout: time::Duration,
+    pub max_len: usize,
+}
+impl Default for BatchOpts {
+    fn default() -> Self {
+        Self {
+            timeout: BATCH_TIMEOUT,
+            max_len: BATCH_MAX_LEN,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Clone)]
 pub struct UntypedRecordBatch {
-    records: Vec<UntypedRecord>,
-    last_seq: Option<String>,
+    pub records: Vec<UntypedRecord>,
+    pub last_seq: Option<String>,
 }
 
 impl UntypedRecordBatch {
+    pub fn len(&self) -> usize {
+        self.records.len()
+    }
     pub fn last_seq(&self) -> Option<&str> {
         self.last_seq.as_deref()
     }
@@ -139,14 +190,25 @@ impl UntypedRecordBatch {
     }
 }
 
-async fn get_changes(db: CouchDB, params: HashMap<String, String>) -> CouchResult<Response> {
+async fn get_changes(
+    db: CouchDB,
+    params: HashMap<String, String>,
+    _body: Option<serde_json::Value>,
+) -> CouchResult<Response> {
+    // let req = db.request(Method::POST, "_changes").query(&params);
     let req = db.request(Method::GET, "_changes").query(&params);
+    // let req = if let Some(body) = body {
+    //     req.json(&body)
+    // } else {
+    //     req
+    // };
     let res = req.send().await?;
     Ok(res)
 }
 
 impl Stream for ChangesStream {
     type Item = CouchResult<ChangeEvent>;
+    #[instrument(skip(self, cx))]
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         loop {
             let retries_exceeded = self.retries >= self.max_retries;
@@ -164,11 +226,13 @@ impl Stream for ChangesStream {
                     if let Some(seq) = &self.last_seq {
                         params.insert("since".to_string(), seq.clone());
                     }
-                    let fut = get_changes(self.db.clone(), params);
+                    let body = self.body.clone();
+                    let fut = get_changes(self.db.clone(), params, body);
                     self.state = ChangesStreamState::Requesting(Box::pin(fut));
                 }
                 ChangesStreamState::Requesting(ref mut fut) => match ready!(fut.poll_unpin(cx)) {
                     Err(err) => {
+                        error!(err = %err, "Request failed: {}", err);
                         self.state =
                             ChangesStreamState::Retrying(Box::pin(sleep(self.retry_timeout)));
                         return Poll::Ready(Some(Err(err)));

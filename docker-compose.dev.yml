@@ -41,10 +41,12 @@ services:
 
 
   ocypod:
-    image: davechallis/ocypod:latest
+    build:
+      context: ./docker/ocypod
+    # image: davechallis/ocypod:latest
     volumes:
       - ./ocypod.toml:/etc/ocypod.toml:ro
-    command: /etc/ocypod.toml
+    command: ["redis:6379", "--", "ocypod-server", "/etc/ocypod.toml"]
     ports:
       - 8023:8023
 

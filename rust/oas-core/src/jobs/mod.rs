@@ -4,11 +4,14 @@ use std::{collections::HashMap, time::Duration};
 
 use crate::couch::CouchDB;
 
+pub mod bin;
+pub mod changes;
 mod ocypod;
 pub mod typs;
-pub use ocypod::{JobInfo, JobInput, JobStatus, OcypodClient};
 
-pub type JobId = u64;
+pub use ocypod::{
+    JobFilter, JobId, JobInfo, JobInput, JobOutput, JobStatus, OcypodClient, DEFAULT_OCYPOD_URL,
+};
 
 #[derive(Debug, Clone)]
 pub struct JobManager {
@@ -17,8 +20,8 @@ pub struct JobManager {
 }
 
 impl JobManager {
-    pub fn new(db: CouchDB, base_url: String) -> Self {
-        let client = OcypodClient::new(base_url);
+    pub fn new(db: CouchDB, base_url: impl ToString) -> Self {
+        let client = OcypodClient::new(base_url.to_string());
         Self { db, client }
     }
 
@@ -55,45 +58,81 @@ impl JobManager {
         Ok(job_id)
     }
 
-    pub async fn next_job(&self, typ: &str) -> anyhow::Result<JobRequest> {
+    pub async fn next_job(&self, typ: &str) -> anyhow::Result<Option<JobRequest>> {
         let input = self.client.next_job(&typ).await?;
-        let job = self.client.get_job(input.id).await?;
-        let job_request = JobRequest {
-            id: input.id.clone(),
-            typ: job.queue,
-            args: input.input,
-            subjects: job.tags,
-        };
-        Ok(job_request)
+        if let Some(input) = input {
+            let job = self.client.get_job(input.id).await?;
+            let job_request = JobRequest {
+                id: input.id.clone(),
+                typ: job.queue,
+                args: input.input,
+                subjects: job.tags,
+            };
+            Ok(Some(job_request))
+        } else {
+            Ok(None)
+        }
     }
 
-    pub async fn get_job(&self, id: JobId) -> anyhow::Result<JobInfo> {
+    pub async fn job(&self, id: JobId) -> anyhow::Result<JobInfo> {
         self.client.get_job(id).await
     }
 
-    pub async fn apply_results(
+    pub async fn all_jobs(&self, filter: Option<JobFilter>) -> anyhow::Result<Vec<JobInfo>> {
+        self.client.all_jobs(filter).await
+    }
+
+    pub async fn set_progress(&self, job_id: JobId, req: JobProgressRequest) -> anyhow::Result<()> {
+        let output = JobOutput {
+            error: None,
+            progress: Some(req.progress),
+            meta: req.meta,
+            duration: None,
+        };
+        self.client.update_job(job_id, None, Some(output)).await
+    }
+
+    pub async fn set_failed(&self, job_id: JobId, req: JobFailedRequest) -> anyhow::Result<()> {
+        let status = JobStatus::Failed;
+        let output = JobOutput {
+            error: Some(req.error),
+            progress: Some(100.0),
+            meta: req.meta,
+            duration: req.duration,
+        };
+        self.client
+            .update_job(job_id, Some(status), Some(output))
+            .await
+    }
+
+    pub async fn set_completed(
         &self,
         job_id: ocypod::JobId,
-        results: JobResults,
+        req: JobCompletedRequest,
     ) -> anyhow::Result<()> {
-        let patches = results.patches;
-        let guids: Vec<&str> = patches.keys().map(|s| s.as_str()).collect();
-        let records = self.db.get_many_records_untyped(&guids).await?;
-        let mut changed_records = vec![];
-        for mut record in records.into_iter() {
-            if let Some(patch) = patches.get(record.guid()) {
-                let success = record.apply_json_patch(&patch);
-                if let Ok(_) = success {
-                    changed_records.push(record)
-                }
-            }
-        }
-        self.db
-            .put_untyped_record_bulk_update(changed_records)
-            .await?;
-        let status = Some(ocypod::JobStatus::Completed);
-        let output = Some(serde_json::to_value(results.meta)?);
-        let res = self.client.update_job(job_id, status, output).await;
+        let changed_guids = if let Some(patches) = req.patches {
+            self.db.apply_patches(patches).await?
+        } else {
+            vec![]
+        };
+        log::debug!(
+            "Job {} completed with {} patches ({}) and meta `{}`",
+            job_id,
+            changed_guids.len(),
+            changed_guids.join(", "),
+            serde_json::to_string(&req.meta).unwrap_or_default()
+        );
+        let status = ocypod::JobStatus::Completed;
+        let output = JobOutput {
+            progress: Some(100.0),
+            error: None,
+            meta: req.meta,
+            duration: req.duration,
+        };
+        let res = self
+            .client
+            .update_job(job_id, Some(status), Some(output))
+            .await;
         res?;
         Ok(())
     }
@@ -115,18 +154,23 @@ pub struct JobRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct JobResults {
-    #[serde(default)]
-    pub patches: HashMap<String, Patch>,
-    #[serde(default)]
-    pub meta: HashMap<String, String>,
+pub struct JobCompletedRequest {
+    pub patches: Option<HashMap<String, Patch>>,
+    pub meta: Option<HashMap<String, String>>,
+    pub duration: Option<f32>,
 }
 
-// trait JobTyp {
-//     const NAME: &'static str;
-//     type Args: Serialize + DeserializeOwned;
-// }
-// mod jobs {
-//     struct AsrJob;
+#[derive(Debug, Serialize, Deserialize)]
+pub struct JobProgressRequest {
+    pub progress: f32,
+    pub meta: Option<HashMap<String, String>>,
+}
 
-// }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct JobFailedRequest {
+    #[serde(default)]
+    pub error: serde_json::Value,
+    #[serde(default)]
+    pub meta: Option<HashMap<String, String>>,
+    pub duration: Option<f32>,
+}

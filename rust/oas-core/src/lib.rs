@@ -10,7 +10,6 @@ pub mod jobs;
 pub mod rss;
 mod runtime;
 pub mod server;
-pub mod tasks;
 pub mod util;
 
 use crate::rss::FeedManager;
@@ -29,7 +28,6 @@ pub struct State {
     pub db_manager: CouchManager,
     pub db: couch::CouchDB,
     pub index_manager: index::IndexManager,
-    pub tasks: tasks::CeleryManager,
     pub jobs: jobs::JobManager,
     did_init: Arc<AtomicBool>,
 }
@@ -39,7 +37,6 @@ impl State {
         db_manager: CouchManager,
         db: CouchDB,
         index_manager: index::IndexManager,
-        tasks: tasks::CeleryManager,
         feed_manager: FeedManager,
         jobs: jobs::JobManager,
     ) -> Self {
@@ -47,7 +44,6 @@ impl State {
             db_manager,
             db,
             index_manager,
-            tasks,
             feed_manager,
             jobs,
             did_init: Arc::new(AtomicBool::new(false)),
@@ -76,10 +72,6 @@ impl State {
             .init(Default::default())
             .await
             .context("Failed to initialize Elasticsearch.")?;
-        self.tasks
-            .init()
-            .await
-            .context("Failed to initialize Celery/Redis task manager.")?;
         Ok(())
     }
 }

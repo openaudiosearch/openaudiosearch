@@ -21,7 +21,7 @@ pub trait Crawler: Send + Sync {
     }
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 pub struct FetchOpts {
     /// Feed URL
     url: Url,
@@ -30,7 +30,7 @@ pub struct FetchOpts {
     update: bool,
 }
 
-#[derive(Parser, Serialize, Deserialize)]
+#[derive(Parser, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CrawlOpts {
     /// Feed URL to ingest

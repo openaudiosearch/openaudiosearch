@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use crate::util::{wait_for_ready, RetryOpts};
-
+use super::durable_changes::{ChangesOpts, DurableChanges};
 use super::{Config, CouchDB, CouchError};
+use crate::util::{wait_for_ready, RetryOpts};
 
 pub const RECORD_DB_NAME: &str = "records";
 pub const META_DB_NAME: &str = "meta";
@@ -106,5 +106,12 @@ impl CouchManager {
 
     pub fn meta_db(&self) -> &CouchDB {
         &self.meta_db
+    }
+
+    pub async fn durable_changes(&self, id: impl ToString, opts: ChangesOpts) -> DurableChanges {
+        let id = id.to_string();
+        let changes =
+            DurableChanges::new(self.record_db().clone(), self.meta_db().clone(), id, opts).await;
+        changes
     }
 }
