@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use super::{Config, CouchDB};
+use crate::util::{wait_for_ready, RetryOpts};
+
+use super::{Config, CouchDB, CouchError};
 
 pub const RECORD_DB_NAME: &str = "records";
 pub const META_DB_NAME: &str = "meta";
@@ -54,7 +56,19 @@ impl CouchManager {
         CouchDB::with_config_and_client(config, self.client.clone())
     }
 
+    pub async fn wait_for_ready(&self) -> Result<(), CouchError> {
+        let opts = RetryOpts::with_name("CouchDB".into());
+        wait_for_ready(&self.client, opts, || {
+            self.client.get(&self.config.host).build()
+        })
+        .await?;
+        Ok(())
+    }
+
+    /// Test connection and create initial databases.
     pub async fn init(&self) -> anyhow::Result<()> {
+        // Wait until the CouchDB is reachable.
+        self.wait_for_ready().await?;
         // Init system databases if they do not exist yet.
         let res = futures::future::join_all(vec![
             self.db("_users", false).init(),
