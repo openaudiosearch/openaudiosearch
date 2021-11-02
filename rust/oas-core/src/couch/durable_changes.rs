@@ -4,9 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::pin::Pin;
 use tracing::debug;
 
-use crate::couch::changes::BatchOpts;
-
-use super::{changes::UntypedRecordBatch, CouchDB};
+use super::changes::{BatchOpts, UntypedRecordBatch};
+use super::CouchDB;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct DurablePointer {
@@ -19,10 +18,15 @@ impl TypedValue for DurablePointer {
 
 pub struct ChangesOpts {
     pub infinite: bool,
+    pub batch: BatchOpts,
 }
+
 impl Default for ChangesOpts {
     fn default() -> Self {
-        Self { infinite: true }
+        Self {
+            infinite: true,
+            batch: BatchOpts::default(),
+        }
     }
 }
 
@@ -33,7 +37,6 @@ pub struct DurableChanges {
     main: CouchDB,
     changes: Option<Pin<Box<dyn Stream<Item = UntypedRecordBatch> + Unpin + Send + 'static>>>,
     seq: Option<String>,
-    init: bool,
     opts: ChangesOpts,
 }
 
@@ -46,7 +49,6 @@ impl DurableChanges {
             changes: None,
             seq: None,
             needs_ack: false,
-            init: false,
             opts,
         }
     }
@@ -70,13 +72,10 @@ impl DurableChanges {
 
         let mut changes = self.main.changes(self.seq.clone());
         changes.set_infinite(self.opts.infinite);
-        let mut batch_opts = BatchOpts::default();
-        batch_opts.max_len = 3;
-        let changes = changes.batched_untyped_records(batch_opts);
+        let changes = changes.batched_untyped_records(&self.opts.batch);
         let changes: Box<dyn Stream<Item = _> + Unpin + Send + 'static> = Box::new(changes);
         let changes = Pin::new(changes);
         self.changes = Some(changes);
-        self.init = true;
     }
 
     pub async fn ack(&mut self) -> anyhow::Result<()> {
@@ -90,7 +89,7 @@ impl DurableChanges {
     }
 
     pub async fn next(&mut self) -> anyhow::Result<Option<UntypedRecordBatch>> {
-        if !self.init {
+        if self.changes.is_none() {
             self.init().await;
         }
         if self.needs_ack {
@@ -98,7 +97,7 @@ impl DurableChanges {
         }
         let batch = self.changes.as_mut().unwrap().next().await;
         if let Some(batch) = &batch {
-            self.seq = batch.last_seq().as_ref().map(|s| s.to_string());
+            self.seq = batch.last_seq().map(|s| s.to_string());
             self.needs_ack = true;
         }
         Ok(batch)

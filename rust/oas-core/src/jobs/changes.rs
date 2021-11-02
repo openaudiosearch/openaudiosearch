@@ -11,7 +11,10 @@ use super::JobManager;
 const DURABLE_ID: &str = "core.jobs";
 
 pub async fn process_changes(state: State, infinite: bool) -> anyhow::Result<()> {
-    let opts = ChangesOpts { infinite };
+    let opts = ChangesOpts {
+        infinite,
+        ..Default::default()
+    };
     let mut changes = state.db_manager.durable_changes(DURABLE_ID, opts).await;
     while let Some(batch) = changes.next().await? {
         process_batch(&state, batch.into_inner())
