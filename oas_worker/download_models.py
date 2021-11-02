@@ -18,8 +18,8 @@ def extract(filepath):
     path, _ = os.path.split(filepath)
     with zipfile.ZipFile(filepath) as zip_ref:
         zip_ref.extractall(path)
-
-
+    os.remove(filepath)
+        
 def download_all_models():
     download_vosk_models()
     download_spacy_models()
