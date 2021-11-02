@@ -1,5 +1,6 @@
 use anyhow::Context;
 use clap::Parser;
+use json_patch::Patch;
 use oas_common::UntypedRecord;
 use oas_common::{Record, TypedValue};
 use reqwest::{Method, RequestBuilder};
@@ -16,6 +17,7 @@ pub type CouchResult<T> = std::result::Result<T, CouchError>;
 pub type Result<T> = std::result::Result<T, CouchError>;
 
 pub(crate) mod changes;
+pub(crate) mod durable_changes;
 pub(crate) mod error;
 mod manager;
 pub mod resolver;
@@ -251,14 +253,19 @@ impl CouchDB {
             if let Some(rev) = last_doc.rev() {
                 path = path + "?rev=" + rev;
             }
-        } 
+        }
         let req = self.request(Method::DELETE, &path);
         let res = self.send(req).await;
-            if let Err(err) = &res {
-                log::trace!("[{}] delete ERR for {}: {:?}", self.config.database, id, err);
-            } else {
-                log::trace!("[{}] delete OK for {}", self.config.database, id);
-            }
+        if let Err(err) = &res {
+            log::trace!(
+                "[{}] delete ERR for {}: {:?}",
+                self.config.database,
+                id,
+                err
+            );
+        } else {
+            log::trace!("[{}] delete OK for {}", self.config.database, id);
+        }
         return res;
     }
 
@@ -542,5 +549,37 @@ impl CouchDB {
     /// Delete a single record from the database.
     pub async fn delete_record(&self, guid: &str) -> Result<PutResponse> {
         self.delete_doc(guid).await
+    }
+
+    /// Apply a list of JSON patches.
+    ///
+    /// `patches` is a HashMap with GUIDs as keys and JSON patches as values.
+    ///
+    /// TODO: Make this atomic!
+    pub async fn apply_patches(
+        &self,
+        patches: HashMap<String, Patch>,
+    ) -> anyhow::Result<Vec<String>> {
+        let guids: Vec<&str> = patches.keys().map(|s| s.as_str()).collect();
+        let records = self.get_many_records_untyped(&guids).await?;
+        let mut changed_records = vec![];
+        for mut record in records.into_iter() {
+            if let Some(patch) = patches.get(record.guid()) {
+                let success = record.apply_json_patch(&patch);
+                if let Ok(_) = success {
+                    changed_records.push(record)
+                }
+            }
+        }
+        if !changed_records.is_empty() {
+            let guids = changed_records
+                .iter()
+                .map(|r| r.guid().to_string())
+                .collect::<Vec<_>>();
+            self.put_untyped_record_bulk_update(changed_records).await?;
+            Ok(guids)
+        } else {
+            Ok(vec![])
+        }
     }
 }

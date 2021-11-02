@@ -72,8 +72,6 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 handlers::feed::delete_feed,
                 // /search routes
                 handlers::search::search,
-                // task routes
-                handlers::task::post_transcribe_media,
                 // login routes
                 auth::post_login,
                 auth::get_login,
@@ -81,10 +79,15 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 auth::register,
                 auth::private,
                 // job routes
+                handlers::job::get_all_jobs,
                 handlers::job::get_job,
                 handlers::job::post_job,
                 handlers::job::work_job,
-                handlers::job::patch_job
+                handlers::job::put_job_completed,
+                handlers::job::put_job_failed,
+                handlers::job::put_job_progress,
+                // changes routes
+                handlers::changes::durable_changes,
             ],
         )
         .mount(

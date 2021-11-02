@@ -72,7 +72,7 @@ pub struct FeedManagerInner {
     store: HashMap<String, TypedRecord<types::Feed>>,
     mapping_manager: MappingManager,
     opts: FeedManagerOpts,
-    init: bool
+    init: bool,
 }
 
 impl FeedManagerInner {
@@ -86,13 +86,13 @@ impl FeedManagerInner {
             store: HashMap::new(),
             opts,
             mapping_manager,
-            init: false
+            init: false,
         }
     }
 
     async fn init(&mut self, db: &CouchDB) -> anyhow::Result<()> {
         if self.init {
-            return Ok(())
+            return Ok(());
         }
         self.mapping_manager.init().await?;
         let records = db.get_all_records::<types::Feed>().await?;

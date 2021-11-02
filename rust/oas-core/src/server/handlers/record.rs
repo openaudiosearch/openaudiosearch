@@ -6,8 +6,8 @@ use rocket_okapi::openapi;
 use serde_json::Value;
 
 use crate::couch::Doc;
-use crate::server::error::{AppError, Result};
 use crate::server::auth::AdminUser;
+use crate::server::error::{AppError, Result};
 
 // pub fn routes() -> Vec<Route> {
 //     routes![get_record, post_record]
