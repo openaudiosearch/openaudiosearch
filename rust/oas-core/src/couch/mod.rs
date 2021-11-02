@@ -305,6 +305,9 @@ impl CouchDB {
     where
         T: Into<Doc>,
     {
+        if docs.is_empty() {
+            return Ok(vec![]);
+        }
         let mut docs_without_rev = vec![];
         let mut docs: Vec<Doc> = docs.into_iter().map(|doc| doc.into()).collect();
         for (i, doc) in docs.iter().enumerate() {
@@ -522,14 +525,10 @@ impl CouchDB {
         self.put_bulk_update(docs).await
     }
 
-    /// Apply a list of JSON patches.
-    ///
-    /// `patches` is a HashMap with GUIDs as keys and JSON patches as values.
-    ///
-    /// TODO: Make this atomic!
-    pub async fn apply_patches(
+    pub async fn apply_patches_with_callback(
         &self,
         patches: HashMap<String, Patch>,
+        mut cb: impl FnMut(&mut Vec<UntypedRecord>),
     ) -> anyhow::Result<Vec<String>> {
         let guids: Vec<&str> = patches.keys().map(|s| s.as_str()).collect();
         let records = self.get_many_records_untyped(&guids).await?;
@@ -542,15 +541,25 @@ impl CouchDB {
                 }
             }
         }
-        if !changed_records.is_empty() {
-            let guids = changed_records
-                .iter()
-                .map(|r| r.guid().to_string())
-                .collect::<Vec<_>>();
-            self.put_untyped_record_bulk_update(changed_records).await?;
-            Ok(guids)
-        } else {
-            Ok(vec![])
-        }
+        cb(&mut changed_records);
+        let guids = changed_records
+            .iter()
+            .map(|r| r.guid().to_string())
+            .collect::<Vec<_>>();
+        self.put_untyped_record_bulk_update(changed_records).await?;
+        Ok(guids)
+    }
+
+    /// Apply a list of JSON patches.
+    ///
+    /// `patches` is a HashMap with GUIDs as keys and JSON patches as values.
+    ///
+    /// TODO: Make this atomic!
+    pub async fn apply_patches(
+        &self,
+        patches: HashMap<String, Patch>,
+    ) -> anyhow::Result<Vec<String>> {
+        self.apply_patches_with_callback(patches, |_records| {})
+            .await
     }
 }

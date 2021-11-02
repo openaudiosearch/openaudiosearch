@@ -5,7 +5,7 @@ use std::{ops::Range, str::FromStr};
 use serde::de::Visitor;
 use serde::{Deserialize, Serialize};
 
-use crate::util::id_from_uuid;
+use crate::util::{id_from_hashed_string, id_from_uuid};
 
 pub const SEPERATOR: &str = "_";
 
@@ -69,11 +69,6 @@ impl Guid {
         &self.guid
     }
 
-    /// Turn into a GUID string
-    pub fn into_guid(self) -> String {
-        self.guid
-    }
-
     // pub fn from_string_unchecked(s: String) -> Self {
     //     Self::from_str(&s).unwrap()
     // }
@@ -88,6 +83,7 @@ impl Guid {
         &self.guid[self.id.start..self.id.end]
     }
 
+    /// Create a GUID from type and id strings.
     pub fn from_parts(typ: &str, id: &str) -> Self {
         let guid = format!("{}{}{}", typ, SEPERATOR, id);
         Self {
@@ -97,8 +93,22 @@ impl Guid {
         }
     }
 
-    pub fn typ_and_random(typ: &str) -> Self {
+    /// Turn a GUID into a (typ, id) string tuple.
+    pub fn into_parts(self) -> (String, String) {
+        (self.typ().to_string(), self.id().to_string())
+    }
+
+    /// Turn into a GUID string
+    pub fn into_guid(self) -> String {
+        self.guid
+    }
+
+    pub fn with_typ_and_random(typ: &str) -> Self {
         Self::from_parts(typ, &id_from_uuid())
+    }
+
+    pub fn with_typ_and_seed(typ: &str, seed: &str) -> Self {
+        Self::from_parts(typ, &id_from_hashed_string(seed))
     }
 }
 
@@ -112,24 +122,17 @@ impl Deref for Guid {
 impl FromStr for Guid {
     type Err = GuidParseError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.starts_with(SEPERATOR) || s.ends_with(SEPERATOR) {
+            return Err(GuidParseError);
+        }
         let parts: Vec<&str> = s.split_terminator(SEPERATOR).collect();
-        if parts.len() == 2 {
-            let typ = parts[0];
-            let id = parts[1];
-            if (s.len() != (typ.len() + id.len() + SEPERATOR.len()))
-                || id.is_empty()
-                || typ.is_empty()
-            {
-                Err(GuidParseError)
-            } else {
-                Ok(Self {
-                    guid: s.to_string(),
-                    typ: 0..typ.len(),
-                    id: (typ.len() + SEPERATOR.len())..s.len(),
-                })
-            }
-        } else {
-            Err(GuidParseError)
+        match parts.as_slice() {
+            [typ, id] if !typ.is_empty() && !id.is_empty() => Ok(Self {
+                guid: s.to_string(),
+                typ: 0..typ.len(),
+                id: (typ.len() + SEPERATOR.len())..s.len(),
+            }),
+            _ => Err(GuidParseError),
         }
     }
 }
@@ -147,9 +150,9 @@ mod tests {
     }
     #[test]
     fn parse_guid() {
-        let s = "media_pic1312";
+        let s = "oas.Media_pic1312";
         let guid = Guid::from_str(s).expect("failed to parse uid");
-        assert_eq!(guid.typ(), "media");
+        assert_eq!(guid.typ(), "oas.Media");
         assert_eq!(guid.id(), "pic1312");
         let invalid = [
             "_",
@@ -162,7 +165,13 @@ mod tests {
             "foo_bar_",
         ];
         for s in invalid.iter() {
-            assert_eq!(Guid::from_str(s).err(), Some(GuidParseError),);
+            assert_eq!(
+                Guid::from_str(s).err(),
+                Some(GuidParseError),
+                "invalid guid: {} (got: {:?})",
+                s,
+                Guid::from_str(s)
+            );
         }
     }
 
