@@ -125,11 +125,18 @@ def download(opts):
 @app.task(name="asr")
 def asr(args, opts):
     engine = opts['engine']
-    samplerate = opts['samplerate']
-    temp_wav = file_path(f'task/prepare/{asr.request.id}/processed.wav')
+    
     model_base_path = config.model_path or os.path.join(
         config.storage_path, 'models')
     model_path = os.path.join(model_base_path, config.model)
+
+    samplerate = opts['samplerate']
+    temp_wav = file_path(f'task/prepare/{asr.request.id}/processed.wav')
+    subprocess.call(['ffmpeg', '-i',
+                     args["download"]["file_path"],
+                     '-hide_banner', '-loglevel', 'error',
+                     '-ar', str(samplerate), '-ac', '1', dst],
+                    stdout=subprocess.PIPE)
     if engine == "vosk":
         # transcribe with vosk
 
