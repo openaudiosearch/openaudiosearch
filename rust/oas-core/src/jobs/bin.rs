@@ -90,14 +90,14 @@ pub async fn load_medias_with_opts(
             media: Some(id),
             ..
         } => {
-            vec![db.get_record::<Media>(&Media::guid(&id)).await?]
+            vec![db.get_record::<Media>(&Media::guid(id)).await?]
         }
         AsrOpts {
             media: None,
             post: Some(id),
             ..
         } => {
-            let mut post = db.get_record::<Post>(&Post::guid(&id)).await?;
+            let mut post = db.get_record::<Post>(&Post::guid(id)).await?;
             post.resolve_refs(db).await?;
             post.value
                 .media

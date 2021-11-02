@@ -40,7 +40,7 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
 
     let cors = rocket_cors::CorsOptions::default().to_cors()?;
     let auth = auth::Auth::new();
-    auth.ensure_admin_user(&admin_password).await;
+    auth.ensure_admin_user(admin_password).await;
 
     let app = rocket::custom(figment)
         .manage(state)

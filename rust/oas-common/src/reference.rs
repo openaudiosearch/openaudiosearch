@@ -28,14 +28,14 @@ impl<T: TypedValue> Reference<T> {
     /// Get the target id of the reference.
     pub fn id(&self) -> &str {
         match self {
-            Self::Id(id) => &id,
+            Self::Id(id) => id,
             Self::Resolved(record) => record.guid(),
         }
     }
 
     pub fn guid(&self) -> &str {
         match self {
-            Self::Id(id) => &id,
+            Self::Id(id) => id,
             Self::Resolved(record) => record.guid(),
         }
     }
@@ -43,7 +43,7 @@ impl<T: TypedValue> Reference<T> {
     /// Get the loaded record if the reference is resolved.
     pub fn record(&self) -> Option<&Record<T>> {
         match self {
-            Self::Resolved(record) => Some(&record),
+            Self::Resolved(record) => Some(record),
             Self::Id(_) => None,
         }
     }

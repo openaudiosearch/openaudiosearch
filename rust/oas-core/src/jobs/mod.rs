@@ -59,11 +59,11 @@ impl JobManager {
     }
 
     pub async fn next_job(&self, typ: &str) -> anyhow::Result<Option<JobRequest>> {
-        let input = self.client.next_job(&typ).await?;
+        let input = self.client.next_job(typ).await?;
         if let Some(input) = input {
             let job = self.client.get_job(input.id).await?;
             let job_request = JobRequest {
-                id: input.id.clone(),
+                id: input.id,
                 typ: job.queue,
                 args: input.input,
                 subjects: job.tags,

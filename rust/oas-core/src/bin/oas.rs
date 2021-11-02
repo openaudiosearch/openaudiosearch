@@ -218,7 +218,7 @@ async fn main() -> anyhow::Result<()> {
 async fn run_nuke(state: State, _args: Args) -> anyhow::Result<()> {
     use dialoguer::Input;
 
-    let prompt = format!("Will DELETE and recreate ALL used CouchDB databases and ElasticSearch indexes. Type \"nuke!\" to continue");
+    let prompt = "Will DELETE and recreate ALL used CouchDB databases and ElasticSearch indexes. Type \"nuke!\" to continue".to_string();
     println!("{}", prompt);
     let input = Input::<String>::new().interact_text()?;
     if &input == "nuke!" {
@@ -274,21 +274,21 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
             let records = db.table::<Media>().get_all().await?;
             records
                 .into_iter()
-                .map(|r| serde_json::to_value(r))
+                .map(serde_json::to_value)
                 .collect::<Vec<_>>()
         }
         "post" => {
             let records = db.table::<Media>().get_all().await?;
             records
                 .into_iter()
-                .map(|r| serde_json::to_value(r))
+                .map(serde_json::to_value)
                 .collect::<Vec<_>>()
         }
         "feed" => {
             let records = db.table::<Media>().get_all().await?;
             records
                 .into_iter()
-                .map(|r| serde_json::to_value(r))
+                .map(serde_json::to_value)
                 .collect::<Vec<_>>()
         }
         _ => vec![],
@@ -334,7 +334,7 @@ async fn run_index(state: State, opts: IndexOpts) -> anyhow::Result<()> {
     manager
         .init(init_opts)
         .await
-        .with_context(|| format!("Failed to initializer Elasticsearch index"))?;
+        .with_context(|| "Failed to initializer Elasticsearch index".to_string())?;
     match opts.post_id {
         Some(post_id) => {
             let post_index = manager.post_index();

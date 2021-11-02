@@ -47,8 +47,8 @@ async fn try_login(
     login_request: &LoginRequest,
     session_id: Option<&SessionId>,
 ) -> Option<SessionId> {
-    try_logout(&auth, &cookies, session_id).await;
-    if let Some(session_id) = auth.login(&login_request).await {
+    try_logout(auth, cookies, session_id).await;
+    if let Some(session_id) = auth.login(login_request).await {
         let cookie = {
             let mut cookie = Cookie::new(SESSION_COOKIE, session_id.clone());
             cookie.set_secure(true);
@@ -104,7 +104,7 @@ impl<'r> FromRequest<'r> for SessionId {
             let basic_auth = request.guard::<BasicAuth>().await;
             if let Outcome::Success(basic_auth) = basic_auth {
                 try_login(
-                    &auth,
+                    auth,
                     request.cookies(),
                     &basic_auth.into(),
                     session_id.as_ref(),
@@ -194,7 +194,7 @@ impl Auth {
     /// Try to login with username and password. Returns a new, random session ID in case of
     /// success.
     pub async fn login(&self, req: &LoginRequest) -> Option<String> {
-        let user = self.users.login(&req).await;
+        let user = self.users.login(req).await;
         if let Some(user) = user {
             // let user_info = UserInfo {
             //     username: username.to_string(),
@@ -219,7 +219,7 @@ impl Auth {
 
     /// Logout a user by session id.
     pub async fn logout(&self, session_id: &str) {
-        self.sessions.remove(&session_id).await;
+        self.sessions.remove(session_id).await;
     }
 }
 
@@ -246,7 +246,7 @@ pub async fn post_login(
     data: Json<LoginRequest>,
     session_id: Option<SessionId>,
 ) -> Json<LoginResponse> {
-    let session_id = try_login(&auth, &cookies, &data, session_id.as_ref()).await;
+    let session_id = try_login(auth, cookies, &data, session_id.as_ref()).await;
     if let Some(session_id) = session_id {
         let session = auth.session(&session_id.0).await.unwrap();
         let public_user_info = session.user().into_public();
@@ -269,7 +269,7 @@ pub async fn logout(
     cookies: &CookieJar<'_>,
     session_id: Option<SessionId>,
 ) -> Json<()> {
-    try_logout(&auth, &cookies, session_id.as_ref()).await;
+    try_logout(auth, cookies, session_id.as_ref()).await;
     Json(())
 }
 
@@ -287,7 +287,7 @@ pub async fn register(
 #[openapi(tag = "Login")]
 #[get("/private")]
 pub async fn private(_user: AdminUser) -> String {
-    format!("you're logged in!")
+    "you're logged in!".to_string()
 }
 
 #[catch(401)]

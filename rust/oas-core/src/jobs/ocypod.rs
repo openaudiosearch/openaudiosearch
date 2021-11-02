@@ -81,7 +81,7 @@ impl OcypodClient {
         check_response(&res)?;
         let res: HashMap<String, Vec<JobId>> = res.json().await?;
         let all_job_ids: Vec<u64> = match status {
-            None => res.values().flatten().map(|x| *x).collect(),
+            None => res.values().flatten().copied().collect(),
             Some(status) => res
                 .into_iter()
                 .filter_map(|(k, v)| {
@@ -116,7 +116,7 @@ impl OcypodClient {
         // let queues = self.get_queues().await?;
         let mut jobs = vec![];
         for queue in queues.iter() {
-            let queue_jobs = self.all_jobs_for_queue(&queue, &status).await?;
+            let queue_jobs = self.all_jobs_for_queue(queue, &status).await?;
             jobs.extend_from_slice(&queue_jobs[..]);
         }
         Ok(jobs)

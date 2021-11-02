@@ -58,7 +58,7 @@ impl RecordMeta {
     pub fn insert_job(&mut self, typ: &str, id: u64) {
         self.jobs
             .entry(typ.to_string())
-            .or_insert_with(|| vec![])
+            .or_insert_with(std::vec::Vec::new)
             .push(id);
     }
 
@@ -67,7 +67,7 @@ impl RecordMeta {
     }
 
     pub fn latest_job(&self, typ: &str) -> Option<u64> {
-        self.jobs.get(typ).and_then(|vec| vec.last().map(|x| *x))
+        self.jobs.get(typ).and_then(|vec| vec.last().copied())
     }
 
     pub fn latest_jobs(&self) -> HashMap<String, u64> {
@@ -262,14 +262,14 @@ impl UntypedRecord {
 
     pub fn apply_json_patch(&mut self, patch: &json_patch::Patch) -> Result<(), EncodingError> {
         let mut value = Value::Object(self.value.clone());
-        let res = json_patch::patch(&mut value, &patch);
+        let res = json_patch::patch(&mut value, patch);
         match res {
             Ok(_) => match value {
                 Value::Object(value) => {
                     self.value = value;
                     Ok(())
                 }
-                _ => Err(EncodingError::NotAnObject.into()),
+                _ => Err(EncodingError::NotAnObject),
             },
             Err(err) => Err(err.into()),
         }
