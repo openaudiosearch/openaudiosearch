@@ -127,16 +127,21 @@ def download(opts):
 @app.task(name="prepare")
 def prepare(args, opts):
     samplerate = opts['samplerate']
+<<<<<<< HEAD
     dst = file_path(f'task/prepare/{prepare.request.id}/processed.wav')
     # TODO: Find out why this pydub segment does not work.
     # sound = AudioSegment.from_file(args.file_path)
     # sound.set_frame_rate(opts.samplerate)
     # sound.set_channels(1)
     # sound.export(dst, format="wav")
+=======
+    temp_wav = file_path(f'task/prepare/{asr.request.id}/processed.wav')
+ 
+>>>>>>> b12213dbb... delete prepared wav files
     subprocess.call(['ffmpeg', '-i',
                      args["download"]["file_path"],
                      '-hide_banner', '-loglevel', 'error',
-                     '-ar', str(samplerate), '-ac', '1', dst],
+                     '-ar', str(samplerate), '-ac', '1', temp_wav],
                     stdout=subprocess.PIPE)
     args['prepare'] = {'file_path': dst}
     return args
@@ -152,9 +157,20 @@ def asr(args, opts):
         # transcribe with vosk
 
         start = time.time()
+<<<<<<< HEAD
         result = transcribe_vosk(opts["media_id"], args["prepare"]["file_path"], model_path)
         end = time.time()
 
+=======
+        result = transcribe_vosk(opts["media_id"], temp_wav, model_path)
+        end = time.time()
+        dir = os.path.dirname(temp_wav)
+        if os.path.isdir(dir):
+            os.remove(temp_wav)
+            os.rmdir(dir)
+        else:
+            print("Error: %s dir not found" % dir, )
+>>>>>>> b12213dbb... delete prepared wav files
         # send change to core
         patch = [
             { "op": "replace", "path": "/transcript", "value": result },
