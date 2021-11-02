@@ -48,13 +48,14 @@ For a quick start, copy [`docker-compose.nightly.yml`](https://raw.githubusercon
 ```
 mkdir openaudiosearch && cd openaudiosearch
 wget https://raw.githubusercontent.com/openaudiosearch/openaudiosearch/main/docker-compose.nightly.yml
-docker-compose -f docker-compose.nightly.yml up
+mv docker-compose.nightly.yml docker-compose.yml
+docker-compose up
 ```
 
 For the speech recognition to work you will need to download the models first. Run this command once, it will download the models into the `./data/oas` volume:
 
 ```sh
-docker-compose -f docker-compose.nightly.yml exec worker python download_models.py
+docker-compose exec worker python download_models.py
 ```
 
 #### Build Docker images from source
