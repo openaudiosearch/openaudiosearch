@@ -5,7 +5,7 @@ from app.bin import run
 
 worker = Worker()
 
-@worker.task("asr", default_concurrency=1)
+@worker.job("asr", default_concurrency=1)
 def asr(ctx, args, opts):
     meta = {
         "model": "foo1"
@@ -43,7 +43,7 @@ def asr(ctx, args, opts):
         "patches": patches
     }
 
-@worker.task("nlp", default_concurrency=2)
+@worker.job("nlp", default_concurrency=2)
 def nlp(ctx, args, opts):
     ctx.log.info("hello info nlp")
     #  print("nlp", ctx.worker_id, "job", ctx.job_id, "ARGS", args, opts)
