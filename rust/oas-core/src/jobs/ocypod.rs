@@ -154,10 +154,10 @@ impl OcypodClient {
     pub async fn next_job(&self, queue: &str) -> anyhow::Result<Option<JobInput>> {
         let url = format!("{}/queue/{}/job", self.base_url, queue);
         let res = self.client.get(&url).send().await?;
-        check_response(&res)?;
-        if res.status() == StatusCode::NO_CONTENT {
+        if res.status() == StatusCode::NO_CONTENT || res.status() == StatusCode::NOT_FOUND {
             Ok(None)
         } else {
+            check_response(&res)?;
             let body: JobInput = res.json().await?;
             Ok(Some(body))
         }

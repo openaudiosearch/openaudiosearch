@@ -29,12 +29,19 @@ impl JobTypId {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 pub struct JobsLog {
+    #[serde(default, skip_serializing_if = "SettingsMap::is_empty")]
     settings: SettingsMap,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     completed: Vec<JobTypId>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     failed: Vec<JobTypId>,
 }
 
 impl JobsLog {
+    pub fn is_empty(self) -> bool {
+        self.settings.is_empty() && self.completed.is_empty() && self.failed.is_empty()
+    }
+
     pub fn settings(&self) -> &SettingsMap {
         &self.settings
     }

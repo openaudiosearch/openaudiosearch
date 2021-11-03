@@ -38,18 +38,17 @@ pub enum DecodingError {
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RecordMeta {
+    // TODO: Add more metadata?
+    // source: String,
+    // seq: u32,
+    // version: u32,
+    // timestamp: u32,
     guid: String,
     #[serde(rename = "type")]
     typ: String,
     id: String,
-
     #[serde(default)]
-    jobs: JobsLog, // TODO: Add more metadata?
-                   // source: String,
-                   // seq: u32,
-                   // version: u32,
-                   // timestamp: u32,
-                   // tasks: HashMap<TaskName, TaskState>
+    jobs: JobsLog,
 }
 
 impl RecordMeta {
