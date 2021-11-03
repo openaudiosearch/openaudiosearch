@@ -22,17 +22,10 @@ class DownloadResult(BaseModel):
     file_path: str
 
 
-class PrepareOpts(BaseModel):
-    samplerate = 16000
-
-
-class PrepareResult(BaseModel):
-    file_path: str
-
-
 class AsrOpts(BaseModel):
     engine: Engine
     language: str = 'de'
+    samplerate = 16000
 
 
 class AsrResult(BaseModel):
@@ -53,7 +46,7 @@ class TranscribeArgs(BaseModel):
     doc_id: Optional[str] = None
 
 
-class TranscribeOpts(PrepareOpts, AsrOpts, NlpOpts):
+class TranscribeOpts( AsrOpts, NlpOpts):
     pass
 
 
