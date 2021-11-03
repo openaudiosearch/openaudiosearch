@@ -66,3 +66,29 @@ python task-run.py asr --engine ENGINE [--language LANGUAGE] --file_path FILE_PA
 # (e.g). 
 python task-run.py asr --engine vosk --file_path ../examples/frn-leipzig.wav
 ```
+
+## NLP Evaluation
+
+### Generate Devset
+
+Generate and serve Devset RSS feed on localhost port 6650:  
+```
+cd scripts/
+python generate_devset.py
+sh serve_nlp_devset.sh
+```
+
+Import RSS feed:  
+In UI, login first. Then head over to `Importer`-Tab. There fill in the URL 
+`http://127.0.0.1:6650/rss.xml` into the `Add new feed`-Section and make sure 
+to check the `Transcribe items`-Button.
+
+
+### Access NLP Results
+
+In Search-UI, click on a post you want to inspect. From its URL, copy the 
+Post-ID and paste it as argument to the examples nlp.py script:
+```
+cd oas_worker/examples
+poetry run python nlp.py <OAS-POST-ID>
+```

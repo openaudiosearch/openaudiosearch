@@ -1,4 +1,5 @@
 import spacy
+import pytextrank
 import os
 import sys
 from spacy.lang.de import German
@@ -49,6 +50,7 @@ class SpacyPipe():
         self.pipeline = pipeline
         # Will be None if the model cannot be loaded!
         self.nlp = spacy_load(spacy_model)
+        self.nlp.add_pipe("textrank")
     
     def run(self, transcript):
         """
@@ -67,6 +69,7 @@ class SpacyPipe():
         pos = []
         missed = []
         lemma = []
+        keywords = []
         if "ner" in self.pipeline:
             for ent in doc.ents:
                 ner.append((ent.text, ent.label_))
@@ -81,10 +84,23 @@ class SpacyPipe():
                         missed.append(token.text)
                 if "lemma" in self.pipeline:
                     lemma.append(token.text, token.lemma)
+
+        if "textrank" in self.pipeline:
+            max_n = 10
+            if len(doc._.phrases) < max_n:
+                best_n = len(doc._.phrases)
+            else:
+                best_n = max_n
+
+            for phrase in doc._.phrases[:best_n]:
+                keyword = (phrase.text, phrase.count, phrase.rank)
+                keywords.append(keyword)
+
         return {"lemma":lemma, 
                 "ner":ner, 
                 "pos":pos, 
-                "missed":missed}
+                "missed":missed,
+                "keywords":keywords}
 
     def create_token(self, word):
         return self.nlp.vocab.strings[word]
