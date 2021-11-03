@@ -23,7 +23,7 @@ clap = "3.0.0-beta.5"
 convert_case = "0.4.0"
 dialoguer = "0.8.0"
 dirs = "3.0.2"
-elasticsearch = { version = "7.12.0-alpha.1", default_features = false, features = ["rustls-tls"] }
+elasticsearch = { version = "7.14.0-alpha.1", default_features = false, features = ["rustls-tls"] }
 futures = "0.3.15"
 futures-batch = "0.6.0"
 futures-timer = "3.0.2"
