@@ -1,46 +1,30 @@
-from pydantic import (
-    BaseModel,
-    BaseSettings,
-    PyObject,
-    RedisDsn,
-    Field
-)
-
+import logging
+import time
 import os
+from urllib.parse import urlparse, urlunparse
 from pathlib import Path
+
+DEFAULT_OAS_URL = 'http://admin:password@localhost:8080/api/v1'
 
 def base_path():
     self_path = Path(os.path.dirname(os.path.abspath(__file__)))
     base_path = self_path.parent.parent
     return base_path
 
-def default_data_dir():
+def default_storage_dir():
     return os.path.join(base_path(), 'data/oas')
 
-def default_frontend_path():
-    return os.path.join(base_path(), 'frontend/dist')
+class Config(object):
+    def __init__(self):
+        self.base_url = os.environ.get("OAS_URL") or DEFAULT_OAS_URL
+        self.storage_path = os.environ.get("OAS_STORAGE") or default_storage_dir() 
+        self.log_level = os.environ.get('LOG', 'INFO')
+        self.log_file = os.environ.get('OAS_LOGFILE') or os.path.join(self.storage_path, 'oas-worker.log')
 
-class Settings(BaseSettings):
-    # general settings
-    storage_path: str = default_data_dir()
-    model: str = 'vosk-model-de-0.6'
-    model_path: str = ''
-    log_level: str = 'info'
-
-    oas_url: str = 'http://admin:password@localhost:8080/api/v1'
-    redis_url: RedisDsn = 'redis://localhost:6379/0'
-
-    # set to 1 to enable development mode
-    # (hot reload code on changes)
-    oas_dev: bool = False
-
-    # config parsing
-    class Config:
-        env_file = '.env'
-
-    # helper functions
-    def url(self, path):
-        return self.oas_url + path
+        try:
+            self.base_url_parsed = urlparse(self.base_url, 'http')
+        except BaseException as err:
+            logging.error(f"Failed to parse OAS_URL: {err}")
 
 
-config = Settings()
+config = Config()
