@@ -5,15 +5,15 @@ import {
   Route
 } from 'react-router-dom'
 
-import JobsPage from './jobs'
-import SearchPage from './search'
-import ImporterPage from './importer'
-import LandingPage from './landing-page'
-import { PostPage } from './post'
-import ImprintPage from './imprint'
-import AboutPage from './about-page'
+import JobsPage from './pages/jobs'
+import SearchPage from './pages/search'
+import ImporterPage from './pages/importer'
+import LandingPage from './pages/landing-page'
+import { PostPage } from './pages/post'
+import ImprintPage from './pages/imprint'
+import AboutPage from './pages/about-page'
 
-export function Routes () {
+export default function Routes () {
   return (
     <Switch>
       <Route path='/jobs'>
