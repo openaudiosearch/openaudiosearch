@@ -81,6 +81,7 @@ function FeedRow (props = {}) {
       <FeedSettingsModal feed={feed} />
       <Box ml='2' p='1'>{feed.url}</Box>
       <Box>Transcribe media? <strong>{simpleValues.transcribe ? 'Yes' : 'No'}</strong></Box>
+      <DeleteFeed id={feed.$meta.id} />
     </Flex>
   )
 }
@@ -162,7 +163,7 @@ function FeedSettings (props) {
     formState.setIsSubmitting(true)
     try {
       const nextFeed = patchFeed(feed, formValues)
-      let res = await fetch('/feed/' + feed.$meta.id, {
+      const res = await fetch('/feed/' + feed.$meta.id, {
         body: nextFeed,
         method: 'PUT'
       })
@@ -240,6 +241,40 @@ function CreateFeed (props) {
       })
       formState.setSuccess(true)
       mutate(feed)
+    } catch (err) {
+      formState.setError(err)
+    }
+  }
+}
+
+function DeleteFeed (props) {
+  const { id } = props
+  const { mutate } = useSWR('/feed')
+  const { handleSubmit, errors, register } = useForm()
+  const formState = useFormState()
+  return (
+    <Box>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <FeedSettingsInner register={register} />
+        <Flex direction='column' justifyContent='end'>
+          <Button type='submit' isLoading={formState.isSubmitting}>Delete</Button>
+        </Flex>
+        <FormState successMessage='Feed deleted!' {...formState} />
+      </form>
+    </Box>
+  )
+
+  async function onSubmit (formValues) {
+    formState.setIsSubmitting(true)
+    try {
+      const res = await fetch('/feed/' + id, {
+        method: 'DELETE'
+      })
+      if (res.error) {
+        formState.setError(res.error)
+      }
+      formState.setSuccess(true)
+      mutate()
     } catch (err) {
       formState.setError(err)
     }
