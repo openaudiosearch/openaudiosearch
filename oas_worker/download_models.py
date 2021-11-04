@@ -7,7 +7,7 @@ import tempfile
 
 from app.config import config
 
-from app.tasks.spacy_pipe import get_spacy_path, spacy_model
+from app.jobs.spacy_pipe import get_spacy_path, spacy_model
 
 def download(url, path):
     p = subprocess.Popen(["curl", "--insecure", "--output", path, url], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
