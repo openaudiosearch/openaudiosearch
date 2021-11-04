@@ -25,10 +25,6 @@ impl JobManager {
         Self { db, client }
     }
 
-    pub(super) fn client(&self) -> &OcypodClient {
-        &self.client
-    }
-
     pub async fn create_job(&self, job: JobCreateRequest) -> anyhow::Result<ocypod::JobId> {
         let typ = job.typ;
         let queues = self.client.get_queues().await?;
@@ -52,7 +48,7 @@ impl JobManager {
     }
 
     pub async fn next_job(&self, typ: &str) -> anyhow::Result<Option<JobRequest>> {
-        let input = self.client.next_job(typ).await?;
+        let input = self.client.start_job(typ).await?;
         if let Some(input) = input {
             let job = self.client.get_job(input.id).await?;
             let job_request = JobRequest {
@@ -71,15 +67,18 @@ impl JobManager {
         self.client.get_job(id).await
     }
 
-    pub async fn all_jobs(&self, filter: Option<JobFilter>) -> anyhow::Result<Vec<JobInfo>> {
-        self.client.all_jobs(filter).await
+    pub async fn fetch_jobs(&self, filter: Option<JobFilter>) -> anyhow::Result<Vec<JobInfo>> {
+        let filter = filter.unwrap_or_default();
+        self.client.fetch_filtered(filter).await
     }
 
     pub async fn pending_jobs(&self, tag: &str, typ: &str) -> anyhow::Result<Vec<JobInfo>> {
-        let filter = JobFilter::default()
+        let filter = JobFilter::all()
+            .with_tag(tag.to_string())
             .with_queue(typ)
-            .with_status(JobStatus::Queued);
-        let pending_jobs = self.client().load_tag_filtered(tag, filter).await?;
+            .with_status(JobStatus::Queued)
+            .with_status(JobStatus::Running);
+        let pending_jobs = self.client.fetch_filtered(filter).await?;
         Ok(pending_jobs)
     }
 
@@ -111,24 +110,8 @@ impl JobManager {
         job_id: ocypod::JobId,
         req: JobCompletedRequest,
     ) -> anyhow::Result<()> {
-        let job = self.job(job_id).await?;
-        let mut patches = req.patches.unwrap_or_default();
-        // Insert all tagged records into the changes to later
-        // add the completed job id.
-        ensure_entries(&mut patches, &job.tags);
-        let tags = job.tags.clone();
-        let typ = job.queue.clone();
-        let changed_guids = self
-            .db
-            .apply_patches_with_callback(patches, move |records| {
-                for record in records
-                    .iter_mut()
-                    .filter(|r| tags.iter().any(|tag| tag == r.guid()))
-                {
-                    record.meta_mut().jobs_mut().insert_completed(&typ, job_id);
-                }
-            })
-            .await?;
+        let patches = req.patches.unwrap_or_default();
+        let changed_guids = self.db.apply_patches(patches).await?;
         log::debug!(
             "Job {} completed with {} patches ({}) and meta `{}`",
             job_id,
@@ -136,7 +119,6 @@ impl JobManager {
             changed_guids.join(", "),
             serde_json::to_string(&req.meta).unwrap_or_default()
         );
-        let status = ocypod::JobStatus::Completed;
         let output = JobOutput {
             progress: Some(100.0),
             error: None,
@@ -145,23 +127,24 @@ impl JobManager {
         };
         let res = self
             .client
-            .update_job(job_id, Some(status), Some(output))
+            .update_job(job_id, Some(JobStatus::Completed), Some(output))
             .await;
         res?;
+
+        let job = self.client.get_job(job_id).await?;
+
+        self.on_complete(&job).await?;
+
         Ok(())
     }
-}
 
-fn ensure_entries(
-    patches: &mut HashMap<String, Patch>,
-    guids: impl IntoIterator<Item = impl AsRef<str>>,
-) {
-    // Insert all tagged records into the changes to later
-    // add the completed job id.
-    for tag in guids.into_iter() {
-        if !patches.contains_key(tag.as_ref()) {
-            patches.insert(tag.as_ref().to_string(), Patch(vec![]));
+    async fn on_complete(&self, job: &JobInfo) -> anyhow::Result<()> {
+        let typ = &job.queue;
+        match typ.as_str() {
+            typs::ASR => typs::on_asr_complete(&self.db, &self, &job).await?,
+            _ => {}
         }
+        Ok(())
     }
 }
 

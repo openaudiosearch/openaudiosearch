@@ -17,6 +17,7 @@ use crate::jobs::{
 pub struct JobQuery {
     pub status: Vec<String>,
     pub queue: Vec<String>,
+    pub tag: Vec<String>,
 }
 
 #[openapi(skip)]
@@ -28,14 +29,11 @@ pub async fn get_all_jobs(
 ) -> Result<Vec<JobInfo>> {
     let filter = if let Some(filter) = filter {
         let status: Vec<JobStatus> = serde_json::from_value(serde_json::to_value(filter.status)?)?;
-        Some(JobFilter {
-            queue: filter.queue,
-            status,
-        })
+        Some(JobFilter::new(filter.queue, status, filter.tag))
     } else {
         None
     };
-    let jobs = state.jobs.all_jobs(filter).await?;
+    let jobs = state.jobs.fetch_jobs(filter).await?;
     Ok(Json(jobs))
 }
 

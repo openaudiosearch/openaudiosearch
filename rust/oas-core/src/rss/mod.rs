@@ -141,17 +141,17 @@ impl FeedWatcher {
                         .copy_settings(&feed.value.post_jobs);
                 }
                 // Copy media job settings and add references to media.
-                if !feed.value.media_jobs.is_empty() {
-                    for media in post.value.media.iter_mut().filter_map(|r| r.record_mut()) {
+                for media in post.value.media.iter_mut().filter_map(|r| r.record_mut()) {
+                    media.value.posts.push(Reference::Id(post_guid.clone()));
+                    media
+                        .value
+                        .feeds
+                        .push(Reference::Id(feed.guid().to_string()));
+                    if !feed.value.media_jobs.is_empty() {
                         media
                             .meta_mut()
                             .jobs_mut()
                             .copy_settings(&feed.value.media_jobs);
-                        media.value.posts.push(Reference::Id(post_guid.clone()));
-                        media
-                            .value
-                            .feeds
-                            .push(Reference::Id(feed.guid().to_string()));
                     }
                 }
             }
