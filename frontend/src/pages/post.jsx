@@ -19,14 +19,14 @@ import {
 import { useParams, useLocation, useHistory } from 'react-router'
 
 import { stripHTML } from '../lib/sanitize'
-import { usePlayer } from './player'
+import { usePlayer } from '../comp/player'
 import { useIsAdmin } from '../hooks/use-login'
 import { usePost } from '../hooks/use-post'
 import fetch from '../lib/fetch'
 import { useTranslation } from 'react-i18next'
 import Moment from 'moment'
 
-import { ToggleTranscriptSection } from './toggle-transcript-section'
+import { ToggleTranscriptSection } from '../comp/toggle-transcript-section'
 
 export function PostTaskMenuButton (props = {}) {
   const { t } = useTranslation()
@@ -138,21 +138,21 @@ export function PostPageInner (props = {}) {
   genres =
     <>
       {genres.map((genre) => (
-        <Tag key={genre} mr='1'>{genre}</Tag>
+        <SearchTag label={genre} facet='genre'/>
       ))}
     </>
 
   const creators = 
     <>
       {post.creator.map((creator) => (
-        <Tag key={creator} mr='1'>{creator}</Tag>
+        <SearchTag label={creator} facet='creator'/>
       ))}
     </>
 
   let contributors = []
   if (post.contributor) {
     contributors = post.contributor.map((contributor) =>
-      <Tag key={contributor} mr='1'>{contributor}</Tag>
+      <SearchTag label={contributor} facet='contributor'/>
     )
   }
 
@@ -198,7 +198,12 @@ export function PostPageInner (props = {}) {
             </Flex>
           </Flex>
           <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%'>
-            {post.publisher && <Text mr='2' fontSize='sm'>{t('by', 'by')}{post.publisher}</Text>}
+            {post.publisher && 
+              <Flex direction='row'>
+                <Text mr='2' fontSize='sm'>{t('by', 'by')}</Text>
+                <SearchTag label={post.publisher} facet='publisher'/>
+              </Flex>
+            }
             {post.creator.length > 0 &&
               <Flex direction='row' mr='2'>
                 <Text fontSize='sm' mr='1'>{t('creators', 'Creators')}:</Text>
@@ -254,4 +259,18 @@ export function LicenseInfos (props) {
       <Text>Licence unknown</Text>
     )
   }
+}
+
+export function SearchTag (props) {
+  const {label, facet } = props
+  const history = useHistory()
+  function onClick (e) {
+    e.preventDefault()
+    const encoded = encodeURIComponent(label)
+    const facetsearch = `/search?${facet}=["${encoded}"]`
+    history.push(facetsearch)
+  }
+  return (
+    <Tag key={label} mr='1' as='button' onClick={onClick}>{label}</Tag>
+  )
 }

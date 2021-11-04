@@ -3,7 +3,7 @@ import { Stack, Box } from '@chakra-ui/react'
 
 import { Player, usePlayer } from './player'
 import { Header } from './header'
-import { Routes } from './routes'
+import { Routes } from '../pages/routes'
 import { Footer } from './footer'
 
 export default function Layout (props = {}) {

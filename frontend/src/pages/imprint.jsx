@@ -5,7 +5,6 @@ import {
 } from 'react-router-dom'
 
 import { useTranslation } from 'react-i18next'
-import { Login } from './login'
 
 export default function ImprintPage () {
   const { t } = useTranslation()

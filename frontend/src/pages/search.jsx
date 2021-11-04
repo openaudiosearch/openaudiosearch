@@ -12,7 +12,7 @@ import { MdChildFriendly } from 'react-icons/md'
 import { API_ENDPOINT } from '../lib/config'
 import { stripHTML } from '../lib/sanitize'
 import { PostButtons } from './post'
-import { TranscriptSnippet } from './transcript'
+import { TranscriptSnippet } from '../comp/transcript'
 import { useIsAdmin } from '../hooks/use-login'
 
 const { ResultListWrapper } = ReactiveList
@@ -126,20 +126,20 @@ export default function SearchPage () {
   function customHighlight (props) {
     return {
       highlight: {
-        // fragment_size: 200,
-        // number_of_fragments: 2,
-        // type: "fvh",
-        // fields: {
-        //   transcript: {},
-        //   headline: {},
-        //   description: {}
-        // }
-        // pre_tags: ['<mark>'],
-        // post_tags: ['</mark>'],
-        // fields: {
-        //     text: {},
-        //     title: {},
-        // },
+        fragment_size: 200,
+        number_of_fragments: 2,
+        type: "fvh",
+        fields: {
+          transcript: {},
+          headline: {},
+          description: {}
+        },
+        pre_tags: ['<mark>'],
+        post_tags: ['</mark>'],
+        fields: {
+            text: {},
+            title: {},
+        },
       }
     }
   }
@@ -167,7 +167,7 @@ export default function SearchPage () {
               highlight
               autosuggest={false}
               queryFormat='and'
-              fuzziness={0}
+              fuzziness={1}
               react={{
                 and: facets.filter(f => f !== 'searchbox')
               }}
