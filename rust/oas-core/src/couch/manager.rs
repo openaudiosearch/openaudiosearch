@@ -70,7 +70,7 @@ impl CouchManager {
         // Wait until the CouchDB is reachable.
         self.wait_for_ready().await?;
         // Init system databases if they do not exist yet.
-        let res = futures::future::join_all(vec![
+        let res = futures::future::join_all([
             self.db("_users", false).init(),
             self.db("_replicator", false).init(),
             self.db("_global_changes", false).init(),
@@ -80,8 +80,7 @@ impl CouchManager {
             log::warn!("Failed to ensure system CouchDB: {}", err);
         }
 
-        let res =
-            futures::future::join_all(vec![self.record_db().init(), self.meta_db().init()]).await;
+        let res = futures::future::join_all([self.record_db().init(), self.meta_db().init()]).await;
         for res in res {
             res?
         }

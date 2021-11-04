@@ -33,24 +33,26 @@ pub async fn process_batch(state: &State, batch: Vec<UntypedRecord>) -> anyhow::
         .context("failed to resolve refs")?;
 
     for record in posts.into_iter() {
-        let res = process_post(state, record).await;
+        let res = on_post_change(state, record).await;
         log_if_error(res);
     }
 
     for record in medias.into_iter() {
-        let res = process_media(state, record).await;
+        let res = on_media_change(state, record).await;
         log_if_error(res);
     }
 
     Ok(())
 }
 
-async fn process_post(state: &State, record: Record<Post>) -> anyhow::Result<()> {
+async fn on_post_change(state: &State, record: Record<Post>) -> anyhow::Result<()> {
     // Check for post-level jobs.
+    // Logic is: Create an NLP job if record.value.nlp is serde_json::Value::Null
+    // and no NLP job is pending for this record.
     let typ = job_typs::NLP;
     if let Some(_opts) = record.meta().jobs().settings().get(typ) {
         let pending_jobs = state.jobs.pending_jobs(record.guid(), typ).await?;
-        if pending_jobs.is_empty() {
+        if record.value.nlp.is_null() && pending_jobs.is_empty() {
             let job = job_typs::nlp_job(&record);
             state.jobs.create_job(job).await?;
         }
@@ -59,7 +61,7 @@ async fn process_post(state: &State, record: Record<Post>) -> anyhow::Result<()>
     Ok(())
 }
 
-async fn process_media(state: &State, record: Record<Media>) -> anyhow::Result<()> {
+async fn on_media_change(state: &State, record: Record<Media>) -> anyhow::Result<()> {
     let typ = job_typs::ASR;
     let pending_jobs = state.jobs.pending_jobs(record.guid(), typ).await?;
     if record.value.transcript.is_none() && pending_jobs.is_empty() {

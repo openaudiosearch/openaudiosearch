@@ -1,3 +1,4 @@
+use futures::future::join_all;
 use http::StatusCode;
 use serde::de::{Deserializer, Error};
 use serde::ser::Serializer;
@@ -37,6 +38,18 @@ impl OcypodClient {
         Ok(job_id)
     }
 
+    pub async fn start_job(&self, queue: &str) -> anyhow::Result<Option<JobInput>> {
+        let url = format!("{}/queue/{}/job", self.base_url, queue);
+        let res = self.client.get(&url).send().await?;
+        if res.status() == StatusCode::NO_CONTENT || res.status() == StatusCode::NOT_FOUND {
+            Ok(None)
+        } else {
+            check_response(&res)?;
+            let body: JobInput = res.json().await?;
+            Ok(Some(body))
+        }
+    }
+
     pub async fn update_job(
         &self,
         job_id: JobId,
@@ -71,104 +84,108 @@ impl OcypodClient {
         Ok(job)
     }
 
-    pub async fn all_jobs_for_queue(
-        &self,
-        queue: &str,
-        status: &Option<Vec<JobStatus>>,
-    ) -> anyhow::Result<Vec<JobInfo>> {
-        let url = format!("{}/queue/{}/job_ids", self.base_url, queue);
-        let res = self.client.get(&url).send().await?;
-        check_response(&res)?;
-        let res: HashMap<String, Vec<JobId>> = res.json().await?;
-        let all_job_ids: Vec<u64> = match status {
-            None => res.values().flatten().copied().collect(),
-            Some(status) => res
-                .into_iter()
-                .filter_map(|(k, v)| {
-                    let k: JobStatus = serde_json::from_value(serde_json::Value::String(k))
-                        .expect("Failed to parse ocypod status");
-                    if status.contains(&k) {
-                        Some(v)
-                    } else {
-                        None
-                    }
-                })
-                .flatten()
-                .collect(),
-        };
-        let mut jobs = vec![];
-        for job_id in all_job_ids.iter() {
-            let job = self.get_job(*job_id).await?;
-            jobs.push(job);
-        }
-        Ok(jobs)
-    }
-
-    pub async fn load_tag_filtered(
-        &self,
-        tag: &str,
-        filter: JobFilter,
-    ) -> anyhow::Result<Vec<JobInfo>> {
-        let url = format!("{}/tag/{}", self.base_url, tag);
-        let res = self.client.get(&url).send().await?;
-        check_response(&res)?;
-        let res: Vec<JobId> = res.json().await?;
-        let jobs = self.load_filtered(res, filter).await?;
-        Ok(jobs)
-    }
-
-    pub async fn load_filtered(
-        &self,
-        ids: Vec<JobId>,
-        filter: JobFilter,
-    ) -> anyhow::Result<Vec<JobInfo>> {
-        let mut res = vec![];
-        // TODO: Parallelize.
-        for id in ids {
-            let job = self.get_job(id).await?;
-            if filter.matches(&job) {
-                res.push(job);
-            }
-        }
-        Ok(res)
-    }
-
-    pub async fn all_jobs(&self, filter: Option<JobFilter>) -> anyhow::Result<Vec<JobInfo>> {
-        let queues = match filter {
-            Some(JobFilter { ref queue, .. }) if !queue.is_empty() => queue.clone(),
-            _ => self.get_queues().await?,
-        };
-        let status = match filter {
-            Some(JobFilter { ref status, .. }) if !status.is_empty() => Some(status.clone()),
-            _ => None,
-        };
-        // let queues = self.get_queues().await?;
-        let mut jobs = vec![];
-        for queue in queues.iter() {
-            let queue_jobs = self.all_jobs_for_queue(queue, &status).await?;
-            jobs.extend_from_slice(&queue_jobs[..]);
-        }
-        Ok(jobs)
-    }
-
-    pub async fn next_job(&self, queue: &str) -> anyhow::Result<Option<JobInput>> {
-        let url = format!("{}/queue/{}/job", self.base_url, queue);
-        let res = self.client.get(&url).send().await?;
-        if res.status() == StatusCode::NO_CONTENT || res.status() == StatusCode::NOT_FOUND {
-            Ok(None)
-        } else {
-            check_response(&res)?;
-            let body: JobInput = res.json().await?;
-            Ok(Some(body))
-        }
-    }
-
     pub async fn get_queues(&self) -> anyhow::Result<Vec<String>> {
         let url = format!("{}/queue", self.base_url);
         let res = self.client.get(&url).send().await?;
         check_response(&res)?;
         let queues: Vec<String> = res.json().await?;
         Ok(queues)
+    }
+
+    pub async fn fetch_filtered(&self, filter: JobFilter) -> anyhow::Result<Vec<JobInfo>> {
+        let queues = if filter.queue.is_empty() {
+            self.get_queues().await?
+        } else {
+            filter.queue.clone()
+        };
+
+        let ids = if !filter.tag.is_empty() {
+            self.fetch_ids_by_tags(&filter.tag).await?
+        } else {
+            self.fetch_ids_by_queues_and_status(&queues, &filter.status)
+                .await?
+        };
+        let jobs = self.fetch_jobs_by_ids_and_filter(ids, filter).await?;
+        Ok(jobs)
+    }
+
+    async fn fetch_ids_by_tags(&self, tags: &Vec<String>) -> anyhow::Result<Vec<JobId>> {
+        let ids = join_all(tags.iter().map(|tag| self.fetch_ids_by_tag(tag))).await;
+        let ids = ids
+            .into_iter()
+            .filter_map(|res| res.ok())
+            .flatten()
+            .collect();
+        Ok(ids)
+    }
+
+    async fn fetch_ids_by_tag(&self, tag: &str) -> anyhow::Result<Vec<JobId>> {
+        let url = format!("{}/tag/{}", self.base_url, tag);
+        let res = self.client.get(&url).send().await?;
+        check_response(&res)?;
+        let res: Vec<JobId> = res.json().await?;
+        Ok(res)
+    }
+
+    pub async fn fetch_ids_by_queues_and_status(
+        &self,
+        queues: &Vec<String>,
+        status: &Vec<JobStatus>,
+    ) -> anyhow::Result<Vec<JobId>> {
+        let ids = join_all(
+            queues
+                .into_iter()
+                .map(|queue| self.fetch_ids_by_queue_and_status(&queue, &status)),
+        )
+        .await;
+        let ids = ids
+            .into_iter()
+            .filter_map(|ids| ids.ok())
+            .flatten()
+            .collect();
+        Ok(ids)
+    }
+
+    async fn fetch_ids_by_queue_and_status(
+        &self,
+        queue: &str,
+        status: &Vec<JobStatus>,
+    ) -> anyhow::Result<Vec<JobId>> {
+        let url = format!("{}/queue/{}/job_ids", self.base_url, queue);
+        let res = self.client.get(&url).send().await?;
+        check_response(&res)?;
+        let res: HashMap<String, Vec<JobId>> = res.json().await?;
+        let job_ids = if status.is_empty() {
+            res.values().flatten().copied().collect()
+        } else {
+            res.into_iter()
+                .filter_map(|(s, ids)| {
+                    let s: JobStatus = serde_json::from_value(serde_json::Value::String(s))
+                        .expect("Failed to parse ocypod status");
+                    if status.contains(&s) {
+                        Some(ids)
+                    } else {
+                        None
+                    }
+                })
+                .flatten()
+                .collect()
+        };
+        Ok(job_ids)
+    }
+
+    async fn fetch_jobs_by_ids_and_filter(
+        &self,
+        ids: Vec<JobId>,
+        filter: JobFilter,
+    ) -> anyhow::Result<Vec<JobInfo>> {
+        let jobs = join_all(ids.into_iter().map(|id| self.get_job(id))).await;
+        let jobs = jobs
+            .into_iter()
+            .filter_map(|res| res.ok())
+            .filter(|job| filter.matches(job))
+            .collect();
+        Ok(jobs)
     }
 }
 
@@ -186,15 +203,17 @@ pub struct JobFilter {
     pub queue: Vec<String>,
     #[serde(default)]
     pub status: Vec<JobStatus>,
-    // #[serde(default)]
-    // pub limit: usize,
-    // #[serde(default)]
-    // pub offset: usize,
+    #[serde(default)]
+    pub tag: Vec<String>,
 }
 
 impl JobFilter {
-    pub fn new(queue: Vec<String>, status: Vec<JobStatus>) -> Self {
-        Self { queue, status }
+    pub fn all() -> Self {
+        Self::default()
+    }
+
+    pub fn new(queue: Vec<String>, status: Vec<JobStatus>, tag: Vec<String>) -> Self {
+        Self { queue, status, tag }
     }
 
     pub fn with_queue(mut self, queue: impl ToString) -> Self {
@@ -207,11 +226,24 @@ impl JobFilter {
         self
     }
 
+    pub fn with_tag(mut self, tag: String) -> Self {
+        self.tag.push(tag);
+        self
+    }
+
     pub fn matches(&self, job: &JobInfo) -> bool {
         if !self.status.is_empty() && !self.status.contains(&job.status) {
             return false;
         }
         if !self.queue.is_empty() && !self.queue.contains(&job.queue) {
+            return false;
+        }
+        if !self.tag.is_empty() {
+            for tag in &self.tag {
+                if job.tags.contains(&tag) {
+                    return true;
+                }
+            }
             return false;
         }
         true

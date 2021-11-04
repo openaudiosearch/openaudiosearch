@@ -25,7 +25,13 @@ where
     // }
 
     pub async fn get(&self, id: &str) -> CouchResult<Record<T>> {
-        self.db.get_record(&T::guid(id)).await
+        // TODO: Make this clean.
+        let guid = if id.contains("_") {
+            id.to_string()
+        } else {
+            T::guid(id)
+        };
+        self.db.get_record(&guid).await
     }
 
     pub async fn get_bulk(&self, ids: &[&str]) -> CouchResult<Vec<Record<T>>> {
