@@ -9,7 +9,7 @@ import {
   Heading,
   Box,
   Flex,
-  Link,
+  Link as ChakraLink,
   Button,
   Tag,
   Text,
@@ -25,6 +25,7 @@ import { usePost } from '../hooks/use-post'
 import fetch from '../lib/fetch'
 import { useTranslation } from 'react-i18next'
 import Moment from 'moment'
+import { Link } from 'react-router-dom'
 
 import { ToggleTranscriptSection } from '../comp/toggle-transcript-section'
 
@@ -138,21 +139,21 @@ export function PostPageInner (props = {}) {
   genres =
     <>
       {genres.map((genre) => (
-        <SearchTag label={genre} facet='genre'/>
+        <SearchTag label={genre} facet='genre' key={genre}/>
       ))}
     </>
 
   const creators = 
     <>
       {post.creator.map((creator) => (
-        <SearchTag label={creator} facet='creator'/>
+        <SearchTag label={creator} facet='creator' key={creator}/>
       ))}
     </>
 
   let contributors = []
   if (post.contributor) {
     contributors = post.contributor.map((contributor) =>
-      <SearchTag label={contributor} facet='contributor'/>
+      <SearchTag label={contributor} facet='contributor' key={contributor}/>
     )
   }
 
@@ -187,9 +188,9 @@ export function PostPageInner (props = {}) {
                     </Box>}
                 </Flex>
                 {post.url &&
-                  <Link href={post.url} isExternal>
+                  <ChakraLink href={post.url} isExternal>
                     <Button size='xs'><Box>{t('sourceurl', 'Source URL')}</Box> <Box ml='10px' mb='3px'><FaExternalLinkAlt /></Box></Button>
-                  </Link>}
+                  </ChakraLink>}
               </Flex>
               <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%'>
                 <Heading size='md'>{post.headline}</Heading>
@@ -243,14 +244,14 @@ export function LicenseInfos (props) {
           </Box>
         </Center>
         <Center>
-          <Link
+          <ChakraLink
             href='https://creativecommons.org/licenses/by-nc-sa/2.0/de/'
             isExternal
             p='2'
             color='secondary.600'
           >
             Creative Commons BY-NC-SA 2.0 DE
-          </Link>
+          </ChakraLink>
         </Center>
       </Flex>
     )
@@ -262,15 +263,12 @@ export function LicenseInfos (props) {
 }
 
 export function SearchTag (props) {
-  const {label, facet } = props
-  const history = useHistory()
-  function onClick (e) {
-    e.preventDefault()
-    const encoded = encodeURIComponent(label)
-    const facetsearch = `/search?${facet}=["${encoded}"]`
-    history.push(facetsearch)
-  }
+  const {label, facet} = props
+  const encoded = encodeURIComponent(label)
+  const url = `/search?${facet}=["${encoded}"]`
   return (
-    <Tag key={label} mr='1' as='button' onClick={onClick}>{label}</Tag>
+    <Link to={url}>
+      <Tag key={label} mr='1'>{label}</Tag>
+    </Link>
   )
 }
