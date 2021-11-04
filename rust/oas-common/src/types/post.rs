@@ -46,7 +46,8 @@ pub struct Post {
 
     pub transcript: Option<String>,
 
-    pub nlp: Option<serde_json::Value>,
+    #[serde(default)]
+    pub nlp: serde_json::Value,
 
     #[serde(flatten)]
     pub other: serde_json::Map<String, serde_json::Value>,
