@@ -20,11 +20,16 @@ class Config(object):
         self.storage_path = os.environ.get("OAS_STORAGE") or default_storage_dir() 
         self.log_level = os.environ.get('LOG', 'INFO')
         self.log_file = os.environ.get('OAS_LOGFILE') or os.path.join(self.storage_path, 'oas-worker.log')
+        self.model = 'vosk-model-de-0.6'
+        self.model_path = os.path.join(self.storage_path, "models")
 
         try:
             self.base_url_parsed = urlparse(self.base_url, 'http')
         except BaseException as err:
             logging.error(f"Failed to parse OAS_URL: {err}")
+
+    def local_path(self, path):
+        return os.path.join(self.storage_path, path)
 
 
 config = Config()

@@ -70,18 +70,19 @@ def work_fn(worker, typ, i=0, ctx=None):
 
     try:
         # this blocks until a job is available.
-        job = worker.client.poll_next_job(typ)
+        info = worker.client.poll_next_job(typ)
 
-        job_id = job["id"]
-        args = job["args"]
-        opts = job["subjects"]
+        job_id = info["id"]
+        args = info["args"]
+        #  opts = info["subjects"]
 
-        ctx.set_job(job)
+        ctx.set_job(info)
         ctx.log.info(f"start job `{typ}:{job_id}`")
 
         start = time.perf_counter()
         try:
-            result = job.fn(ctx, args, opts)
+            #  result = job.fn(ctx, args, opts)
+            result = job.fn(ctx, args)
             duration = round(time.perf_counter() - start, 3)
             worker.client.set_completed(job_id, patches=result.get("patches"), meta=result.get("meta"), duration=duration)
             ctx.log.info(f"completed job `{typ}:{job_id}` in {duration}s")
@@ -89,6 +90,7 @@ def work_fn(worker, typ, i=0, ctx=None):
             duration = round(time.perf_counter() - start, 3)
             error = str(err) or 'Unkown error'
             ctx.log.error(f"failed job `{typ}:{job_id}` after {duration}s: {error}", exception=err)
+            ctx.log.exception(err)
             worker.client.set_failed(job_id, error=error, duration=duration)
 
     except httpx.RequestError as err:
@@ -140,6 +142,12 @@ class Context(object):
     def set_job(self, job):
         self.job_id = job["id"]
         self.job = job
+
+    def workdir(self):
+        if self.job_id is None:
+            raise RuntimeException("No job set")
+
+        return 
 
 
 class JobFn(object):

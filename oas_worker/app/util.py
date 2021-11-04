@@ -1,4 +1,7 @@
 import requests
+from urllib.parse import urlparse
+from hashlib import sha256
+from base64 import b32encode
 
 def pretty_bytes(num, suffix='B'):
     """
@@ -30,3 +33,32 @@ def download_file(url, local_filename, on_progress=None, on_headers=None):
                 if on_progress and download_size and total_size:
                     on_progress(download_size / total_size)
                 f.flush()
+
+
+def ensure_dir(path: str, parent=True):
+    path = Path(path)
+    if parent:
+        path = path.parent
+    os.makedirs(path, exist_ok=True)
+
+
+def url_to_path(url: str) -> str:
+    parsed_url = urlparse(url)
+
+    url_hash = sha256(url.encode("utf-8")).digest()
+    url_hash = b32encode(url_hash)
+    url_hash = url_hash.lower().decode("utf-8")
+
+    target_name = f"{parsed_url.netloc}/{url_hash[:2]}/{url_hash[2:]}"
+    return target_name
+
+
+def find_in_dict(input, keys):
+    keys = keys.split(".")
+    cursor = input
+    for key in keys:
+        cursor = cursor.get(key)
+        if cursor is None:
+            return None
+    return cursor
+
