@@ -27,7 +27,7 @@ pub async fn on_asr_complete(db: &CouchDB, jobs: &JobManager, job: &JobInfo) -> 
             let post = db.table::<Post>().get(post_ref.id()).await;
             if let Ok(post) = post {
                 let req = nlp_job(&post);
-                let job_id = jobs.create_job(req).await?;
+                let _job_id = jobs.create_job(req).await?;
             }
         }
     }
