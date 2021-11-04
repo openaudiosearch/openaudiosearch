@@ -52,8 +52,6 @@ def download(url):
                 download_size += len(chunk)
                 f.write(chunk)
                 f.flush()
-                if download_size > 1024 * 1024:
-                    break
 
         os.rename(temp_path, target_path)
         return target_path
@@ -126,6 +124,7 @@ def asr(ctx, args):
         }
     }
 
+
 @worker.job(name="nlp")
 def nlp(ctx, args):
     post_id = args["post_id"]
@@ -144,3 +143,26 @@ def nlp(ctx, args):
     return {
         "patches": patches
     }
+
+
+# Debug test job to skip ASR but return valid results.
+@worker.job(name="asr_mock")
+def asr_mock(ctx, args):
+    media_id = args["media_id"]
+    media = ctx.get("/media/" + media_id)
+    guid = media["$meta"]["guid"]
+    result = {
+        "text": "foo bar baz",
+        "parts": [
+            { "start": 0.2, "end": 1.0, "conf": 1.0, "word": "foo" },
+            { "start": 0.2, "end": 1.0, "conf": 1.0, "word": "foo" },
+            { "start": 0.2, "end": 1.0, "conf": 1.0, "word": "foo" },
+        ]
+    }
+    patch = [
+        {"op": "replace", "path": "/transcript", "value": result},
+    ]
+    patches = { guid: patch }
+    meta = { "mock": "yes" }
+    return { "patches": patches, "meta": meta }
+
