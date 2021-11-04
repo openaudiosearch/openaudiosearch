@@ -22,9 +22,9 @@ class JobClient(object):
                 res = res.json()
                 return res
             elif res.status_code == 204:
-                logging.debug("No work to do, waiting and polling")
+                #  logging.trace("No work to do, waiting and polling")
                 #  time.sleep(self.poll_interval)
-                time.sleep(1.0)
+                time.sleep(2.0)
             else:
                 raise res.raise_for_status()
 
