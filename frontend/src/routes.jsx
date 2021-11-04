@@ -8,10 +8,10 @@ import {
 import JobsPage from './pages/jobs'
 import SearchPage from './pages/search'
 import ImporterPage from './pages/importer'
-import LandingPage from './pages/landing-page'
+import LandingPage from './pages/landing'
 import { PostPage } from './pages/post'
 import ImprintPage from './pages/imprint'
-import AboutPage from './pages/about-page'
+import AboutPage from './pages/about'
 
 export default function Routes () {
   return (
