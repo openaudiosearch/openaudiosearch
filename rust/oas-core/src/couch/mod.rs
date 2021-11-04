@@ -239,6 +239,25 @@ impl CouchDB {
         Ok(doc)
     }
 
+    /// Delete a doc by its id
+    pub async fn delete_doc(&self, id: &str) -> Result<PutResponse> {
+        let last_doc = self.get_doc(&id).await;
+        let mut path = id.to_owned();
+        if let Ok(last_doc) = last_doc {
+            if let Some(rev) = last_doc.rev() {
+                path = path + "?rev=" + rev;
+            }
+        } 
+        let req = self.request(Method::DELETE, &path);
+        let res = self.send(req).await;
+            if let Err(err) = &res {
+                log::trace!("[{}] delete ERR for {}: {:?}", self.config.database, id, err);
+            } else {
+                log::trace!("[{}] delete OK for {}", self.config.database, id);
+            }
+        return res;
+    }
+
     /// Put a doc into the database.
     pub async fn put_doc(&self, mut doc: Doc) -> Result<PutResponse> {
         let id = doc.id().to_string();
@@ -514,5 +533,10 @@ impl CouchDB {
     ) -> Result<Vec<PutResult>> {
         let docs = records.into_iter().map(Doc::from_untyped_record).collect();
         self.put_bulk_update(docs).await
+    }
+
+    /// Delete a single record from the database.
+    pub async fn delete_record(&self, guid: &str) -> Result<PutResponse> {
+        self.delete_doc(guid).await
     }
 }
