@@ -251,7 +251,9 @@ export function LicenseInfos (props) {
     )
   } else {
     return (
-      <Text>Licence unknown</Text>
+      <Text>
+        Licence unknown (see <Link href={post.url} isExternal>source</Link> for details)
+      </Text>
     )
   }
 }
