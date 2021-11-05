@@ -69,6 +69,7 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 handlers::feed::get_feed,
                 handlers::feed::post_feed,
                 handlers::feed::get_feeds,
+                handlers::feed::delete_feed,
                 // /search routes
                 handlers::search::search,
                 // task routes
