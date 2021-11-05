@@ -16,7 +16,7 @@ def request_feed(url: str):
 
 def parse_feed(response: requests.Response):
     try:
-        soup = BeautifulSoup(response.text, "lxml")
+        soup = BeautifulSoup(response.text, "html.parser")
         return soup.find("item")
     except Exception as e:
         print(f"Error parsing XML content of {response.url}")
