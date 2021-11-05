@@ -9,7 +9,7 @@ import {
   Heading,
   Box,
   Flex,
-  Link,
+  Link as ChakraLink,
   Button,
   Tag,
   Text,
@@ -19,14 +19,15 @@ import {
 import { useParams, useLocation, useHistory } from 'react-router'
 
 import { stripHTML } from '../lib/sanitize'
-import { usePlayer } from './player'
+import { usePlayer } from '../comp/player'
 import { useIsAdmin } from '../hooks/use-login'
 import { usePost } from '../hooks/use-post'
 import fetch from '../lib/fetch'
 import { useTranslation } from 'react-i18next'
 import Moment from 'moment'
+import { Link } from 'react-router-dom'
 
-import { ToggleTranscriptSection } from './toggle-transcript-section'
+import { ToggleTranscriptSection } from '../comp/toggle-transcript-section'
 
 export function PostTaskMenuButton (props = {}) {
   const { t } = useTranslation()
@@ -138,21 +139,21 @@ export function PostPageInner (props = {}) {
   genres =
     <>
       {genres.map((genre) => (
-        <Tag key={genre} mr='1'>{genre}</Tag>
+        <SearchTag label={genre} facet='genre' key={genre}/>
       ))}
     </>
 
   const creators = 
     <>
       {post.creator.map((creator) => (
-        <Tag key={creator} mr='1'>{creator}</Tag>
+        <SearchTag label={creator} facet='creator' key={creator}/>
       ))}
     </>
 
   let contributors = []
   if (post.contributor) {
     contributors = post.contributor.map((contributor) =>
-      <Tag key={contributor} mr='1'>{contributor}</Tag>
+      <SearchTag label={contributor} facet='contributor' key={contributor}/>
     )
   }
 
@@ -187,9 +188,9 @@ export function PostPageInner (props = {}) {
                     </Box>}
                 </Flex>
                 {post.url &&
-                  <Link href={post.url} isExternal>
+                  <ChakraLink href={post.url} isExternal>
                     <Button size='xs'><Box>{t('sourceurl', 'Source URL')}</Box> <Box ml='10px' mb='3px'><FaExternalLinkAlt /></Box></Button>
-                  </Link>}
+                  </ChakraLink>}
               </Flex>
               <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%'>
                 <Heading size='md'>{post.headline}</Heading>
@@ -198,7 +199,12 @@ export function PostPageInner (props = {}) {
             </Flex>
           </Flex>
           <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%'>
-            {post.publisher && <Text mr='2' fontSize='sm'>{t('by', 'by')}{post.publisher}</Text>}
+            {post.publisher && 
+              <Flex direction='row'>
+                <Text mr='2' fontSize='sm'>{t('by', 'by')}</Text>
+                <SearchTag label={post.publisher} facet='publisher'/>
+              </Flex>
+            }
             {post.creator.length > 0 &&
               <Flex direction='row' mr='2'>
                 <Text fontSize='sm' mr='1'>{t('creators', 'Creators')}:</Text>
@@ -238,14 +244,14 @@ export function LicenseInfos (props) {
           </Box>
         </Center>
         <Center>
-          <Link
+          <ChakraLink
             href='https://creativecommons.org/licenses/by-nc-sa/2.0/de/'
             isExternal
             p='2'
             color='secondary.600'
           >
             Creative Commons BY-NC-SA 2.0 DE
-          </Link>
+          </ChakraLink>
         </Center>
       </Flex>
     )
@@ -256,4 +262,15 @@ export function LicenseInfos (props) {
       </Text>
     )
   }
+}
+
+export function SearchTag (props) {
+  const {label, facet} = props
+  const encoded = encodeURIComponent(label)
+  const url = `/search?${facet}=["${encoded}"]`
+  return (
+    <Link to={url}>
+      <Tag key={label} mr='1'>{label}</Tag>
+    </Link>
+  )
 }

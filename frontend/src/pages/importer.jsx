@@ -36,7 +36,7 @@ import {
   FaCheck as SaveIcon
 } from 'react-icons/fa'
 import { useForm } from 'react-hook-form'
-import { Notice, Error, LoginRequired } from './status'
+import { Notice, Error, LoginRequired } from '../comp/status'
 
 import fetch from '../lib/fetch'
 import { useIsAdmin } from '../hooks/use-login'
