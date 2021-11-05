@@ -24,43 +24,65 @@ export function PostTranscript (props) {
   )
 }
 
+let styleInjected = false
+
 export function MediaTranscript (props) {
   const { media, post, delta } = props
   const parts = media.transcript.parts
 
-  // const [didPlay, setDidPlay] = React.useState(false)
-
   const { setTrack, setMark, setPost } = usePlayer()
 
-  const words = parts.map(word => {
-    // Hue 0 = red, hue 100 = green
-    const conf = word.conf
-    const exp = 6
-    const hue = (Math.pow(conf, exp)) * 100
-    const color = `hsl(${hue}, 100%, 86%)`
-    const style = {
-      display: 'inline-block',
-      background: color,
-      cursor: 'pointer'
-    }
-    return {
-      ...word,
-      style,
-      id: delta
-    }
-  })
+  const style = {
+    display: 'inline-block',
+    cursor: 'pointer'
+  }
+  const words = React.useMemo(() => (
+    <>
+      {parts.map((word, i) => {
+        // Hue 0 = red, hue 100 = green
+        const conf = word.conf
+        const exp = 5
+        const hue = (Math.pow(conf, exp)) * 100
+        const color = `hsl(${hue}, 100%, 86%)`
+        const style = {
+          background: color
+        }
+        return (
+          <span key={i} style={style} onClick={onClick}>
+            {word.word}&nbsp;
+          </span>
+        )
+        function onClick (e) {
+          setPost(post)
+          setTrack(media)
+          setMark(word)
+        }
+      })}
+    </>
+  ), [parts])
+
+  // TODO: Don't do this like this.
+  let globalStyle = null
+  if (!styleInjected) {
+    globalStyle = (
+      <style>
+        {`.transcript-container > span {
+          border-radius: 5px;
+          border: 2px solid transparent;
+          display: inline-block;
+          cursor: pointer;
+        }
+        .transcript-container > span:hover {
+          border-color: rgba(0,0,0,0.4);
+        }`}
+      </style>
+    )
+  }
 
   return (
-    <Box>
-      {words.map((word, i) => (
-        <TranscriptWord
-          key={i}
-          {...word}
-          post={post}
-          track={media}
-          playOnClick
-        />
-      ))}
+    <Box className='transcript-container'>
+      {globalStyle}
+      {words}
     </Box>
   )
 
