@@ -3,36 +3,28 @@ import { Box, Text, Button, Flex } from '@chakra-ui/react'
 import { FaChevronRight, FaChevronDown } from 'react-icons/fa'
 import { useTranslation } from 'react-i18next'
 
+import { PostTranscript } from './transcript'
+
+function hasTranscript (post) {
+  if (!post.media || !post.media.length) return false
+  return post.media.filter(m => m.transcript).length > 0
+}
+
 export function ToggleTranscriptSection (props = {}) {
+  const { t } = useTranslation()
   const { post } = props
   const [show, setShow] = React.useState(false)
-  const toggleTranscript = () => setShow(!show)
-  if (!post) return null
 
-  const transcript = post.media.map((media) => {
-    if (media.transcript && media.transcript.text) { return <Text>{media.transcript.text}</Text> }
-    return null
-  })
-  const { t } = useTranslation()
-
+  if (!hasTranscript(post)) return null
   return (
     <Box>
-      {transcript.indexOf(null) < 0 &&
-        <Box>
-          <Button
-            onClick={toggleTranscript}
-            borderRadius='0'
-          >
-            <Flex w='140px' direction='row' justify='space-between'>
-              {show ? <Text>{t('transcript.hide', 'Hide transcript')}</Text> : <Text>{t('transcript.show', 'Show transcript')}</Text>}
-              {show ? <Box ml='4px'><FaChevronDown /></Box> : <Box ml='4px'><FaChevronRight /></Box>}
-            </Flex>
-          </Button>
-          {show &&
-            <Box bg='gray.100' p='4'>
-              {transcript.map((t, i) => <span key={i}>{t}</span>)}
-            </Box>}
-        </Box>}
+      <Button onClick={() => setShow(show => !show)}>
+        <Flex w='140px' direction='row' justify='space-between'>
+          {show ? <Text>{t('transcript.hide', 'Hide transcript')}</Text> : <Text>{t('transcript.show', 'Show transcript')}</Text>}
+          {show ? <Box ml='4px'><FaChevronDown /></Box> : <Box ml='4px'><FaChevronRight /></Box>}
+        </Flex>
+      </Button>
+      {show && <PostTranscript post={post} />}
     </Box>
   )
 }
