@@ -125,11 +125,9 @@ impl JobManager {
             meta: req.meta,
             duration: req.duration,
         };
-        let res = self
-            .client
+        self.client
             .update_job(job_id, Some(JobStatus::Completed), Some(output))
-            .await;
-        res?;
+            .await?;
 
         let job = self.client.get_job(job_id).await?;
 
