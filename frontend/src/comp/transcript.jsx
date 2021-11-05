@@ -1,7 +1,76 @@
-import { chakra, Box, Icon, Tooltip, Divider } from '@chakra-ui/react'
+import { chakra, Box, Icon, Tooltip, Divider, Heading } from '@chakra-ui/react'
 import React from 'react'
 import { usePlayer, usePlayerRegionIfPlaying, formatDuration } from './player'
 import { FaVolumeUp } from 'react-icons/fa'
+
+export function PostTranscript (props) {
+  const { post } = props
+  let medias = post.media
+  if (!medias) return null
+  medias = medias.filter(media => media.transcript)
+  if (!medias.length) return null
+
+  return (
+    <>
+      {medias.map((media, i) => (
+        <MediaTranscript
+          key={i}
+          media={media}
+          post={post}
+          delta={i}
+          />
+      ))}
+    </>
+  )
+}
+
+export function MediaTranscript (props) {
+  const { media, post, delta } = props
+  const parts = media.transcript.parts
+
+  // const [didPlay, setDidPlay] = React.useState(false)
+
+  const { setTrack, setMark, setPost } = usePlayer()
+
+  const words = parts.map(word => {
+    // Hue 0 = red, hue 100 = green
+    const conf = word.conf
+    const exp = 6
+    const hue = (Math.pow(conf, exp)) * 100
+    const color = `hsl(${hue}, 100%, 86%)`
+    const style = {
+      display: 'inline-block',
+      background: color,
+      cursor: 'pointer'
+    }
+    return {
+      ...word,
+      style,
+      id: delta
+    }
+  })
+
+  return (
+    <Box>
+      {words.map((word, i) => (
+        <TranscriptWord
+          key={i}
+          {...word}
+          post={post}
+          track={media}
+          playOnClick
+        />
+      ))}
+    </Box>
+  )
+
+  function onClick (mark, _e) {
+    // setDidPlay(false)
+    setTrack(media)
+    setPost(post)
+    setMark(mark)
+  }
+}
 
 export function TranscriptSnippet (props) {
   const { post, snippet } = props
@@ -52,6 +121,20 @@ export function TranscriptSnippet (props) {
   }
 }
 
+// function ClickToPlayTooltip (props) {
+//   const { children } = props
+//   return (
+//     <Tooltip label='Click to play'>
+//       <Box onClick={onClick} style={style} _hover={{ bg: 'gray.50'}} position='relative'>
+//         {children}
+//         <Icon as={FaVolumeUp} ml='2' mr='2' color='gray.400' />
+//         <chakra.span fontSize='sm' color='gray.600'>{formatDuration(mark.start)}</chakra.span>
+//         <TranscriptPlayingOverlay track={track} mark={mark} />
+//       </Box>
+//     </Tooltip>
+//   )
+// }
+
 function TranscriptPlayingOverlay (props) {
   const { track, mark } = props
   const currentTimeIfPlaying = usePlayerRegionIfPlaying({ track, mark })
@@ -79,17 +162,51 @@ function TranscriptPlayingOverlay (props) {
 }
 
 export function TranscriptWord (props) {
-  const { setTrack, setMark } = usePlayer()
-  const { highlightWord, word, start, end, conf, id } = props
+  const { highlightWord, playOnClick, track, post, word, start, end, conf, id, onClick, style } = props
+  const { setTrack, setPost, setMark } = usePlayer()
   const alpha = Number(conf)
-  const style = {
+
+  const DEFAULT_STYLE = {
     display: 'inline-block',
     cursor: 'pointer',
     color: `rgba(0,0,0,${alpha})`
   }
+
   let bg = 'transparent'
   if (highlightWord) bg = 'highlightMark'
-  return <Box as='span' bg={bg} style={style}>{word}&nbsp;</Box>
+
+  const inner = (
+    <>
+      <Box
+        as='span'
+        bg={bg}
+        style={style || DEFAULT_STYLE}
+        onClick={onWordClick}
+      >
+          {word}
+      </Box>
+      &nbsp;
+    </>
+  )
+
+
+  if (playOnClick) {
+    return (
+      <Tooltip label='Click to play'>{inner}</Tooltip>
+    )
+  }
+
+  return inner
+
+  function onWordClick (e) {
+    const mark = { word, start, end, conf, id }
+    if (onClick) onClick(mark, e)
+    if (playOnClick) {
+      if (track) setTrack(track)
+      if (post) setPost(post)
+      setMark(mark)
+    }
+  }
 }
 
 export function parseTranscriptSentence (value) {
