@@ -27,7 +27,7 @@ import { useTranslation } from 'react-i18next'
 import Moment from 'moment'
 import { Link } from 'react-router-dom'
 
-import { ToggleTranscriptSection } from '../comp/toggle-transcript-section'
+import { PostTranscriptSection } from '../comp/transcript'
 
 export function PostTaskMenuButton (props = {}) {
   const { t } = useTranslation()
@@ -178,10 +178,6 @@ export function PostPageInner (props = {}) {
             <Flex direction='column' w='100%'>
               <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' w='100%'>
                 <Flex direction={['column', 'column', 'row', 'row']} w='100%'>
-                  {post.datePublished &&
-                    <Text fontSize='sm' mr='2'>
-                      {Moment(post.datePublished).format('DD.MM.YYYY')}
-                    </Text>}
                   {post.genre.length > 0 &&
                     <Box>
                       {genres}
@@ -192,13 +188,18 @@ export function PostPageInner (props = {}) {
                     <Button size='xs'><Box>{t('sourceurl', 'Source URL')}</Box> <Box ml='10px' mb='3px'><FaExternalLinkAlt /></Box></Button>
                   </ChakraLink>}
               </Flex>
-              <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%'>
-                <Heading size='md'>{post.headline}</Heading>
-                <PostButtons post={post} />
+              <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%' my='4'>
+                <Heading size='lg'>{post.headline}</Heading>
+                <PostButtons my='4' post={post} />
               </Flex>
             </Flex>
           </Flex>
           <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%'>
+            {post.datePublished && (
+              <Box fontSize='sm' mr='2'>
+                {Moment(post.datePublished).format('DD.MM.YYYY')}
+              </Box>
+            )}
             {post.publisher && 
               <Flex direction='row'>
                 <Text mr='2' fontSize='sm'>{t('by', 'by')}</Text>
@@ -215,18 +216,18 @@ export function PostPageInner (props = {}) {
                 <Text fontSize='sm' mr='1'>{t('contributors', 'Contributors')}:</Text>
                 {contributors}
               </Flex>}
-          </Flex>
-          {duration &&
-            <Flex direction='row' mt='2'>
-              <Text fontSize='sm'>{duration}</Text>
-            </Flex>}
 
-            <Box mt='2'>{description}</Box>
-
-          <Flex direction='row' justify='space-between' mt='4'>
-            <ToggleTranscriptSection post={post} />
+              {duration && (
+                <Box flex='1' fontSize='sm'>{duration}</Box>
+              )}
           </Flex>
-          <LicenseInfos post={post} />
+
+          <Box mt='4'>{description}</Box>
+          <Box my='4'>
+            <LicenseInfos my='4' post={post} />
+          </Box>
+          <PostTranscriptSection post={post}/>
+
         </Flex>
       </Box>
     </Center>
@@ -234,10 +235,10 @@ export function PostPageInner (props = {}) {
 }
 
 export function LicenseInfos (props) {
-  const { post } = props
+  const { post, ...other } = props
   if (post.licence === 'by-nc-sa') {
     return (
-      <Flex direction='row'>
+      <Flex direction='row' {...other}>
         <Center>
           <Box py='4' pr='4'>
             <Icon as={FaCreativeCommons} />
@@ -270,7 +271,7 @@ export function SearchTag (props) {
   const url = `/search?${facet}=["${encoded}"]`
   return (
     <Link to={url}>
-      <Tag key={label} mr='1'>{label}</Tag>
+      <Tag key={label} mr='1' _hover={{ bg: 'gray.200' }}>{label}</Tag>
     </Link>
   )
 }
