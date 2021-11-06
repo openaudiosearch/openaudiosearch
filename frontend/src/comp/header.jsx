@@ -12,6 +12,7 @@ import logo from '../../assets/oas_logo-5.svg'
 
 import { Login } from './login'
 import { useIsAdmin } from '../hooks/use-login'
+import { GoToSearchBox } from '../pages/search'
 
 const BADGE_STYLE = css`
   position: absolute;
@@ -110,6 +111,14 @@ function Navbar () {
             {t('about', 'About')}
           </Text>
         </NavLink>
+        <Box py='3' px='4'>
+          <GoToSearchBox
+            bg='primary'
+            color='white'
+            borderColor='gray.500'
+            _placeholder={{ color: 'gray.300' }}
+          />
+        </Box>
         {/* <NavLink to='/jobs'>
           <Text fontSize='xl' fontWeight='bold'>
             {t('jobs', 'Jobs')}

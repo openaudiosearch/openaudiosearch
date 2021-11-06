@@ -1,4 +1,5 @@
 import React from 'react'
+import { Helmet } from 'react-helmet'
 import ReactJson from 'react-json-view'
 import { DataSearch, MultiList, DateRange, ReactiveBase, ReactiveList, SelectedFilters, MultiRange, DynamicRangeSlider } from '@appbaseio/reactivesearch'
 import { Heading, Flex, Box, Spinner, Button, Text, chakra, IconButton, Input, InputGroup, InputLeftElement } from '@chakra-ui/react'
@@ -7,7 +8,7 @@ import Moment from 'moment'
 import { useTranslation } from 'react-i18next'
 import { CgClose } from 'react-icons/cg'
 import { FaFilter, FaChevronDown, FaChevronRight, FaSearch } from 'react-icons/fa'
-import { MdChildFriendly } from 'react-icons/md'
+import { MdChildFriendly, MdRemoveCircleOutline } from 'react-icons/md'
 
 import { API_ENDPOINT } from '../lib/config'
 import { stripHTML } from '../lib/sanitize'
@@ -51,6 +52,7 @@ export function GoToSearchBox (props = {}) {
         onChange={e => setValue(e.target.value)}
         placeholder='Search for community media'
         name='searchbox'
+        {...props}
       />
     </Flex>
   )
@@ -95,6 +97,19 @@ export function CustomDataSearch (props = {}) {
       </Flex>
       <DataSearch style={dataSearchStyle} {...props} onChange={onChange} value={queryValue} />
     </>
+  )
+}
+
+function RemoveFilterButton ({ onClick }) {
+  return (
+    <IconButton
+      variant='ghost'
+      rounded
+      size='sm'
+      title='Remove filter'
+      onClick={onClick}
+      icon={<MdRemoveCircleOutline />}
+    />
   )
 }
 
@@ -144,6 +159,77 @@ export default function SearchPage () {
     }
   }
 
+  function renderSelectedFilters (props) {
+    const { selectedValues, setValue } = props
+    const activeFilters = Object.entries(selectedValues).map(([key, props]) => {
+      if (!props.value) return null
+      if (Array.isArray(props.value) && !props.value.length) return null
+      return { key, ...props }
+    }).filter(x => x)
+
+    let main
+    let text = ''
+    if (!activeFilters.length) {
+      text = t('search', 'Search')
+      main = <Box mt='4'>{text}</Box>
+    } else {
+      text = activeFilters.map(filter => Array.isArray(filter.value) ? filter.value.join(', ') : filter.value).join('; ')
+      main = (
+        <>
+          {activeFilters.map((props) => {
+            let value
+            if (Array.isArray(props.value)) {
+              value = (
+                <>
+                  {props.value.map((value, i) => (
+                    <Text key={i}>
+                      {value}
+                      <RemoveFilterButton
+                        onClick={e => setValue(props.key, props.value.filter(v => v !== value))}
+                      />
+                    </Text>
+                  ))}
+                </>
+              )
+            } else {
+              value = (
+                <Text>
+                  {props.value}
+                  <RemoveFilterButton
+                    onClick={e => setValue(props.key, null)}
+                  />
+                </Text>
+              )
+            }
+            return (
+              <Flex key={props.key} direction='column' display='inline-block' mr='2'>
+                <Box fontSize='sm' color='gray.400'>
+                  {props.label}
+                </Box>
+                <Box>
+                  {value}
+                </Box>
+              </Flex>
+            )
+          })}
+        </>
+      )
+    }
+
+    return (
+      <Heading
+        size='lg'
+        mb='2'
+        ml={[null, null, '350px', '350px']}
+      >
+        <Helmet>
+          <title>{text} – Open Audio Search</title>
+        </Helmet>
+        {main}
+      </Heading>
+    )
+  }
+
   return (
     <Flex color='white'>
       <ReactiveBase
@@ -152,7 +238,7 @@ export default function SearchPage () {
         url={url}
       >
         <Flex direction='column'>
-          <Heading mb='2' ml={[null, null, '350px', '350px']}>{t('search', 'Search')}</Heading>
+          <SelectedFilters showClearAll render={renderSelectedFilters} />
           <Box
             // w={['90vw', '90vw', '600px', '600px']}
             maxWidth='750px'
@@ -174,7 +260,6 @@ export default function SearchPage () {
               defaultValue=''
               URLParams={true}
             />
-            <SelectedFilters showClearAll />
           </Box>
 
           <Flex direction={['column', 'column', 'row', 'row']} justify-content='flex-start'>
