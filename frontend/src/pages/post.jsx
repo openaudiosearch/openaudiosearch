@@ -26,6 +26,7 @@ import fetch from '../lib/fetch'
 import { useTranslation } from 'react-i18next'
 import Moment from 'moment'
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet'
 
 import { PostTranscriptSection } from '../comp/transcript'
 
@@ -118,7 +119,23 @@ export function PostPage (props = {}) {
   const { postId } = useParams()
   const { post } = usePost(postId)
   if (!post) return null
-  return <PostPageInner {...props} post={post} />
+  return (
+    <>
+      <PostPageHelmet post={post} />
+      <PostPageInner {...props} post={post} />
+    </>
+  )
+}
+
+export function PostPageHelmet (props) {
+  const { post } = props
+  const headline = post.headline || post.$meta.id
+  const title = `${headline} – Open Audio Search`
+  return (
+    <Helmet>
+      <title>{title}</title>
+    </Helmet>
+  )
 }
 
 export function PostPageInner (props = {}) {

@@ -7,6 +7,7 @@ import { FaVolumeUp } from 'react-icons/fa'
 export function PostTranscriptSection (props) {
   const { post } = props
   const { t } = useTranslation()
+  if (!hasTranscript(post)) return null
   // const [show, setShow] = React.useState(false)
   return (
     <Box p='4' border='1px' borderColor='gray.200' bg='white' borderRadius='sm'>
@@ -229,7 +230,7 @@ export function TranscriptWord (props) {
 }
 
 function hasTranscript (post) {
-  if (!post.media || !post.media.length) return false
+  if (!post || !post.media || !post.media.length) return false
   return post.media.filter(m => m.transcript).length > 0
 }
 
