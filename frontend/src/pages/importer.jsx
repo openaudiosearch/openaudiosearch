@@ -92,6 +92,7 @@ function FeedRow (props = {}) {
         URL: <Code>{feed.url}</Code>
         <FeedTag enabled={settings.enableAsr} label='ASR' tooltip='Speech recognition is enabled' />
         <FeedTag enabled={settings.enableNlp} label='NLP' tooltip='Natural language processing is enabled' />
+        <Text fontSize='sm'>{feed.$meta.guid}</Text>
       </Box>
       <FeedSettingsModal feed={feed} />
     </Flex>
@@ -113,7 +114,7 @@ function FeedSettingsModal (props) {
   const { isOpen, onOpen, onClose } = useDisclosure()
   return (
     <>
-    <Button isRound onClick={onOpen} leftIcon={<SettingsIcon />}>Settings</Button>
+    <Button onClick={onOpen} leftIcon={<SettingsIcon />}>Settings</Button>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -210,20 +211,20 @@ function FeedSettings (props) {
 function toValues (feed) {
   return {
     url: feed.url,
-    enableAsr: feed.mediaJobs.asr !== undefined,
-    enableNlp: feed.postJobs.nlp !== undefined,
+    enableAsr: feed.mediaJobs?.asr !== undefined,
+    enableNlp: feed.postJobs?.nlp !== undefined,
   }
 }
 
 function patchFeed (oldFeed, formValues) {
-  const feed = { ...oldFeed }
+  const feed = { mediaJobs: {}, postJobs: {}, ...oldFeed }
   feed.mediaJobs.asr = formValues.enableAsr ? null : undefined
   feed.postJobs.nlp = formValues.enableNlp ? null : undefined
   return feed
 }
 
 function FormState (props) {
-  let { success, successMessage, errorMessage, error, ...other } = props
+  let { error, success, setError, setSuccess, successMessage, errorMessage, submitting, setIsSubmitting, ...other } = props
   if (!success && !error) return null
   if (success && !successMessage) successMessage = 'OK!'
   if (error && !errorMessage) errorMessage = 'Error: ' + String(error)

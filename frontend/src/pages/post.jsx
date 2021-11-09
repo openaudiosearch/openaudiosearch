@@ -184,67 +184,69 @@ export function PostPageInner (props = {}) {
     <Center>
       <Box w={['90vw', '80vw', '750px', '750px']}>
         <Flex direction='column' maxWidth='750px'>
-          {fromSearch &&
+          {fromSearch && (
             <Flex direction='row' w='100%' mb='2'>
               <Button onClick={() => history.goBack()} size='sm' variant='ghost'>
                 <Box mr='2'><FaChevronLeft /></Box>
                 <Box>{t('backtosearch', 'Back to search')}</Box>
               </Button>
-            </Flex>}
-          <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' w='100%'>
-            <Flex direction='column' w='100%'>
-              <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' w='100%'>
-                <Flex direction={['column', 'column', 'row', 'row']} w='100%'>
-                  {post.genre.length > 0 &&
-                    <Box>
-                      {genres}
-                    </Box>}
+            </Flex>
+          )}
+          <Box bg='white' borderRadius='md' boxShadow='sm' borderWidth='1px' borderColor='gray.300' p='4'>
+            <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' w='100%'>
+              <Flex direction='column' w='100%'>
+                <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' w='100%'>
+                  <Flex direction={['column', 'column', 'row', 'row']} w='100%'>
+                    {post.genre.length > 0 &&
+                      <Box>
+                        {genres}
+                      </Box>}
+                  </Flex>
+                  {post.url &&
+                    <ChakraLink href={post.url} isExternal>
+                      <Button size='xs'><Box>{t('sourceurl', 'Source URL')}</Box> <Box ml='10px' mb='3px'><FaExternalLinkAlt /></Box></Button>
+                    </ChakraLink>}
                 </Flex>
-                {post.url &&
-                  <ChakraLink href={post.url} isExternal>
-                    <Button size='xs'><Box>{t('sourceurl', 'Source URL')}</Box> <Box ml='10px' mb='3px'><FaExternalLinkAlt /></Box></Button>
-                  </ChakraLink>}
-              </Flex>
-              <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%' my='4'>
-                <Heading size='lg'>{post.headline}</Heading>
-                <PostButtons my='4' post={post} />
+                <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%' my='4'>
+                  <Heading size='lg'>{post.headline}</Heading>
+                  <PostButtons my='4' post={post} />
+                </Flex>
               </Flex>
             </Flex>
-          </Flex>
-          <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%'>
-            {post.datePublished && (
-              <Box fontSize='sm' mr='2'>
-                {Moment(post.datePublished).format('DD.MM.YYYY')}
-              </Box>
-            )}
-            {post.publisher && 
-              <Flex direction='row'>
-                <Text mr='2' fontSize='sm'>{t('by', 'by')}</Text>
-                <SearchTag label={post.publisher} facet='publisher'/>
-              </Flex>
-            }
-            {post.creator.length > 0 &&
-              <Flex direction='row' mr='2'>
-                <Text fontSize='sm' mr='1'>{t('creators', 'Creators')}:</Text>
-                {creators}
-              </Flex>}
-            {post.contributor && contributors.length > 0 &&
-              <Flex direction='row' mr='2'>
-                <Text fontSize='sm' mr='1'>{t('contributors', 'Contributors')}:</Text>
-                {contributors}
-              </Flex>}
-
-              {duration && (
-                <Box flex='1' fontSize='sm'>{duration}</Box>
+            <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' mt='2' w='100%'>
+              {post.datePublished && (
+                <Box fontSize='sm' mr='2'>
+                  {Moment(post.datePublished).format('DD.MM.YYYY')}
+                </Box>
               )}
-          </Flex>
+              {post.publisher && 
+                <Flex direction='row'>
+                  <Text mr='2' fontSize='sm'>{t('by', 'by')}</Text>
+                  <SearchTag label={post.publisher} facet='publisher'/>
+                </Flex>
+              }
+              {post.creator.length > 0 &&
+                <Flex direction='row' mr='2'>
+                  <Text fontSize='sm' mr='1'>{t('creators', 'Creators')}:</Text>
+                  {creators}
+                </Flex>}
+              {post.contributor && contributors.length > 0 &&
+                <Flex direction='row' mr='2'>
+                  <Text fontSize='sm' mr='1'>{t('contributors', 'Contributors')}:</Text>
+                  {contributors}
+                </Flex>}
 
-          <Box mt='4'>{description}</Box>
-          <Box my='4'>
-            <LicenseInfos my='4' post={post} />
+                {duration && (
+                  <Box flex='1' fontSize='sm'>{duration}</Box>
+                )}
+            </Flex>
+
+            <Box mt='4'>{description}</Box>
+            <Box my='4'>
+              <LicenseInfos my='4' post={post} />
+            </Box>
+            <PostTranscriptSection post={post}/>
           </Box>
-          <PostTranscriptSection post={post}/>
-
         </Flex>
       </Box>
     </Center>

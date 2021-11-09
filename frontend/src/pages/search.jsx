@@ -15,6 +15,7 @@ import { stripHTML } from '../lib/sanitize'
 import { PostButtons } from './post'
 import { TranscriptSnippet } from '../comp/transcript'
 import { useIsAdmin } from '../hooks/use-login'
+import { reactiveBaseTheme } from '../theme'
 
 const { ResultListWrapper } = ReactiveList
 
@@ -234,6 +235,7 @@ export default function SearchPage () {
     <Flex color='white'>
       <ReactiveBase
         getSearchParams={() => location.search}
+        theme={reactiveBaseTheme}
         app='oas'
         url={url}
       >
@@ -443,13 +445,13 @@ export function ResultItem (props) {
   return (
     <Flex
       direction='column'
-      border='2px'
+      border='1px'
       p='2'
-      borderRadius='10px'
-      borderColor='gray.200'
-      boxShadow='md'
+      borderColor='gray.300'
+      boxShadow='sm'
+      borderRadius='md'
       bg='white'
-      my='3'
+      mb='2'
       overflow='hidden'
       overflowWrap='break-word'
       wordBreak='break-word'
