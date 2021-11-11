@@ -16,14 +16,14 @@ from app.worker import worker
 from app.jobs.spacy_pipe import SpacyPipe
 from app.jobs.transcribe_vosk import transcribe_vosk
 
-def local_path_with_dir(path):
-    path = config.local_path(path)
+def local_dir_mkdir(path):
+    path = config.local_dir(path)
     os.makedirs(Path(path).parent, exist_ok=True)
     return path
 
 def download(url, refetch=False, limit_bytes=None):
     url_as_path = url_to_path(url)
-    target_path = local_path_with_dir(f"download/{url_as_path}")
+    target_path = local_dir_mkdir(f"download/{url_as_path}")
     temp_path = target_path + ".tmp"
     # chunk size to write
     chunk_size = 1024 * 64

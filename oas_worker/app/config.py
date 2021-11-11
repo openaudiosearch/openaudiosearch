@@ -28,7 +28,7 @@ class Config(object):
         except BaseException as err:
             logging.error(f"Failed to parse OAS_URL: {err}")
 
-    def local_path(self, path):
+    def local_dir(self, path):
         return os.path.join(self.storage_path, path)
 
 
