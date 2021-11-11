@@ -60,16 +60,12 @@ impl Mappable for Media {}
 impl ElasticMapping for Media {
     fn elastic_mapping() -> serde_json::Value {
         json!({
-            "tasks": {
-                "type": "object",
-                "enabled": false
-            },
             "transcript": {
                 "type": "object",
                 "enabled": false
             },
             "contentUrl":{
-                "type":"text"
+                "type": "keyword"
             },
             "duration": {
                 "type": "float"

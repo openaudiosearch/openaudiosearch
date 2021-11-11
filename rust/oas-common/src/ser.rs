@@ -184,7 +184,13 @@ impl<'de> de::Visitor<'de> for DateVisitor {
             Ok(value) => Ok(Some(value.with_timezone(&Utc))),
             Err(_e) => match DateTime::parse_from_rfc3339(value) {
                 Ok(value) => Ok(Some(value.with_timezone(&Utc))),
-                Err(e) => Err(E::custom(format!("Parse error {} for {}", e, value))),
+                Err(_e) => match diligent_date_parser::parse_date(value) {
+                    Some(value) => Ok(Some(value.with_timezone(&Utc))),
+                    None => Err(E::custom(format!(
+                        "Parse error for {}: Invalid date",
+                        value
+                    ))),
+                },
             },
         }
     }

@@ -19,3 +19,4 @@ uuid = { version = "0.8.2", features = ["v4"] }
 json-patch = "0.2.6"
 schemars = { version = "0.8.3", features = ["chrono"] }
 chrono = { version = "0.4.19", features = ["serde"] }
+diligent-date-parser = "0.1.3"
