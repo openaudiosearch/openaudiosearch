@@ -87,7 +87,7 @@ impl FeedWatcher {
             db.put_untyped_record_bulk(records.clone()).await?
         };
 
-        log::trace!("put result: {:?}", put_result);
+        // log::trace!("put result: {:?}", put_result);
 
         let (success, error): (Vec<_>, Vec<_>) = put_result
             .iter()
@@ -100,15 +100,13 @@ impl FeedWatcher {
             error.len()
         );
         for error in error {
-            // save because of partition above.
-            let error = error.as_err().unwrap();
-            match error.error.as_str() {
-                "conflict" => {
-                    log::trace!("Skipped to save post from feed {}: exists", self.url(),);
-                }
-                _ => {
-                    log::error!("Failed to save post from feed {}: {}", self.url(), error);
-                }
+            if let PutResult::Err(error) = error {
+                log::trace!(
+                    "skipped to save post `{}` from feed `{}`: {}",
+                    error.id.as_deref().unwrap_or_default(),
+                    self.url(),
+                    error.reason
+                );
             }
         }
         Ok((put_result, records))
@@ -228,17 +226,14 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
     let mapped_fields = resolve_extensions(extensions, mapping);
     // log::debug!("resolve_extensions result: {:#?}", mapped_fields);
     let mut post = {
-        //let mapped_fields  = mapped_fields.into_iter().filter(|(k,_v)| !(k.starts_with("media.")));
         let mapped_fields_json: serde_json::Map<String, serde_json::Value> = mapped_fields
             .clone()
             .into_iter()
             .map(|(k, v)| (k.to_case(Case::Camel), serde_json::Value::String(v)))
             .filter(|(k, _v)| !(k.starts_with("media.")))
             .collect();
-        // log::debug!("mapped fields result {:#?}", mapped_fields_json);
         let post: Result<Post, serde_json::Error> =
             serde_json::from_value(serde_json::Value::Object(mapped_fields_json));
-        // log::debug!("post result after parse {:#?}", post);
 
         post.unwrap_or_default()
     };
