@@ -58,6 +58,10 @@ class Worker(object):
             return
         self.pool.terminate()
 
+    def workdir(self, job_id):
+        workdir = self.config.local_dir(f"job/{job_id}")
+        return workdir
+
     #  def start_dashboard(self):
     #      start_dashboard(range(DASHBOARD_PORT, DASHBOARD_PORT + 2))
 
@@ -146,8 +150,7 @@ class Context(object):
     def workdir(self):
         if self.job_id is None:
             raise RuntimeException("No job set")
-
-        return 
+        return self.worker.workdir(self.job_id)
 
 
 class JobFn(object):

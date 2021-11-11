@@ -21,7 +21,7 @@ def local_path_with_dir(path):
     os.makedirs(Path(path).parent, exist_ok=True)
     return path
 
-def download(url):
+def download(url, refetch=False, limit_bytes=None):
     url_as_path = url_to_path(url)
     target_path = local_path_with_dir(f"download/{url_as_path}")
     temp_path = target_path + ".tmp"
@@ -37,7 +37,7 @@ def download(url):
         target_path += extension
         total_size = int(headers.get("content-length", 0))
 
-        if os.path.isfile(target_path):
+        if os.path.isfile(target_path) and not refetch:
             log.info(
                 f"File exists, skipping download of {url} to {target_path} ({pretty_bytes(total_size)})"
             )
@@ -52,6 +52,8 @@ def download(url):
                 download_size += len(chunk)
                 f.write(chunk)
                 f.flush()
+                if limit_bytes is not None and download_size > limit_bytes:
+                    break
 
         os.rename(temp_path, target_path)
         return target_path
@@ -78,7 +80,7 @@ def asr(ctx, args):
     downloaded_path = download(url)
 
     # convert to wav
-    workdir = config.local_path(f"job/{ctx.job_id}")
+    workdir = ctx.workdir()
     os.makedirs(workdir, exist_ok=True)
     temp_wav = os.path.join(workdir, "processed.wav")
 
