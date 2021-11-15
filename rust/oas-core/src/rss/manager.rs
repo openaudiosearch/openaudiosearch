@@ -72,13 +72,13 @@ pub struct FeedManagerInner {
     store: HashMap<String, TypedRecord<types::Feed>>,
     mapping_manager: MappingManager,
     opts: FeedManagerOpts,
-    init: bool
+    init: bool,
 }
 
 impl FeedManagerInner {
     fn new(opts: FeedManagerOpts) -> Self {
         let mapping_manager = if let Some(file) = &opts.mapping_file {
-            MappingManager::with_file(&file)
+            MappingManager::with_file(file)
         } else {
             MappingManager::new()
         };
@@ -86,13 +86,13 @@ impl FeedManagerInner {
             store: HashMap::new(),
             opts,
             mapping_manager,
-            init: false
+            init: false,
         }
     }
 
     async fn init(&mut self, db: &CouchDB) -> anyhow::Result<()> {
         if self.init {
-            return Ok(())
+            return Ok(());
         }
         self.mapping_manager.init().await?;
         let records = db.get_all_records::<types::Feed>().await?;
@@ -104,9 +104,9 @@ impl FeedManagerInner {
     }
 
     pub async fn refetch(&mut self, db: &CouchDB, id_or_url: &str) -> anyhow::Result<()> {
-        self.init(&db).await?;
+        self.init(db).await?;
         let table = db.table::<Feed>();
-        let feed = match table.get(&id_or_url).await {
+        let feed = match table.get(id_or_url).await {
             Ok(feed) => feed,
             Err(_) => match table.get(&id_from_hashed_string(&id_or_url)).await {
                 Ok(feed) => feed,
@@ -124,7 +124,7 @@ impl FeedManagerInner {
         )?;
 
         watcher.load().await?;
-        watcher.save(&db, true).await?;
+        watcher.save(db, true).await?;
         Ok(())
     }
 }

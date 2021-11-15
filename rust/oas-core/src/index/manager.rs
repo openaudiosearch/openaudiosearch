@@ -216,7 +216,7 @@ impl IndexManager {
                 .filter_map(|ev| ev.doc.and_then(|doc| doc.into_untyped_record().ok()))
                 .collect();
             self.post_index
-                .index_changes(&db, &records[..])
+                .index_changes(db, &records[..])
                 .await
                 .context("Failed to index changes")?;
             self.meta_index

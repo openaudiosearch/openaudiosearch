@@ -8,9 +8,9 @@ fn main() {
     };
     let frontend_dist_path = format!("{}/{}", frontend_path, "dist");
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-env-changed={}", "BUILD_FRONTEND");
-    println!("cargo:rerun-if-env-changed={}", "FRONTEND_PATH");
-    println!("cargo:rerun-if-env-changed={}", "PROFILE");
+    println!("cargo:rerun-if-env-changed=BUILD_FRONTEND");
+    println!("cargo:rerun-if-env-changed=FRONTEND_PATH");
+    println!("cargo:rerun-if-env-changed=PROFILE");
     println!("frontend path: {}", frontend_path);
     let build_frontend = match std::env::var("BUILD_FRONTEND") {
         Ok(var) => match var.as_str() {

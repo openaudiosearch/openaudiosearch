@@ -71,7 +71,7 @@ impl MappingManager {
             self.mappings = mapping;
         // Use default mapping (included at compile time)
         } else {
-            let mapping: HashMap<String, Mapping> = toml::from_str(&DEFAULT_MAPPING)?;
+            let mapping: HashMap<String, Mapping> = toml::from_str(DEFAULT_MAPPING)?;
             self.mappings = mapping;
         }
         Ok(())
@@ -91,7 +91,7 @@ async fn mapping_path() -> Option<PathBuf> {
         return Some(path);
     }
 
-    return None;
+    None
 }
 
 async fn path_exists(path: &PathBuf) -> bool {

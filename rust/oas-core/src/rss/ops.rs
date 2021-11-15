@@ -21,7 +21,7 @@ pub trait Crawler: Send + Sync {
     }
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 pub struct FetchOpts {
     /// Feed URL
     url: Url,
@@ -30,7 +30,7 @@ pub struct FetchOpts {
     update: bool,
 }
 
-#[derive(Parser, Serialize, Deserialize)]
+#[derive(Parser, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CrawlOpts {
     /// Feed URL to ingest
@@ -103,7 +103,7 @@ pub async fn crawler_loop(
     let start = Instant::now();
     for _i in 0..max_pages {
         log::debug!("fetching {}", url);
-        let feed_page = fetch_and_save_with_client(client.clone(), &db, &url, opts.update).await?;
+        let feed_page = fetch_and_save_with_client(client.clone(), db, &url, opts.update).await?;
 
         // Check if the batch put to db contained any errors.
         // An error should occur when putting an existing ID
@@ -156,7 +156,7 @@ pub async fn fetch_and_save_with_client(
 ) -> RssResult<FetchedFeedPage> {
     let mut feed = FeedWatcher::with_client(client, &url, None, Default::default(), None).unwrap();
     feed.load().await?;
-    let (put_result, records) = feed.save(&db, update).await?;
+    let (put_result, records) = feed.save(db, update).await?;
     let feed_page = FetchedFeedPage {
         url: feed.url.clone(),
         feed,
@@ -169,7 +169,7 @@ pub async fn fetch_and_save_with_client(
 pub async fn fetch_and_save(db: &CouchDB, opts: &FetchOpts) -> RssResult<FetchedFeedPage> {
     let mut feed = FeedWatcher::new(&opts.url, None, Default::default(), None).unwrap();
     feed.load().await?;
-    let (put_result, records) = feed.save(&db, opts.update).await?;
+    let (put_result, records) = feed.save(db, opts.update).await?;
     let feed_page = FetchedFeedPage {
         url: feed.url.clone(),
         feed,

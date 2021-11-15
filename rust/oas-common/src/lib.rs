@@ -1,13 +1,14 @@
 mod guid;
+pub mod jobs;
 pub mod mapping;
 pub mod record;
 mod record_map;
 pub mod reference;
 pub mod resolver;
 pub mod ser;
-pub mod task;
 pub mod types;
 pub mod util;
+pub use jobs::*;
 
 pub use guid::Guid;
 pub use record::*;

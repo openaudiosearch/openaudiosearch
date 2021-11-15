@@ -3,7 +3,6 @@ use crate::mapping::Mappable;
 use crate::record::TypedValue;
 use crate::reference::{self, Reference};
 use crate::ser;
-use crate::task::{TaskObject, TaskState};
 use crate::{ElasticMapping, MissingRefsError};
 use crate::{Record, Resolvable, Resolver, UntypedRecord};
 use chrono::{DateTime, Utc};
@@ -47,12 +46,11 @@ pub struct Post {
 
     pub transcript: Option<String>,
 
-    pub nlp: Option<serde_json::Value>,
+    #[serde(default)]
+    pub nlp: serde_json::Value,
 
     #[serde(flatten)]
     pub other: serde_json::Map<String, serde_json::Value>,
-    #[serde(default)]
-    pub tasks: PostTasks,
 }
 
 impl TypedValue for Post {
@@ -60,22 +58,6 @@ impl TypedValue for Post {
 }
 
 impl Mappable for Post {}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
-pub struct PostTasks {
-    #[serde(deserialize_with = "ser::deserialize_null_default")]
-    pub nlp: TaskState,
-}
-
-impl TaskObject for Post {
-    type TaskStates = PostTasks;
-    fn task_states(&self) -> Option<&Self::TaskStates> {
-        Some(&self.tasks)
-    }
-    fn task_states_mut(&mut self) -> Option<&mut Self::TaskStates> {
-        Some(&mut self.tasks)
-    }
-}
 
 #[async_trait::async_trait]
 impl Resolvable for Post {

@@ -150,18 +150,18 @@ applies to: core
 
 If set to a HTTP URL, all requests for the web UI are proxied to this address
 
-#### `CONCURRENCY`
+#### `OAS_CONCURRENCY_ASR`
 
 default: `1`
 applies to: worker
 
-Sets the number of worker processes/threads.
+Sets the number of worker processes/threads for ASR processing.
 
 
 ## Development and local setup
 
 To run OAS locally for developing or testing you should install the following requirements beforehand:
-- For the core: [Rust](https://rust-lang.org), which is most easily installed with [Rustup](https://rustup.rs/). You also will need a C compiler and OpenSSL development headers. On Debian based systems, run `apt install gcc libssl-dev pkg-config`.
+- For the core: [Rust](https://rust-lang.org), which is most easily installed with [Rustup](https://rustup.rs/). The minimum supported version of Rust (MSRV) is **1.54.0**. You might also need a C compiler and OpenSSL development headers. On Debian based systems, run `apt install gcc libssl-dev pkg-config`.
 - For the worker: [Python 3](https://python.org) and [poetry](https://python-poetry.org/docs/). Also requires [ffmpeg](https://www.ffmpeg.org/).
 - For the frontend: [Node.js](https://nodejs.org/en/) and npm or yarn.
 

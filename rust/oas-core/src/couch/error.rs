@@ -22,6 +22,8 @@ pub enum CouchError {
     MissingRefs(#[from] MissingRefsError),
     #[error("CouchDB is not reachable")]
     ServiceUnavailable,
+    #[error("Not found")]
+    NotFound,
 }
 
 impl CouchError {

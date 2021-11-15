@@ -7,8 +7,7 @@ use std::convert::TryFrom;
 use std::fmt;
 use thiserror::Error;
 
-use crate::task::TaskObject;
-use crate::{ElasticMapping, MissingRefsError, Resolvable, Resolver};
+use crate::{ElasticMapping, JobsLog, MissingRefsError, Resolvable, Resolver};
 
 pub type Object = serde_json::Map<String, serde_json::Value>;
 pub type Record<T> = TypedRecord<T>;
@@ -39,19 +38,28 @@ pub enum DecodingError {
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RecordMeta {
-    guid: String,
-    #[serde(rename = "type")]
-    typ: String,
-    id: String,
     // TODO: Add more metadata?
     // source: String,
     // seq: u32,
     // version: u32,
     // timestamp: u32,
-    // tasks: HashMap<TaskName, TaskState>,
+    guid: String,
+    #[serde(rename = "type")]
+    typ: String,
+    id: String,
+    #[serde(default)]
+    jobs: JobsLog,
 }
 
-// pub type TaskName = String;
+impl RecordMeta {
+    pub fn jobs(&self) -> &JobsLog {
+        &self.jobs
+    }
+
+    pub fn jobs_mut(&mut self) -> &mut JobsLog {
+        &mut self.jobs
+    }
+}
 
 impl ElasticMapping for RecordMeta {
     fn elastic_mapping() -> serde_json::Value {
@@ -64,7 +72,7 @@ impl ElasticMapping for RecordMeta {
             },
             "typ": {
                 "type": "keyword"
-            }
+            },
         })
     }
 }
@@ -205,6 +213,16 @@ impl UntypedRecord {
         &self.meta.typ
     }
 
+    // Get a reference to the record meta.
+    pub fn meta(&self) -> &RecordMeta {
+        &self.meta
+    }
+
+    // Get a mutable reference to the record meta.
+    pub fn meta_mut(&mut self) -> &mut RecordMeta {
+        &mut self.meta
+    }
+
     /// Merge this record's value with another JSON value.
     pub fn merge_json_value(
         &mut self,
@@ -225,15 +243,14 @@ impl UntypedRecord {
 
     pub fn apply_json_patch(&mut self, patch: &json_patch::Patch) -> Result<(), EncodingError> {
         let mut value = Value::Object(self.value.clone());
-        let res = json_patch::patch(&mut value, &patch);
-        eprintln!("PATCH RES {:#?}", res);
+        let res = json_patch::patch(&mut value, patch);
         match res {
             Ok(_) => match value {
                 Value::Object(value) => {
                     self.value = value;
                     Ok(())
                 }
-                _ => Err(EncodingError::NotAnObject.into()),
+                _ => Err(EncodingError::NotAnObject),
             },
             Err(err) => Err(err.into()),
         }
@@ -276,19 +293,6 @@ where
 
 impl<T> TypedRecord<T>
 where
-    T: TaskObject,
-{
-    pub fn task_states(&self) -> Option<&<T as TaskObject>::TaskStates> {
-        self.value.task_states()
-    }
-
-    pub fn task_states_mut(&mut self) -> Option<&mut <T as TaskObject>::TaskStates> {
-        self.value.task_states_mut()
-    }
-}
-
-impl<T> TypedRecord<T>
-where
     T: TypedValue,
 {
     /// Get the guid of the record.
@@ -304,6 +308,16 @@ where
     /// Get the typ of the record.
     pub fn typ(&self) -> &str {
         &self.meta.typ
+    }
+
+    // Get a reference to the record meta.
+    pub fn meta(&self) -> &RecordMeta {
+        &self.meta
+    }
+
+    // Get a mutable reference to the record meta.
+    pub fn meta_mut(&mut self) -> &mut RecordMeta {
+        &mut self.meta
     }
 
     /// Create a new record from an id and a value.

@@ -80,7 +80,7 @@ fn decode_basic_auth<T: Into<String>>(base64_encoded: T) -> Option<(String, Stri
         Err(_) => return None,
     };
 
-    let split_vec: Vec<&str> = decoded_creds.splitn(2, ":").collect();
+    let split_vec: Vec<&str> = decoded_creds.splitn(2, ':').collect();
 
     if split_vec.len() < 2 {
         None

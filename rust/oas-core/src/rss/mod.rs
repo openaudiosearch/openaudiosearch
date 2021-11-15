@@ -87,7 +87,7 @@ impl FeedWatcher {
             db.put_untyped_record_bulk(records.clone()).await?
         };
 
-        log::trace!("put result: {:?}", put_result);
+        // log::trace!("put result: {:?}", put_result);
 
         let (success, error): (Vec<_>, Vec<_>) = put_result
             .iter()
@@ -100,15 +100,13 @@ impl FeedWatcher {
             error.len()
         );
         for error in error {
-            // save because of partition above.
-            let error = error.as_err().unwrap();
-            match error.error.as_str() {
-                "conflict" => {
-                    log::trace!("Skipped to save post from feed {}: exists", self.url(),);
-                }
-                _ => {
-                    log::error!("Failed to save post from feed {}: {}", self.url(), error);
-                }
+            if let PutResult::Err(error) = error {
+                log::trace!(
+                    "skipped to save post `{}` from feed `{}`: {}",
+                    error.id.as_deref().unwrap_or_default(),
+                    self.url(),
+                    error.reason
+                );
             }
         }
         Ok((put_result, records))
@@ -129,26 +127,29 @@ impl FeedWatcher {
         let posts = self.to_posts()?;
         let mut docs = vec![];
         for mut post in posts.into_iter() {
-            if let Some(record) = &self.feed_record {
+            if let Some(feed) = &self.feed_record {
                 // Assign feed reference on post.
-                post.value.feeds = vec![Reference::Id(record.guid().to_string())];
+                post.value.feeds = vec![Reference::Id(feed.guid().to_string())];
                 // Assign feed reference on medias.
                 let post_guid = post.guid().to_string();
-                if let Some(defaults) = &record.value.task_defaults {
-                    if let Some(task_settings) = &defaults.post {
-                        post.value.tasks = task_settings.clone();
-                    }
-                    if let Some(task_settings) = &defaults.media {
-                        for media in post.value.media.iter_mut() {
-                            if let Some(media) = media.record_mut() {
-                                media.value.tasks = task_settings.clone();
-                                media.value.posts.push(Reference::Id(post_guid.clone()));
-                                media
-                                    .value
-                                    .feeds
-                                    .push(Reference::Id(record.guid().to_string()));
-                            }
-                        }
+                // Copy post job settings.
+                if !feed.value.post_jobs.is_empty() {
+                    post.meta_mut()
+                        .jobs_mut()
+                        .copy_settings(&feed.value.post_jobs);
+                }
+                // Copy media job settings and add references to media.
+                for media in post.value.media.iter_mut().filter_map(|r| r.record_mut()) {
+                    media.value.posts.push(Reference::Id(post_guid.clone()));
+                    media
+                        .value
+                        .feeds
+                        .push(Reference::Id(feed.guid().to_string()));
+                    if !feed.value.media_jobs.is_empty() {
+                        media
+                            .meta_mut()
+                            .jobs_mut()
+                            .copy_settings(&feed.value.media_jobs);
                     }
                 }
             }
@@ -196,7 +197,7 @@ fn resolve_extensions(
     let result: HashMap<String, String> = mapping
         .iter()
         .filter_map(|(from_key, target_key)| {
-            let mut parts = from_key.split(":");
+            let mut parts = from_key.split(':');
             match (parts.next(), parts.next()) {
                 (Some(prefix), Some(suffix)) => {
                     let value = extensions
@@ -225,19 +226,16 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
     let mapped_fields = resolve_extensions(extensions, mapping);
     // log::debug!("resolve_extensions result: {:#?}", mapped_fields);
     let mut post = {
-        //let mapped_fields  = mapped_fields.into_iter().filter(|(k,_v)| !(k.starts_with("media.")));
         let mapped_fields_json: serde_json::Map<String, serde_json::Value> = mapped_fields
             .clone()
             .into_iter()
             .map(|(k, v)| (k.to_case(Case::Camel), serde_json::Value::String(v)))
             .filter(|(k, _v)| !(k.starts_with("media.")))
             .collect();
-        // log::debug!("mapped fields result {:#?}", mapped_fields_json);
         let post: Result<Post, serde_json::Error> =
             serde_json::from_value(serde_json::Value::Object(mapped_fields_json));
-        // log::debug!("post result after parse {:#?}", post);
-        let post = post.unwrap_or_default();
-        post
+
+        post.unwrap_or_default()
     };
     // log::debug!("post after mapping {:#?}", post);
 
@@ -247,7 +245,7 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
             .into_iter()
             .filter(|(k, _v)| k.starts_with("media."))
             .map(|(k, v)| {
-                let arr: Vec<&str> = k.split(".").collect();
+                let arr: Vec<&str> = k.split('.').collect();
                 let v = serde_json::Value::String(v);
                 let k = arr[1].to_case(Case::Camel);
                 (k, v)
@@ -301,7 +299,7 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
             post.genre = ext
                 .keywords()
                 .unwrap_or_default()
-                .split(",")
+                .split(',')
                 .map(|a| a.to_string())
                 .collect::<Vec<String>>();
         }
@@ -326,7 +324,7 @@ fn item_into_post(mapping: &HashMap<String, String>, item: rss::Item) -> Record<
     }
 
     if let Some(creator) = item.author {
-        post.creator.push(creator.to_string());
+        post.creator.push(creator);
     }
     for category in item.categories {
         post.genre.push(category.name);

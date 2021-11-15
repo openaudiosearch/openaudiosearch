@@ -1,0 +1,17 @@
+# ./.tmuxinator.yml
+# start a dev session with `tmuxinator start`
+name: oas
+root: <%= ENV["PWD"] %>
+
+windows:
+  - editor:
+      panes:
+        - vi
+  - run:
+      panes:
+        - cargo run -- --dev run
+        - docker-compose -f docker-compose.dev.yml up
+        - cd frontend; yarn start
+        -
+  - cli: 
+        - git status

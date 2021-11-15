@@ -36,6 +36,12 @@ pub enum AppError {
     Unauthorized,
 }
 
+impl From<anyhow::Error> for AppError {
+    fn from(err: anyhow::Error) -> Self {
+        Self::Other(format!("{}", err))
+    }
+}
+
 impl<'r> Responder<'r, 'static> for AppError {
     fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
         log::debug!("{:?}", self);

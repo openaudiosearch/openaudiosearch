@@ -99,13 +99,13 @@ impl<'de> de::Visitor<'de> for F32Visitor {
         if let Ok(float) = float {
             Ok(Some(float))
         } else {
-            let mut split: Vec<&str> = value.split(":").collect();
+            let mut split: Vec<&str> = value.split(':').collect();
             split[..].reverse();
 
             let mut factor = 1.;
             let mut result = 0.;
             for part in split {
-                let part: f32 = f32::from_str(&part).map_err(de::Error::custom)?;
+                let part: f32 = f32::from_str(part).map_err(de::Error::custom)?;
                 result += part * factor;
                 factor *= 60.;
             }
@@ -184,7 +184,13 @@ impl<'de> de::Visitor<'de> for DateVisitor {
             Ok(value) => Ok(Some(value.with_timezone(&Utc))),
             Err(_e) => match DateTime::parse_from_rfc3339(value) {
                 Ok(value) => Ok(Some(value.with_timezone(&Utc))),
-                Err(e) => Err(E::custom(format!("Parse error {} for {}", e, value))),
+                Err(_e) => match diligent_date_parser::parse_date(value) {
+                    Some(value) => Ok(Some(value.with_timezone(&Utc))),
+                    None => Err(E::custom(format!(
+                        "Parse error for {}: Invalid date",
+                        value
+                    ))),
+                },
             },
         }
     }

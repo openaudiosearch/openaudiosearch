@@ -7,6 +7,7 @@ import Moment from 'moment'
 import { useTranslation } from 'react-i18next'
 import { PostButtons } from './post'
 import { ResultItem, GoToSearchBox } from './search'
+import { reactiveBaseTheme } from '../theme'
 
 export default function LandingPage () {
   const url = API_ENDPOINT + '/search'
@@ -15,6 +16,7 @@ export default function LandingPage () {
     <Center>
       <Flex color='white' align='center' justify='center'>
         <ReactiveBase
+          theme={reactiveBaseTheme}
           app='oas'
           url={url}
         >
@@ -28,9 +30,9 @@ export default function LandingPage () {
                 </Box>
               </Center>
             </Flex>
-            <Flex direction='column' align='left' maxWidth='750px'>
+            <Flex direction='column' align='left' maxWidth='960px'>
               <Box>
-                <Heading as='h4' size='md' mt='20' mb='5' ml='5'>{t('discover', 'Discover')}</Heading>
+                <Heading as='h4' size='lg' textAlign='center' my='10' color='gray.600'>{t('discover', 'Discover')}</Heading>
               </Box>
               <ReactiveList
                 dataField='datePublished'

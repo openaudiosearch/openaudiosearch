@@ -40,7 +40,7 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
 
     let cors = rocket_cors::CorsOptions::default().to_cors()?;
     let auth = auth::Auth::new();
-    auth.ensure_admin_user(&admin_password).await;
+    auth.ensure_admin_user(admin_password).await;
 
     let app = rocket::custom(figment)
         .manage(state)
@@ -72,14 +72,22 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 handlers::feed::delete_feed,
                 // /search routes
                 handlers::search::search,
-                // task routes
-                handlers::task::post_transcribe_media,
                 // login routes
                 auth::post_login,
                 auth::get_login,
                 auth::logout,
                 auth::register,
-                auth::private
+                auth::private,
+                // job routes
+                handlers::job::get_all_jobs,
+                handlers::job::get_job,
+                handlers::job::post_job,
+                handlers::job::work_job,
+                handlers::job::put_job_completed,
+                handlers::job::put_job_failed,
+                handlers::job::put_job_progress,
+                // changes routes
+                handlers::changes::durable_changes,
             ],
         )
         .mount(
