@@ -35,12 +35,12 @@ def clean_txt(transcript_text: str):
 
     cleaned_tokens = []
     stemmer = Cistem(case_insensitive=False)
-    custom_stopwords = {"ja", "nein", "nicht", "fur"}
+    custom_stopwords = {"ja", "nein", "nicht"}
     stop_words = set(stopwords.words("german")).union(custom_stopwords)
 
     for word in transcript_text.split():
-        stem_token = stemmer.stem(word)
-        if stem_token not in stop_words:
+        if word not in stop_words:
+            stem_token = stemmer.stem(word)
             cleaned_tokens.append(stem_token)
 
     return " ".join(cleaned_tokens)
