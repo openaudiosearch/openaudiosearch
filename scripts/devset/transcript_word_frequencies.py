@@ -11,7 +11,7 @@ import glob
 import collections
 import nltk
 from nltk.corpus import stopwords
-from nltk.stem.snowball import GermanStemmer
+from nltk.stem.cistem import Cistem
 
 
 def get_txt(transcript_fpath: str):
@@ -34,10 +34,12 @@ def clean_txt(transcript_text: str):
     """
 
     cleaned_tokens = []
-    stop_words = set(stopwords.words("german"))
+    stemmer = Cistem(case_insensitive=False)
+    custom_stopwords = {"ja", "nein", "nicht", "fur"}
+    stop_words = set(stopwords.words("german")).union(custom_stopwords)
 
     for word in transcript_text.split():
-        stem_token = GermanStemmer().stem(word)
+        stem_token = stemmer.stem(word)
         if stem_token not in stop_words:
             cleaned_tokens.append(stem_token)
 
