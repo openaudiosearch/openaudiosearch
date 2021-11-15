@@ -22,13 +22,19 @@ class Worker(object):
         self.client = JobClient(self.config)
 
     def job(self, name=None, default_concurrency=1):
+        if name is None:
+            raise Exception("Job name is required.")
+        env_name = "OAS_CONCURRENCY_" + name.upper()
+        concurrency = os.environ.get(env_name) or default_concurrency
+        concurrency = int(concurrency)
         """
         Register a job
         """
         def decorator(fn):
             if name in self.jobs:
                 raise Exception(f"Job {name} already registered, cannot register a job with the same name twice.")
-            job_fn = JobFn(name, fn, concurrency=default_concurrency)
+            job_fn = JobFn(name, fn, concurrency=concurrency)
+            log.info(f"Registered job {name} with concurrency {concurrency}")
             self.jobs[name] = job_fn
             return job_fn
 

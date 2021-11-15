@@ -150,12 +150,12 @@ applies to: core
 
 If set to a HTTP URL, all requests for the web UI are proxied to this address
 
-#### `CONCURRENCY`
+#### `OAS_CONCURRENCY_ASR`
 
 default: `1`
 applies to: worker
 
-Sets the number of worker processes/threads.
+Sets the number of worker processes/threads for ASR processing.
 
 
 ## Development and local setup
