@@ -1,9 +1,10 @@
 import argparse
 import httpx
 import sys
+import re
 
 sys.path.insert(0, "..")
-from app.tasks.spacy_pipe import SpacyPipe
+from app.jobs.spacy_pipe import SpacyPipe
 
 
 # Run with: poetry run python nlp.py <OAS-POST-ID>
@@ -24,7 +25,9 @@ def get_post(post_id):
 
 
 def nlp(post):
-    text = post["description"]
+    description = re.sub("<[^<]+?>", "", post["description"])
+    transcript = post["media"][0]["transcript"]["text"]
+    text = description + " " + transcript
 
     spacy = SpacyPipe(["ner", "textrank"])
     res = spacy.run(text)
