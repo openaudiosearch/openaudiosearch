@@ -169,7 +169,7 @@ impl Handler for ProxyHandler {
         copy_request_headers(req.headers(), &mut out_req, &HEADERS_REQUEST);
         let res = self.client.execute(out_req).await;
         match res {
-            Ok(res) => Outcome::from_or_forward(&req, data, ReqwestResponse::new(res)),
+            Ok(res) => Outcome::from_or_forward(req, data, ReqwestResponse::new(res)),
             Err(_err) => Outcome::failure(Status::BadGateway),
         }
     }
@@ -181,7 +181,7 @@ pub struct Headers<'r>(pub &'r HeaderMap<'r>);
 impl<'r> Deref for Headers<'r> {
     type Target = HeaderMap<'r>;
     fn deref(&self) -> &Self::Target {
-        &self.0
+        self.0
     }
 }
 

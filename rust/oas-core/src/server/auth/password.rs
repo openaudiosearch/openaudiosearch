@@ -7,8 +7,8 @@ use rand_core::OsRng;
 
 lazy_static! {
     static ref SALT: SaltString = {
-        let salt = SaltString::generate(&mut OsRng);
-        salt
+        
+        SaltString::generate(&mut OsRng)
     };
 }
 
@@ -24,7 +24,7 @@ pub fn hash_password(password: &str) -> String {
 }
 
 pub fn verify_password(password_hash: &str, password: &str) -> bool {
-    let parsed_hash = PasswordHash::new(&password_hash).unwrap();
+    let parsed_hash = PasswordHash::new(password_hash).unwrap();
     ARGON2
         .verify_password(password.as_bytes(), &parsed_hash)
         .is_ok()

@@ -125,8 +125,8 @@ impl Index {
             .map(|record| {
                 let id = record.id().to_string();
                 // let body = serde_json::to_value(record).unwrap();
-                let op = BulkOperation::index(record).id(&id).routing(&id).into();
-                op
+                
+                BulkOperation::index(record).id(&id).routing(&id).into()
             })
             .collect();
 
@@ -322,12 +322,8 @@ impl BulkPutResponse {
 
     // TODO: Remove clones.
     pub fn errors(&self) -> impl Iterator<Item = (String, BulkPutResponseError)> + '_ {
-        self.items.iter().filter_map(|ref item| {
-            if let Some(ref error) = item.inner().error {
-                Some((item.inner().id.to_string(), error.clone()))
-            } else {
-                None
-            }
+        self.items.iter().filter_map(|item| {
+            item.inner().error.as_ref().map(|error| (item.inner().id.to_string(), error.clone()))
         })
     }
 
@@ -366,10 +362,10 @@ pub enum BulkPutResponseAction {
 impl BulkPutResponseAction {
     fn inner(&self) -> &BulkPutResponseItem {
         match self {
-            Self::Create(item) => &item,
-            Self::Delete(item) => &item,
-            Self::Index(item) => &item,
-            Self::Update(item) => &item,
+            Self::Create(item) => item,
+            Self::Delete(item) => item,
+            Self::Index(item) => item,
+            Self::Update(item) => item,
         }
     }
 }
@@ -419,14 +415,14 @@ async fn create_index_if_not_exists(
 ) -> Result<(), IndexError> {
     let exists = client
         .indices()
-        .exists(IndicesExistsParts::Index(&[&name]))
+        .exists(IndicesExistsParts::Index(&[name]))
         .send()
         .await?;
 
     if exists.status_code().is_success() && delete {
         let delete = client
             .indices()
-            .delete(IndicesDeleteParts::Index(&[&name]))
+            .delete(IndicesDeleteParts::Index(&[name]))
             .send()
             .await?;
 
@@ -440,7 +436,7 @@ async fn create_index_if_not_exists(
     if exists.status_code() == StatusCode::NOT_FOUND || delete {
         let response = client
             .indices()
-            .create(IndicesCreateParts::Index(&name))
+            .create(IndicesCreateParts::Index(name))
             .body(mapping)
             .send()
             .await?;
@@ -520,10 +516,14 @@ pub fn wrap_mapping_properties(properties: serde_json::Value) -> serde_json::Val
                 "analyzer": {
                     "payload_delimiter": {
                         "tokenizer": "whitespace",
-                        "filter": [ "payload_delimiter_filter" ]
+                        "filter": [ "lowercase", "oas_stemmer", "payload_delimiter_filter" ]
                     }
                 },
                 "filter": {
+                    "oas_stemmer": {
+                       "type": "stemmer",
+                       "language": "light_german"
+                    },
                     "payload_delimiter_filter": {
                         "type": "delimited_payload",
                         "delimiter": "|",

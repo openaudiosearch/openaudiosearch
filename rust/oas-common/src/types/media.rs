@@ -1,6 +1,5 @@
 use crate::mapping::Mappable;
 use crate::record::TypedValue;
-use crate::task::{TaskObject, TaskState};
 use crate::{ElasticMapping, Reference};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -27,38 +26,10 @@ pub struct Media {
     pub other: serde_json::Map<String, Value>,
 
     #[serde(default)]
-    pub tasks: MediaTasks,
-
-    #[serde(default)]
     pub feeds: Vec<Reference<Feed>>,
     #[serde(default)]
     pub posts: Vec<Reference<Post>>,
 }
-
-#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
-pub struct MediaTasks {
-    #[serde(deserialize_with = "ser::deserialize_null_default")]
-    #[serde(default)]
-    pub download: TaskState,
-    #[serde(deserialize_with = "ser::deserialize_null_default")]
-    #[serde(default)]
-    pub asr: TaskState,
-}
-
-impl TaskObject for Media {
-    type TaskStates = MediaTasks;
-    fn task_states(&self) -> Option<&Self::TaskStates> {
-        Some(&self.tasks)
-    }
-    fn task_states_mut(&mut self) -> Option<&mut Self::TaskStates> {
-        Some(&mut self.tasks)
-    }
-}
-
-// pub struct MediaOpts {
-//     pub wants_asr: bool,
-//     pub wants_nlp: bool
-// }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
 pub struct Transcript {
@@ -89,16 +60,12 @@ impl Mappable for Media {}
 impl ElasticMapping for Media {
     fn elastic_mapping() -> serde_json::Value {
         json!({
-            "tasks": {
-                "type": "object",
-                "enabled": false
-            },
             "transcript": {
                 "type": "object",
                 "enabled": false
             },
             "contentUrl":{
-                "type":"text"
+                "type": "keyword"
             },
             "duration": {
                 "type": "float"

@@ -47,8 +47,7 @@ impl Sessions {
         self.sessions
             .read()
             .await
-            .get(session_id)
-            .map(|session_info| session_info.clone())
+            .get(session_id).cloned()
     }
 
     pub async fn remove(&self, session_id: &str) {

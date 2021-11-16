@@ -3,42 +3,64 @@ import logging
 from pprint import pformat
 import sys
 from loguru import logger
+
 from app.config import config
 
-level = os.environ.get('LOG', 'INFO').upper()
+CLI_FORMAT = "{time:YYYY-MM-DDTHH:mm:ss.SS} <level>{level}</level> [{extra[name]}] {message}"
+FILE_FORMAT = "{time:YYYY-MM-DDTHH:mm:ss.SS} pid:{process} level:{level} worker:{extra[name]} {message}"
+
+level = config.log_level.upper()
 diagnose = False
 if level == "DEBUG" or level == "TRACE":
     diagnose = True
+log = logger
 
-FORMAT = "{time:YYYY-MM-DDTHH:mm:ss.SS} <level>{level}</level>] {message}"
+def enrich_record(record: dict) -> dict:
+    if record["extra"].get("name") is None:
+        record["extra"]["name"] = record["name"].replace("__", "")
+    if record["extra"].get("id") is not None:
+        id = record["extra"]["id"]
+        record["extra"]["name"] += f"-{id}"
+    return record
 
-def formatter(record):
-    fmt = f'{FORMAT}\n'
-    fmt = fmt_exception(fmt, record)
+def cli_formatter(record: dict) -> str:
+    record = enrich_record(record)
+    fmt = CLI_FORMAT
+    fmt += "\n"
+    if diagnose:
+        fmt = fmt_exception(fmt, record)
+    return fmt
+
+def file_formatter(record: dict) -> str:
+    record = enrich_record(record)
+    fmt = FILE_FORMAT
+    fmt += "\n"
     return fmt
 
 def fmt_exception(fmt, record):
     if record["exception"] is not None:
-        if diagnose:
-            fmt += "{exception}\n"
+        fmt += "{exception}\n"
     return fmt
 
 def setup_logging():
-    log_path = os.path.join(config.storage_path, 'oas.log')
+    log_path = config.log_file
     logger.remove()
     logger.add(sys.stderr,
             colorize=True,
             backtrace=False,
-            diagnose=False,
+            #  diagnose=False,
             #  backtrace=diagnose,
-            #  diagnose=diagnose,
-            level=level,
-            format=formatter)
+            diagnose=diagnose,
+            format=cli_formatter,
+            level=level)
 
     logger.add(log_path,
             rotation="50 MB",
-            format="[{time:YYYY-MM-DD HH:mm:ss.SS} {level}] {message}",
+            diagnose=False,
+            format=file_formatter,
             level="INFO")
+
+    logging.basicConfig(handlers=[InterceptHandler()], level=0)
 
 
 class InterceptHandler(logging.Handler):
@@ -65,49 +87,6 @@ class InterceptHandler(logging.Handler):
         )
 
 
-def format_record(record: dict) -> str:
-    """
-    Custom format for loguru loggers.
-    Uses pformat for log any data like request/response body during debug.
-    Works with logging if loguru handler it.
-    """
-
-    fmt = FORMAT
-    if record["extra"].get("payload") is not None:
-        record["extra"]["payload"] = pformat(
-            record["extra"]["payload"], indent=4, compact=True, width=88
-        )
-        fmt += "\n{extra[payload]}"
-    fmt += "\n"
-    fmt = fmt_exception(fmt, record)
-    return fmt
-
-
-def setup_uvicorn_logging():
-    """
-    Replaces logging handlers with a handler for using the custom handler.
-    """
-
-    # disable handlers for specific uvicorn loggers
-    # to redirect their output to the default uvicorn logger
-    # works with uvicorn==0.11.6
-    loggers = (
-        logging.getLogger(name)
-        for name in logging.root.manager.loggerDict
-        if name.startswith("uvicorn.")
-    )
-    for uvicorn_logger in loggers:
-        uvicorn_logger.handlers = []
-
-    # change handler for default uvicorn logger
-    intercept_handler = InterceptHandler()
-    logging.getLogger("uvicorn").handlers = [intercept_handler]
-
-    # set logs output, level and format
-    logger.configure(
-        handlers=[{"sink": sys.stdout, "level": logging.DEBUG, "format": format_record}]
-    )
 
 
 setup_logging()
-setup_uvicorn_logging()

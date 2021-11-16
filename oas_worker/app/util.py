@@ -1,24 +1,7 @@
 import requests
-import inspect
-import os
+from urllib.parse import urlparse
+from hashlib import sha256
 from base64 import b32encode
-from uuid import uuid4
-from typing import (
-    Any,
-    Callable,
-    Dict
-)
-from pydantic.typing import ForwardRef, evaluate_forwardref
-
-
-def uuid():
-    """
-    Generate a base32 encoded UUID string"
-    """
-    B32_LEN = 26
-    encoded = b32encode(uuid4().bytes)[:B32_LEN]
-    return encoded.lower().decode('utf-8')
-
 
 def pretty_bytes(num, suffix='B'):
     """
@@ -52,28 +35,30 @@ def download_file(url, local_filename, on_progress=None, on_headers=None):
                 f.flush()
 
 
-# the following three functions are copied from fastapi/dependencies/utils.py
-def get_typed_signature(call: Callable) -> inspect.Signature:
-    signature = inspect.signature(call)
-    globalns = getattr(call, "__globals__", {})
-    typed_params = [
-        inspect.Parameter(
-            name=param.name,
-            kind=param.kind,
-            default=param.default,
-            annotation=get_typed_annotation(param, globalns),
-        )
-        for param in signature.parameters.values()
-    ]
-    typed_signature = inspect.Signature(typed_params)
-    return typed_signature
+def ensure_dir(path: str, parent=True):
+    path = Path(path)
+    if parent:
+        path = path.parent
+    os.makedirs(path, exist_ok=True)
 
 
-def get_typed_annotation(param: inspect.Parameter, globalns: Dict[str, Any]) -> Any:
-    annotation = param.annotation
-    if isinstance(annotation, str):
-        # Temporary ignore type
-        # Ref: https://github.com/samuelcolvin/pydantic/issues/1738
-        annotation = ForwardRef(annotation)  # type: ignore
-        annotation = evaluate_forwardref(annotation, globalns, globalns)
-    return annotation
+def url_to_path(url: str) -> str:
+    parsed_url = urlparse(url)
+
+    url_hash = sha256(url.encode("utf-8")).digest()
+    url_hash = b32encode(url_hash)
+    url_hash = url_hash.lower().decode("utf-8")
+
+    target_name = f"{parsed_url.netloc}/{url_hash[:2]}/{url_hash[2:]}"
+    return target_name
+
+
+def find_in_dict(input, keys):
+    keys = keys.split(".")
+    cursor = input
+    for key in keys:
+        cursor = cursor.get(key)
+        if cursor is None:
+            return None
+    return cursor
+

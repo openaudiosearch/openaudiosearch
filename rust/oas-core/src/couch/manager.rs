@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use super::{Config, CouchDB};
+use super::durable_changes::{ChangesOpts, DurableChanges};
+use super::{Config, CouchDB, CouchError};
+use crate::util::{wait_for_ready, RetryOpts};
 
 pub const RECORD_DB_NAME: &str = "records";
 pub const META_DB_NAME: &str = "meta";
@@ -54,9 +56,21 @@ impl CouchManager {
         CouchDB::with_config_and_client(config, self.client.clone())
     }
 
+    pub async fn wait_for_ready(&self) -> Result<(), CouchError> {
+        let opts = RetryOpts::with_name("CouchDB".into());
+        wait_for_ready(&self.client, opts, || {
+            self.client.get(&self.config.host).build()
+        })
+        .await?;
+        Ok(())
+    }
+
+    /// Test connection and create initial databases.
     pub async fn init(&self) -> anyhow::Result<()> {
+        // Wait until the CouchDB is reachable.
+        self.wait_for_ready().await?;
         // Init system databases if they do not exist yet.
-        let res = futures::future::join_all(vec![
+        let res = futures::future::join_all([
             self.db("_users", false).init(),
             self.db("_replicator", false).init(),
             self.db("_global_changes", false).init(),
@@ -66,8 +80,7 @@ impl CouchManager {
             log::warn!("Failed to ensure system CouchDB: {}", err);
         }
 
-        let res =
-            futures::future::join_all(vec![self.record_db().init(), self.meta_db().init()]).await;
+        let res = futures::future::join_all([self.record_db().init(), self.meta_db().init()]).await;
         for res in res {
             res?
         }
@@ -92,5 +105,12 @@ impl CouchManager {
 
     pub fn meta_db(&self) -> &CouchDB {
         &self.meta_db
+    }
+
+    pub async fn durable_changes(&self, id: impl ToString, opts: ChangesOpts) -> DurableChanges {
+        let id = id.to_string();
+        let changes =
+            DurableChanges::new(self.record_db().clone(), self.meta_db().clone(), id, opts).await;
+        changes
     }
 }

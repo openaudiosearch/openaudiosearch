@@ -1,10 +1,10 @@
-use clap::Clap;
+use clap::Parser;
 use url::Url;
 
 pub const DEFAULT_PREFIX: &str = "oas";
 
 /// ElasticSearch config.
-#[derive(Clap, Debug, Clone)]
+#[derive(Parser, Debug, Clone)]
 pub struct Config {
     /// Elasticsearch server URL
     #[clap(long, env = "ELASTICSEARCH_URL")]
@@ -39,7 +39,7 @@ impl Config {
 
     pub fn from_url_or_default(url: Option<&str>) -> anyhow::Result<Self> {
         if let Some(url) = url {
-            Self::from_url(&url)
+            Self::from_url(url)
         } else {
             Ok(Self::default())
         }
@@ -49,10 +49,10 @@ impl Config {
         let mut url: Url = url.parse()?;
         let first_segment = url
             .path_segments()
-            .map(|mut segments| segments.nth(0).map(|s| s.to_string()))
+            .map(|mut segments| segments.next().map(|s| s.to_string()))
             .flatten();
         let prefix = if let Some(first_segment) = first_segment {
-            first_segment.to_string()
+            first_segment
         } else {
             DEFAULT_PREFIX.to_string()
         };

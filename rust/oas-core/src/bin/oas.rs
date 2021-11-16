@@ -1,5 +1,5 @@
 use anyhow::Context;
-use clap::Clap;
+use clap::Parser;
 use futures::stream::StreamExt;
 use oas_common::types::Media;
 use oas_common::Record;
@@ -7,12 +7,16 @@ use oas_core::rss::manager::FeedManagerOpts;
 use oas_core::server::{run_server, ServerOpts};
 use oas_core::types::Post;
 use oas_core::util::debug_print_records;
-use oas_core::{couch, index, rss, tasks};
+use oas_core::{couch, index, jobs, rss};
 use oas_core::{Runtime, State};
 use std::env;
 use std::time;
 
-#[derive(Clap)]
+pub const VAR_LOG: &str = "RUST_LOG";
+pub const VAR_FRONTEND_PROXY: &str = "FRONTEND_PROXY";
+pub const DEFAULT_FRONTEND_PROXY: &str = "http://localhost:4000";
+
+#[derive(Parser, Debug)]
 struct Args {
     #[clap(subcommand)]
     pub command: Command,
@@ -26,8 +30,8 @@ struct Args {
     pub couchdb_url: Option<String>,
 
     /// Redis URL
-    #[clap(long, env = "REDIS_URL")]
-    pub redis_url: Option<String>,
+    #[clap(long, env = "OCYPOD_URL")]
+    pub ocypod_url: Option<String>,
 
     /// Bind HTTP server to host
     #[clap(long, env = "HTTP_HOST")]
@@ -46,7 +50,7 @@ struct Args {
     pub dev: bool,
 }
 
-#[derive(Clap)]
+#[derive(Parser, Debug)]
 enum Command {
     /// Watch and show print changes from the CouchDB feed
     Watch(WatchOpts),
@@ -59,8 +63,8 @@ enum Command {
     Search(SearchOpts),
     /// Fetch a RSS feed
     Feed(FeedCommands),
-    /// Create a test task
-    Task(tasks::TaskOpts),
+    /// Job commands
+    Job(jobs::bin::JobOpts),
     /// Run the HTTP API server
     Server(ServerOpts),
     /// Delete all databases and indexes (dangerous!)
@@ -69,20 +73,20 @@ enum Command {
     Run,
 }
 
-#[derive(Clap)]
+#[derive(Parser, Debug)]
 struct FeedCommands {
     /// Subcommand
     #[clap(subcommand)]
     command: FeedCommand,
 }
 
-#[derive(Clap)]
+#[derive(Parser, Debug)]
 struct RefetchOpts {
     /// Feed ID or URL
     id_or_url: String,
 }
 
-#[derive(Clap)]
+#[derive(Parser, Debug)]
 enum FeedCommand {
     /// Fetch a feed by URL.
     Fetch(rss::ops::FetchOpts),
@@ -94,7 +98,7 @@ enum FeedCommand {
     Refetch(RefetchOpts),
 }
 
-#[derive(Clap)]
+#[derive(Parser, Debug)]
 struct IndexOpts {
     /// Run forever in daemon mode
     #[clap(short, long)]
@@ -119,13 +123,13 @@ impl IndexOpts {
     }
 }
 
-#[derive(Clap)]
+#[derive(Parser, Debug)]
 struct WatchOpts {
     /// Rev to start the watch stream at.
     since: Option<String>,
 }
 
-#[derive(Clap)]
+#[derive(Parser, Debug)]
 struct SearchOpts {
     /// Search query
     query: String,
@@ -134,7 +138,7 @@ struct SearchOpts {
     json: bool,
 }
 
-#[derive(Clap)]
+#[derive(Parser, Debug)]
 struct ListOpts {
     /// Type ("post", "media", "feed").
     typ: String,
@@ -146,18 +150,25 @@ struct ListOpts {
 }
 
 fn setup(args: &Args) -> anyhow::Result<()> {
+    use tracing_subscriber::EnvFilter;
     if args.dev {
-        if env::var("RUST_LOG").is_err() {
-            env::set_var("RUST_LOG", "oas=debug")
+        if env::var(VAR_LOG).is_err() {
+            env::set_var(VAR_LOG, "oas=debug")
         }
-        if env::var("FRONTEND_PROXY").is_err() {
-            env::set_var("FRONTEND_PROXY", "http://localhost:4000")
+        if env::var(VAR_FRONTEND_PROXY).is_err() {
+            env::set_var(VAR_FRONTEND_PROXY, DEFAULT_FRONTEND_PROXY);
         }
     }
-    if env::var("RUST_LOG").is_err() {
-        env::set_var("RUST_LOG", "oas=info")
+    if env::var(VAR_LOG).is_err() {
+        env::set_var(VAR_LOG, "oas=info")
     }
-    env_logger::init();
+
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .try_init()
+        .map_err(|e| anyhow::anyhow!(e))?;
+
+    // tracing::debug!(log_level = env::var("RUST_LOG").unwrap(), "start");
     Ok(())
 }
 
@@ -165,13 +176,18 @@ fn state_from_args(args: &Args) -> anyhow::Result<State> {
     let db_manager = couch::CouchManager::with_url(args.couchdb_url.as_deref())?;
     let db = db_manager.record_db().clone();
     let index_manager = index::IndexManager::with_url(args.elasticsearch_url.as_deref())?;
-    let task_manager = tasks::CeleryManager::with_url(args.redis_url.as_deref())?;
     let feed_manager_opts = FeedManagerOpts {
         mapping_file: args.mapping_file.clone(),
     };
     let feed_manager = rss::FeedManager::new(feed_manager_opts);
 
-    let state = State::new(db_manager, db, index_manager, task_manager, feed_manager);
+    let ocypod_url = args
+        .ocypod_url
+        .as_deref()
+        .unwrap_or(jobs::DEFAULT_OCYPOD_URL);
+    let job_manager = jobs::JobManager::new(db_manager.record_db().clone(), ocypod_url);
+
+    let state = State::new(db_manager, db, index_manager, feed_manager, job_manager);
     Ok(state)
 }
 
@@ -190,7 +206,7 @@ async fn main() -> anyhow::Result<()> {
         Command::Index(opts) => run_index(state, opts).await,
         Command::Search(opts) => run_search(state, opts).await,
         Command::Feed(opts) => run_feed(state, opts.command).await,
-        Command::Task(opts) => run_task(state, opts).await,
+        Command::Job(opts) => jobs::bin::main(state, opts).await,
         Command::Server(opts) => run_server(state, opts).await,
         Command::Run => run_all(state, args).await,
         Command::Nuke => run_nuke(state, args).await,
@@ -202,7 +218,7 @@ async fn main() -> anyhow::Result<()> {
 async fn run_nuke(state: State, _args: Args) -> anyhow::Result<()> {
     use dialoguer::Input;
 
-    let prompt = format!("Will DELETE and recreate ALL used CouchDB databases and ElasticSearch indexes. Type \"nuke!\" to continue");
+    let prompt = "Will DELETE and recreate ALL used CouchDB databases and ElasticSearch indexes. Type \"nuke!\" to continue".to_string();
     println!("{}", prompt);
     let input = Input::<String>::new().interact_text()?;
     if &input == "nuke!" {
@@ -229,10 +245,7 @@ async fn run_all(mut state: State, args: Args) -> anyhow::Result<()> {
     runtime.spawn("server", run_server(state.clone(), server_opts));
     runtime.spawn("index", run_index(state.clone(), IndexOpts::run_forever()));
     // Spawn task watcher.
-    runtime.spawn(
-        "tasks",
-        tasks::changes::process_changes(state.clone(), true),
-    );
+    runtime.spawn("jobs", jobs::changes::process_changes(state.clone(), true));
     runtime.spawn(
         "feed_watcher",
         state.feed_manager.clone().run_watch(state.db.clone()), // run_feed(state, FeedCommand::Watch(feed_manager_opts)),
@@ -254,11 +267,6 @@ async fn run_exit() -> anyhow::Result<()> {
     std::process::exit(0)
 }
 
-async fn run_task(state: State, opts: tasks::TaskOpts) -> anyhow::Result<()> {
-    tasks::run_celery(state, opts).await?;
-    Ok(())
-}
-
 async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
     let db = state.db;
     let records = match opts.typ.as_str() {
@@ -266,21 +274,21 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
             let records = db.table::<Media>().get_all().await?;
             records
                 .into_iter()
-                .map(|r| serde_json::to_value(r))
+                .map(serde_json::to_value)
                 .collect::<Vec<_>>()
         }
         "post" => {
             let records = db.table::<Media>().get_all().await?;
             records
                 .into_iter()
-                .map(|r| serde_json::to_value(r))
+                .map(serde_json::to_value)
                 .collect::<Vec<_>>()
         }
         "feed" => {
             let records = db.table::<Media>().get_all().await?;
             records
                 .into_iter()
-                .map(|r| serde_json::to_value(r))
+                .map(serde_json::to_value)
                 .collect::<Vec<_>>()
         }
         _ => vec![],
@@ -326,7 +334,7 @@ async fn run_index(state: State, opts: IndexOpts) -> anyhow::Result<()> {
     manager
         .init(init_opts)
         .await
-        .with_context(|| format!("Failed to initializer Elasticsearch index"))?;
+        .with_context(|| "Failed to initializer Elasticsearch index".to_string())?;
     match opts.post_id {
         Some(post_id) => {
             let post_index = manager.post_index();

@@ -13,47 +13,49 @@ path = "src/bin/oas.rs"
 
 [dependencies]
 anyhow = "1"
+argon2 = "0.2.2"
 async-trait = "0.1.50"
 base32 = "0.4.0"
 base64 = "0.13.0"
-celery = { git = "https://github.com/openaudiosearch/rusty-celery.git", branch = "oas", default_features = false, features = ["broker_redis", "codegen"] }
-clap = "3.0.0-beta.2"
-elasticsearch = { version = "7.12.0-alpha.1", default_features = false, features = ["rustls-tls"] }
-env_logger = "0.8.3"
+bytes = "1.0.1"
+chrono = { version = "0.4.19", features=["serde"] }
+clap = "3.0.0-beta.5"
+convert_case = "0.4.0"
+dialoguer = "0.8.0"
+dirs = "3.0.2"
+elasticsearch = { version = "7.14.0-alpha.1", default_features = false, features = ["rustls-tls"] }
 futures = "0.3.15"
+futures-batch = "0.6.0"
+futures-timer = "3.0.2"
 http = "0.2.4"
+humantime = "2.1.0"
+include_dir = "0.6.1"
+json-patch = "0.2.6"
+lazy_static = "1.4.0"
 log = "0.4.14"
 oas-common = { path = "../oas-common" }
+okapi = { version = "0.6.0-alpha-1" }
+rand = { version = "0.8.4", features = ["std"] }
+rand_core = { version = "0.6", features = ["std"] }
+reqwest = { version = "0.11.4", default_features = false, features = ["stream", "rustls-tls"] }
 rocket = { version = "0.5.0-rc.1", features = ["json"] }
 rocket_cors = { git = "https://github.com/lawliet89/rocket_cors.git" }
-rss = "1.10.0"
+rocket_okapi = "0.7.0-alpha-1"
+rss = "2.0.0"
+schemars = "0.8.3"
 serde = "1.0.126"
 serde_json = "1.0.64"
 sha2 = "0.9.5"
 thiserror = "1.0.25"
-tokio = { version = "1", features = ["rt", "macros", "time", "signal"]}
-url = { version = "2.2", features = ["serde"] }
-reqwest = { version = "0.11.4", default_features = false, features = ["stream", "rustls-tls"] }
-rocket_okapi = "0.7.0-alpha-1"
-schemars = "0.8.3"
-okapi = { version = "0.6.0-alpha-1" }
-tokio-stream = { version = "0.1.6", features = ["io-util"] }
-futures-batch = "0.6.0"
-humantime = "2.1.0"
-chrono = "0.4.19"
-bytes = "1.0.1"
-include_dir = "0.6.1"
-uuid = { version = "0.8.2", features = ["v4"] }
-argon2 = "0.2.2"
-rand_core = { version = "0.6", features = ["std"] }
-lazy_static = "1.4.0"
-rand = { version = "0.8.4", features = ["std"] }
 time = { version = "0.2" }
-# couch_rs = { path = "../../../rust/couch-rs/couch_rs" }
+tokio = { version = "1", features = ["rt", "macros", "time", "signal"]}
+tokio-stream = { version = "0.1.6", features = ["io-util"] }
 tokio-util = "0.6.7"
 toml = "0.5.8"
-dirs = "3.0.2"
-convert_case = "0.4.0"
-futures-timer = "3.0.2"
-dialoguer = "0.8.0"
-json-patch = "0.2.6"
+tracing = "0.1.29"
+tracing-attributes = "0.1.18"
+tracing-futures = "0.2.5"
+tracing-log = "0.1.2"
+tracing-subscriber = { version = "0.3.1", features = ["env-filter"] }
+url = { version = "2.2", features = ["serde"] }
+uuid = { version = "0.8.2", features = ["v4"] }

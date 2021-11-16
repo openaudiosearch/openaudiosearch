@@ -4,7 +4,7 @@
 //! index which stores meta information about the indexing state, most importantly the latest
 //! CouchDB seq that was indexed.
 
-use crate::couch::CouchDB;
+use crate::{couch::CouchDB, util::RetryOpts};
 use anyhow::Context;
 use elasticsearch::Elasticsearch;
 use futures::stream::StreamExt;
@@ -141,7 +141,37 @@ impl IndexManager {
         Ok(manager)
     }
 
+    pub async fn wait_for_ready(&self) -> anyhow::Result<()> {
+        let opts = RetryOpts::with_name("Elasticsearch".into());
+        let mut interval = tokio::time::interval(opts.interval);
+        let name = opts.name.unwrap_or_default();
+        for _i in 0..opts.max_retries {
+            let res = self.client.cat().health().send().await;
+            let url = self.config.url.clone().unwrap_or_default();
+            match res {
+                Ok(res) => {
+                    if res.status_code().is_success() {
+                        return Ok(());
+                    } else {
+                        log::debug!(
+                            "Failed to connect to {} at {}: {}",
+                            name,
+                            url,
+                            res.status_code().canonical_reason().unwrap()
+                        );
+                    }
+                }
+                Err(err) => {
+                    log::debug!("Failed to connect to {} at {}: {}", name, url, err);
+                }
+            }
+            interval.tick().await;
+        }
+        Err(std::io::Error::new(std::io::ErrorKind::TimedOut, "Cannot reac service {}").into())
+    }
+
     pub async fn init(&self, opts: InitOpts) -> anyhow::Result<()> {
+        self.wait_for_ready().await?;
         self.meta_index.index.ensure_index(opts.delete_meta).await?;
         self.post_index.index.ensure_index(opts.delete_data).await?;
         Ok(())
@@ -186,7 +216,7 @@ impl IndexManager {
                 .filter_map(|ev| ev.doc.and_then(|doc| doc.into_untyped_record().ok()))
                 .collect();
             self.post_index
-                .index_changes(&db, &records[..])
+                .index_changes(db, &records[..])
                 .await
                 .context("Failed to index changes")?;
             self.meta_index

@@ -1,6 +1,6 @@
 use oas_common::{types, util, Record, TypedValue};
 use rocket::serde::json::Json;
-use rocket::{get, post, put};
+use rocket::{get, post, put, delete};
 use rocket_okapi::openapi;
 
 use crate::couch::types::PutResponse;
@@ -54,6 +54,18 @@ pub async fn get_feed(
 ) -> Result<Json<Record<types::Feed>>, AppError> {
     let feed = state.db.get_record(&types::Feed::guid(&id)).await?;
     Ok(Json(feed))
+}
+
+/// Delete a feed by its id
+#[openapi(tag = "Feed")]
+#[delete("/feed/<id>")]
+pub async fn delete_feed(
+    _user: AdminUser,
+    state: &rocket::State<State>,
+    id: String,
+) -> Result<Json<PutResponse>, AppError> {
+    let result = state.db.delete_record(&types::Feed::guid(&id)).await?;
+    Ok(Json(result))
 }
 
 /// Get all feeds

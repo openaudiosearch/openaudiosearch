@@ -1,5 +1,6 @@
 use anyhow::Context;
-use clap::Clap;
+use clap::Parser;
+use json_patch::Patch;
 use oas_common::UntypedRecord;
 use oas_common::{Record, TypedValue};
 use reqwest::{Method, RequestBuilder};
@@ -16,6 +17,7 @@ pub type CouchResult<T> = std::result::Result<T, CouchError>;
 pub type Result<T> = std::result::Result<T, CouchError>;
 
 pub(crate) mod changes;
+pub(crate) mod durable_changes;
 pub(crate) mod error;
 mod manager;
 pub mod resolver;
@@ -34,7 +36,7 @@ pub const DEFAULT_HOST: &str = "http://localhost:5984";
 // pub const DEFAULT_PORT: u16 = 5984;
 
 /// CouchDB config.
-#[derive(Clap, Debug, Clone)]
+#[derive(Parser, Debug, Clone)]
 pub struct Config {
     /// CouchDB hostname
     #[clap(long, env = "COUCHDB_HOST", default_value = "http://localhost:5984")]
@@ -72,7 +74,7 @@ impl Config {
 
     pub fn from_url_or_default(url: Option<&str>) -> anyhow::Result<Self> {
         if let Some(url) = url {
-            Self::from_url(&url)
+            Self::from_url(url)
         } else {
             Ok(Self::default())
         }
@@ -81,7 +83,7 @@ impl Config {
     pub fn from_url(url: &str) -> anyhow::Result<Self> {
         let url: Url = url
             .parse()
-            .with_context(|| format!("Failed to parse CouchDB URL"))?;
+            .with_context(|| "Failed to parse CouchDB URL".to_string())?;
         let host = if let Some(host) = url.host() {
             if let Some(port) = url.port() {
                 format!("{}://{}:{}", url.scheme(), host, port)
@@ -99,10 +101,10 @@ impl Config {
         let password = url.password().map(|p| p.to_string());
         let first_segment = url
             .path_segments()
-            .map(|mut segments| segments.nth(0).map(|s| s.to_string()))
+            .map(|mut segments| segments.next().map(|s| s.to_string()))
             .flatten();
         let database = if let Some(first_segment) = first_segment {
-            first_segment.to_string()
+            first_segment
         } else {
             DEFAULT_DATABASE.to_string()
         };
@@ -228,8 +230,12 @@ impl CouchDB {
     pub async fn get_all_with_params(&self, params: &impl Serialize) -> Result<DocList> {
         let req = self.request(Method::GET, "_all_docs").query(params);
         let docs: Value = self.send(req).await?;
-        let docs: DocList = serde_json::from_value(docs)?;
-        Ok(docs)
+        // TODO: This is a very unclean way to check for not found...
+        let docs: serde_json::Result<DocList> = serde_json::from_value(docs);
+        match docs {
+            Ok(docs) => Ok(docs),
+            Err(_) => Err(CouchError::NotFound),
+        }
     }
 
     /// Get a doc from the id by its id.
@@ -237,6 +243,30 @@ impl CouchDB {
         let req = self.request(Method::GET, id);
         let doc: Doc = self.send(req).await?;
         Ok(doc)
+    }
+
+    /// Delete a doc by its id
+    pub async fn delete_doc(&self, id: &str) -> Result<PutResponse> {
+        let last_doc = self.get_doc(&id).await;
+        let mut path = id.to_owned();
+        if let Ok(last_doc) = last_doc {
+            if let Some(rev) = last_doc.rev() {
+                path = path + "?rev=" + rev;
+            }
+        }
+        let req = self.request(Method::DELETE, &path);
+        let res = self.send(req).await;
+        if let Err(err) = &res {
+            log::trace!(
+                "[{}] delete ERR for {}: {:?}",
+                self.config.database,
+                id,
+                err
+            );
+        } else {
+            log::trace!("[{}] delete OK for {}", self.config.database, id);
+        }
+        return res;
     }
 
     /// Put a doc into the database.
@@ -299,6 +329,9 @@ impl CouchDB {
     where
         T: Into<Doc>,
     {
+        if docs.is_empty() {
+            return Ok(vec![]);
+        }
         let mut docs_without_rev = vec![];
         let mut docs: Vec<Doc> = docs.into_iter().map(|doc| doc.into()).collect();
         for (i, doc) in docs.iter().enumerate() {
@@ -438,13 +471,13 @@ impl CouchDB {
     /// ```
     pub async fn get_record<T: TypedValue>(&self, id: &str) -> Result<Record<T>> {
         // let id = T::guid(id);
-        let doc = self.get_doc(&id).await?;
+        let doc = self.get_doc(id).await?;
         let record = doc.into_typed_record::<T>()?;
         Ok(record)
     }
 
     pub async fn get_record_untyped(&self, guid: &str) -> Result<UntypedRecord> {
-        let doc = self.get_doc(&guid).await?;
+        let doc = self.get_doc(guid).await?;
         let record = doc.into_untyped_record()?;
         Ok(record)
     }
@@ -453,7 +486,7 @@ impl CouchDB {
         // let ids: Vec<String> = ids.iter().map(|id| T::guid(id)).collect();
         // let ids: Vec<&str> = ids.iter().map(|id| id.as_str()).collect();
         let rows = self
-            .get_many(&ids[..])
+            .get_many(ids)
             .await?
             .rows
             .into_iter()
@@ -463,9 +496,9 @@ impl CouchDB {
     }
 
     pub async fn get_many_records_untyped(&self, ids: &[&str]) -> Result<Vec<UntypedRecord>> {
-        let rows = self
-            .get_many(ids)
-            .await?
+        let res = self.get_many(ids).await;
+        let res = res?;
+        let rows = res
             .rows
             .into_iter()
             .filter_map(|doc| doc.doc.into_untyped_record().ok())
@@ -514,5 +547,47 @@ impl CouchDB {
     ) -> Result<Vec<PutResult>> {
         let docs = records.into_iter().map(Doc::from_untyped_record).collect();
         self.put_bulk_update(docs).await
+    }
+
+    /// Delete a single record from the database.
+    pub async fn delete_record(&self, guid: &str) -> Result<PutResponse> {
+        self.delete_doc(guid).await
+    }
+
+    pub async fn apply_patches_with_callback(
+        &self,
+        patches: HashMap<String, Patch>,
+        mut cb: impl FnMut(&mut Vec<UntypedRecord>),
+    ) -> anyhow::Result<Vec<String>> {
+        let guids: Vec<&str> = patches.keys().map(|s| s.as_str()).collect();
+        let records = self.get_many_records_untyped(&guids).await?;
+        let mut changed_records = vec![];
+        for mut record in records.into_iter() {
+            if let Some(patch) = patches.get(record.guid()) {
+                let success = record.apply_json_patch(patch);
+                success?;
+                changed_records.push(record)
+            }
+        }
+        cb(&mut changed_records);
+        let guids = changed_records
+            .iter()
+            .map(|r| r.guid().to_string())
+            .collect::<Vec<_>>();
+        self.put_untyped_record_bulk_update(changed_records).await?;
+        Ok(guids)
+    }
+
+    /// Apply a list of JSON patches.
+    ///
+    /// `patches` is a HashMap with GUIDs as keys and JSON patches as values.
+    ///
+    /// TODO: Make this atomic!
+    pub async fn apply_patches(
+        &self,
+        patches: HashMap<String, Patch>,
+    ) -> anyhow::Result<Vec<String>> {
+        self.apply_patches_with_callback(patches, |_records| {})
+            .await
     }
 }

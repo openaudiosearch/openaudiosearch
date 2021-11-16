@@ -1,5 +1,11 @@
 import { extendTheme } from '@chakra-ui/react'
 
+export const reactiveBaseTheme = {
+  typography: {
+    fontFamily: 'Inter, sans-serif'
+  }
+}
+
 export default function createTheme (props = {}) {
   // const config = {
   //   initialColorMode: 'light',
@@ -11,6 +17,9 @@ export default function createTheme (props = {}) {
     fonts: {
       heading: 'Inter',
       body: 'Inter'
+    },
+    borderRadius: {
+      md: '5px'
     },
     colors: {
       primary: '#260A4A',

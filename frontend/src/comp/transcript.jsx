@@ -1,7 +1,110 @@
-import { chakra, Box, Icon, Tooltip, Divider } from '@chakra-ui/react'
+import { chakra, Box, Icon, Tooltip, Divider, Heading } from '@chakra-ui/react'
 import React from 'react'
 import { usePlayer, usePlayerRegionIfPlaying, formatDuration } from './player'
+import { useTranslation } from 'react-i18next'
 import { FaVolumeUp } from 'react-icons/fa'
+
+export function PostTranscriptSection (props) {
+  const { post } = props
+  const { t } = useTranslation()
+  if (!hasTranscript(post)) return null
+  // const [show, setShow] = React.useState(false)
+  return (
+    <Box p='4' border='1px' borderColor='gray.200' bg='white' borderRadius='sm'>
+      <Heading size='md' mb='4'>{t('transcript.title', 'Transcript')}</Heading>
+      <PostTranscript post={post} />
+    </Box>
+  )
+}
+
+export function PostTranscript (props) {
+  const { post } = props
+  let medias = post.media
+  if (!medias) return null
+  medias = medias.filter(media => media.transcript)
+  if (!medias.length) return null
+
+  return (
+    <>
+      {medias.map((media, i) => (
+        <MediaTranscript
+          key={i}
+          media={media}
+          post={post}
+          delta={i}
+          />
+      ))}
+    </>
+  )
+}
+
+let styleInjected = false
+
+export function MediaTranscript (props) {
+  const { media, post, delta } = props
+  const parts = media.transcript.parts
+
+  const { setTrack, setMark, setPost } = usePlayer()
+
+  const words = React.useMemo(() => (
+    <>
+      {parts.map((word, i) => {
+        // Hue 0 = red, hue 100 = green
+        const conf = word.conf
+        const exp = 5
+        const hue = (Math.pow(conf, exp)) * 100
+        const color = `hsl(${hue}, 100%, 90%)`
+        const style = {
+          background: color
+        }
+        return (
+          <span key={i} style={style} onClick={onClick}>
+            {word.word}
+          </span>
+        )
+        function onClick (e) {
+          setPost(post)
+          setTrack(media)
+          setMark(word)
+        }
+      })}
+    </>
+  ), [parts])
+
+  // TODO: Don't do this like this.
+  let globalStyle = null
+  if (!styleInjected) {
+    globalStyle = (
+      <style>
+        {`.transcript-container > span {
+          border-radius: 5px;
+          border: 1px solid transparent;
+          padding: 0;
+          margin-right: 2px;
+          display: inline-block;
+          cursor: pointer;
+        }
+        .transcript-container > span:hover {
+          border-color: rgba(0,0,0,0.4);
+        }`}
+      </style>
+    )
+  }
+
+  return (
+    <Box className='transcript-container'>
+      {globalStyle}
+      {words}
+    </Box>
+  )
+
+  function onClick (mark, _e) {
+    // setDidPlay(false)
+    setTrack(media)
+    setPost(post)
+    setMark(mark)
+  }
+}
 
 export function TranscriptSnippet (props) {
   const { post, snippet } = props
@@ -79,17 +182,56 @@ function TranscriptPlayingOverlay (props) {
 }
 
 export function TranscriptWord (props) {
-  const { setTrack, setMark } = usePlayer()
-  const { highlightWord, word, start, end, conf, id } = props
+  const { highlightWord, playOnClick, track, post, word, start, end, conf, id, onClick, style } = props
+  const { setTrack, setPost, setMark } = usePlayer()
   const alpha = Number(conf)
-  const style = {
+
+  const DEFAULT_STYLE = {
     display: 'inline-block',
     cursor: 'pointer',
     color: `rgba(0,0,0,${alpha})`
   }
+
   let bg = 'transparent'
   if (highlightWord) bg = 'highlightMark'
-  return <Box as='span' bg={bg} style={style}>{word}&nbsp;</Box>
+
+  const inner = (
+    <>
+      <Box
+        as='span'
+        bg={bg}
+        style={style || DEFAULT_STYLE}
+        onClick={onWordClick}
+      >
+          {word}
+      </Box>
+      &nbsp;
+    </>
+  )
+
+
+  if (playOnClick) {
+    return (
+      <Tooltip label='Click to play'>{inner}</Tooltip>
+    )
+  }
+
+  return inner
+
+  function onWordClick (e) {
+    const mark = { word, start, end, conf, id }
+    if (onClick) onClick(mark, e)
+    if (playOnClick) {
+      if (track) setTrack(track)
+      if (post) setPost(post)
+      setMark(mark)
+    }
+  }
+}
+
+function hasTranscript (post) {
+  if (!post || !post.media || !post.media.length) return false
+  return post.media.filter(m => m.transcript).length > 0
 }
 
 export function parseTranscriptSentence (value) {

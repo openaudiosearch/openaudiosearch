@@ -7,6 +7,7 @@ import {
   Switch,
   Checkbox,
   Table,
+  Tooltip,
   AlertTitle,
   AlertDescription,
   Code,
@@ -28,25 +29,35 @@ import {
   Tr,
   Th,
   Td,
-  TableCaption
+  TableCaption,
+  Tag
 } from '@chakra-ui/react'
 
 import {
   FaEdit as EditIcon,
-  FaCheck as SaveIcon
+  FaCheck as SaveIcon,
+  FaCog as SettingsIcon
 } from 'react-icons/fa'
 import { useForm } from 'react-hook-form'
-import { Notice, Error, LoginRequired } from './status'
+import { Notice, Error, LoginRequired } from '../comp/status'
 
 import fetch from '../lib/fetch'
 import { useIsAdmin } from '../hooks/use-login'
+
+const DEFAULT_FEED_VALUES = {
+  enableAsr: true,
+  enableNlp: true
+}
 
 export default function FeedPage (props = {}) {
   const isAdmin = useIsAdmin()
   if (!isAdmin) return <LoginRequired />
   return (
     <Stack>
-      <CreateFeed />
+      <Heading>Feeds</Heading>
+      <Box maxWidth='60rem' mx='auto' my='2' p='4' bg='white' border='1px' borderColor='gray.200'>
+        <CreateFeed />
+      </Box>
       <ListFeeds />
     </Stack>
   )
@@ -66,7 +77,6 @@ function ListFeeds (props = {}) {
 
   return (
     <>
-      <Heading>Feeds</Heading>
       {rows}
     </>
   )
@@ -75,13 +85,27 @@ function ListFeeds (props = {}) {
 function FeedRow (props = {}) {
   const { feed } = props
   if (!feed) return null
-  const simpleValues = toValues(feed)
+  const settings = toValues(feed)
   return (
-    <Flex p={2} m={2} border='1px' borderColor='gray.200'>
+    <Flex p={2} m={2} border='1px' borderColor='gray.200' bg='white'>
+      <Box py={2} flex={1}>
+        URL: <Code>{feed.url}</Code>
+        <FeedTag enabled={settings.enableAsr} label='ASR' tooltip='Speech recognition is enabled' />
+        <FeedTag enabled={settings.enableNlp} label='NLP' tooltip='Natural language processing is enabled' />
+        <Text fontSize='sm'>{feed.$meta.guid}</Text>
+      </Box>
       <FeedSettingsModal feed={feed} />
-      <Box ml='2' p='1'>{feed.url}</Box>
-      <Box>Transcribe media? <strong>{simpleValues.transcribe ? 'Yes' : 'No'}</strong></Box>
     </Flex>
+  )
+}
+
+function FeedTag (props = {}) {
+  const { enabled = true, label, tooltip, color = 'green' } = props
+  if (!enabled) return null
+  return (
+    <Tooltip label={tooltip}>
+      <Tag ml='4' colorScheme={color}>{label}</Tag>
+    </Tooltip>
   )
 }
 
@@ -90,20 +114,15 @@ function FeedSettingsModal (props) {
   const { isOpen, onOpen, onClose } = useDisclosure()
   return (
     <>
-      <Button onClick={onOpen}>Settings</Button>
+    <Button onClick={onOpen} leftIcon={<SettingsIcon />}>Settings</Button>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Feed settings</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <FeedSettings feed={feed} />
+          <ModalBody mb={2}>
+            <FeedSettings feed={feed} handleClose={onClose} />
           </ModalBody>
-          <ModalFooter>
-            <Button variant='ghost' onClick={onClose}>
-              Close
-            </Button>
-          </ModalFooter>
         </ModalContent>
       </Modal>
     </>
@@ -132,8 +151,12 @@ function FeedSettingsInner (props) {
   return (
     <FormControl as='fieldset'>
       <Flex>
-        <Switch name='transcribe' ref={register()} />
-        <FormLabel ml='2'>Transcribe items</FormLabel>
+        <Switch name='enableAsr' ref={register()} />
+        <FormLabel ml='2'>Enable speech recognition</FormLabel>
+      </Flex>
+      <Flex>
+        <Switch name='enableNlp' ref={register()} />
+        <FormLabel ml='2'>Enable natural language processing</FormLabel>
       </Flex>
     </FormControl>
   )
@@ -141,7 +164,7 @@ function FeedSettingsInner (props) {
 
 function FeedSettings (props) {
   const { mutate } = useSWR('/feed')
-  const { feed } = props
+  const { feed, handleClose } = props
   const defaultValues = React.useMemo(() => toValues(feed), [feed])
   const { handleSubmit, errors, register } = useForm({
     defaultValues
@@ -149,12 +172,23 @@ function FeedSettings (props) {
   const formState = useFormState()
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <FeedSettingsInner register={register} />
-      <Button type='submit' isLoading={formState.isSubmitting}>Save</Button>
-      <FormState
-        successMessage='Feed settings saved!'
-        {...formState}
-      />
+      <Stack>
+        <FormState
+          mb={4}
+          successMessage='Feed settings saved!'
+          {...formState}
+        />
+        <FeedSettingsInner register={register} />
+        <Flex>
+          <Button type='submit' isLoading={formState.isSubmitting}>
+            Save
+          </Button>
+          <Box flex={1} />
+          <Button variant='ghost' onClick={handleClose}>
+            Close
+          </Button>
+        </Flex>
+      </Stack>
     </form>
   )
 
@@ -162,7 +196,7 @@ function FeedSettings (props) {
     formState.setIsSubmitting(true)
     try {
       const nextFeed = patchFeed(feed, formValues)
-      let res = await fetch('/feed/' + feed.$meta.id, {
+      const res = await fetch('/feed/' + feed.$meta.id, {
         body: nextFeed,
         method: 'PUT'
       })
@@ -177,28 +211,27 @@ function FeedSettings (props) {
 function toValues (feed) {
   return {
     url: feed.url,
-    transcribe: feed.taskDefaults?.media?.asr?.state === 'wanted'
+    enableAsr: feed.mediaJobs?.asr !== undefined,
+    enableNlp: feed.postJobs?.nlp !== undefined,
   }
 }
 
 function patchFeed (oldFeed, formValues) {
-  const feed = { ...oldFeed }
-  if (!feed.taskDefaults) feed.taskDefaults = {}
-  if (!feed.taskDefaults.media) feed.taskDefaults.media = {}
-  if (!feed.taskDefaults.media.asr) feed.taskDefaults.media.asr = {}
-  feed.taskDefaults.media.asr.state = formValues.transcribe ? 'wanted' : null
+  const feed = { mediaJobs: {}, postJobs: {}, ...oldFeed }
+  feed.mediaJobs.asr = formValues.enableAsr ? null : undefined
+  feed.postJobs.nlp = formValues.enableNlp ? null : undefined
   return feed
 }
 
 function FormState (props) {
-  let { success, successMessage, errorMessage, error } = props
+  let { error, success, setError, setSuccess, successMessage, errorMessage, submitting, setIsSubmitting, ...other } = props
   if (!success && !error) return null
   if (success && !successMessage) successMessage = 'OK!'
   if (error && !errorMessage) errorMessage = 'Error: ' + String(error)
   const status = success ? 'success' : 'error'
   const message = success ? successMessage : errorMessage
   return (
-    <Alert status={status}>
+    <Alert status={status} {...other}>
       <AlertIcon />
       {message}
     </Alert>
@@ -207,23 +240,25 @@ function FormState (props) {
 
 function CreateFeed (props) {
   const { mutate } = useSWR('/feed')
-  const { handleSubmit, errors, register } = useForm()
+  const { handleSubmit, errors, register } = useForm({
+    defaultValues: DEFAULT_FEED_VALUES
+  })
   const formState = useFormState()
   const [url, setUrl] = useState(null)
   return (
     <Box>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Heading fontSize='lg'>Add new feed</Heading>
+        <Heading fontSize='lg' mb='4'>Add new feed</Heading>
         <Stack>
+          <FormState successMessage='Feed saved!' {...formState} />
           <FormControl>
-            <FormLabel>Media URL</FormLabel>
+            <FormLabel>Feed URL:</FormLabel>
             <Input name='url' ref={register()} placeholder='https://...' minW='40rem' />
           </FormControl>
           <FeedSettingsInner register={register} />
-          <Flex direction='column' justifyContent='end'>
+          <Box>
             <Button type='submit' isLoading={formState.isSubmitting}>Save & import</Button>
-          </Flex>
-          <FormState successMessage='Feed saved!' {...formState} />
+          </Box>
         </Stack>
       </form>
     </Box>
@@ -240,6 +275,40 @@ function CreateFeed (props) {
       })
       formState.setSuccess(true)
       mutate(feed)
+    } catch (err) {
+      formState.setError(err)
+    }
+  }
+}
+
+function DeleteFeed (props) {
+  const { id } = props
+  const { mutate } = useSWR('/feed')
+  const { handleSubmit, errors, register } = useForm()
+  const formState = useFormState()
+  return (
+    <Box>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <FeedSettingsInner register={register} />
+        <Flex direction='column' justifyContent='end'>
+          <Button type='submit' isLoading={formState.isSubmitting}>Delete</Button>
+        </Flex>
+        <FormState successMessage='Feed deleted!' {...formState} />
+      </form>
+    </Box>
+  )
+
+  async function onSubmit (formValues) {
+    formState.setIsSubmitting(true)
+    try {
+      const res = await fetch('/feed/' + id, {
+        method: 'DELETE'
+      })
+      if (res.error) {
+        formState.setError(res.error)
+      }
+      formState.setSuccess(true)
+      mutate()
     } catch (err) {
       formState.setError(err)
     }

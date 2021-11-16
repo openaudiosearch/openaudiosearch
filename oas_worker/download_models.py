@@ -7,7 +7,7 @@ import tempfile
 
 from app.config import config
 
-from app.tasks.spacy_pipe import get_spacy_path, spacy_model
+from app.jobs.spacy_pipe import get_spacy_path, spacy_model
 
 def download(url, path):
     p = subprocess.Popen(["curl", "--insecure", "--output", path, url], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -47,8 +47,8 @@ def download_spacy_models():
 
 def download_vosk_models():
     models = {
-        "vosk-model-de-0.6": "https://alphacephei.com/vosk/models/vosk-model-de-0.6.zip",
-        "vosk-model-spk-0.4": "https://alphacephei.com/vosk/models/vosk-model-spk-0.4.zip"
+        "vosk-model-spk-0.4": "https://alphacephei.com/vosk/models/vosk-model-spk-0.4.zip",
+        "vosk-model-de-0.6": "https://alphacephei.com/vosk/models/vosk-model-de-0.6.zip"
     }
 
     models_path = os.path.join(config.storage_path, "models")
@@ -57,12 +57,12 @@ def download_vosk_models():
 
     for model in models:
         target_dir = os.path.join(models_path, model)
-        target_filepath = os.path.join(target_dir, model + ".zip")
+        target_filepath = os.path.join(models_path, model + ".zip")
         if not os.path.isdir(target_dir):
             print(f'Downloading {models[model]}')
-            os.makedirs(target_dir)
             print(f'Downloading to {target_filepath}')
             download(models[model], target_filepath)
+            os.makedirs(target_dir)
             extract(target_filepath)
         else:
             print(f'Skipping {models[model]}')

@@ -19,7 +19,7 @@ impl UserStore {
 
     pub async fn _with_admin_user(password: &str) -> Self {
         let this = Self::new();
-        this.add_admin_user(&password).await;
+        this.add_admin_user(password).await;
         this
     }
 
