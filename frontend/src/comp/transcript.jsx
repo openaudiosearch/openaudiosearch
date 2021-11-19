@@ -1,8 +1,10 @@
 import { chakra, Box, Icon, Tooltip, Divider, Heading } from '@chakra-ui/react'
 import React from 'react'
+
 import { usePlayer, usePlayerRegionIfPlaying, formatDuration } from './player'
 import { useTranslation } from 'react-i18next'
 import { FaVolumeUp } from 'react-icons/fa'
+import { MdNextWeek } from 'react-icons/md'
 
 export function PostTranscriptSection (props) {
   const { post } = props
@@ -32,22 +34,52 @@ export function PostTranscript (props) {
           media={media}
           post={post}
           delta={i}
-          />
+        />
       ))}
     </>
   )
 }
 
-let styleInjected = false
+const styleInjected = false
 
 export function MediaTranscript (props) {
   const { media, post, delta } = props
   const parts = media.transcript.parts
-
   const { setTrack, setMark, setPost } = usePlayer()
+  const handleMouseDown = e => {
+    console.log('yeah', e.target)
+    console.log(e.target)
+  }
+  const handleMouseUp = () => {
+    const selection = document.getSelection()
+    const range = document.createRange()
+    range.setStart(selection.anchorNode, selection.anchorOffset)
+    range.setEnd(selection.focusNode, selection.focusOffset)
+    range.detach()
+
+    const endNode = selection.focusNode
+    const endOffset = selection.focusOffset
+    const backwards = range.collapsed
+    selection.collapse(selection.anchorNode, selection.anchorOffset)
+    let direction = []
+    if (backwards) {
+      direction = ['backward', 'forward']
+    } else {
+      direction = ['forward', 'backward']
+    }
+    selection.modify('move', direction[0], 'character')
+    selection.modify('move', direction[1], 'word')
+    selection.extend(endNode, endOffset)
+    selection.modify('extend', direction[1], 'character')
+    selection.modify('extend', direction[0], 'word')
+    console.log('Rangestart: ', range.startContainer.parentElement.attributes.value.nodeValue)
+    console.log('Rangeend: ', range.endContainer.parentElement.attributes.value.nodeValue)
+    const selectionArr = selection.toString().split(' ')
+    console.log(selectionArr)
+  }
 
   const words = React.useMemo(() => (
-    <>
+    <Box>
       {parts.map((word, i) => {
         // Hue 0 = red, hue 100 = green
         const conf = word.conf
@@ -58,8 +90,8 @@ export function MediaTranscript (props) {
           background: color
         }
         return (
-          <span key={i} style={style} onClick={onClick}>
-            {word.word}
+          <span key={i} value={[word.word, word.start, word.end]} style={style} onClick={onClick} onSelectCapture={handleMouseDown} onMouseUp={handleMouseUp.bind(word)}>
+            {word.word}&nbsp;
           </span>
         )
         function onClick (e) {
@@ -68,7 +100,7 @@ export function MediaTranscript (props) {
           setMark(word)
         }
       })}
-    </>
+    </Box>
   ), [parts])
 
   // TODO: Don't do this like this.
@@ -138,7 +170,7 @@ export function TranscriptSnippet (props) {
 
   return (
     <Tooltip label='Click to play'>
-      <Box onClick={onClick} style={style} _hover={{ bg: 'gray.50'}} position='relative'>
+      <Box onClick={onClick} style={style} _hover={{ bg: 'gray.50' }} position='relative'>
         {renderedWords}
         <Icon as={FaVolumeUp} ml='2' mr='2' color='gray.400' />
         <chakra.span fontSize='sm' color='gray.600'>{formatDuration(mark.start)}</chakra.span>
@@ -203,12 +235,11 @@ export function TranscriptWord (props) {
         style={style || DEFAULT_STYLE}
         onClick={onWordClick}
       >
-          {word}
+        {word}
       </Box>
       &nbsp;
     </>
   )
-
 
   if (playOnClick) {
     return (
@@ -253,7 +284,7 @@ export function parseTranscriptWords (value) {
     }
     token = token.replace('<mark>', '')
     token = token.replace('</mark>', '')
-    let [word, meta] = token.split('|')
+    const [word, meta] = token.split('|')
     // skip words that are actually a meta string
     if (word.indexOf(':') !== -1) return null
     const item = { word, highlightWord }
