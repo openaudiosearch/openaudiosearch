@@ -46,37 +46,6 @@ export function MediaTranscript (props) {
   const { media, post, delta } = props
   const parts = media.transcript.parts
   const { setTrack, setMark, setPost } = usePlayer()
-  const handleMouseDown = e => {
-    console.log('yeah', e.target)
-    console.log(e.target)
-  }
-  const handleMouseUp = () => {
-    const selection = document.getSelection()
-    const range = document.createRange()
-    range.setStart(selection.anchorNode, selection.anchorOffset)
-    range.setEnd(selection.focusNode, selection.focusOffset)
-    range.detach()
-
-    const endNode = selection.focusNode
-    const endOffset = selection.focusOffset
-    const backwards = range.collapsed
-    selection.collapse(selection.anchorNode, selection.anchorOffset)
-    let direction = []
-    if (backwards) {
-      direction = ['backward', 'forward']
-    } else {
-      direction = ['forward', 'backward']
-    }
-    selection.modify('move', direction[0], 'character')
-    selection.modify('move', direction[1], 'word')
-    selection.extend(endNode, endOffset)
-    selection.modify('extend', direction[1], 'character')
-    selection.modify('extend', direction[0], 'word')
-    console.log('Rangestart: ', range.startContainer.parentElement.attributes.value.nodeValue)
-    console.log('Rangeend: ', range.endContainer.parentElement.attributes.value.nodeValue)
-    const selectionArr = selection.toString().split(' ')
-    console.log(selectionArr)
-  }
 
   const words = React.useMemo(() => (
     <Box>
@@ -90,7 +59,7 @@ export function MediaTranscript (props) {
           background: color
         }
         return (
-          <span key={i} value={[word.word, word.start, word.end]} style={style} onClick={onClick} onSelectCapture={handleMouseDown} onMouseUp={handleMouseUp.bind(word)}>
+          <span key={i} value={[word.word, word.start, word.end]} style={style} onClick={onClick} onMouseUp={handleMouseUp.bind(word)}>
             {word.word}&nbsp;
           </span>
         )
@@ -102,6 +71,41 @@ export function MediaTranscript (props) {
       })}
     </Box>
   ), [parts])
+
+  function handleMouseUp () {
+    const selection = document.getSelection()
+    const range = document.createRange()
+    range.setStart(selection.anchorNode, selection.anchorOffset)
+    range.setEnd(selection.focusNode, selection.focusOffset)
+    range.detach()
+
+    const endNode = selection.focusNode
+    const startNode = selection.anchorNode
+    const endOffset = selection.focusOffset
+    const backwards = range.collapsed
+    selection.collapse(selection.anchorNode, selection.anchorOffset)
+    let direction = []
+
+    if (backwards) {
+      direction = ['backward', 'forward']
+    } else {
+      direction = ['forward', 'backward']
+    }
+    selection.modify('move', direction[0], 'character')
+    selection.modify('move', direction[1], 'word')
+    selection.extend(endNode, endOffset)
+    selection.modify('extend', direction[1], 'character')
+    selection.modify('extend', direction[0], 'word')
+    let start = startNode.parentNode.attributes.value.nodeValue.split(',')
+    let end = endNode.parentNode.attributes.value.nodeValue.split(',')
+    console.log('Start: ', start[1], ' End: ', end[1])
+    if (start[1] > end[1]) {
+      const temp = start
+      start = end
+      end = temp
+    }
+    console.log('Start: ', start[1], ' End: ', end[2])
+  }
 
   // TODO: Don't do this like this.
   let globalStyle = null
