@@ -10,23 +10,20 @@ asr_model = None
 vad_model = None
 
 def transcribe_nemo(media_id, audio_file_path, model_folder):
-    global asr_model
-    if not asr_model:
-        asr_model = nemo_asr.models.EncDecCTCModelBPE.from_pretrained(
-            model_name='stt_de_citrinet_1024'
-        )
     total_buffer_in_secs = 4.0
     batch_size = 32
     chunk_len = 1.6
     model_stride = 8
 
     torch.set_grad_enabled(False)
-    asr_model = nemo_asr.models.EncDecCTCModelBPE.restore_from(
-        os.path.join(model_folder, 'stt_de_citrinet_1024.nemo')
-    )
 
-    asr_model.eval()
-    asr_model = asr_model.to(asr_model.device)
+    global asr_model
+    if not asr_model:
+        asr_model = nemo_asr.models.EncDecCTCModelBPE.restore_from(
+            os.path.join(model_folder, 'stt_de_citrinet_1024.nemo')
+        )
+        asr_model.eval()
+        asr_model = asr_model.to(asr_model.device)
 
     feature_stride = asr_model._cfg.preprocessor['window_stride']
     model_stride_in_secs = feature_stride * model_stride
