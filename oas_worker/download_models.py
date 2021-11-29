@@ -22,6 +22,7 @@ def extract(filepath):
 
 def download_all_models():
     download_vosk_models()
+    download_punctuator_models()
     download_spacy_models()
 
 
@@ -44,6 +45,18 @@ def download_spacy_models():
     #  shutil.copytree(path, target)
     #  shutil.rmtree(tempdir)
 
+
+def download_punctuator_models():
+    models = {
+        "subs_norm1_filt_5M_tageschau_euparl_h256_lr0.02": "http://ltdata1.informatik.uni-hamburg.de/subtitle2go/Model_subs_norm1_filt_5M_tageschau_euparl_h256_lr0.02.pcl"
+    }
+    models_path = os.path.join(config.storage_path, "models", "punctuator2")
+    if not os.path.isdir(models_path):
+        os.makedirs(models_path)
+
+    for model in models:
+        target_filepath = os.path.join(models_path, model + ".pcl")
+        download(models[model], target_filepath)
 
 def download_vosk_models():
     models = {
