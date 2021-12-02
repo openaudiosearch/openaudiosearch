@@ -4,6 +4,8 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::str::FromStr;
 
+pub type JsonObject = serde_json::Map<String, serde_json::Value>;
+
 pub fn deserialize_null_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
 where
     T: Default + Deserialize<'de>,

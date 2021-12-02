@@ -15,6 +15,8 @@ pub use record::*;
 pub use record_map::*;
 pub use reference::*;
 pub use resolver::*;
+pub use ser::JsonObject;
+pub use util::*;
 
 pub trait ElasticMapping {
     fn elastic_mapping() -> serde_json::Value;

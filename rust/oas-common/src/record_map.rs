@@ -34,10 +34,7 @@ impl RecordMap {
     }
 
     pub fn insert<T: TypedValue>(&mut self, record: Record<T>) {
-        let entry = self
-            .records
-            .entry(T::NAME)
-            .or_insert_with(HashMap::new);
+        let entry = self.records.entry(T::NAME).or_insert_with(HashMap::new);
         entry.insert(record.id().to_string(), Box::new(record));
     }
 
