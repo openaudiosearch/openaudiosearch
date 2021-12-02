@@ -18,6 +18,10 @@ Run a single job of a job type (currently `nlp` or `asr`).
 
 ## Writing jobs
 
+A full example job can be seen in `app/examples/example.py`. To run it, a simple runner is provided in `examples`. Run it with `poetry run python examples/example-worker.py`.
+
+---
+
 Currently jobs reside in `app/jobs`. So first create a new file in `app/jobs`. Import `app.worker` and create a job function that uses the `worker.job` decorator to declare it as a job. Then import the file from `app/jobs/jobs.py`. From then on the job will be processed when starting the worker.
 
 After having created the below files, start the worker:
