@@ -22,6 +22,7 @@ def extract(filepath):
 
 def download_all_models():
     download_vosk_models()
+    download_nemo_models()
     download_spacy_models()
 
 
@@ -66,6 +67,22 @@ def download_vosk_models():
             extract(target_filepath)
         else:
             print(f'Skipping {models[model]}')
+
+
+def download_nemo_models():
+    models = {
+        "stt_de_citrinet_1024.nemo": "https://api.ngc.nvidia.com/v2/models/nvidia/nemo/stt_de_citrinet_1024/versions/1.3.2/files/stt_de_citrinet_1024.nemo",
+    }
+
+    models_path = os.path.join(config.storage_path, "models")
+    if not os.path.isdir(models_path):
+        os.makedirs(models_path)
+
+    for model in models:
+        target_filepath = os.path.join(models_path, model)
+        print(f'Downloading {models[model]}')
+        print(f'Downloading to {target_filepath}')
+        download(models[model], target_filepath)
 
 
 if __name__ == "__main__":
