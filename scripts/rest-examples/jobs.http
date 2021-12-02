@@ -1,0 +1,18 @@
+### create an example job
+@identifier = "https://www.freie-radios.net/112600"
+POST {{api}}/job
+Authorization: Basic admin:password
+
+
+{
+  "typ": "example",
+  "args": {
+    "identifier": {{identifier}}
+  },
+  "subjects": []
+}
+
+### find queued ASR jobs
+GET {{api}}/jobs?queue=asr&status=queued
+Authorization: Basic admin password
+
