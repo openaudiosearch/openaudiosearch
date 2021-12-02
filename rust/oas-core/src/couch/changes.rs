@@ -154,6 +154,7 @@ impl ChangesStream {
     }
 }
 
+#[derive(Debug)]
 pub struct BatchOpts {
     pub timeout: time::Duration,
     pub max_len: usize,

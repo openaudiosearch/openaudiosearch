@@ -16,6 +16,7 @@ impl TypedValue for DurablePointer {
     const NAME: &'static str = "meta.DurableChanges";
 }
 
+#[derive(Debug)]
 pub struct ChangesOpts {
     pub infinite: bool,
     pub batch: BatchOpts,
@@ -27,6 +28,13 @@ impl Default for ChangesOpts {
             infinite: true,
             batch: BatchOpts::default(),
         }
+    }
+}
+
+impl ChangesOpts {
+    pub fn set_infinite(mut self, infinite: bool) -> Self {
+        self.infinite = infinite;
+        self
     }
 }
 
