@@ -47,8 +47,32 @@ impl JobManager {
         Ok(job_id)
     }
 
-    pub async fn next_job(&self, typ: &str) -> anyhow::Result<Option<JobRequest>> {
-        let input = self.client.start_job(typ).await?;
+    pub async fn take_job_timeout(
+        &self,
+        typ: &str,
+        timeout: JobTakeTimeout,
+    ) -> anyhow::Result<Option<JobRequest>> {
+        let start = std::time::Instant::now();
+        let poll_interval = std::time::Duration::from_secs(1);
+        let mut interval = tokio::time::interval(poll_interval);
+        loop {
+            let job = self.take_job(typ).await?;
+            match job {
+                Some(job) => return Ok(Some(job)),
+                None => {
+                    if let JobTakeTimeout::Timeout(timeout) = timeout {
+                        if start.elapsed() > timeout {
+                            return Ok(None);
+                        }
+                    }
+                    interval.tick().await;
+                }
+            }
+        }
+    }
+
+    pub async fn take_job(&self, typ: &str) -> anyhow::Result<Option<JobRequest>> {
+        let input = self.client.take_job(typ).await?;
         if let Some(input) = input {
             let job = self.client.get_job(input.id).await?;
             let job_request = JobRequest {
@@ -144,6 +168,12 @@ impl JobManager {
         }
         Ok(())
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum JobTakeTimeout {
+    Timeout(std::time::Duration),
+    Forever,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

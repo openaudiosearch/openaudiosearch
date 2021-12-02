@@ -64,13 +64,28 @@ pub async fn post_job(
 /// Pull a job to work it.
 // #[openapi(tag = "Job")]
 #[openapi(skip)]
-#[post("/work/<typ>")]
+#[post("/work/<typ>?<wait>")]
 pub async fn work_job(
     _user: AdminUser,
     state: &rocket::State<crate::State>,
     typ: String,
+    wait: Option<String>,
 ) -> std::result::Result<Custom<rocket::serde::json::Json<Option<JobRequest>>>, AppError> {
-    let job = state.jobs.next_job(&typ).await?;
+    let wait = wait.map(|_any| true).unwrap_or(false);
+    let job = match wait {
+        false => state.jobs.take_job(&typ).await?,
+        true => {
+            // TODO: This is not aborted in rocket when the request ends.
+            // Enable after switching to axum
+            return Err(AppError::Other("wait opt is not yet supported.".into()));
+            // let timeout = std::time::Duration::from_secs(60);
+            // state
+            //     .jobs
+            //     .take_job_timeout(&typ, JobTakeTimeout::Timeout(timeout))
+            //     .await?
+        }
+    };
+    // let job = state.jobs.take_job(&typ).await?;
     if let Some(job) = job {
         Ok(Custom(Status::Ok, Json(Some(job))))
     } else {
