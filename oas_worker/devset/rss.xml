@@ -1,0 +1,711 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+		xmlns:content="http://purl.org/rss/1.0/modules/content/"
+		xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+		xmlns:dc="http://purl.org/dc/elements/1.1/"
+		xmlns:atom="http://www.w3.org/2005/Atom"
+		xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+		xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+		
+	xmlns:cba="https://cba.fro.at/help#feeds" 
+	xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" 
+    xmlns:media="http://search.yahoo.com/mrss/" 
+    xmlns:spotify="http://www.spotify.com/ns/rss" 
+    xmlns:googleplay="http://www.google.com/schemas/play-podcasts/1.0" >
+
+	<channel>
+		<title>OAS Devset RSS Feed</title>
+		<link>https://demo.openaudiosearch.org/</link>
+		<description>OpenAudioSearch Devset feed to be used for NLP development testing</description>
+		<lastBuildDate>Fri, 13 Mar 2009 22:02:21 +0000</lastBuildDate>
+		<language>en-US</language>
+		<sy:updatePeriod>
+		hourly	</sy:updatePeriod>
+		<sy:updateFrequency>
+		1	</sy:updateFrequency>
+		<item>
+<title>Interview Martin Hagmayr</title>
+<link/>https://cba.fro.at/522477
+					<comments>https://cba.fro.at/522477#respond</comments>
+<dc:creator><![CDATA[Julian Ehrenreich]]></dc:creator>
+<pubdate>Fri, 15 Oct 2021 10:04:11 +0000</pubdate>
+<category><![CDATA[Gesellschaft]]></category>
+<category><![CDATA[72 Stunden]]></category>
+<category><![CDATA[Caritas]]></category>
+<category><![CDATA[KJOOE]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=522477</guid>
+<description><![CDATA[<span class="date">15.10.2021</span> - Martin Hagmayr vom Museum Arbeitswelt spricht über Zwangsarbeit und Arbeitsbedingungen.<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F522477&amp;action_name=Interview+Martin+Hagmayr&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Martin Hagmayr vom Museum Arbeitswelt spricht über Zwangsarbeit und Arbeitsbedingungen.</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F522477&amp;action_name=Interview+Martin+Hagmayr&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/522477/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Fri, 15 Oct 2021</cba:productiondate>
+<cba:broadcastdate>Fri, 15 Oct 2021 10:00:00</cba:broadcastdate>
+<cba:duration>183.11835714286</cba:duration><cba:attachmentid>522474</cba:attachmentid>
+<itunes:title><![CDATA[Interview Martin Hagmayr]]></itunes:title>
+<itunes:summary><![CDATA[15.10.2021 - Martin Hagmayr vom Museum Arbeitswelt spricht über Zwangsarbeit und Arbeitsbedingungen.]]></itunes:summary>
+<itunes:duration>03:03</itunes:duration>
+<itunes:author><![CDATA[Julian Ehrenreich]]></itunes:author>
+<itunes:image href="https://cba.fro.at/wp-content/uploads/72stundenohnekompromiss/whatsapp-image-2021-10-15-at-11.32.41.jpeg"></itunes:image>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[72 Stunden, Caritas, KJOOE]]></itunes:keywords>
+<enclosure length="2564462" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/72stundenohnekompromiss/interview-martin-hagmayr.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/72stundenohnekompromiss/interview-martin-hagmayr.mp3</cba:filename> </item>
+<item>
+<title>R(h)eingehört: Symposium Irak</title>
+<link/>https://cba.fro.at/351425
+					<comments>https://cba.fro.at/351425#respond</comments>
+<dc:creator><![CDATA[PROTON - das freie Radio]]></dc:creator>
+<pubdate>Tue, 10 Oct 2017 20:02:06 +0000</pubdate>
+<category><![CDATA[Gesellschaft]]></category>
+<category><![CDATA[Asyl]]></category>
+<category><![CDATA[Irak]]></category>
+<category><![CDATA[Symposium]]></category>
+<category><![CDATA[Vindex]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=351425</guid>
+<description><![CDATA[<span class="date">10.10.2017</span> - Am Montag, dem 16. Oktober 2017 veranstaltet Vindex – Schutz und Asyl ein Symposium zum Thema Irak. Eva Fahlbusch, Geschäftsführerin des Vereins Vindex erklärt warum. &#160; Vier Experten und eine Expertin sprechen über das (Kriegs)chaos in...<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F351425&amp;action_name=R%28h%29eingeh%C3%B6rt%3A+Symposium+Irak&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Am Montag, dem 16. Oktober 2017 veranstaltet Vindex – Schutz und Asyl ein Symposium zum Thema Irak. Eva Fahlbusch, Geschäftsführerin des Vereins Vindex erklärt warum.</p>
+<p>&nbsp;</p>
+<p>Vier Experten und eine Expertin sprechen über das (Kriegs)chaos in Irak:<br />
+Mirza Dinnayi, Gründer der NGO „Luftbrücke Irak<br />
+Michael Genner, Obmann von Asyl in Not und Träger des Menschenrechtspreises 2011<br />
+Soma Ahmad, Magistra der Politikwissenschaft und Arabistik und im Vorstand der im Irak aktiven Menschenrechtsorganisation Leeza,<br />
+Thomas Schmidinger, Politikwissenschaftler mit Schwerpunkten Kurdistan, Jihadismus, Naher Osten und Internationale Politik<br />
+Dr. Kamel Zozo, tätig bei der Organisation von Hilfskonvois und humanitären Aktionen von Deutschland nach Irak</p>
+<p>&nbsp;</p>
+<p>Weitere Informationen <a href="https://www.facebook.com/VindexSchutzUndAsyl/">https://www.facebook.com/VindexSchutzUndAsyl/</a></p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F351425&amp;action_name=R%28h%29eingeh%C3%B6rt%3A+Symposium+Irak&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/351425/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Tue, 10 Oct 2017</cba:productiondate>
+<cba:broadcastdate></cba:broadcastdate>
+<cba:duration>364.43420833333</cba:duration><cba:attachmentid>351423</cba:attachmentid>
+<itunes:title><![CDATA[R(h)eingehört: Symposium Irak]]></itunes:title>
+<itunes:summary><![CDATA[10.10.2017 - Am Montag, dem 16. Oktober 2017 veranstaltet Vindex – Schutz und Asyl ein Symposium zum Thema Irak. Eva Fahlbusch, Geschäftsführerin des Vereins Vindex erklärt warum. &nbsp; Vier Experten und eine Expertin sprechen über das (Kriegs)chaos in...]]></itunes:summary>
+<itunes:duration>06:04</itunes:duration>
+<itunes:author><![CDATA[PROTON - das freie Radio]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Asyl, Irak, Symposium, Vindex]]></itunes:keywords>
+<enclosure length="8746421" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/rheingehrt/2017-10-12-rheingehoert-vindex-symposium-irak.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/rheingehrt/2017-10-12-rheingehoert-vindex-symposium-irak.mp3</cba:filename> </item>
+<item>
+<title>Say it loud Konferenz 1.+2.März 2019 Radioankündigung (1:33min)</title>
+<link/>https://cba.fro.at/396450
+					<comments>https://cba.fro.at/396450#respond</comments>
+<dc:creator><![CDATA[Jutta Matysek]]></dc:creator>
+<pubdate>Mon, 18 Feb 2019 22:12:00 +0000</pubdate>
+<category><![CDATA[Politik]]></category>
+<category><![CDATA[Asyl]]></category>
+<category><![CDATA[Gegen Rassismus]]></category>
+<category><![CDATA[Grüne Bildungswerkstatt Wien]]></category>
+<category><![CDATA[Information]]></category>
+<category><![CDATA[Konferenz]]></category>
+<category><![CDATA[Plattform für eine menschliche Asylpolitik]]></category>
+<category><![CDATA[Protest]]></category>
+<category><![CDATA[Schwarzblau]]></category>
+<category><![CDATA[Tagung]]></category>
+<category><![CDATA[transnationalen Aktionstag Migrant_innenstreik]]></category>
+<category><![CDATA[UN-Aktionstages gegen Rassismus]]></category>
+<category><![CDATA[Widerstand]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=396450</guid>
+<description><![CDATA[<span class="date">18.02.2019</span> - Interview zur Say it loud! Widerstandskonferenz für starke Zivilgesellschaft &#x1f4e3; 1. und 2. März 2019 &#x1f46b;&#x1f46d;&#x1f46b; Albert-Schweitzer-Haus Schwarzspanierstraße 13, 1090 Wien // ANMELDUNG Anmeldungen unter:...<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F396450&amp;action_name=Say+it+loud+Konferenz+1.%2B2.M%C3%A4rz+2019+Radioank%C3%BCndigung+%281%3A33min%29&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Interview zur<br />
+Say it loud! Widerstandskonferenz für starke Zivilgesellschaft</p>
+<div class="_63eu _63ev">
+<div class="_63ew"><img src="https://s.w.org/images/core/emoji/13.1.0/72x72/1f4e3.png" alt="📣" class="wp-smiley" style="height: 1em; max-height: 1em;" /> 1. und 2. März 2019 <img src="https://s.w.org/images/core/emoji/13.1.0/72x72/1f46b.png" alt="👫" class="wp-smiley" style="height: 1em; max-height: 1em;" /><img src="https://s.w.org/images/core/emoji/13.1.0/72x72/1f46d.png" alt="👭" class="wp-smiley" style="height: 1em; max-height: 1em;" /><img src="https://s.w.org/images/core/emoji/13.1.0/72x72/1f46b.png" alt="👫" class="wp-smiley" style="height: 1em; max-height: 1em;" /><br />
+Albert-Schweitzer-Haus<br />
+Schwarzspanierstraße 13, 1090 Wien</p>
+<p>// ANMELDUNG</p>
+<p>Anmeldungen unter: <a href="http://menschliche-asylpolitik.at/anmeldung-widerstandskonferenz-2019/?fbclid=IwAR2q2Ohzszpef4HkiOT4rpnYxxY-U8MetnjPuUFgpFZOl1SARCpiWHJNzHQ" target="_blank" rel="nofollow noopener">http://menschliche-asylpolitik.at/anmeldung-widerstandskonferenz-2019/</a></p>
+<p>Teilnahme kostenlos! Begrenzte Teilnehmer_innenzahl!<br />
+Für Verpflegung (vegan) während der Tagung ist gesorgt.<br />
+Alle Räume sind barrierefrei erreichbar.</p>
+<p>// TAG 1 // ERÖFFNUNG // Freitag, 1. März 2019</p>
+<p>Beginn: 18:30 Uhr (Einlass 18:00 Uhr)<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/1f4e3.png" alt="📣" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Podiumsdiskussion: Gemeinsam widerständig – <a href="https://www.facebook.com/hashtag/aufstehn" target="_blank" rel="noopener">#aufstehn</a> für eine solidarische Welt!</p>
+<p><img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> <a href="https://www.facebook.com/ErichFenningerOffiziell/" target="_blank" rel="noopener">Erich Fenninger</a> (<a href="https://www.facebook.com/volkshilfe/" target="_blank" rel="noopener">Volkshilfe Österreich</a> und Plattform für eine menschliche Asylpolitik)<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> <a href="https://www.facebook.com/jeno.kaltenbach" target="_blank" rel="noopener">Jenő Kaltenbach</a> (Dialog für Ungarn, eh. Vorsitzender der Europäischen Kommission gegen Rassismus und Intoleranz ECRI beim Europarat)<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Nora Berneis (#<a href="https://www.facebook.com/buendnisunteilbar/" target="_blank" rel="noopener">Unteilbar</a>, Deutschland)<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> <a href="https://www.facebook.com/Ishraga-Mustafa-Hamid-280642608612583/" target="_blank" rel="noopener">Ishraga Mustafa Hamid</a> (Journalistin und Autorin, Solidaritätsgruppe Sudan)<br />
+Moderation: <a href="https://www.facebook.com/elnagashi/" target="_blank" rel="noopener">Faika El-Nagashi</a> (<a href="https://www.facebook.com/GrueneBildungswerkstattWien/" target="_blank" rel="noopener">Grüne Bildungswerkstatt Wien</a>)</p>
+<p><img src="https://s.w.org/images/core/emoji/13.1.0/72x72/1f3b6.png" alt="🎶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Musikalischer Abschluss: <a href="https://www.facebook.com/harri.stojka" target="_blank" rel="noopener">Harri Stojka</a> Hot Club Trio<br />
+Getränke und Fingerfood<br />
+Ende: 22:00 Uhr</p>
+<p>// TAG 2 // TAGUNG // Samstag, 2. März</p>
+<p>10:00 Uhr: Anmeldung und Kaffee<br />
+10:30 Uhr: Begrüßung durch die Grüne Bildungswerkstatt Wien<br />
+Moderation durch den Tag: <a href="https://www.facebook.com/judith.ranftler" target="_blank" rel="noopener">Judith Ranftler</a> (Plattform für eine menschliche Asylpolitik)</p>
+<p>11:00 Uhr: <img src="https://s.w.org/images/core/emoji/13.1.0/72x72/1f4d6.png" alt="📖" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Redebeiträge<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> „Immer hinschauen und laut schreien!“ <a href="https://www.facebook.com/susanne.scholl" target="_blank" rel="noopener">Susanne Scholl</a> (Autorin, Journalistin und Mitbegründerin der <a href="https://www.facebook.com/groups/1661958310529729/" target="_blank" rel="noopener">OMAS GEGEN RECHTS</a>)<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Weitere folgen!</p>
+<p>12:00 Uhr: Vorstellung der Workshops<br />
+12:30 Uhr: Mittagspause (vegan)</p>
+<p>13:30 Uhr: <img src="https://s.w.org/images/core/emoji/13.1.0/72x72/270f.png" alt="✏" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Workshops<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Widerstand mobilisieren – im Netz und auf der Straße: #<a href="https://www.facebook.com/aufstehnat/" target="_blank" rel="noopener">aufstehn</a> (Ö) und <a href="https://www.facebook.com/hashtag/unteilbar" target="_blank" rel="noopener">#unteilbar</a> (D)<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> <a href="https://www.facebook.com/hashtag/nichtmituns" target="_blank" rel="noopener">#nichtmituns</a> – Antirassistische Solidarität und politische Sichtbarkeit<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Klimagerechtigkeit heißt offene Grenzen: <a href="https://www.facebook.com/systemchangenotclimatechange.A/" target="_blank" rel="noopener">System Change, not Climate Change</a><br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> MigrantInnenstreik?! Strategien gegen Prekariat, Ausbeutung und Abhängigkeit: <a href="https://www.facebook.com/vereinmaiz/" target="_blank" rel="noopener">Verein maiz</a>, autonomes zentrum von &amp; für migrantinnen</p>
+<p>15:30 Uhr: Kaffeepause</p>
+<p>15:45 Uhr: <img src="https://s.w.org/images/core/emoji/13.1.0/72x72/270c-1f3fe.png" alt="✌🏾" class="wp-smiley" style="height: 1em; max-height: 1em;" /><img src="https://s.w.org/images/core/emoji/13.1.0/72x72/270a-1f3fc.png" alt="✊🏼" class="wp-smiley" style="height: 1em; max-height: 1em;" /><img src="https://s.w.org/images/core/emoji/13.1.0/72x72/270a.png" alt="✊" class="wp-smiley" style="height: 1em; max-height: 1em;" /><img src="https://s.w.org/images/core/emoji/13.1.0/72x72/270c-1f3fc.png" alt="✌🏼" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Abschlusspodium: #aufstehn gegen Rassismus!</p>
+<p><img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Johanna Morandell (#aufstehn)<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> #nichtmituns<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Nadine Versell (System Change, not Climate Change!)<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Luzenir Caixeta (maiz, autonomes zentrum von &amp; für migrantinnen)<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> Afghanischer Sport- und Kulturverein <a href="https://www.facebook.com/neuer.start.2010/" target="_blank" rel="noopener">Verein Neuer Start انجمن اغاز نوین</a> in Österreich<br />
+<img src="https://s.w.org/images/core/emoji/13.1.0/72x72/25b6.png" alt="▶" class="wp-smiley" style="height: 1em; max-height: 1em;" /> <a href="https://www.facebook.com/axel.magnus.12" target="_blank" rel="noopener">Axel Magnus</a> (<a href="https://www.facebook.com/GegenNotstandspolitik/" target="_blank" rel="noopener">SozialdemokratInnen und GewerkschafterInnen gegen Notstandspolitik</a>)<br />
+Moderation: <a href="https://www.facebook.com/david.albrich" target="_blank" rel="noopener">David Albrich</a> (Plattform für eine menschliche Asylpolitik)</p>
+<p>Ende: 16:45 Uhr</p>
+<p>// ÜBER DIE TAGUNG</p>
+<p>Hunderttausende von uns sind seit 2015 in der Unterstützung von Geflüchteten aktiv, protestieren gegen den Rechtsruck, engagieren uns gegen Sozialabbau und Rassismus – für eine starke, kritische und solidarische Zivilgesellschaft. Es ist Zeit, unsere Netzwerke zu erweitern, unseren Austausch zu vertiefen und unsere Solidarität zu stärken!</p>
+<p>Die Plattform für eine menschliche Asylpolitik und die Grüne Bildungswerkstatt Wien veranstalten die „Widerstandskonferenz für eine solidarische Zivilgesellschaft“ als Ort der Begegnung verschiedener Strategien, Proteste und Organisationsformen – und als Ort der Verbindung des Widerstands gegen Sozialabbau und sozialer Kämpfe mit dem Widerstand gegen Rassismus und antirassistischen Kämpfen. Gemeinsam schaffen wir den „System Change“, für den wir in Österreich, in Europa und weltweit kämpfen.</p>
+<p>Der Tagungsbeginn am 1. März ist dabei ein symbolisches Datum: Zurückgehend auf den 2006 in den USA initiierten Protest „A Day without Immigrants“ hat sich der 1. März als Tag etabliert, an dem MigrantInnen weltweit für ihre Rechte kämpfen – und streiken. Auch in Wien organisierten AktivistInnen von 2011 bis 2013 den „transnationalen Aktionstag Migrant_innenstreik“, bei dem es um Sichtbarkeit und Solidarität ging; ein Protest für gleiche Rechte und gegen Rassismus, immer auch getragen von und solidarisch mit Geflüchteten.</p>
+<p>Im Vorfeld der Großdemo „#aufstehn gegen Rassismus” in Wien, anlässlich des UN-Aktionstages gegen Rassismus am 16. März, möchten wir mit der Tagung schließlich auch dazu einladen, diesen Protest gemeinsam mit uns aufzubauen und auf die Straße zu tragen!</p></div>
+</div>
+<p>aus: https://www.facebook.com/events/1046650215526189/</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F396450&amp;action_name=Say+it+loud+Konferenz+1.%2B2.M%C3%A4rz+2019+Radioank%C3%BCndigung+%281%3A33min%29&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/396450/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Mon, 18 Feb 2019</cba:productiondate>
+<cba:broadcastdate>Fri, 15 Feb 2019 22:00:00</cba:broadcastdate>
+<cba:duration>93.44</cba:duration><cba:attachmentid>396449</cba:attachmentid>
+<itunes:title><![CDATA[Say it loud Konferenz 1.+2.März 2019 Radioankündigung (1:33min)]]></itunes:title>
+<itunes:summary><![CDATA[18.02.2019 - Interview zur Say it loud! Widerstandskonferenz für starke Zivilgesellschaft &#x1f4e3; 1. und 2. März 2019 &#x1f46b;&#x1f46d;&#x1f46b; Albert-Schweitzer-Haus Schwarzspanierstraße 13, 1090 Wien // ANMELDUNG Anmeldungen unter:...]]></itunes:summary>
+<itunes:duration>01:33</itunes:duration>
+<itunes:author><![CDATA[Jutta Matysek]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Asyl, Gegen Rassismus, Grüne Bildungswerkstatt Wien, Information, Konferenz, Plattform für eine menschliche Asylpolitik, Protest, Schwarzblau, Tagung, transnationalen Aktionstag Migrant_innenstreik, UN-Aktionstages gegen Rassismus, Widerstand]]></itunes:keywords>
+<enclosure length="2243186" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/trotz_allem/say-it-loud-konferenz.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/trotz_allem/say-it-loud-konferenz.mp3</cba:filename> </item>
+<item>
+<title>EMRAWI – Emanzipatorisch, Radikal, Widerständig</title>
+<link/>https://cba.fro.at/427561
+					<comments>https://cba.fro.at/427561#respond</comments>
+<dc:creator><![CDATA[genderfrequenz]]></dc:creator>
+<pubdate>Tue, 08 Oct 2019 13:46:06 +0000</pubdate>
+<category><![CDATA[Gesellschaft]]></category>
+<category><![CDATA[Aktivismus]]></category>
+<category><![CDATA[Emanzipation]]></category>
+<category><![CDATA[emrawi]]></category>
+<category><![CDATA[Feminismus]]></category>
+<category><![CDATA[Onlineplattform]]></category>
+<category><![CDATA[Vernetzung]]></category>
+<category><![CDATA[Widerstand]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=427561</guid>
+<description><![CDATA[<span class="date">08.10.2019</span> - Wie vernetzt mensch sich online feministisch? Eine Möglichkeit bietet emrawi – das steht für „emanzipatorisch, radikal, widerständig“ und ist eine Online-Plattform, auf der jede und jeder nach einer Anmeldung mit Beiträgen mitarbeiten...<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F427561&amp;action_name=EMRAWI+%26%238211%3B+Emanzipatorisch%2C+Radikal%2C+Widerst%C3%A4ndig&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p><em>Wie vernetzt mensch sich online feministisch?</em></p>
+<p>Eine Möglichkeit bietet <a href="https://emrawi.org/" target="_blank" rel="noopener"><strong><em>emrawi</em></strong></a> – das steht für „emanzipatorisch, radikal, widerständig“ und ist eine Online-Plattform, auf der jede und jeder nach einer Anmeldung mit Beiträgen mitarbeiten kann. Wir haben emrawi vorab sechs Fragen geschickt, die sie schriftlich für uns beantwortet haben. Das Ergebnis hört ihr im Audiobeitrag.</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F427561&amp;action_name=EMRAWI+%26%238211%3B+Emanzipatorisch%2C+Radikal%2C+Widerst%C3%A4ndig&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/427561/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Sun, 06 Oct 2019</cba:productiondate>
+<cba:broadcastdate></cba:broadcastdate>
+<cba:duration>298.3706122449</cba:duration><cba:attachmentid>427553</cba:attachmentid>
+<itunes:title><![CDATA[EMRAWI &#8211; Emanzipatorisch, Radikal, Widerständig]]></itunes:title>
+<itunes:summary><![CDATA[08.10.2019 - Wie vernetzt mensch sich online feministisch? Eine Möglichkeit bietet emrawi – das steht für „emanzipatorisch, radikal, widerständig“ und ist eine Online-Plattform, auf der jede und jeder nach einer Anmeldung mit Beiträgen mitarbeiten...]]></itunes:summary>
+<itunes:duration>04:58</itunes:duration>
+<itunes:author><![CDATA[genderfrequenz]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Aktivismus, Emanzipation, emrawi, Feminismus, Onlineplattform, Vernetzung, Widerstand]]></itunes:keywords>
+<enclosure length="7391283" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/gender_frequenz/iv-emrawi.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/gender_frequenz/iv-emrawi.mp3</cba:filename> </item>
+<item>
+<title>DO5, die neuen Identitären, zum ersten Mal in Graz</title>
+<link/>https://cba.fro.at/441902
+					<comments>https://cba.fro.at/441902#comments</comments>
+<dc:creator><![CDATA[RH Redaktion]]></dc:creator>
+<pubdate>Wed, 05 Feb 2020 16:07:33 +0000</pubdate>
+<category><![CDATA[Politik]]></category>
+<category><![CDATA[DO5]]></category>
+<category><![CDATA[Graz]]></category>
+<category><![CDATA[Hetze]]></category>
+<category><![CDATA[Identitäre]]></category>
+<category><![CDATA[Islam]]></category>
+<category><![CDATA[Islamisches Kulturzentrum Graz]]></category>
+<category><![CDATA[Patriotismus]]></category>
+<category><![CDATA[Rassismus]]></category>
+<category><![CDATA[Rechtsextermismus]]></category>
+<category><![CDATA[Zip-Alpin]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=441902</guid>
+<description><![CDATA[<span class="date">05.02.2020</span> - Das Islamisches Kulturzentrum Graz lud am 24. Jänner zu einer Veranstaltung. Die vielen Vorurteile gegenüber ihrer Glaubensgemeinde zwingen sie dazu in die Öffentlichkeit zu gehen und klar zu stellen, wer sie sind, an was sie glauben und was...<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F441902&amp;action_name=DO5%2C+die+neuen+Identit%C3%A4ren%2C+zum+ersten+Mal+in+Graz&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Das Islamisches Kulturzentrum Graz lud am 24. Jänner zu einer Veranstaltung. Die vielen Vorurteile gegenüber ihrer Glaubensgemeinde zwingen sie dazu in die Öffentlichkeit zu gehen und klar zu stellen, wer sie sind, an was sie glauben und was sie nicht sind.<br />
+Bei der Veranstaltung trat die Gruppe DO5 (&#8220;Die Österreicher&#8221;) zum ersten Mal in Graz auf. Dabei handelt es sich um eine Neuinszenierung der als rechtsextrem eingestuften Identitären. Gegründet wurde DO5 von Martin Sellner. Das Dokumentationsarchiv des österreichischen Widerstands ordnet die Gruppe als <a href="https://www.doew.at/erkennen/rechtsextremismus/neues-von-ganz-rechts/archiv/jaenner-2020/identitaeres-rebranding" target="_blank" rel="noopener noreferrer">&#8220;Rebranding&#8221; der Identitären</a> ein, die sich &#8220;aus dem Fundus rechtsextremer Rhetorik und Ideologie [bedient]&#8221;. Anwesend war neben der DO5 auch offizielle Vertreter*innen der Stadt. Der Bürgermeister nicht. Ein Kommentar der VON UNTEN-Redaktion.</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F441902&amp;action_name=DO5%2C+die+neuen+Identit%C3%A4ren%2C+zum+ersten+Mal+in+Graz&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/441902/feed</wfw:commentrss>
+<slash:comments>1</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Wed, 05 Feb 2020</cba:productiondate>
+<cba:broadcastdate></cba:broadcastdate>
+<cba:duration>277.66421768707</cba:duration><cba:attachmentid>441899</cba:attachmentid>
+<itunes:title><![CDATA[DO5, die neuen Identitären, zum ersten Mal in Graz]]></itunes:title>
+<itunes:summary><![CDATA[05.02.2020 - Das Islamisches Kulturzentrum Graz lud am 24. Jänner zu einer Veranstaltung. Die vielen Vorurteile gegenüber ihrer Glaubensgemeinde zwingen sie dazu in die Öffentlichkeit zu gehen und klar zu stellen, wer sie sind, an was sie glauben und was...]]></itunes:summary>
+<itunes:duration>04:37</itunes:duration>
+<itunes:author><![CDATA[RH Redaktion]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[DO5, Graz, Hetze, Identitäre, Islam, Islamisches Kulturzentrum Graz, Patriotismus, Rassismus, Rechtsextermismus, Zip-Alpin]]></itunes:keywords>
+<enclosure length="8197395" type="audio/ogg" url="https://cba.fro.at/wp-content/uploads/vonuntendasnachrichtenmagazinaufradiohelsinki/kommentar-islamisches-kulturzentrum.ogg"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/vonuntendasnachrichtenmagazinaufradiohelsinki/kommentar-islamisches-kulturzentrum.ogg</cba:filename> </item>
+<item>
+<title>Ziviler Ungehorsam</title>
+<link/>https://cba.fro.at/336502
+					<comments>https://cba.fro.at/336502#respond</comments>
+<dc:creator><![CDATA[RH Redaktion]]></dc:creator>
+<pubdate>Wed, 15 Mar 2017 18:06:13 +0000</pubdate>
+<category><![CDATA[Widerstand]]></category>
+<category><![CDATA[Murkraftwerk Graz Puntigam]]></category>
+<category><![CDATA[selbstermächtigung]]></category>
+<category><![CDATA[Ungehorsam]]></category>
+<category><![CDATA[Zip-Alpin]]></category>
+<category><![CDATA[ziviler ungehorsam]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=336502</guid>
+<description><![CDATA[<span class="date">15.03.2017</span> - Ziviler Ungehorsam ist in Zusammenhang mit Umweltschutz immer wieder ein Thema. So auch beim Kampf für die Mur in Graz. Sylvia bringt ein paar Stimmen von einer Veranstaltung die sich dem Thema ziviler Ungehorsam widmete. Anmod Laut, stark, wild...<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F336502&amp;action_name=Ziviler+Ungehorsam&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Ziviler Ungehorsam ist in Zusammenhang mit Umweltschutz immer wieder ein Thema. So auch beim Kampf für die Mur in Graz. Sylvia bringt ein paar Stimmen von einer Veranstaltung die sich dem Thema ziviler Ungehorsam widmete.</p>
+<p><span style="font-family: Liberation Sans,sans-serif">Anmod</span></p>
+<p><span style="font-family: Liberation Sans,sans-serif">Laut, stark, wild und ungehorsam – Proteste gegen das Murkraftwerk im Süden von Graz!</span></p>
+<p><span style="font-family: Liberation Sans,sans-serif">Was kann aus den bisherigen Aktionen gelernt werden? Welche Strategien waren erfolgreich? Wie lässt sich die Bewegung weiter stärken? Mit diesen Fragen beschäftigte sich eine Veranstaltung im Spektral am Donnerstag, 9. März. Im Wesentlichen ging es auch um die Frage des zivilen Ungehorsams. Sylvia war vor Ort und ist der Frage nachgegangen wie es die Anwesenden mit dem zivilen Ungehorsam halten. </span></p>
+<p><span style="font-family: Liberation Sans,sans-serif">Abmod</span></p>
+<p><span style="font-family: Liberation Sans,sans-serif">Das waren einige Stimmen zum zivilen, manchmal ungesetzlichen aber legitimen Ungehorsams.</span></p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F336502&amp;action_name=Ziviler+Ungehorsam&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/336502/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Wed, 15 Mar 2017</cba:productiondate>
+<cba:broadcastdate>Wed, 15 Mar 2017 17:00:00</cba:broadcastdate>
+<cba:duration>189.7012</cba:duration><cba:attachmentid>336496</cba:attachmentid>
+<itunes:title><![CDATA[Ziviler Ungehorsam]]></itunes:title>
+<itunes:summary><![CDATA[15.03.2017 - Ziviler Ungehorsam ist in Zusammenhang mit Umweltschutz immer wieder ein Thema. So auch beim Kampf für die Mur in Graz. Sylvia bringt ein paar Stimmen von einer Veranstaltung die sich dem Thema ziviler Ungehorsam widmete. Anmod Laut, stark, wild...]]></itunes:summary>
+<itunes:duration>03:09</itunes:duration>
+<itunes:author><![CDATA[RH Redaktion]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Murkraftwerk Graz Puntigam, selbstermächtigung, Ungehorsam, Zip-Alpin, ziviler ungehorsam]]></itunes:keywords>
+<enclosure length="7588099" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/vonuntendasnachrichtenmagazinaufradiohelsinki/ziviler-ungehorsam.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/vonuntendasnachrichtenmagazinaufradiohelsinki/ziviler-ungehorsam.mp3</cba:filename> </item>
+<item>
+<title>Hobbykick</title>
+<link/>https://cba.fro.at/1162
+					<comments>https://cba.fro.at/1162#respond</comments>
+<dc:creator><![CDATA[Radiofabrik Salzburg]]></dc:creator>
+<pubdate>Wed, 07 May 2003 00:00:00 +0000</pubdate>
+<category><![CDATA[Medien Unterhaltung]]></category>
+<category><![CDATA[Fußball]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=1162</guid>
+<description><![CDATA[<span class="date">07.05.2003</span> - Beitrag über die Lust am Kicken. Gemacht von Toni Prilc und David Valch<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F1162&amp;action_name=Hobbykick&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Beitrag über die Lust am Kicken. Gemacht von Toni Prilc und David Valch</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F1162&amp;action_name=Hobbykick&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/1162/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Wed, 07 May 2003</cba:productiondate>
+<cba:broadcastdate></cba:broadcastdate>
+<cba:duration>205</cba:duration><cba:attachmentid>20726</cba:attachmentid>
+<itunes:title><![CDATA[Hobbykick]]></itunes:title>
+<itunes:summary><![CDATA[07.05.2003 - Beitrag über die Lust am Kicken. Gemacht von Toni Prilc und David Valch]]></itunes:summary>
+<itunes:duration>03:25</itunes:duration>
+<itunes:author><![CDATA[Radiofabrik Salzburg]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Fußball]]></itunes:keywords>
+<enclosure length="3282043" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/radiofabrik_um_6/radiofabrik_um_6-07-05-2003_20-06-53.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/radiofabrik_um_6/radiofabrik_um_6-07-05-2003_20-06-53.mp3</cba:filename> </item>
+<item>
+<title>Amazonas auf der Kippe</title>
+<link/>https://cba.fro.at/522657
+					<comments>https://cba.fro.at/522657#respond</comments>
+<dc:creator><![CDATA[Martin Mehrwald]]></dc:creator>
+<pubdate>Sat, 16 Oct 2021 19:20:24 +0000</pubdate>
+<category><![CDATA[Ökologie]]></category>
+<category><![CDATA[Amazonas]]></category>
+<category><![CDATA[Kipppunkt]]></category>
+<category><![CDATA[Klima]]></category>
+<category><![CDATA[Klimawandel]]></category>
+<category><![CDATA[Regenwald]]></category>
+<category><![CDATA[Rodung]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=522657</guid>
+<description><![CDATA[<span class="date">16.10.2021</span> - Warum ist der Amazonas-Regenwald so wichtig für unser Klima? Was passiert, wenn wir ihn abholzen?<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F522657&amp;action_name=Amazonas+auf+der+Kippe&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Warum ist der Amazonas-Regenwald so wichtig für unser Klima? Was bedeutet es, wenn wir vom Amazonas als Kipppunkt sprechen? Und die Frage aller Fragen &#8211; Was passiert, wenn wir ihn abholzen? Das hören wir uns heute genauer an.</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F522657&amp;action_name=Amazonas+auf+der+Kippe&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/522657/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser><![CDATA[<span class="date">16.10.2021</span> - Warum ist der Amazonas-Regenwald so wichtig für unser Klima? Was passiert, wenn wir ihn abholzen?<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F522657&amp;action_name=Amazonas+auf+der+Kippe&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></cba:teaser>
+<cba:productiondate>Sat, 16 Oct 2021</cba:productiondate>
+<cba:broadcastdate></cba:broadcastdate>
+<cba:duration>300.0424375</cba:duration><cba:attachmentid>522650</cba:attachmentid>
+<itunes:title><![CDATA[Amazonas auf der Kippe]]></itunes:title>
+<itunes:summary><![CDATA[16.10.2021 - Warum ist der Amazonas-Regenwald so wichtig für unser Klima? Was passiert, wenn wir ihn abholzen?]]></itunes:summary>
+<itunes:duration>05:00</itunes:duration>
+<itunes:author><![CDATA[Martin Mehrwald]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Amazonas, Kipppunkt, Klima, Klimawandel, Regenwald, Rodung]]></itunes:keywords>
+<enclosure length="4801096" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/5minutenclimatechance/86-amazonas-auf-der-kippe.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/5minutenclimatechance/86-amazonas-auf-der-kippe.mp3</cba:filename> </item>
+<item>
+<title>UNS REICHTS – Demaufruf – In Steyr donnerts am Samstag!</title>
+<link/>https://cba.fro.at/399160
+					<comments>https://cba.fro.at/399160#respond</comments>
+<dc:creator><![CDATA[Johanna Duscher]]></dc:creator>
+<pubdate>Wed, 13 Mar 2019 21:18:51 +0000</pubdate>
+<category><![CDATA[Soziales]]></category>
+<category><![CDATA[Demo Steyr]]></category>
+<category><![CDATA[Kundgebung Steyr]]></category>
+<category><![CDATA[uns reichts]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=399160</guid>
+<description><![CDATA[<span class="date">13.03.2019</span> - Am Samstag, den 23. März 2019 treffen sich politisch interessierte Menschen aus der Region, um gemeinsam ein Zeichen zu setzen: laut, stark, kreativ, friedlich, bunt und selbstbewusst. Hier gibts´s dem Veranstaltungshinweis zu dieser Kundgebung...<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F399160&amp;action_name=UNS+REICHTS+%26%238211%3B+Demaufruf+%26%238211%3B+In+Steyr+donnerts+am+Samstag%21&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Am Samstag, den 23. März 2019 treffen sich politisch interessierte Menschen aus der Region, um gemeinsam ein Zeichen zu setzen: <strong>laut, stark, kreativ, friedlich, bunt und selbstbewusst.</strong></p>
+<p>Hier gibts´s dem Veranstaltungshinweis zu dieser Kundgebung zu hören.</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F399160&amp;action_name=UNS+REICHTS+%26%238211%3B+Demaufruf+%26%238211%3B+In+Steyr+donnerts+am+Samstag%21&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/399160/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Mon, 11 Mar 2019</cba:productiondate>
+<cba:broadcastdate>Mon, 11 Mar 2019 21:00:00</cba:broadcastdate>
+<cba:duration>63.190175</cba:duration><cba:attachmentid>399157</cba:attachmentid>
+<itunes:title><![CDATA[UNS REICHTS &#8211; Demaufruf &#8211; In Steyr donnerts am Samstag!]]></itunes:title>
+<itunes:summary><![CDATA[13.03.2019 - Am Samstag, den 23. März 2019 treffen sich politisch interessierte Menschen aus der Region, um gemeinsam ein Zeichen zu setzen: laut, stark, kreativ, friedlich, bunt und selbstbewusst. Hier gibts´s dem Veranstaltungshinweis zu dieser Kundgebung...]]></itunes:summary>
+<itunes:duration>01:03</itunes:duration>
+<itunes:author><![CDATA[Johanna Duscher]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Demo Steyr, Kundgebung Steyr, uns reichts]]></itunes:keywords>
+<enclosure length="2527789" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/b138veranstaltungshinweise/20190323-vah-demo-steyr-uns-reichts.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/b138veranstaltungshinweise/20190323-vah-demo-steyr-uns-reichts.mp3</cba:filename> </item>
+<item>
+<title>Interview mit Maria Hofstätter zu Marie Jahoda</title>
+<link/>https://cba.fro.at/355069
+					<comments>https://cba.fro.at/355069#respond</comments>
+<dc:creator><![CDATA[Christian Diabl]]></dc:creator>
+<pubdate>Mon, 04 Dec 2017 13:46:29 +0000</pubdate>
+<category><![CDATA[Gesellschaft]]></category>
+<category><![CDATA[Jahoda]]></category>
+<category><![CDATA[Soziologie]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=355069</guid>
+<description><![CDATA[<span class="date">04.12.2017</span> - Nach der Präsentation der erstmals publizierten Dissertation der Soziologin Marie Jahoda im Museum Arbeitswelt in Steyr hat Christian Diabl kurz mit der Schauspielerin Maria Hofstätter gesprochen, die an diesem Abend aus dem Werk Jahodas gelesen...<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F355069&amp;action_name=Interview+mit+Maria+Hofst%C3%A4tter+zu+Marie+Jahoda&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Nach der Präsentation der erstmals publizierten Dissertation der Soziologin Marie Jahoda im Museum Arbeitswelt in Steyr hat Christian Diabl kurz mit der Schauspielerin Maria Hofstätter gesprochen, die an diesem Abend aus dem Werk Jahodas gelesen hat. Die erste Frage lautet gleich einmal, wie Hofstätter zu dem Projekt gekommen ist.</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F355069&amp;action_name=Interview+mit+Maria+Hofst%C3%A4tter+zu+Marie+Jahoda&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/355069/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Thu, 30 Nov 2017</cba:productiondate>
+<cba:broadcastdate>Mon, 04 Dec 2017 13:00:00</cba:broadcastdate>
+<cba:duration>222.40653061224</cba:duration><cba:attachmentid>355068</cba:attachmentid>
+<itunes:title><![CDATA[Interview mit Maria Hofstätter zu Marie Jahoda]]></itunes:title>
+<itunes:summary><![CDATA[04.12.2017 - Nach der Präsentation der erstmals publizierten Dissertation der Soziologin Marie Jahoda im Museum Arbeitswelt in Steyr hat Christian Diabl kurz mit der Schauspielerin Maria Hofstätter gesprochen, die an diesem Abend aus dem Werk Jahodas gelesen...]]></itunes:summary>
+<itunes:duration>03:42</itunes:duration>
+<itunes:author><![CDATA[Christian Diabl]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Jahoda, Soziologie]]></itunes:keywords>
+<enclosure length="4245859" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/frozine/iv-maria-hofstatter-30.11.17-cut.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/frozine/iv-maria-hofstatter-30.11.17-cut.mp3</cba:filename> </item>
+<item>
+<title>Herbert Dutzler über das Ausseerland</title>
+<link/>https://cba.fro.at/519154
+					<comments>https://cba.fro.at/519154#respond</comments>
+<dc:creator><![CDATA[Erich Weidinger]]></dc:creator>
+<pubdate>Tue, 28 Sep 2021 06:30:34 +0000</pubdate>
+<category><![CDATA[Literatur]]></category>
+<category><![CDATA[Aussee]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=519154</guid>
+<description><![CDATA[<span class="date">28.09.2021</span> - Herbert Dutzler im Gespräch mit Erich Weidinger<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F519154&amp;action_name=Herbert+Dutzler+%C3%BCber+das+Ausseerland&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F519154&amp;action_name=Herbert+Dutzler+%C3%BCber+das+Ausseerland&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/519154/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser><![CDATA[<span class="date">28.09.2021</span> - Herbert Dutzler im Gespräch mit Erich Weidinger<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F519154&amp;action_name=Herbert+Dutzler+%C3%BCber+das+Ausseerland&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></cba:teaser>
+<cba:productiondate>Sat, 25 Sep 2021</cba:productiondate>
+<cba:broadcastdate>Tue, 28 Sep 2021 08:00:00</cba:broadcastdate>
+<cba:duration>198.5734375</cba:duration><cba:attachmentid>519153</cba:attachmentid>
+<itunes:title><![CDATA[Herbert Dutzler über das Ausseerland]]></itunes:title>
+<itunes:summary><![CDATA[28.09.2021 - Herbert Dutzler im Gespräch mit Erich Weidinger]]></itunes:summary>
+<itunes:duration>03:18</itunes:duration>
+<itunes:author><![CDATA[Erich Weidinger]]></itunes:author>
+<itunes:image href="https://cba.fro.at/wp-content/uploads/2021/09/img-3294.jpg"></itunes:image>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Aussee, Literatur]]></itunes:keywords>
+<enclosure length="6354350" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/interviewsjedentagmiterichweidinger_0/jeden-tag-autorengespraech-herbert-dutzler-mit-erich-weidinger.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/interviewsjedentagmiterichweidinger_0/jeden-tag-autorengespraech-herbert-dutzler-mit-erich-weidinger.mp3</cba:filename> </item>
+<item>
+<title>Diese Dating Mythen glauben Menschen und geben sie späteren Generationen weiter! Jetzt ist der Moment mit einigen davon aufzuhören!</title>
+<link/>https://cba.fro.at/519063
+					<comments>https://cba.fro.at/519063#respond</comments>
+<dc:creator><![CDATA[Thomas Paier]]></dc:creator>
+<pubdate>Fri, 24 Sep 2021 20:50:41 +0000</pubdate>
+<category><![CDATA[Gesellschaft]]></category>
+<category><![CDATA[Beziehung]]></category>
+<category><![CDATA[bumble]]></category>
+<category><![CDATA[Caroline Hehenberger]]></category>
+<category><![CDATA[dating]]></category>
+<category><![CDATA[Dating Mythen]]></category>
+<category><![CDATA[Feminismus]]></category>
+<category><![CDATA[flirten]]></category>
+<category><![CDATA[Gen Z]]></category>
+<category><![CDATA[generation z]]></category>
+<category><![CDATA[Gleichberechtigung]]></category>
+<category><![CDATA[Jugend]]></category>
+<category><![CDATA[Junge Generation]]></category>
+<category><![CDATA[Kennenlernen]]></category>
+<category><![CDATA[Online Dating]]></category>
+<category><![CDATA[Tinder]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=519063</guid>
+<description><![CDATA[<span class="date">24.09.2021</span> - Diese Dating Mythen glauben Menschen und geben sie späteren Generationen weiter! Jetzt ist der Moment mit einigen davon aufzuhören!<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F519063&amp;action_name=Diese+Dating+Mythen+glauben+Menschen+und+geben+sie+sp%C3%A4teren+Generationen+weiter%21+Jetzt+ist+der+Moment+mit+einigen+davon+aufzuh%C3%B6ren%21&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Diese Dating Mythen glauben Menschen und geben sie späteren Generationen weiter! Jetzt ist der Moment mit einigen davon aufzuhören!</p>
+<p>Das ist ein kurzer Ausschnitt der <a href="https://cba.fro.at/518068">Gen Z Radioshow vom 19.09.2021</a>.</p>
+<p><strong>Gen Z | Nach Y kommt Z – Das junge Radio für die Generation zwischen 1995 und 2010</strong></p>
+<p>Zwei Bereiche umfasst die 60 Minuten Radiosendung alle zwei Wochen am Sonntag um 18:00: Viel Musik der 90er, 00er, 10er und 20er Jahre und Themen die der Generation Z wichtig sind für ihre Zukunft.</p>
+<p>Alle Informationen zur Radioshow auf der <a href="https://radiosendung.at/generationz">radiosendung.at</a> Webseite</p>
+<p>Moderation, Redaktion und Technik: Thomas Paier</p>
+<p>Von Generation Z für Generation Z</p>
+<p><strong>Die Sendung im Radio</strong></p>
+<p>Alle zwei Wochen am Sonntag von 18:00 bis 19:00 live auf Radio Helsinki 92,6 MHz in der Region Graz sowie weltweit online im Livestream. Die Wiederholung der Sendung findet am Mittwoch in der Woche darauf von 01:00 bis 02:00 statt im Rahmen der Helsinki Jugendnacht.</p>
+<p>Um mehr über die Sendung zu erfahren, folge dem jungen Radio auf <a href="https://www.facebook.com/radioshow.generationz">Facebook</a>, <a href="https://www.instagram.com/radioshow.generationz">Instagram</a>, <a href="https://t.me/radioshowgenz">Telegram</a> und <a href="https://www.tiktok.com/@radiosendung.at">TikTok</a>.</p>
+<p><strong>Diese Sendungen könnten dich interessieren</strong></p>
+<p><strong>Nummer 1: </strong>Ok Boomer! Im <a href="https://cba.fro.at/438880">Laufe des Jahres 2019 ging die Phrase “Ok Boomer“ viral</a> und wurde in zahlreichen Memes und Spaßvideos online verarbeitet. Ist die immer wiederkehrende und pauschalisierende Kritik an der jungen Generation gerechtfertigt? Zeigt das einen aktuellen Generationenkonflikt oder ist das nur sinnlose Panikmache der Gesellschaft. Alle Infos in dieser Sendung.<strong><br />
+</strong></p>
+<p><strong>Nummer 2: </strong>In dieser Ausgabe blicken wir in eine Szene wo Jutebeutel, Veganismus, Bärte und Hornbrillen zur Normalität gehören. Definitiv kein Platz für Mainstream und Massenkonsum! <a href="https://cba.fro.at/445516">60 Minuten alternative Musik der 90er, 00er, 10er und 20er Jahre</a>. Gemixt wird die Sendung mit Geschichten und Anekdoten.</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F519063&amp;action_name=Diese+Dating+Mythen+glauben+Menschen+und+geben+sie+sp%C3%A4teren+Generationen+weiter%21+Jetzt+ist+der+Moment+mit+einigen+davon+aufzuh%C3%B6ren%21&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/519063/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser><![CDATA[<span class="date">24.09.2021</span> - Diese Dating Mythen glauben Menschen und geben sie späteren Generationen weiter! Jetzt ist der Moment mit einigen davon aufzuhören!<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F519063&amp;action_name=Diese+Dating+Mythen+glauben+Menschen+und+geben+sie+sp%C3%A4teren+Generationen+weiter%21+Jetzt+ist+der+Moment+mit+einigen+davon+aufzuh%C3%B6ren%21&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></cba:teaser>
+<cba:productiondate>Sun, 19 Sep 2021</cba:productiondate>
+<cba:broadcastdate>Sun, 19 Sep 2021 18:00:00</cba:broadcastdate>
+<cba:duration>298.55345</cba:duration><cba:attachmentid>519062</cba:attachmentid>
+<itunes:title><![CDATA[Diese Dating Mythen glauben Menschen und geben sie späteren Generationen weiter! Jetzt ist der Moment mit einigen davon aufzuhören!]]></itunes:title>
+<itunes:summary><![CDATA[24.09.2021 - Diese Dating Mythen glauben Menschen und geben sie späteren Generationen weiter! Jetzt ist der Moment mit einigen davon aufzuhören!]]></itunes:summary>
+<itunes:duration>04:58</itunes:duration>
+<itunes:author><![CDATA[Thomas Paier]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Beziehung, bumble, Caroline Hehenberger, dating, Dating Mythen, Feminismus, flirten, Gen Z, generation z, Gleichberechtigung, Jugend, Junge Generation, Kennenlernen, Online Dating, Tinder]]></itunes:keywords>
+<enclosure length="11943182" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/genzexklusiv/interview-v6-metadating-mp3.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/genzexklusiv/interview-v6-metadating-mp3.mp3</cba:filename> </item>
+<item>
+<title>Beitrag: “Die europäische Minute – Juli21”</title>
+<link/>https://cba.fro.at/508160
+					<comments>https://cba.fro.at/508160#respond</comments>
+<dc:creator><![CDATA[s_ecker]]></dc:creator>
+<pubdate>Thu, 08 Jul 2021 11:16:24 +0000</pubdate>
+<category><![CDATA[Politik]]></category>
+<category><![CDATA[Datenbank für Arzneimittel]]></category>
+<category><![CDATA[Desinformation]]></category>
+<category><![CDATA[EU]]></category>
+<category><![CDATA[Europa]]></category>
+<category><![CDATA[Europäisches Parlament]]></category>
+<category><![CDATA[Frozine]]></category>
+<category><![CDATA[Meeresschutzgebiet Antarktis]]></category>
+<category><![CDATA[Ratspräsidentschaft Slowenien]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=508160</guid>
+<description><![CDATA[<span class="date">08.07.2021</span> - ..ist ein monatlicher Informationsbeitrag des Europäischen Parlaments, in dem die Themen, Debatten und Abstimmungen des jeweiligen Monats kurz und bündig zusammengefasst werden. Die Themen der Juli21 Ausgabe sind: •  Datenbank für...<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F508160&amp;action_name=Beitrag%3A+%E2%80%9CDie+europ%C3%A4ische+Minute+%26%238211%3B+Juli21%E2%80%9D&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>..ist ein monatlicher Informationsbeitrag des Europäischen Parlaments, in dem die Themen, Debatten und Abstimmungen des jeweiligen Monats kurz und bündig zusammengefasst werden. Die Themen der Juli21 Ausgabe sind:</p>
+<p>•  Datenbank für Arzneimittel<br />
+• Desinformation<br />
+• Meeresschutzgebiet Antarktis<br />
+• Ratspräsidentschaft Slowenien</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F508160&amp;action_name=Beitrag%3A+%E2%80%9CDie+europ%C3%A4ische+Minute+%26%238211%3B+Juli21%E2%80%9D&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/508160/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Thu, 08 Jul 2021</cba:productiondate>
+<cba:broadcastdate></cba:broadcastdate>
+<cba:duration>216.9469</cba:duration><cba:attachmentid>508154</cba:attachmentid>
+<itunes:title><![CDATA[Beitrag: “Die europäische Minute &#8211; Juli21”]]></itunes:title>
+<itunes:summary><![CDATA[08.07.2021 - ..ist ein monatlicher Informationsbeitrag des Europäischen Parlaments, in dem die Themen, Debatten und Abstimmungen des jeweiligen Monats kurz und bündig zusammengefasst werden. Die Themen der Juli21 Ausgabe sind: •  Datenbank für...]]></itunes:summary>
+<itunes:duration>03:36</itunes:duration>
+<itunes:author><![CDATA[s_ecker]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Datenbank für Arzneimittel, Desinformation, EU, Europa, Europäisches Parlament, Frozine, Meeresschutzgebiet Antarktis, Ratspräsidentschaft Slowenien]]></itunes:keywords>
+<enclosure length="8679002" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/frozine/die-europaeische-minute-juli21.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/frozine/die-europaeische-minute-juli21.mp3</cba:filename> </item>
+<item>
+<title>Kurzbeitrag FROzine: Gefärbte Eier gehören zu Ostern</title>
+<link/>https://cba.fro.at/371672
+					<comments>https://cba.fro.at/371672#respond</comments>
+<dc:creator><![CDATA[Michael Diesenreither]]></dc:creator>
+<pubdate>Sat, 31 Mar 2018 11:25:57 +0000</pubdate>
+<category><![CDATA[Wirtschaft]]></category>
+<category><![CDATA[Geflügelwirtschaft]]></category>
+<category><![CDATA[Martin Mayringer]]></category>
+<category><![CDATA[Ostereier färben]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=371672</guid>
+<description><![CDATA[<span class="date">31.03.2018</span> - Ein kurzer Beitrag mit Martin Mayringer, Geschäftsführer des Landesverbands der landwirtschaftlichen Geflügelwirtschaft über das Färben von Hühnereiern in Oberösterreich und wie erkannt werden kann, aus welcher Produktionsform diese...<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F371672&amp;action_name=Kurzbeitrag+FROzine%3A+Gef%C3%A4rbte+Eier+geh%C3%B6ren+zu+Ostern&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Ein kurzer Beitrag mit <strong>Martin Mayringer</strong>, Geschäftsführer des Landesverbands der <strong>landwirtschaftlichen Geflügelwirtschaft</strong> über das Färben von Hühnereiern in Oberösterreich und wie erkannt werden kann, aus welcher Produktionsform diese stammen. Denn auch Österreich importiert nach wie vor Eier aus Käfighaltung aus anderen Ländern, in Österreich ist die Käfighaltung ja mittlerweile verboten.</p>
+<p>Gestaltung: Michael Diesenreither<br />
+Interview: Johannes Mayerbrugger</p>
+<p>gesendet im Infomagazin FROzine am 30.3.2018</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F371672&amp;action_name=Kurzbeitrag+FROzine%3A+Gef%C3%A4rbte+Eier+geh%C3%B6ren+zu+Ostern&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/371672/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Fri, 30 Mar 2018</cba:productiondate>
+<cba:broadcastdate>Fri, 30 Mar 2018 18:00:00</cba:broadcastdate>
+<cba:duration>118.824</cba:duration><cba:attachmentid>371670</cba:attachmentid>
+<itunes:title><![CDATA[Kurzbeitrag FROzine: Gefärbte Eier gehören zu Ostern]]></itunes:title>
+<itunes:summary><![CDATA[31.03.2018 - Ein kurzer Beitrag mit Martin Mayringer, Geschäftsführer des Landesverbands der landwirtschaftlichen Geflügelwirtschaft über das Färben von Hühnereiern in Oberösterreich und wie erkannt werden kann, aus welcher Produktionsform diese...]]></itunes:summary>
+<itunes:duration>01:58</itunes:duration>
+<itunes:author><![CDATA[Michael Diesenreither]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Geflügelwirtschaft, Martin Mayringer, Ostereier färben]]></itunes:keywords>
+<enclosure length="3802562" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/frozine/beitrag-frozine-ostereier-faerben.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/frozine/beitrag-frozine-ostereier-faerben.mp3</cba:filename> </item>
+<item>
+<title>Crossing Europe 2021 – Trailer</title>
+<link/>https://cba.fro.at/500796
+					<comments>https://cba.fro.at/500796#respond</comments>
+<dc:creator><![CDATA[Dorota Trepczyk]]></dc:creator>
+<pubdate>Thu, 20 May 2021 16:21:40 +0000</pubdate>
+<category><![CDATA[Kultur]]></category>
+<category><![CDATA[Crossing Europe 2021]]></category>
+<category><![CDATA[Film Festival Linz]]></category>
+<category><![CDATA[KIno für die Ohren 2021]]></category>
+<category><![CDATA[trailer]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=500796</guid>
+<description><![CDATA[<span class="date">20.05.2021</span> - <img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F500796&amp;action_name=Crossing+Europe+2021+%26%238211%3B+Trailer&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F500796&amp;action_name=Crossing+Europe+2021+%26%238211%3B+Trailer&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/500796/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Thu, 20 May 2021</cba:productiondate>
+<cba:broadcastdate></cba:broadcastdate>
+<cba:duration>77.113425</cba:duration><cba:attachmentid>500794</cba:attachmentid>
+<itunes:title><![CDATA[Crossing Europe 2021 &#8211; Trailer]]></itunes:title>
+<itunes:summary><![CDATA[20.05.2021 - ]]></itunes:summary>
+<itunes:duration>01:17</itunes:duration>
+<itunes:author><![CDATA[Dorota Trepczyk]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Crossing Europe 2021, Film Festival Linz, KIno für die Ohren 2021, trailer]]></itunes:keywords>
+<enclosure length="3085582" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/kinofrdieohren2021/crossingeuropetrailer2021.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/kinofrdieohren2021/crossingeuropetrailer2021.mp3</cba:filename> </item>
+<item>
+<title>Österreichs schönste Radfernwege. 20 Touren</title>
+<link/>https://cba.fro.at/497615
+					<comments>https://cba.fro.at/497615#respond</comments>
+<dc:creator><![CDATA[Erich Klinger]]></dc:creator>
+<pubdate>Wed, 21 Apr 2021 22:58:12 +0000</pubdate>
+<category><![CDATA[Gesellschaft]]></category>
+<category><![CDATA[Buchbesprechung; Styria Verlag]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=497615</guid>
+<description><![CDATA[<span class="date">22.04.2021</span> - Radiokollegin Daniela Banglmayr stellt Thorsten Brönners Buch „Österreichs schönste Radfernwege. 20 Touren“, das kürzlich im Styria Verlag neu aufgelegt wurde, vor.<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F497615&amp;action_name=%C3%96sterreichs+sch%C3%B6nste+Radfernwege.+20+Touren&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Radiokollegin Daniela Banglmayr stellt Thorsten Brönners Buch „Österreichs schönste Radfernwege. 20 Touren“, das kürzlich im Styria Verlag neu aufgelegt wurde, vor.</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F497615&amp;action_name=%C3%96sterreichs+sch%C3%B6nste+Radfernwege.+20+Touren&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/497615/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Wed, 21 Apr 2021</cba:productiondate>
+<cba:broadcastdate>Tue, 20 Apr 2021 19:00:00</cba:broadcastdate>
+<cba:duration>80.2219375</cba:duration><cba:attachmentid>497614</cba:attachmentid>
+<itunes:title><![CDATA[Österreichs schönste Radfernwege. 20 Touren]]></itunes:title>
+<itunes:summary><![CDATA[22.04.2021 - Radiokollegin Daniela Banglmayr stellt Thorsten Brönners Buch „Österreichs schönste Radfernwege. 20 Touren“, das kürzlich im Styria Verlag neu aufgelegt wurde, vor.]]></itunes:summary>
+<itunes:duration>01:20</itunes:duration>
+<itunes:author><![CDATA[Erich Klinger]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Buchbesprechung; Styria Verlag]]></itunes:keywords>
+<enclosure length="1283969" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/wegstrecken/oesterreichs-schoenste-radfernwege.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/wegstrecken/oesterreichs-schoenste-radfernwege.mp3</cba:filename> </item>
+<item>
+<title>Raum für Bürger*innenbeteiligung</title>
+<link/>https://cba.fro.at/495188
+					<comments>https://cba.fro.at/495188#respond</comments>
+<dc:creator><![CDATA[Marina Wetzlmaier]]></dc:creator>
+<pubdate>Mon, 05 Apr 2021 10:03:39 +0000</pubdate>
+<category><![CDATA[Gesellschaft]]></category>
+<category><![CDATA[Bürgerbeteiligung]]></category>
+<category><![CDATA[FreiRaum Wels]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=495188</guid>
+<description><![CDATA[<span class="date">05.04.2021</span> - Ein halbes Jahr ist vergangen seitdem die Stadt Wels den Mietvertrag des FreiRaum gekündigt hat. Dem Projekt drohte das Ende, doch nun blicken die Betreiber*innen optimistischer in die Zukunft. Nachhaltig, respektvoll und selbstorganisiert –...<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F495188&amp;action_name=Raum+f%C3%BCr+B%C3%BCrger%2Ainnenbeteiligung&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p><strong><span style="font-family: Times New Roman, serif"><span style="font-size: medium">Ein halbes Jahr ist vergangen seitdem die Stadt Wels den Mietvertrag des <a href="https://www.freiraumwels.at/freiraumwels.html" target="_blank" rel="noopener noreferrer">FreiRaum</a> gekündigt hat. Dem Projekt drohte das Ende, doch nun blicken die Betreiber*innen optimistischer in die Zukunft.</span></span></strong></p>
+<p><span style="color: #222222"><span style="font-family: Times New Roman, serif"><span style="font-size: medium">Nachhaltig, respektvoll und selbstorganisiert – nach diesen Prinzipien haben im FreiRaum Wels seit 2015 rund 1170 Aktivitäten stattgefunden. Er dient als offener Treffpunkt für nachhaltige und gemeinschaftsorientierte Projekte und vor allem als Ort, wo man einfach sein kann, wie die Nutzer*innen sagen. Betreut wird der FreiRaum von einem ehrenamtlichen Verein, die Räumlichkeiten wurden von der Stadt Wels gemietet. Doch Ende letzten Jahres war damit Schluss. Bürgermeister Andreas Rabl von der FPÖ hatte im September den Mietvertrag im Alleingang gekündigt. Seither kämpfen Vorstand und Nutzer*innen des FreiRaum für dessen Erhalt. </span></span></span></p>
+<p><span style="font-family: Times New Roman, serif"><span style="font-size: medium">Über Spenden konnte der Vorstand die Finanzierung der Miete für 2021 selbst aufstellen. Insgesamt 21.000 Euro notwendig, um den FreiRaum dieses Jahr weiterbetreiben zu können. 16.000 konnten bereits gesichert werden. Für die Aufbrigung der restlichen 5.000 Euro wird am 8. Mai 2021 voraussichtlich ein Flohmarkt stattfinden, Informationen darüber, wie man den FreiRaum unterstützen kann gibt es auf: <a href="https://erhalten.freiraumwels.at/" target="_blank" rel="noopener noreferrer">erhalten.freiraumwels.at </a>.</span></span></p>
+<p><span style="font-family: Times New Roman, serif"><span style="font-size: medium">Durch die Pandemie sind die Aktivitäten im FreiRaum beschränkt. Angebote gibt es aber beispielsweise vom <a href="https://www.dioezese-linz.at/kernzone-wels" target="_blank" rel="noopener noreferrer">Verein KernZone Wels</a>, die vor der Pandemie einen Pop-Up-Jugendtreff ins Leben gerufen hat. Beratungen finden nun auf Anfrage individuell statt. Auch fürs Home Schooling könne der FreiRaum genutzt werden, sagt Vorstandsmitglied Ralf Drack. </span></span><span style="font-family: Times New Roman, serif"><span style="font-size: medium">Die Betreiber*innen des FreiRaums blicken hoffnungsvoll auf die Gemeinderatswahl 2021, eine Neuordnung der politischen Verhältnisse und eine gesicherte Weiterführung des Betriebs.</span></span></p>
+<p>Beitrag: <a href="https://www.fro.at/author/marina_w/" target="_blank" rel="noopener noreferrer">Marina Wetzlmaier</a></p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F495188&amp;action_name=Raum+f%C3%BCr+B%C3%BCrger%2Ainnenbeteiligung&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/495188/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Mon, 05 Apr 2021</cba:productiondate>
+<cba:broadcastdate></cba:broadcastdate>
+<cba:duration>285.831825</cba:duration><cba:attachmentid>495187</cba:attachmentid>
+<itunes:title><![CDATA[Raum für Bürger*innenbeteiligung]]></itunes:title>
+<itunes:summary><![CDATA[05.04.2021 - Ein halbes Jahr ist vergangen seitdem die Stadt Wels den Mietvertrag des FreiRaum gekündigt hat. Dem Projekt drohte das Ende, doch nun blicken die Betreiber*innen optimistischer in die Zukunft. Nachhaltig, respektvoll und selbstorganisiert –...]]></itunes:summary>
+<itunes:duration>04:45</itunes:duration>
+<itunes:author><![CDATA[Marina Wetzlmaier]]></itunes:author>
+<itunes:image href="https://cba.fro.at/wp-content/uploads/2021/04/img-20210329-144229.jpg"></itunes:image>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Bürgerbeteiligung, FreiRaum Wels]]></itunes:keywords>
+<enclosure length="11434317" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/lehrredaktion/20210407-beitrag-freiraum-lehrredaktion.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/lehrredaktion/20210407-beitrag-freiraum-lehrredaktion.mp3</cba:filename> </item>
+<item>
+<title>Versammlungs- und Demonstrationsfreiheit gesichert</title>
+<link/>https://cba.fro.at/494078
+					<comments>https://cba.fro.at/494078#respond</comments>
+<dc:creator><![CDATA[Margit Happerger]]></dc:creator>
+<pubdate>Tue, 23 Mar 2021 19:47:23 +0000</pubdate>
+<category><![CDATA[Gesellschaft]]></category>
+<category><![CDATA[Demonstrationsfreiheit]]></category>
+<category><![CDATA[Linz gegen Rechts]]></category>
+<category><![CDATA[OGH]]></category>
+<category><![CDATA[Versammlungsrecht]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=494078</guid>
+<description><![CDATA[<span class="date">23.03.2021</span> - Ein richtungsweisendes Urteil des OGH sichert auch in die Zukunft das Recht auf Versammlungs- und Demonstrationsfreiheit in Österreich.<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F494078&amp;action_name=Versammlungs-+und+Demonstrationsfreiheit+gesichert&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Ein richtungsweisendes Urteil des OGH sichert auch in die Zukunft das Recht auf Versammlungs- und Demonstrationsfreiheit in Österreich.</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F494078&amp;action_name=Versammlungs-+und+Demonstrationsfreiheit+gesichert&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/494078/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Tue, 23 Mar 2021</cba:productiondate>
+<cba:broadcastdate></cba:broadcastdate>
+<cba:duration>141.7665</cba:duration><cba:attachmentid>494072</cba:attachmentid>
+<itunes:title><![CDATA[Versammlungs- und Demonstrationsfreiheit gesichert]]></itunes:title>
+<itunes:summary><![CDATA[23.03.2021 - Ein richtungsweisendes Urteil des OGH sichert auch in die Zukunft das Recht auf Versammlungs- und Demonstrationsfreiheit in Österreich.]]></itunes:summary>
+<itunes:duration>02:21</itunes:duration>
+<itunes:author><![CDATA[Margit Happerger]]></itunes:author>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Demonstrationsfreiheit, Linz gegen Rechts, OGH, Versammlungsrecht]]></itunes:keywords>
+<enclosure length="2268264" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/frozine/versammlungs-und-demonstrationsfreiheit-gesichert.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/frozine/versammlungs-und-demonstrationsfreiheit-gesichert.mp3</cba:filename> </item>
+<item>
+<title>Ein Winter in Attersee</title>
+<link/>https://cba.fro.at/479820
+					<comments>https://cba.fro.at/479820#respond</comments>
+<dc:creator><![CDATA[Ellisabeth Hollerweger]]></dc:creator>
+<pubdate>Sat, 21 Nov 2020 16:45:57 +0000</pubdate>
+<category><![CDATA[Literatur]]></category>
+<category><![CDATA[Attersee]]></category>
+<category><![CDATA[Elisabeth Hollerweger]]></category>
+<category><![CDATA[Erzählung]]></category>
+<category><![CDATA[Geschichten]]></category>
+<category><![CDATA[Langeweile]]></category>
+<category><![CDATA[Neustift]]></category>
+<category><![CDATA[Weihnachten]]></category>
+<category><![CDATA[Winter]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=479820</guid>
+<description><![CDATA[<span class="date">21.11.2020</span> - Warum Winter in Attersee durchaus lange sein können.<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F479820&amp;action_name=Ein+Winter+in+Attersee&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Ein Winter in Attersee kann durchaus lang sein. Unter welchen Umständen das besonders der Fall ist, erzählt Elisabeth Hollerweger in dieser kurzen und humorvollen Geschichte aus dem Februar 2001. Aufgenommen wurde sie am 26. August 2017.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F479820&amp;action_name=Ein+Winter+in+Attersee&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/479820/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser><![CDATA[<span class="date">21.11.2020</span> - Warum Winter in Attersee durchaus lange sein können.<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F479820&amp;action_name=Ein+Winter+in+Attersee&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></cba:teaser>
+<cba:productiondate>Fri, 20 Nov 2020</cba:productiondate>
+<cba:broadcastdate></cba:broadcastdate>
+<cba:duration>86.9355</cba:duration><cba:attachmentid>479815</cba:attachmentid>
+<itunes:title><![CDATA[Ein Winter in Attersee]]></itunes:title>
+<itunes:summary><![CDATA[21.11.2020 - Warum Winter in Attersee durchaus lange sein können.]]></itunes:summary>
+<itunes:duration>01:26</itunes:duration>
+<itunes:author><![CDATA[Ellisabeth Hollerweger]]></itunes:author>
+<itunes:image href="https://cba.fro.at/wp-content/uploads/2020/11/ein-winter-in-attersee.jpg"></itunes:image>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Attersee, Elisabeth Hollerweger, Erzählung, Geschichten, Langeweile, Neustift, Weihnachten, Winter]]></itunes:keywords>
+<enclosure length="2152116" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/geschichtenvomattersee/ein-winter-in-attersee-ellie-hollerweger.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/geschichtenvomattersee/ein-winter-in-attersee-ellie-hollerweger.mp3</cba:filename> </item>
+<item>
+<title>Karim Rihan will, dass die Black Communities mehr Ressourcen zur Bekämpfung von Rassismus bekommen</title>
+<link/>https://cba.fro.at/467964
+					<comments>https://cba.fro.at/467964#respond</comments>
+<dc:creator><![CDATA[INOU]]></dc:creator>
+<pubdate>Fri, 09 Oct 2020 17:00:43 +0000</pubdate>
+<category><![CDATA[Politik]]></category>
+<category><![CDATA[Afröwahl]]></category>
+<category><![CDATA[anti-rassismus]]></category>
+<category><![CDATA[Karim Rihan]]></category>
+<category><![CDATA[NEOS]]></category>
+<category><![CDATA[Partizipation]]></category>
+<category><![CDATA[Rassismus]]></category>
+<category><![CDATA[wien wahlen]]></category>
+<guid ispermalink="false">https://cba.fro.at/?p=467964</guid>
+<description><![CDATA[<span class="date">09.10.2020</span> - Karim Rihan ist geboren und aufgewachsen in Wien. Der Unternehmen ist Spitzenkandidat der NEOS in Meidling, dem 12. Wiener Gemeindebezirk. Er steht für die gleichberectigte Teilhabe und Partizipation aller in der Gesellschaft. Sollte er gewählt...<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F467964&amp;action_name=Karim+Rihan+will%2C+dass+die+Black+Communities+mehr+Ressourcen+zur+Bek%C3%A4mpfung+von+Rassismus+bekommen&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></description>
+<content:encoded><![CDATA[<p>Karim Rihan ist geboren und aufgewachsen in Wien. Der Unternehmen ist Spitzenkandidat der NEOS in Meidling, dem 12. Wiener Gemeindebezirk. Er steht für die gleichberectigte Teilhabe und Partizipation aller in der Gesellschaft. Sollte er gewählt werden würde er sich für mehr Ressourcen für die Black Communities zur Bekämpfung von Rassismus einsetzen. Ein Interview mit simon INOU.</p>
+<img src="https://webstats.servus.at/piwik.php?idsite=3&amp;rec=1&amp;url=https%3A%2F%2Fcba.fro.at%2F467964&amp;action_name=Karim+Rihan+will%2C+dass+die+Black+Communities+mehr+Ressourcen+zur+Bek%C3%A4mpfung+von+Rassismus+bekommen&amp;urlref=https%3A%2F%2Fcba.fro.at%2Ffeed" style="border:0;width:0;height:0" width="0" height="0" alt="" />]]></content:encoded>
+<wfw:commentrss>https://cba.fro.at/467964/feed</wfw:commentrss>
+<slash:comments>0</slash:comments>
+<cba:teaser></cba:teaser>
+<cba:productiondate>Fri, 09 Oct 2020</cba:productiondate>
+<cba:broadcastdate></cba:broadcastdate>
+<cba:duration>124.32</cba:duration><cba:attachmentid>467962</cba:attachmentid>
+<itunes:title><![CDATA[Karim Rihan will, dass die Black Communities mehr Ressourcen zur Bekämpfung von Rassismus bekommen]]></itunes:title>
+<itunes:summary><![CDATA[09.10.2020 - Karim Rihan ist geboren und aufgewachsen in Wien. Der Unternehmen ist Spitzenkandidat der NEOS in Meidling, dem 12. Wiener Gemeindebezirk. Er steht für die gleichberectigte Teilhabe und Partizipation aller in der Gesellschaft. Sollte er gewählt...]]></itunes:summary>
+<itunes:duration>02:04</itunes:duration>
+<itunes:author><![CDATA[INOU]]></itunes:author>
+<itunes:image href="https://cba.fro.at/wp-content/uploads/2020/10/whatsapp-image-2020-10-09-at-15.09.39.jpeg"></itunes:image>
+<itunes:explicit>No</itunes:explicit>
+<itunes:keywords><![CDATA[Afröwahl, anti-rassismus, Karim Rihan, NEOS, Partizipation, Rassismus, wien wahlen]]></itunes:keywords>
+<enclosure length="4973760" type="audio/mpeg" url="https://cba.fro.at/wp-content/uploads/freshvibes/04freshvibes-wienwahlen-9okt2020-karimrihan-inou.mp3"></enclosure><cba:filename>https://cba.fro.at/wp-content/uploads/freshvibes/04freshvibes-wienwahlen-9okt2020-karimrihan-inou.mp3</cba:filename> </item>
+	</channel>
+	</rss>
+	

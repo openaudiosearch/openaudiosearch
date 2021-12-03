@@ -2,6 +2,7 @@
 """ transcript_word_frequencies
 
 Word frequencies in transcripts of Devset.
+#TODO automate transcript download in case devset grows in size
 
 Author(s): datadonk23
 Date: 11.11.21
@@ -77,7 +78,7 @@ def top_n_words(word_frequencies: list, n: int):
 if __name__ == '__main__':
     """ Prints Top-n words in Devset transcripts. """
     TOP_N = 15
-    SOURCES_DIR = "../../examples/Devset"
+    SOURCES_DIR = "../examples/Devset"
     transcript_fpaths = [fpath for fpath in glob.glob(SOURCES_DIR +
                                                       "/*_transcript.txt")]
 
