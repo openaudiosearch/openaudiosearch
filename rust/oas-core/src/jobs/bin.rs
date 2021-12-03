@@ -66,7 +66,7 @@ pub async fn main(state: State, opts: JobOpts) -> anyhow::Result<()> {
 
 async fn run_nlp(state: State, opts: NlpOpts) -> anyhow::Result<()> {
     let post = state.db.table::<Post>().get(&opts.post).await?;
-    let job = crate::jobs::typs::nlp_job(&post);
+    let job = crate::jobs::typs::nlp_job(&post, None);
     state.jobs.create_job(job).await?;
     Ok(())
 }
@@ -74,7 +74,7 @@ async fn run_nlp(state: State, opts: NlpOpts) -> anyhow::Result<()> {
 async fn run_asr(state: State, opts: AsrOpts) -> anyhow::Result<()> {
     let medias = load_medias_with_opts(&state.db, &opts).await?;
     for media in medias {
-        let job = crate::jobs::typs::asr_job(&media);
+        let job = crate::jobs::typs::asr_job(&media, None);
         state.jobs.create_job(job).await?;
     }
     Ok(())

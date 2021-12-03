@@ -50,9 +50,9 @@ async fn on_post_change(state: &State, record: Record<Post>) -> anyhow::Result<(
     // Logic is: Create an NLP job if record.value.nlp is serde_json::Value::Null
     // and no NLP job is pending for this record.
     let typ = job_typs::NLP;
-    if let Some(_opts) = record.meta().jobs().settings().get(typ) {
+    if let Some(_opts) = record.meta().jobs().setting(typ) {
         if record.value.nlp.is_null() && !has_pending(&state.jobs, typ, record.guid()).await {
-            let job = job_typs::nlp_job(&record);
+            let job = job_typs::nlp_job(&record, None);
             state.jobs.create_job(job).await?;
         }
     }
@@ -62,10 +62,10 @@ async fn on_post_change(state: &State, record: Record<Post>) -> anyhow::Result<(
 
 async fn on_media_change(state: &State, record: Record<Media>) -> anyhow::Result<()> {
     let typ = job_typs::ASR;
-    if let Some(_opts) = record.meta().jobs().settings().get(typ) {
+    if let Some(_opts) = record.meta().jobs().setting(typ) {
         if record.value.transcript.is_none() && !has_pending(&state.jobs, typ, record.guid()).await
         {
-            let job = job_typs::asr_job(&record);
+            let job = job_typs::asr_job(&record, None);
             state.jobs.create_job(job).await?;
         }
     }
