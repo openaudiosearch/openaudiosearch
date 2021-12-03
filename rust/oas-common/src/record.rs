@@ -31,6 +31,6 @@ where
 {
     type Error = EncodingError;
     fn try_from(record: TypedRecord<T>) -> Result<Self, Self::Error> {
-        record.into_untyped_record()
+        record.into_untyped()
     }
 }

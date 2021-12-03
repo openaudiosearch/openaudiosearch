@@ -105,7 +105,7 @@ impl Index {
     ) -> Result<BulkPutResponse, IndexError> {
         let docs: Vec<UntypedRecord> = docs
             .iter()
-            .filter_map(|r| r.clone().into_untyped_record().ok())
+            .filter_map(|r| r.clone().into_untyped().ok())
             .collect();
         self.put_untyped_records(&docs).await
     }
@@ -125,7 +125,7 @@ impl Index {
             .map(|record| {
                 let id = record.id().to_string();
                 // let body = serde_json::to_value(record).unwrap();
-                
+
                 BulkOperation::index(record).id(&id).routing(&id).into()
             })
             .collect();
@@ -323,7 +323,10 @@ impl BulkPutResponse {
     // TODO: Remove clones.
     pub fn errors(&self) -> impl Iterator<Item = (String, BulkPutResponseError)> + '_ {
         self.items.iter().filter_map(|item| {
-            item.inner().error.as_ref().map(|error| (item.inner().id.to_string(), error.clone()))
+            item.inner()
+                .error
+                .as_ref()
+                .map(|error| (item.inner().id.to_string(), error.clone()))
         })
     }
 

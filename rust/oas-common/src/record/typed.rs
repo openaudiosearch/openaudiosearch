@@ -68,7 +68,7 @@ where
     ///
     /// This can be unwrapped by default as it only fails if the record value would not serialize
     /// to an object (which should be treated as a bug).
-    pub fn into_untyped_record(self) -> Result<UntypedRecord, EncodingError>
+    pub fn into_untyped(self) -> Result<UntypedRecord, EncodingError>
     where
         T: Serialize,
     {
