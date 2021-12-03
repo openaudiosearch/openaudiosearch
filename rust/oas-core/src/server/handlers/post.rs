@@ -5,7 +5,7 @@ use rocket::{get, patch, post, put};
 use rocket_okapi::openapi;
 use serde_json::Value;
 
-use crate::couch::PutResponse;
+use crate::couch::{PutResponse, PutResult};
 use crate::server::auth::AdminUser;
 use crate::server::error::Result;
 
@@ -31,6 +31,27 @@ pub async fn post_post(
     value.identifier = Some(id.clone());
     let record = Record::from_id_and_value(id, value);
     let res = state.db.put_record(record).await?;
+    Ok(Json(res))
+}
+
+#[openapi(tag = "Post")]
+#[post("/post?batch=1", data = "<value>")]
+pub async fn post_post_batch(
+    _user: AdminUser,
+    state: &rocket::State<crate::State>,
+    value: Json<Vec<Post>>,
+) -> Result<Vec<PutResult>> {
+    let values = value.into_inner();
+    let records = values
+        .into_iter()
+        .map(|mut value| {
+            let id = value.identifier.unwrap_or_else(util::id_from_uuid);
+            value.identifier = Some(id.clone());
+            let record = Record::from_id_and_value(id, value);
+            record
+        })
+        .collect::<Vec<_>>();
+    let res = state.db.put_record_bulk(records).await?;
     Ok(Json(res))
 }
 

@@ -36,6 +36,16 @@ impl ChangesOpts {
         self.infinite = infinite;
         self
     }
+
+    pub fn set_max_batch_len(mut self, max_len: usize) -> Self {
+        self.batch.max_len = max_len;
+        self
+    }
+
+    pub fn set_timeout(mut self, timeout: std::time::Duration) -> Self {
+        self.batch.timeout = timeout;
+        self
+    }
 }
 
 pub struct DurableChanges {
