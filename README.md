@@ -31,6 +31,14 @@ Open Audio Search is still **in development**. No API stability guarantees yet. 
 * *Task queue* with tasks written in [Python](https://python.org) (using [Celery](https://docs.celeryproject.org/) and [Redis](https://redis.io/))
 * *Automatic Speech Recognition* using [Vosk toolkit](https://alphacephei.com/vosk/) ([Kaldi](http://kaldi-asr.org/) under the hood)
 
+## Docs, references and utilities
+
+
+* For installation and usage see further down in here
+* [HTTP API docs](https://demo.openaudiosearch.org/swagger-ui/) are auto-generated (still incomplete) and can be viewed on the [demo site](https://demo.openaudiosearch.org/swagger-ui/). Some useful examples on how to use the HTTP API can be found in the [rest-examples](scripts/rest-examples/README.md) folder.
+* The worker has a [README](oas_worker/README.md) with docs on how to run and create jobs
+* When working with the Rust core, the [Rust API docs](https://openaudiosearch.github.io/openaudiosearch/rustdocs/oas_core/) may help you
+* We have some resources and docs in a [documentation book](https://openaudiosearch.github.io/openaudiosearch/book/) (still incomplete and partially outdated)
 
 ## Installation and usage
 

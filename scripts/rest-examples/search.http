@@ -1,0 +1,164 @@
+@api = http://localhost:8080/api/v1
+@search = {{api}}/search/oas/_search
+
+### find a post by original identifier
+@identifier = "https://www.freie-radios.net/112600"
+POST {{search}}
+
+{
+  "query": { 
+    "term": {
+      "identifier": {{identifier}}
+    }
+  },
+  "_source": false,
+  "fields": [
+    "$meta.id"
+  ]
+}
+
+
+### find all without transcript
+POST {{search}}
+
+{
+  "query": { 
+    "bool": { 
+      "must_not": {
+        "exists": {
+          "field": "transcript"
+        }
+      }
+    }
+  },
+  "_source": false,
+  "fields": [
+    "media.$meta.guid"
+  ]
+}
+
+### find all with transcript
+POST {{search}}
+
+{
+  "query": { 
+    "bool": { 
+      "must": {
+        "exists": {
+          "field": "transcript"
+        }
+      }
+    }
+  }
+}
+
+### find all with nlp 
+POST {{search}}
+
+{
+  "query": { 
+    "bool": { 
+      "must": {
+        "exists": {
+          "field": "nlp"
+        }
+      }
+    }
+  }
+}
+
+### all with feed
+POST {{search}}
+content-type: application/json
+
+{
+  "_source": false,
+  "stats": [
+    "boolean-query"
+  ],
+  "from": 0,
+  "size": 10,
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "feed": {
+              "value": "oas.Feed_9kmgrfvcz7p6k994vdddm1gb0g"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+### query string query
+POST {{search}}
+
+{
+  "query": {
+    "query_string": {
+      "query": "symposium"
+    }
+  }
+}
+
+
+### simple query
+POST {{search}}
+
+{
+  "query": {
+    "term": {
+      "feeds": {
+        "value": "oas.Feed_k7xjt6cqfevxyhpsb4bwyxw22c"
+      }
+    }
+  },
+  "_source": false,
+  "fields": [
+    "id",
+    "headline",
+    "media.$meta.id"
+  ]
+}
+
+###
+
+# simple query: all with feed
+@feed = "..."
+POST {{search}}
+
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "terms": {
+            "feeds.keyword": [
+              "{{feed}}"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "size": 10,
+  "from": 0,
+  "sort": [
+    {
+      "datePublished": {
+        "order": "desc"
+      }
+    }
+  ],
+  "_source": false
+}
+
+
+
+### get elastic mapping directly
+@elastic = http://localhost:9200/oas.data
+GET {{elastic}}/_mapping

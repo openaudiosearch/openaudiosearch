@@ -38,7 +38,7 @@ impl OcypodClient {
         Ok(job_id)
     }
 
-    pub async fn start_job(&self, queue: &str) -> anyhow::Result<Option<JobInput>> {
+    pub async fn take_job(&self, queue: &str) -> anyhow::Result<Option<JobInput>> {
         let url = format!("{}/queue/{}/job", self.base_url, queue);
         let res = self.client.get(&url).send().await?;
         if res.status() == StatusCode::NO_CONTENT || res.status() == StatusCode::NOT_FOUND {
@@ -127,7 +127,7 @@ impl OcypodClient {
         Ok(res)
     }
 
-    pub async fn fetch_ids_by_queues_and_status(
+    async fn fetch_ids_by_queues_and_status(
         &self,
         queues: &Vec<String>,
         status: &Vec<JobStatus>,

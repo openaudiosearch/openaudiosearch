@@ -156,7 +156,7 @@ impl FeedWatcher {
             let mut refs = post.extract_refs();
             docs.append(&mut refs);
             // TODO: Handle error?
-            if let Ok(record) = post.into_untyped_record() {
+            if let Ok(record) = post.into_untyped() {
                 docs.push(record);
             }
         }

@@ -1,0 +1,14 @@
+@api = http://localhost:8080/api/v1
+
+### get post
+@id = 88nd45ybkxt8b4dcnas5ffed48
+GET {{api}}/post/{{id}}
+
+### create post
+POST {{api}}/post
+Authorization: Basic admin:password
+
+{
+  "headline": "hello world",
+  "description": "yay foobar foo"
+}

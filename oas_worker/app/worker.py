@@ -149,6 +149,9 @@ class Context(object):
     def get(self, url):
         return self.worker.client.get(url)
 
+    def post(self, url, body=None):
+        return self.worker.client.post(url, body=body)
+
     def set_job(self, job):
         self.job_id = job["id"]
         self.job = job

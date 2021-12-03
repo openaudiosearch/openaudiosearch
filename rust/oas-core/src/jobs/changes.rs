@@ -3,7 +3,7 @@ use oas_common::types::{Media, Post};
 use oas_common::{Record, RecordMap, Resolver, UntypedRecord};
 
 use crate::couch::durable_changes::ChangesOpts;
-use crate::jobs::typs as job_typs;
+use crate::jobs::{typs as job_typs, JobManager};
 use crate::State;
 
 const DURABLE_ID: &str = "core.jobs";
@@ -50,10 +50,9 @@ async fn on_post_change(state: &State, record: Record<Post>) -> anyhow::Result<(
     // Logic is: Create an NLP job if record.value.nlp is serde_json::Value::Null
     // and no NLP job is pending for this record.
     let typ = job_typs::NLP;
-    if let Some(_opts) = record.meta().jobs().settings().get(typ) {
-        let pending_jobs = state.jobs.pending_jobs(record.guid(), typ).await?;
-        if record.value.nlp.is_null() && pending_jobs.is_empty() {
-            let job = job_typs::nlp_job(&record);
+    if let Some(_opts) = record.meta().jobs().setting(typ) {
+        if record.value.nlp.is_null() && !has_pending(&state.jobs, typ, record.guid()).await {
+            let job = job_typs::nlp_job(&record, None);
             state.jobs.create_job(job).await?;
         }
     }
@@ -63,12 +62,21 @@ async fn on_post_change(state: &State, record: Record<Post>) -> anyhow::Result<(
 
 async fn on_media_change(state: &State, record: Record<Media>) -> anyhow::Result<()> {
     let typ = job_typs::ASR;
-    let pending_jobs = state.jobs.pending_jobs(record.guid(), typ).await?;
-    if record.value.transcript.is_none() && pending_jobs.is_empty() {
-        let job = job_typs::asr_job(&record);
-        state.jobs.create_job(job).await?;
+    if let Some(_opts) = record.meta().jobs().setting(typ) {
+        if record.value.transcript.is_none() && !has_pending(&state.jobs, typ, record.guid()).await
+        {
+            let job = job_typs::asr_job(&record, None);
+            state.jobs.create_job(job).await?;
+        }
     }
     Ok(())
+}
+
+async fn has_pending(jobs: &JobManager, typ: &str, guid: &str) -> bool {
+    match jobs.pending_jobs(guid, typ).await {
+        Err(_) => false,
+        Ok(list) => !list.is_empty(),
+    }
 }
 
 fn log_if_error<A>(res: anyhow::Result<A>) {

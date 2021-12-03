@@ -10,7 +10,7 @@ pub fn extract_refs<T: TypedValue>(refs: &mut [Reference<T>]) -> Vec<UntypedReco
     refs.iter_mut()
         .filter_map(|r| {
             r.extract_record()
-                .and_then(|record| record.into_untyped_record().ok())
+                .and_then(|record| record.into_untyped().ok())
         })
         .collect()
 }

@@ -38,6 +38,14 @@ impl JobsLog {
         self.settings.is_empty()
     }
 
+    pub fn setting(&self, typ: &str) -> Option<&serde_json::Value> {
+        self.settings.get(typ).map(|x| x.as_ref()).flatten()
+    }
+
+    pub fn setting_mut(&mut self, typ: &str) -> Option<&mut serde_json::Value> {
+        self.settings.get_mut(typ).map(|x| x.as_mut()).flatten()
+    }
+
     pub fn settings(&self) -> &SettingsMap {
         &self.settings
     }

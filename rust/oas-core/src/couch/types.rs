@@ -196,7 +196,7 @@ pub struct PutResponse {
     pub rev: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct ErrorDetails {
     pub error: String,
     pub id: Option<String>,
@@ -213,7 +213,7 @@ impl ErrorDetails {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(untagged)]
 pub enum PutResult {
     Ok(PutResponse),

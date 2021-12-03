@@ -24,7 +24,7 @@ use super::types::{ChangeEvent, Event};
 use super::{CouchDB, CouchError, CouchResult};
 
 pub const BATCH_TIMEOUT: time::Duration = time::Duration::from_millis(200);
-pub const BATCH_MAX_LEN: usize = 1000;
+pub const BATCH_MAX_LEN: usize = 100;
 
 /// The max timeout value for longpoll/continous HTTP requests
 /// that CouchDB supports (see [1]).
@@ -154,6 +154,7 @@ impl ChangesStream {
     }
 }
 
+#[derive(Debug)]
 pub struct BatchOpts {
     pub timeout: time::Duration,
     pub max_len: usize,

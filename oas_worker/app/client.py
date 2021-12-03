@@ -66,4 +66,11 @@ class JobClient(object):
         res = res.json()
         return res
 
+    def post(self, url, body=None):
+        url = f"{self.base_url}{url}"
+        res = httpx.post(url, json=body)
+        res = res.json()
+        return res
+
+
 
