@@ -20,14 +20,18 @@ use crate::server::error::AppError;
 ///
 // #[openapi(tag = "Changes")]
 #[openapi(skip)]
-#[post("/changes/durable/<token>")]
+#[post("/changes/durable/<token>?<max_len>")]
 pub async fn durable_changes(
     _user: AdminUser,
     state: &rocket::State<crate::State>,
     token: String,
+    max_len: Option<usize>,
 ) -> Result<Custom<Json<Option<ChangesResponse>>>, AppError> {
-    // let opts = ChangesOpts::default().set_infinite(false);
     let opts = ChangesOpts::default().set_infinite(false);
+    let opts = match max_len {
+        Some(max_len) => opts.set_max_batch_len(max_len),
+        None => opts,
+    };
     let mut changes = state.db_manager.durable_changes(token, opts).await;
     let batch = changes.next().await?;
     let res = if let Some(batch) = batch {
