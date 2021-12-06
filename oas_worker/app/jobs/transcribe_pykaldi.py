@@ -18,6 +18,12 @@ from kaldi.fstext import SymbolTable, shortestpath, indices_to_symbols
 from kaldi.fstext.utils import get_linear_symbol_sequence
 from kaldi.nnet3 import NnetSimpleComputationOptions
 from kaldi.feat.online import OnlineMatrixFeature
+from kaldi.lat.align import (
+    WordBoundaryInfo,
+    WordBoundaryInfoNewOpts,
+    word_align_lattice
+)
+from kaldi.lat.functions import compact_lattice_to_word_alignment
 from kaldi.online2 import (
     OnlineIvectorExtractionInfo,
     OnlineIvectorExtractionConfig,
@@ -171,6 +177,11 @@ class SpeechRecognizer:
         )
         # Construct symbol table
         self.symbols = SymbolTable.read_text(os.path.join(model_folder, "graph/words.txt"))
+        # Construct word boundary info (for word begin/end times)
+        self.word_boundary_info = WordBoundaryInfo.from_file(
+            WordBoundaryInfoNewOpts(),
+            os.path.join(model_folder, "graph/phones/word_boundary.int")
+        )
 
         # Construct Ivector Extractor config
         self.ivector_config = OnlineIvectorExtractionConfig()
@@ -192,6 +203,10 @@ class SpeechRecognizer:
             List of recognized words.
         """
         words = []
+        word_ids = []
+        begin_times = []
+        end_times = []
+        confidences = []
         with SequentialWaveReader(f"scp:echo utterance-id1 {audio_file_path}|") as reader:
             for key, wav in reader:
                 # Get audio signal as vector
@@ -204,13 +219,13 @@ class SpeechRecognizer:
                 ivector_info = OnlineIvectorExtractionInfo.from_config(self.ivector_config)
                 adaptation_state = OnlineIvectorExtractorAdaptationState.from_info(ivector_info)
 
-                for start, end in segments:
-                    start = int(start/0.01)
-                    end = min(int(end/0.01), feats.num_rows)
+                for seg_start_time, seg_end_time in segments:
+                    seg_start_idx = int(seg_start_time/0.01)
+                    seg_end_idx = min(int(seg_end_time/0.01), feats.num_rows)
                     seg_feats = SubMatrix(
                         feats,
-                        row_start=start,
-                        num_rows=end-start
+                        row_start=seg_start_idx,
+                        num_rows=seg_end_idx-seg_start_idx
                     )
 
                     matrix_feature = OnlineMatrixFeature(seg_feats)
@@ -225,12 +240,21 @@ class SpeechRecognizer:
 
                     # Speech decoding
                     out = self.asr.decode((seg_feats, ivectors))
-                    # Get most likely sequence of word IDs from lattice
-                    word_ids, _, _ = get_linear_symbol_sequence(shortestpath(out["lattice"]))
-                    # Convert word IDs to words
-                    current_words = indices_to_symbols(self.symbols, word_ids)
-                    words.extend(current_words)
-        return words
+                    _, lattice = word_align_lattice(
+                        out["best_path"],
+                        self.asr.transition_model,
+                        self.word_boundary_info,
+                        max_states=0
+                    )
+                    seg_word_ids, begin_frames, duration_frames = compact_lattice_to_word_alignment(lattice)
+                    likelihood = -(out["weight"].value1 + out["weight"].value2)
+                    for word_id, begin, duration in zip(seg_word_ids, begin_frames, duration_frames):
+                        word_ids.append(word_id)
+                        begin_times.append(seg_start_time + begin * 0.03)
+                        end_times.append(seg_start_time + (begin + duration) * 0.03)
+                        confidences.append(likelihood)
+                words = indices_to_symbols(self.symbols, word_ids)
+        return words, begin_times, end_times, confidences
 
     def process(self, audio_file_path) -> List[str]:
         """
@@ -290,7 +314,14 @@ def transcribe_pykaldi(media_id, audio_file_path, model_folder):
             raise ValueError('Audio file must be WAV format mono PCM.')
 
     segments = sad.process(audio_file_path)
-    parts = asr.process_segments(audio_file_path, segments)
-    transcript = " ".join(parts)
+    words, begin_times, end_times, confidences = asr.process_segments(audio_file_path, segments)
+    transcript = " ".join(words)
+    for word, begin_time, end_time, confidence in zip(words, begin_times, end_times, confidences):
+        parts.append({
+            "word": word,
+            "start": begin_time,
+            "end": end_time,
+            "conf": confidence
+        })
 
     return {'text': transcript, 'parts': parts }
