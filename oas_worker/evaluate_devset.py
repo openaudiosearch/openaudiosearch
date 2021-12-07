@@ -14,7 +14,6 @@ import json
 import argparse
 import pandas as pd
 
-
 OAS_URL = 'http://admin:password@localhost:8080/api/v1'
 
 def create_feed(url):
@@ -48,10 +47,10 @@ def get_true_labels(fpath: str):
     return pd.Series(df.OAS_tags.str.split(",").values, index=df.ID).to_dict()
 
 
-def devset_cba_ids(fpath: str):
+def devsetIDs_to_cbaIDs(fpath: str):
     """
-    Gets post IDs from devset spreadsheet and transforms them into OAS post
-    identifiers.
+    Transforms IDs from devset spreadsheet to CBA IDs in OAS posts
+    (identifier field, not post ID!).
 
     :param fpath: Filepath to devset spreadsheet
     :return: List of OAS identifiers
@@ -66,12 +65,34 @@ def devset_cba_ids(fpath: str):
 
 def get_post_ids(cba_ids: list):
     """
+    Transforms CBA IDs to OAS post IDs.
 
-    :param cba_identifiers: List of CBA identifiers
-    :return: List of OAS post IDs
+    :param cba_ids: List of CBA identifiers
+    :return: Dict of CBA IDs as keys and OAS post IDs as values
     """
-    #FIXME search Elastic
-    pass
+    url = f"{OAS_URL}/job"
+    job_ids = {}
+    oas_ids = {}
+
+    for cba_id in cba_ids:
+        body = {
+            "typ": "cba2oas_id",
+            "subjects": [""],
+            "args": {"identifier": cba_id}
+        }
+        res = httpx.post(url, json=body)
+        job_ids[cba_id] = str(res.json())
+
+    for cba_id, job_id in job_ids.items():
+        completed = False
+        job_url = url + f"/{job_id}"
+        while not completed:
+            res = httpx.get(job_url)
+            if res.json()["status"] == "completed":
+                oas_ids[cba_id] = res.json()["output"]["meta"]["oas_id"]
+                completed = True
+
+    return oas_ids
 
 
 def get_post(post_id: str):
@@ -126,13 +147,14 @@ if __name__ == "__main__":
 
     """ Get true labels """
     true_labels = get_true_labels(devset_fpath)
-    print(f"Ground truth: {true_labels}")  # dev print
+    #print(f"Ground truth: {true_labels}")  # dev print
 
     """ Get OAS keywords """
-    cba_ids = devset_cba_ids(devset_fpath)
-    print(f"CBA IDs: {cba_ids}")  # dev print
-    # oas_post_ids = get_post_ids(cba_ids)
-    # devset_posts = [get_post(post_id) for post_id in oas_post_ids]
+    cba_ids = devsetIDs_to_cbaIDs(devset_fpath)
+    #print(f"CBA IDs: {cba_ids}")  # dev print
+    oas_post_ids = get_post_ids(cba_ids)
+    print(f"OAS IDs: {oas_post_ids}")  # dev print
+    #devset_posts = [get_post(post_id) for post_id in oas_post_ids]
     # oas_keywords = get_keywords(devset_posts, cba_ids)
 
     """ Evaluate """
@@ -142,12 +164,12 @@ if __name__ == "__main__":
     # generate feed from devset
     # serve via http
 
-    url = 'http://localhost:6650/rss.xml'
-    res = create_feed(url)
-    print('created feed', res)
-
-    # wait for all jobs to be finished
-    token = 'evaluate_devset'
+    # url = 'http://localhost:6650/rss.xml'
+    # res = create_feed(url)
+    # print('created feed', res)
+    #
+    # # wait for all jobs to be finished
+    # token = 'evaluate_devset'
     # while True:
     #     changes = get_changes(token)
     #     print('changes', json.dumps(changes))
