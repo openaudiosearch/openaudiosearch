@@ -148,14 +148,10 @@ export default function SearchPage () {
         fields: {
           transcript: {},
           headline: {},
-          description: {}
+          description: {},
         },
         pre_tags: ['<mark>'],
-        post_tags: ['</mark>'],
-        fields: {
-            text: {},
-            title: {},
-        },
+        post_tags: ['</mark>']
       }
     }
   }
