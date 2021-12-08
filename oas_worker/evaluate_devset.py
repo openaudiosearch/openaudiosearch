@@ -6,7 +6,7 @@ Evaluate OAS Devset:
   * Transcripts (TBD)
 
 Author(s): flipsimon, datadonk23
-Date: 03.12.21
+Date: 08.12.21
 """
 
 import httpx
@@ -40,11 +40,19 @@ def get_true_labels(fpath: str):
     dict with track ID as key and keywords list as values.
 
     :param fpath: Filepath to devset spreadsheet
-    :return: Dict of track ID - keywords list
-    :return type: dict(ID: [keywords])
+    :return: List of Dicts {cba ID: keywords list}
+    :return list: list(dict(cba ID: [keywords]))
     """
+    ground_truth = []
     df = pd.read_csv(devset_fpath)
-    return pd.Series(df.OAS_tags.str.split(",").values, index=df.ID).to_dict()
+    df["cba_id"] = df["URL"].apply(
+        lambda s: "https://cba.fro.at/?p=" + s.split("/")[-1]
+    )
+    df["keywords"] = df.OAS_tags.str.split(",")
+    for _, row in df.iterrows():
+        ground_truth.append({row["cba_id"]: row["keywords"]})
+
+    return ground_truth
 
 
 def devsetIDs_to_cbaIDs(fpath: str):
@@ -86,7 +94,7 @@ def get_post_ids(cba_ids: list):
     for cba_id, job_id in job_ids.items():
         completed = False
         job_url = url + f"/{job_id}"
-        while not completed:
+        while not completed:  # this is blocking, fixme when evaluate fun works
             res = httpx.get(job_url)
             if res.json()["status"] == "completed":
                 oas_ids[cba_id] = res.json()["output"]["meta"]["oas_id"]
@@ -113,23 +121,22 @@ def get_post(post_id: str):
         print(f"An error occurred while requesting {e.request.url!r}.")
 
 
-def get_keywords(posts: list, cba_ids: list):
+def get_keywords(cba_id_oas_id):
     """
-    Gets keywords from devset posts.
+    Gets keywords from devset post.
 
-    :param posts: List of devset posts.
-    :param cba_ids: List of cba IDs.
+    :param cba_id_oas_id: (cba_id and oas_id) of post
     :return: Dict of CBA track ID - keywords list
-    :return type: dict(ID: [keywords])
+    :return type: dict(cba_id: [keywords])
     """
-    keywords = []
-    for post in posts:
-        try:
-            keywords.append(post["nlp"]["keywords"])
-        except Exception as e:
-            print(f"Couldn't find keywords for post{post['$meta']['id']}\n{e}")
+    cba_id, oas_id = cba_id_oas_id
 
-    return dict(zip(cba_ids, keywords))
+    post = get_post(oas_id)
+    try:
+        post_keywords = post["media"][0]["nlp"]["keywords"]
+        return {cba_id: post_keywords}
+    except Exception as e:
+        print(f"Couldn't find keywords for post {post['$meta']['id']}\n{e}")
 
 
 def evaluate(keywords: dict, true_keywords: dict):
@@ -147,15 +154,15 @@ if __name__ == "__main__":
 
     """ Get true labels """
     true_labels = get_true_labels(devset_fpath)
-    #print(f"Ground truth: {true_labels}")  # dev print
+    print(f"Ground truth: {true_labels}")  # dev print
 
     """ Get OAS keywords """
     cba_ids = devsetIDs_to_cbaIDs(devset_fpath)
     #print(f"CBA IDs: {cba_ids}")  # dev print
     oas_post_ids = get_post_ids(cba_ids)
-    print(f"OAS IDs: {oas_post_ids}")  # dev print
-    #devset_posts = [get_post(post_id) for post_id in oas_post_ids]
-    # oas_keywords = get_keywords(devset_posts, cba_ids)
+    #print(f"OAS IDs: {oas_post_ids}")  # dev print
+    oas_keywords = [get_keywords(ids) for ids in oas_post_ids.items()]
+    print(f"Keyword List: {oas_keywords}")  # dev print
 
     """ Evaluate """
     # evaluate(oas_keywords, true_labels)
