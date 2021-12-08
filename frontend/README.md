@@ -1,6 +1,6 @@
 # Open Audio Search frontend
 
-This is the main user interface for Open Audio Search. It's a React single page application.
+This is the default user interface for Open Audio Search. It is a [React](https://reactjs.org/) single page application.
 
 ## Requirements
 
@@ -17,8 +17,10 @@ sudo apt install yarn nodejs
 
 ## Development
 
-For development `webpack-dev-server` is included. In this folder, run `yarn` to install all dependencies and then `yarn start` to start the live-reloading development server. Then open the UI at [http://localhost:4000](http://localhost:4000). In development mode, the UI expects a running oas_worker server at `http://localhost:8080`.
+Run `yarn dev` to start the included [Vite](https://vitejs.dev/) development server. Then open [`http://localhost:4000`](http://localhost:4000) in a web browser.
 
-## Deployment
+By default, the API path `/api` is proxied onto `http://localhost:8080`. To change the API URL of the frontend proxy, set the `OAS_URL` environment variable to an OAS API endpoint.
 
-Make sure to run `yarn build` in this directory after pulling in changes. The `oas_worker` server serves the UI at `/ui` from the `dist/` folder in this directory.
+## Packaging
+
+When building the OAS core in release mode, a [`build.rs`](../rust/oas-core/build.rs) script runs `yarn build` in this folder to build the UI with vite. The resulting files (in `dist/`) are bundled into the OAS binary.
