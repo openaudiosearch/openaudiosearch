@@ -15,7 +15,6 @@ from app.worker import worker
 
 from app.jobs.spacy_pipe import SpacyPipe
 from app.jobs.transcribe_vosk import transcribe_vosk
-import app.jobs.example
 
 def local_dir_mkdir(path):
     path = config.local_dir(path)
