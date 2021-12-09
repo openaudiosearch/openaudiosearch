@@ -1,6 +1,6 @@
 import reactRefresh from '@vitejs/plugin-react-refresh'
 
-const DEFAULT_OAS_URL = 'http://localhost:8080/api'
+const DEFAULT_OAS_URL = 'http://localhost:8080'
 
 export default {
   plugins: [reactRefresh()],
