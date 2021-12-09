@@ -53,13 +53,15 @@ export function MediaTranscript (props) {
         const conf = word.conf
         const exp = 5
         const hue = (Math.pow(conf, exp)) * 100
-        const color = `hsl(${hue}, 100%, 90%)`
+        const color = `hsla(${hue}, 100%, 90%, 30%)`
         const style = {
           background: color
         }
+        let wordWithPunct = word.word
+        if (word.suffix) wordWithPunct += word.suffix
         return (
           <span key={i} style={style} onClick={onClick}>
-            {word.word}
+            {wordWithPunct}&nbsp;
           </span>
         )
         function onClick (e) {
@@ -80,7 +82,7 @@ export function MediaTranscript (props) {
           border-radius: 5px;
           border: 1px solid transparent;
           padding: 0;
-          margin-right: 2px;
+          // margin-right: 2px;
           display: inline-block;
           cursor: pointer;
         }
