@@ -3,11 +3,11 @@ import requests
 import time
 import json
 import httpx
+from pprint import pprint
 import subprocess
 import datetime
 from pathlib import Path
 from mimetypes import guess_extension
-
 from app.config import config
 from app.util import pretty_bytes, ensure_dir, url_to_path, find_in_dict
 from app.logging import log
@@ -15,6 +15,8 @@ from app.worker import worker
 
 from app.jobs.spacy_pipe import SpacyPipe
 from app.jobs.transcribe_vosk import transcribe_vosk
+
+import app.jobs.recasepunc.recasepunc
 
 def local_dir_mkdir(path):
     path = config.local_dir(path)
@@ -145,6 +147,8 @@ def nlp(ctx, args):
     return {
         "patches": patches
     }
+
+
 
 
 # Debug test job to skip ASR but return valid results.

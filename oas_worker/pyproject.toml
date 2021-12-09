@@ -6,8 +6,7 @@ authors = ["Open Audio Search team"]
 license = "APGL-3.0"
 
 [tool.poetry.dependencies]
-python = "^3.7.0"
-typing = "^3.7.4"
+python = "3.7.0"
 setuptools = "^54.2.0"
 requests = "^2.25.1"
 jiwer = "^2.2.0"
@@ -19,6 +18,7 @@ vosk = "^0.3.30"
 loguru = "^0.5.3"
 httpx = "^0.18.1"
 mpire = "^2.3.0"
+recasepunc = { git = "https://github.com/openaudiosearch/recasepunc.git", branch = "oas2" }
 
 [tool.poetry.dev-dependencies]
 rope = "^0.18.0"

@@ -21,6 +21,7 @@ class Config(object):
         self.log_level = os.environ.get('LOG', 'INFO')
         self.log_file = os.environ.get('OAS_LOGFILE') or os.path.join(self.storage_path, 'oas-worker.log')
         self.model = 'vosk-model-de-0.6'
+        self.recase_model = 'vosk-recasepunc-de-0.21/checkpoint'
         self.model_path = os.path.join(self.storage_path, "models")
 
         try:
