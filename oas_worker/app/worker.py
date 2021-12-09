@@ -142,6 +142,10 @@ class Context(object):
         self.job = None
         self.job_id = None
 
+    @property
+    def config(self):
+        return self.worker.config
+
     def set_progress(self, progress, meta=None):
         self.log.debug(f"  Progress: {progress}")
         return self.worker.client.set_progress(self.job_id, progress, meta=meta)

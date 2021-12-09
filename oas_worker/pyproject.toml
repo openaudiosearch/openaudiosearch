@@ -7,7 +7,6 @@ license = "APGL-3.0"
 
 [tool.poetry.dependencies]
 python = "3.7.0"
-typing = "^3.7.4"
 setuptools = "^54.2.0"
 requests = "^2.25.1"
 jiwer = "^2.2.0"
