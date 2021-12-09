@@ -4,6 +4,7 @@ use crate::{ElasticMapping, Reference};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::HashMap;
 
 use crate::ser;
 
@@ -35,6 +36,8 @@ pub struct Media {
 pub struct Transcript {
     pub text: String,
     pub parts: Vec<TranscriptPart>,
+    #[serde(default)]
+    pub meta: HashMap<String, serde_json::Value>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
@@ -43,6 +46,7 @@ pub struct TranscriptPart {
     pub start: f32,
     pub end: f32,
     pub word: String,
+    pub suffix: Option<String>,
 }
 
 impl TranscriptPart {
