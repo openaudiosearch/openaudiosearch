@@ -1,4 +1,4 @@
-use oas_common::types::{Feed, Media};
+use oas_common::types::{Feed, Media, Post};
 use oas_common::{TypedValue, UntypedRecord};
 use rocket::serde::json::Json;
 use rocket::{get, post};
@@ -34,18 +34,27 @@ pub async fn post_record(
 ) -> Result<serde_json::Value> {
     let db = &state.db;
 
+    let mut records = vec![];
     let record = record.into_inner();
     match record.typ() {
+        Post::NAME => {
+            let mut record = record.into_typed_record::<Post>()?;
+            let mut refs = record.extract_refs();
+            records.append(&mut refs);
+            records.push(record.into_untyped()?);
+        }
         Media::NAME => {
             let record = record.into_typed_record::<Media>()?;
-            db.put_record(record).await?;
-            Ok(Value::Bool(true).into())
+            records.push(record.into_untyped()?);
         }
         Feed::NAME => {
             let record = record.into_typed_record::<Feed>()?;
-            db.put_record(record).await?;
-            Ok(Value::Bool(true).into())
+            records.push(record.into_untyped()?);
         }
-        _ => Err(AppError::Other("Unknown type".to_string())),
+        _ => return Err(AppError::Other("Unknown type".to_string())),
     }
+
+    let res = db.put_untyped_record_bulk_update(records).await?;
+    let json_res = serde_json::to_value(res)?;
+    Ok(Json(json_res))
 }
