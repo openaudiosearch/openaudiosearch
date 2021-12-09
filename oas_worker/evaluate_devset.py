@@ -13,6 +13,7 @@ import httpx
 import json
 import argparse
 import pandas as pd
+from app.jobs.spacy_pipe import SpacyPipe  # dev
 
 OAS_URL = 'http://admin:password@localhost:8080/api/v1'
 
@@ -132,16 +133,51 @@ def get_keywords(cba_id_oas_id):
     cba_id, oas_id = cba_id_oas_id
 
     post = get_post(oas_id)
-    try:
-        post_keywords = post["media"][0]["nlp"]["keywords"]
-        return {cba_id: post_keywords}
-    except Exception as e:
-        print(f"Couldn't find keywords for post {post['$meta']['id']}\n{e}")
+    ### As nlp job is currently not working correctly, hardcoded version
+    ### instead of query:
+    # try:
+    #     post_keywords = post["media"][0]["nlp"]["keywords"]
+    #     return {cba_id: post_keywords}
+    # except Exception as e:
+    #     print(f"Couldn't find keywords for post {post['$meta']['id']}\n{e}")
+    transcript = post["media"][0]["transcript"]["text"]
+    spacy = SpacyPipe(["textrank"])
+    nlp_res = spacy.run(transcript)
+    post_keywords = nlp_res["keywords"]
+
+    return {cba_id: post_keywords}
 
 
-def evaluate(keywords: dict, true_keywords: dict):
-    #FIXME eval, metrics param?
-    pass
+def flatten_oas_keywords(oas_keywords: list):
+    """ Flattens oas_keywords list to [{cba_ids: [kw]}]. Removes unused
+    informations on keyword count and rank.
+
+    :param oas_keywords: List of {cba_id: (kw, count, rank)}
+    :return: List of {cba_ids: [kws]}
+    """
+    oas_plain_keywords = []
+
+    for keyword_dict in oas_keywords:
+        cba_id = list(keyword_dict.keys())[0]
+        keywords = [keyword_infos[0] for keyword_infos in
+                    list(keyword_dict.values())[0]]
+        oas_plain_keywords.append({cba_id: keywords})
+
+    return oas_plain_keywords
+
+
+def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
+    f""" 
+
+    :param oas_keywords: List of {{cba_id: (kw, count, rank)}}
+    :param true_keywords: List of {{cba_id: [kws]}}
+    :param metrics: List of metrics to compute
+    :return: -
+    """
+    print(f"OAS Keywords [{{cba_id: (kw, count, rank)}}]:\n{oas_keywords}")
+    print(f"Ground Truth [{{cba_id: [kws]}}]:\n{true_keywords}")
+    keywords = flatten_oas_keywords(oas_keywords)
+
 
 
 if __name__ == "__main__":
@@ -154,7 +190,7 @@ if __name__ == "__main__":
 
     """ Get true labels """
     true_labels = get_true_labels(devset_fpath)
-    print(f"Ground truth: {true_labels}")  # dev print
+    #print(f"Ground truth: {true_labels}")  # dev print
 
     """ Get OAS keywords """
     cba_ids = devsetIDs_to_cbaIDs(devset_fpath)
@@ -162,10 +198,11 @@ if __name__ == "__main__":
     oas_post_ids = get_post_ids(cba_ids)
     #print(f"OAS IDs: {oas_post_ids}")  # dev print
     oas_keywords = [get_keywords(ids) for ids in oas_post_ids.items()]
-    print(f"Keyword List: {oas_keywords}")  # dev print
+    #print(f"OAS keywords: {oas_keywords}")  # dev print
 
     """ Evaluate """
-    # evaluate(oas_keywords, true_labels)
+    keyword_metrics = []
+    evaluate_keywords(oas_keywords, true_labels, keyword_metrics)
 
 
     # generate feed from devset

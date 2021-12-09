@@ -131,7 +131,7 @@ def asr(ctx, args):
 @worker.job(name="nlp")
 def nlp(ctx, args):
     post_id = args["post_id"]
-    pipeline = "ner"
+    pipeline = ["ner", "textrank"]
     post = ctx.get(f"/post/{post_id}")
     guid = post["$meta"]["guid"]
     fields = ["headline", "description", "transcript.text"]
