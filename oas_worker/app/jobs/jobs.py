@@ -8,11 +8,6 @@ import subprocess
 import datetime
 from pathlib import Path
 from mimetypes import guess_extension
-from transformers import logging
-from app.jobs.recasepunc import CasePuncPredictor
-from app.jobs.recasepunc import WordpieceTokenizer
-from app.jobs.recasepunc import Config
-
 from app.config import config
 from app.util import pretty_bytes, ensure_dir, url_to_path, find_in_dict
 from app.logging import log
@@ -20,6 +15,8 @@ from app.worker import worker
 
 from app.jobs.spacy_pipe import SpacyPipe
 from app.jobs.transcribe_vosk import transcribe_vosk
+
+import app.jobs.recasepunc.recasepunc
 
 def local_dir_mkdir(path):
     path = config.local_dir(path)
@@ -151,32 +148,6 @@ def nlp(ctx, args):
         "patches": patches
     }
 
-@worker.job(name="recasepunc")
-def recasepunc(ctx, args):
-    post_id = args["post_id"]
-    post = ctx.get(f"/post/{post_id}")
-    guid = post["$meta"]["guid"]
-    text = post["media"][0]["transcript"]["text"]
-    model_base_path = config.model_path
-    model_path = os.path.join(model_base_path, config.recase_model)
-    predictor = CasePuncPredictor(model_path, lang="de")
-    tokens = list(enumerate(predictor.tokenize(text)))
-    results = ""
-
-    for token, case_label, punc_label in predictor.predict(tokens, lambda x: x[1]):
-        prediction = predictor.map_punc_label(predictor.map_case_label(token[1], case_label), punc_label)
-        if token[1][0] != '#':
-            results = results + ' ' + prediction
-        else:
-            results = results + prediction
-
-    patch = [
-        {"op": "replace", "path": "/transcript", "value": results},
-    ]
-    patches = { guid: patch }
-    return {
-        "patches": patches
-    }
 
 
 

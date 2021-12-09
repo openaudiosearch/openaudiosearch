@@ -19,8 +19,7 @@ vosk = "^0.3.30"
 loguru = "^0.5.3"
 httpx = "^0.18.1"
 mpire = "^2.3.0"
-transformers = "^4.12.5"
-torch = "^1.10.0"
+recasepunc = { git = "https://github.com/openaudiosearch/recasepunc.git", branch = "oas2" }
 
 [tool.poetry.dev-dependencies]
 rope = "^0.18.0"
