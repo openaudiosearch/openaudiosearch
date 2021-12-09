@@ -3,14 +3,15 @@ import requests
 import time
 import json
 import httpx
+from pprint import pprint
 import subprocess
 import datetime
 from pathlib import Path
 from mimetypes import guess_extension
 from transformers import logging
-from recasepunc import CasePuncPredictor
-from recasepunc import WordpieceTokenizer
-from recasepunc import Config
+from app.jobs.recasepunc import CasePuncPredictor
+from app.jobs.recasepunc import WordpieceTokenizer
+from app.jobs.recasepunc import Config
 
 from app.config import config
 from app.util import pretty_bytes, ensure_dir, url_to_path, find_in_dict
@@ -149,27 +150,28 @@ def nlp(ctx, args):
     return {
         "patches": patches
     }
-@worker.job(name="nlp")
-def recase_repunctuate(ctx, args):
+
+@worker.job(name="recasepunc")
+def recasepunc(ctx, args):
     post_id = args["post_id"]
     post = ctx.get(f"/post/{post_id}")
     guid = post["$meta"]["guid"]
-    text = post["transcript.text"]
-    predictor = CasePuncPredictor('checkpoint', lang="de")
-
-    text = " ".join(open(sys.argv[1]).readlines())
+    text = post["media"][0]["transcript"]["text"]
+    model_base_path = config.model_path
+    model_path = os.path.join(model_base_path, config.recase_model)
+    predictor = CasePuncPredictor(model_path, lang="de")
     tokens = list(enumerate(predictor.tokenize(text)))
-
     results = ""
+
     for token, case_label, punc_label in predictor.predict(tokens, lambda x: x[1]):
         prediction = predictor.map_punc_label(predictor.map_case_label(token[1], case_label), punc_label)
-    if token[1][0] != '#':
-       results = results + ' ' + prediction
-    else:
-       results = results + prediction
+        if token[1][0] != '#':
+            results = results + ' ' + prediction
+        else:
+            results = results + prediction
 
     patch = [
-        {"op": "replace", "path": "/transkript", "value": results},
+        {"op": "replace", "path": "/transcript", "value": results},
     ]
     patches = { guid: patch }
     return {
