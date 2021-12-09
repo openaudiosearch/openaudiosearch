@@ -166,8 +166,34 @@ def flatten_oas_keywords(oas_keywords: list):
     return oas_plain_keywords
 
 
+def precision_recall_f1(keywords: list, true_keywords: list):
+    """
+    Avg precsion, recall and f1 scores.
+
+    :param keywords: List of OAS keywords {{cba_id: [kws]}}
+    :param true_keywords: List of true keywords {{cba_id: [kws]}}
+    :return: Average precision, average recall, average f1 score
+    """
+    avg_prec = 0.  #dev
+    avg_rec = 0.  #dev
+    avg_f1 = 0.  #dev
+
+    for post_keywords in keywords:
+        cba_id = list(post_keywords.keys())[0]
+        oas_kws = post_keywords[cba_id]
+        true_kws = list(map(lambda d: d[cba_id], true_keywords))[0]
+        print(cba_id)
+        print(oas_kws)
+        print(true_kws)
+        #FIXME compute metrics
+
+    return (avg_prec, avg_rec, avg_f1)
+
+
+
 def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
-    f""" 
+    f"""
+    Evaluate OAS keywords against ground truth.
 
     :param oas_keywords: List of {{cba_id: (kw, count, rank)}}
     :param true_keywords: List of {{cba_id: [kws]}}
@@ -177,6 +203,16 @@ def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
     print(f"OAS Keywords [{{cba_id: (kw, count, rank)}}]:\n{oas_keywords}")
     print(f"Ground Truth [{{cba_id: [kws]}}]:\n{true_keywords}")
     keywords = flatten_oas_keywords(oas_keywords)
+
+    # Rankless metrics: Precision, Recall, F1
+    avg_precision, avg_recall, avg_f1 = precision_recall_f1(keywords,
+                                                            true_keywords)
+    print(f"Avg Prec: {avg_precision}")
+    print(f"Avg Prec: {avg_recall}")
+    print(f"Avg Prec: {avg_f1}")
+
+    # Rank aware metrics: MAP and/or nDCG
+    # tbd
 
 
 
