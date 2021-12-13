@@ -6,7 +6,7 @@ Evaluate OAS Devset:
   * Transcripts (TBD)
 
 Author(s): flipsimon, datadonk23
-Date: 08.12.21
+Date: 13.12.21
 """
 
 import httpx
@@ -37,8 +37,8 @@ def get_changes(token: str):
 
 def get_true_labels(fpath: str):
     """
-    Gets ground truth labels from devset spreadsheet and returns them as a
-    dict with track ID as key and keywords list as values.
+    Gets ground truth labels from devset spreadsheet and lowercases them. It
+    returns labels as a dict with track ID as key and keywords list as values.
 
     :param fpath: Filepath to devset spreadsheet
     :return: List of Dicts {cba ID: keywords list}
@@ -49,7 +49,8 @@ def get_true_labels(fpath: str):
     df["cba_id"] = df["URL"].apply(
         lambda s: "https://cba.fro.at/?p=" + s.split("/")[-1]
     )
-    df["keywords"] = df.OAS_tags.str.split(",")
+    df["keywords"] = df.OAS_tags.str.lower().str.split(",").apply(
+        lambda x: [s.strip() for s in x]).tolist()
     for _, row in df.iterrows():
         ground_truth.append({row["cba_id"]: row["keywords"]})
 
@@ -168,27 +169,39 @@ def flatten_oas_keywords(oas_keywords: list):
 
 def precision_recall_f1(keywords: list, true_keywords: list):
     """
-    Avg precsion, recall and f1 scores.
+    Avg precision, recall and f1 scores.
 
     :param keywords: List of OAS keywords {{cba_id: [kws]}}
     :param true_keywords: List of true keywords {{cba_id: [kws]}}
     :return: Average precision, average recall, average f1 score
     """
-    avg_prec = 0.  #dev
-    avg_rec = 0.  #dev
-    avg_f1 = 0.  #dev
+    total_prec = 0.
+    total_rec = 0.
 
     for post_keywords in keywords:
         cba_id = list(post_keywords.keys())[0]
-        oas_kws = post_keywords[cba_id]
-        true_kws = list(map(lambda d: d[cba_id], true_keywords))[0]
-        print(cba_id)
-        print(oas_kws)
-        print(true_kws)
-        #FIXME compute metrics
+        oas_kws = set(post_keywords[cba_id])
+        true_kws = set(next((kw_dict for kw_dict in true_keywords if cba_id
+                             in kw_dict.keys()), None)[cba_id])
+
+        if len(oas_kws) == 0 or len(true_kws) == 0:
+            total_prec += 0.
+            total_rec += 0.
+        else:
+            true_positives = len(oas_kws.intersection(true_kws))
+            total_prec += true_positives / float(len(oas_kws))
+            total_rec += true_positives / float(len(true_kws))
+            print(true_positives / float(len(oas_kws)))
+            print(true_positives / float(len(true_kws)))
+
+    avg_prec = total_prec / float(len(true_keywords))
+    avg_rec = total_rec / float(len(true_keywords))
+    if avg_prec + avg_rec > 0:
+        avg_f1 = 2 * avg_prec * avg_rec / (avg_prec + avg_rec)
+    else:
+        avg_f1 = 0.
 
     return (avg_prec, avg_rec, avg_f1)
-
 
 
 def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
@@ -207,13 +220,12 @@ def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
     # Rankless metrics: Precision, Recall, F1
     avg_precision, avg_recall, avg_f1 = precision_recall_f1(keywords,
                                                             true_keywords)
-    print(f"Avg Prec: {avg_precision}")
-    print(f"Avg Prec: {avg_recall}")
-    print(f"Avg Prec: {avg_f1}")
+    print(f"Avg Prec: {avg_precision:.4f}")
+    print(f"Avg Prec: {avg_recall:.4f}")
+    print(f"Avg Prec: {avg_f1:.4f}")
 
     # Rank aware metrics: MAP and/or nDCG
     # tbd
-
 
 
 if __name__ == "__main__":
