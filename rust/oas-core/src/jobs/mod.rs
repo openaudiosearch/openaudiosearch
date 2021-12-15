@@ -47,6 +47,10 @@ impl JobManager {
         Ok(job_id)
     }
 
+    pub async fn delete_job(&self, job: JobId) -> anyhow::Result<()>{
+        self.client.delete_job(job).await?;
+        Ok(())
+    }
     pub async fn take_job_timeout(
         &self,
         typ: &str,
