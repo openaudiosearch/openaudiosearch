@@ -13,6 +13,7 @@ import httpx
 import json
 import argparse
 import pandas as pd
+import statistics
 from app.jobs.spacy_pipe import SpacyPipe  # dev
 
 OAS_URL = 'http://admin:password@localhost:8080/api/v1'
@@ -152,6 +153,7 @@ def get_keywords(cba_id_oas_id):
 def flatten_oas_keywords(oas_keywords: list):
     """ Flattens oas_keywords list to [{cba_ids: [kw]}]. Removes unused
     informations on keyword count and rank.
+    Helper for evaluate_keywords().
 
     :param oas_keywords: List of {cba_id: (kw, count, rank)}
     :return: List of {cba_ids: [kws]}
@@ -191,8 +193,6 @@ def precision_recall_f1(keywords: list, true_keywords: list):
             true_positives = len(oas_kws.intersection(true_kws))
             total_prec += true_positives / float(len(oas_kws))
             total_rec += true_positives / float(len(true_kws))
-            print(true_positives / float(len(oas_kws)))
-            print(true_positives / float(len(true_kws)))
 
     avg_prec = total_prec / float(len(true_keywords))
     avg_rec = total_rec / float(len(true_keywords))
@@ -204,13 +204,68 @@ def precision_recall_f1(keywords: list, true_keywords: list):
     return (avg_prec, avg_rec, avg_f1)
 
 
+def average_precision_k(oas_kws: list, true_kws: list, k):
+    """
+    Average precision @ k.
+    Helper for mean_average_precision_k().
+
+    :param oas_kws: List of OAS keywords [kws]
+    :param true_kws: List of true keywords [kws]
+    :param k: maximum number of keywords to evaluate
+    :return: average precision at k
+    :return type: float
+    """
+    oas_kws = oas_kws[:k] if len(oas_kws) > k else oas_kws
+
+    score = 0.
+    true_positives = 0
+    for i, kw in enumerate(oas_kws):
+        if kw in true_kws and kw not in oas_kws[:i]:
+            true_positives += 1
+            score += true_positives / float(i + 1)
+
+    return score / min(len(true_kws), k)
+
+
+def mean_average_precision_k(keywords: list, true_keywords: list, k: int):
+    """
+    Mean average precision @ k.
+
+    :param keywords: List of OAS keywords {{cba_id: [kws]}}
+    :param true_keywords: List of true keywords {{cba_id: [kws]}}
+    :param k: maximum number of keywords to evaluate
+    :return: Average MAP@k
+    :return type: float
+    """
+    if len(keywords) == 0 or len(true_keywords) == 0:
+        map_at_k = 0.
+    else:
+        oas_kw_list = []
+        true_kw_list = []
+        for post_keywords in keywords:
+            cba_id = list(post_keywords.keys())[0]
+            oas_kw_list.append(post_keywords[cba_id])
+            true_kw_list.append(next(
+                (kw_dict for kw_dict in true_keywords if
+                 cba_id in kw_dict.keys()), None)[cba_id])
+
+        map_at_k = statistics.mean([
+            average_precision_k(kws, true, k) for kws, true in zip(
+                oas_kw_list, true_kw_list)
+        ])
+
+    return map_at_k
+
+
 def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
     f"""
     Evaluate OAS keywords against ground truth.
+    Current available metrics: Precision, Recall, F1, MAP
 
     :param oas_keywords: List of {{cba_id: (kw, count, rank)}}
     :param true_keywords: List of {{cba_id: [kws]}}
-    :param metrics: List of metrics to compute
+    :param metrics: List of metrics to compute. available metrics [
+    "Precision", "Recall", "F1", "MAP"]
     :return: -
     """
     print(f"OAS Keywords [{{cba_id: (kw, count, rank)}}]:\n{oas_keywords}")
@@ -218,14 +273,22 @@ def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
     keywords = flatten_oas_keywords(oas_keywords)
 
     # Rankless metrics: Precision, Recall, F1
-    avg_precision, avg_recall, avg_f1 = precision_recall_f1(keywords,
-                                                            true_keywords)
-    print(f"Avg Prec: {avg_precision:.4f}")
-    print(f"Avg Prec: {avg_recall:.4f}")
-    print(f"Avg Prec: {avg_f1:.4f}")
+    if any(metric in metrics for metric in ["Precision", "Recall", "F1"]):
+        avg_precision, avg_recall, avg_f1 = precision_recall_f1(keywords,
+                                                                true_keywords)
 
-    # Rank aware metrics: MAP and/or nDCG
-    # tbd
+        if "Precision" in metrics:
+            print(f"Avg Prec: {avg_precision:.4f}")
+        if "Recall" in metrics:
+            print(f"Avg Rec: {avg_recall:.4f}")
+        if "F1" in metrics:
+            print(f"Avg F1: {avg_f1:.4f}")
+
+    # Rank aware metrics: MAP
+    if "MAP" in metrics:
+        for k in range(1, 8):
+            map_at_k = mean_average_precision_k(keywords, true_keywords, k=k)
+            print(f"MAP@k [k={k}]: {map_at_k:.4f}")
 
 
 if __name__ == "__main__":
@@ -249,7 +312,7 @@ if __name__ == "__main__":
     #print(f"OAS keywords: {oas_keywords}")  # dev print
 
     """ Evaluate """
-    keyword_metrics = []
+    keyword_metrics = ["Precision", "Recall", "F1", "MAP"]
     evaluate_keywords(oas_keywords, true_labels, keyword_metrics)
 
 
