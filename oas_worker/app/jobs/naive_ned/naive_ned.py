@@ -6,8 +6,21 @@ import json
 from qwikidata.entity import WikidataItem, WikidataLexeme, WikidataProperty
 from qwikidata.linked_data_interface import get_entity_dict_from_api
 
+def get_candidates(query):
+    r = httpx.get('https://www.wikidata.org/w/api.php?action=wbsearchentities&search={}&language=de&format=json'.format(query))
+    return r.text
+
 @worker.job(name="naive_ned")
 def naive_ned(ctx, args):
+    """[summary]
+
+    Args:
+        ctx ([type]): [description]
+        args ([type]): [description]
+
+    Returns:
+        patches: json patch
+    """
     post_id = args["post_id"]
     post = ctx.get(f"/post/{post_id}")
     guid = post["$meta"]["guid"]
@@ -24,11 +37,13 @@ def naive_ned(ctx, args):
                 ent = get_entity_dict_from_api(candidate["id"])
                 res = WikidataItem(ent)
                 result[named_entity[0]] = candidate
-                print(candidate["id"], candidate["match"]["text"], res.get_description()) 
-        print(20* "-")   
+                print(candidate["id"], candidate["match"]["text"], res.get_description())  
     
-    
+    patch = [
+        {"op": "replace", "path": "/nlp", "value": result},
+    ]
+    patches = { guid: patch }
 
-def get_candidates(query):
-    r = httpx.get('https://www.wikidata.org/w/api.php?action=wbsearchentities&search={}&language=de&format=json'.format(query))
-    return r.text
+    return {
+        "patches": patches
+    }
