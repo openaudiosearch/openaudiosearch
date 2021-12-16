@@ -7,14 +7,14 @@ services:
     ports:
       - 6379:6379
     volumes:
-      - "./data/redis:/data"
+      - "${OAS_DATA_DIR:-./data}/redis:/data"
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.11.2
     ports:
       - 9200:9200
     volumes:
-      - "./data/elastic:/usr/share/elasticsearch/data"
+      - "${OAS_DATA_DIR:-./data}/elastic:/usr/share/elasticsearch/data"
     environment:
       http.host: 0.0.0.0
       discovery.type: single-node
@@ -37,7 +37,7 @@ services:
       - "4369:4369"
       - "9100:9100"
     volumes:
-      - ./data/couch:/opt/couchdb/data
+      - ${OAS_DATA_DIR:-./data}/couch:/opt/couchdb/data
 
 
   ocypod:
