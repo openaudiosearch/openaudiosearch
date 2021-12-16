@@ -218,8 +218,8 @@ function toValues (feed) {
 
 function patchFeed (oldFeed, formValues) {
   const feed = { mediaJobs: {}, postJobs: {}, ...oldFeed }
-  feed.mediaJobs.asr = formValues.enableAsr ? null : undefined
-  feed.postJobs.nlp = formValues.enableNlp ? null : undefined
+  feed.mediaJobs.asr = formValues.enableAsr ? {} : undefined
+  feed.postJobs.nlp = formValues.enableNlp ? {} : undefined
   return feed
 }
 
