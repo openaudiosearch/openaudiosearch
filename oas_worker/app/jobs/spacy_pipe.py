@@ -72,7 +72,7 @@ class SpacyPipe():
         keywords = []
         if "ner" in self.pipeline:
             for ent in doc.ents:
-                ner.append((ent.text, ent.label_))
+                ner.append((ent.text, ent.label_, ent.start, ent.end))
         token_based = ("pos" or "missed" or "lemma") in self.pipeline
         if token_based:   
             for token in doc:
