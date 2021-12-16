@@ -21,6 +21,7 @@ httpx = "^0.18.1"
 mpire = "^2.3.0"
 pandas = "^1.1.5"
 bs4 = "^0.0.1"
+nltk = "^3.6.5"
 
 [tool.poetry.dev-dependencies]
 rope = "^0.18.0"

@@ -6,7 +6,7 @@ Evaluate OAS Devset:
   * Transcripts (TBD)
 
 Author(s): flipsimon, datadonk23
-Date: 13.12.21
+Date: 16.12.21
 """
 
 import httpx
@@ -14,6 +14,8 @@ import json
 import argparse
 import pandas as pd
 import statistics
+from nltk.stem.cistem import Cistem
+from string import punctuation
 from app.jobs.spacy_pipe import SpacyPipe  # dev
 
 OAS_URL = 'http://admin:password@localhost:8080/api/v1'
@@ -169,6 +171,35 @@ def flatten_oas_keywords(oas_keywords: list):
     return oas_plain_keywords
 
 
+def clean_keywords(keyword_dicts: list):
+    """
+    NLP keyword cleansing utility to enhance keyword comparison.
+    It does:
+        * Lowercasing
+        * Punctuation removal
+        * String stripping
+        * Stem words
+
+    :param keyword_dicts: List of {cba_ids: [kws]}
+    :return: cleaned keywords in list of keyword dicts
+    """
+    cleaned_keyword_dicts = []
+    stemmer = Cistem(case_insensitive=False)
+
+    for kw_dict in keyword_dicts:
+        for cba_id, kws in kw_dict.items():
+            cleaned_kws = []
+            for kw in kws:
+                cleaned_string = (kw.lower()
+                                  .translate(str.maketrans("", "", punctuation))
+                                  .strip())
+                cleaned_kws.append(" ".join([stemmer.stem(word) for word in
+                          cleaned_string.split()]))  # Possible keyphrases
+            cleaned_keyword_dicts.append({cba_id: cleaned_kws})
+
+    return cleaned_keyword_dicts
+
+
 def precision_recall_f1(keywords: list, true_keywords: list):
     """
     Avg precision, recall and f1 scores.
@@ -194,8 +225,16 @@ def precision_recall_f1(keywords: list, true_keywords: list):
             total_prec += true_positives / float(len(oas_kws))
             total_rec += true_positives / float(len(true_kws))
 
-    avg_prec = total_prec / float(len(true_keywords))
-    avg_rec = total_rec / float(len(true_keywords))
+    if total_prec > 0:
+        avg_prec = total_prec / float(len(true_keywords))
+    else:
+        avg_prec = 0.
+
+    if total_rec > 0:
+        avg_rec = total_rec / float(len(true_keywords))
+    else:
+        avg_rec = 0.
+
     if avg_prec + avg_rec > 0:
         avg_f1 = 2 * avg_prec * avg_rec / (avg_prec + avg_rec)
     else:
@@ -271,6 +310,10 @@ def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
     print(f"OAS Keywords [{{cba_id: (kw, count, rank)}}]:\n{oas_keywords}")
     print(f"Ground Truth [{{cba_id: [kws]}}]:\n{true_keywords}")
     keywords = flatten_oas_keywords(oas_keywords)
+
+    # Uniform NLP processing of keywords
+    keywords = clean_keywords(keywords)
+    true_keywords = clean_keywords(true_keywords)
 
     # Rankless metrics: Precision, Recall, F1
     if any(metric in metrics for metric in ["Precision", "Recall", "F1"]):
