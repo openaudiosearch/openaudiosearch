@@ -183,6 +183,11 @@ git clone https://github.com/openaudiosearch/openaudiosearch
 docker-compose -f docker-compose.dev.yml up
 ```
 
+Optionally set a data directory for all services (to start from a clean slate):
+```sh
+OAS_DATA_DIR=/tmp/oas docker-compose -f docker-compose.dev.yml up
+```
+
 *Run the frontend in development mode* 
 ```sh
 cd frontend
