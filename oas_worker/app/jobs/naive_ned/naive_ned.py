@@ -19,10 +19,17 @@ def get_candidates(query):
 @worker.job(name="naive_ned")
 def naive_ned(ctx, args):
     """Simple implementation of naive named entity linking with Wikidata.
+<<<<<<< HEAD
 It simply queries the Wikidata Search API and takes the first result.
 
     Args:
         ctx (Context): The context object contains the worker ID, the current job and enables access to the core client
+=======
+It simply queries the Wikidata REST API and takes the first result.
+
+    Args:
+        ctx (Context): Context Object holds worker id & current job
+>>>>>>> docu
         args ({id: string}): post_id
 
     Returns:
@@ -64,15 +71,12 @@ It simply queries the Wikidata Search API and takes the first result.
     
 =======
     for named_entity in nlp_data["ner"]:
-        print(40 * '#')
-        print(named_entity)
         candidates = get_candidates(named_entity[0])
-        print(candidates)
         if candidates is None:
             return {}
         try:
             candidates = json.loads(candidates)
-        except:
+        except ValueError as e:
 	        return {}
         for candidate in candidates['search']:
             if candidate["match"]["type"] == "label":
