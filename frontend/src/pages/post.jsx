@@ -150,28 +150,46 @@ export function PostPageInner (props = {}) {
   }
 
   // Trim items and remove empty and duplicate items from list
-  let genres = [... new Set(post.genre.filter(function(gen) {
-    return gen.length > 0;
+  let genres = [...new Set(post.genre.filter(function (gen) {
+    return gen.length > 0
   }).map((genre) => genre.trim()))]
   genres =
     <>
       {genres.map((genre) => (
-        <SearchTag label={genre} facet='genre' key={genre}/>
+        <SearchTag label={genre} facet='genre' key={genre} />
       ))}
     </>
 
-  const creators = 
+  const creators =
     <>
       {post.creator.map((creator) => (
-        <SearchTag label={creator} facet='creator' key={creator}/>
+        <SearchTag label={creator} facet='creator' key={creator} />
       ))}
     </>
 
   let contributors = []
   if (post.contributor) {
     contributors = post.contributor.map((contributor) =>
-      <SearchTag label={contributor} facet='contributor' key={contributor}/>
+      <SearchTag label={contributor} facet='contributor' key={contributor} />
     )
+  }
+  let wikidataEntities = []
+  if (post.nlp.ned) {
+    console.log('nlp:', post.nlp.ned)
+    wikidataEntities = Object.entries(post.nlp.ned).map((nel, i) =>
+
+      <ChakraLink
+        key={i}
+        href={nel[1].concepturi}
+        isExternal
+        p='2'
+        color='secondary.600'
+      >
+        {nel[0]}
+      </ChakraLink>
+
+    )
+    console.log('ENTS', wikidataEntities)
   }
 
   let duration = null
@@ -219,12 +237,11 @@ export function PostPageInner (props = {}) {
                   {Moment(post.datePublished).format('DD.MM.YYYY')}
                 </Box>
               )}
-              {post.publisher && 
+              {post.publisher &&
                 <Flex direction='row'>
                   <Text mr='2' fontSize='sm'>{t('by', 'by')}</Text>
-                  <SearchTag label={post.publisher} facet='publisher'/>
-                </Flex>
-              }
+                  <SearchTag label={post.publisher} facet='publisher' />
+                </Flex>}
               {post.creator.length > 0 &&
                 <Flex direction='row' mr='2'>
                   <Text fontSize='sm' mr='1'>{t('creators', 'Creators')}:</Text>
@@ -236,17 +253,24 @@ export function PostPageInner (props = {}) {
                   {contributors}
                 </Flex>}
 
-                {duration && (
-                  <Box flex='1' fontSize='sm'>{duration}</Box>
-                )}
+              {duration && (
+                <Box flex='1' fontSize='sm'>{duration}</Box>
+              )}
             </Flex>
 
             <Box mt='4'>{description}</Box>
+
             <Box my='4'>
+              {post.nlp.ned &&
+                <Box>
+                  <Text>related wikidata entries: </Text>
+                  {wikidataEntities}
+                </Box>}
               <LicenseInfos my='4' post={post} />
             </Box>
-            <PostTranscriptSection post={post}/>
+            <PostTranscriptSection post={post} />
           </Box>
+
         </Flex>
       </Box>
     </Center>
@@ -285,7 +309,7 @@ export function LicenseInfos (props) {
 }
 
 export function SearchTag (props) {
-  const {label, facet} = props
+  const { label, facet } = props
   const encoded = encodeURIComponent(label)
   const url = `/search?${facet}=["${encoded}"]`
   return (
