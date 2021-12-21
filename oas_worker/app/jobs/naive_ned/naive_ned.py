@@ -20,6 +20,7 @@ def get_candidates(query):
 def naive_ned(ctx, args):
     """Simple implementation of naive named entity linking with Wikidata.
 <<<<<<< HEAD
+<<<<<<< HEAD
 It simply queries the Wikidata Search API and takes the first result.
 
     Args:
@@ -30,6 +31,12 @@ It simply queries the Wikidata REST API and takes the first result.
     Args:
         ctx (Context): Context Object holds worker id & current job
 >>>>>>> docu
+=======
+It simply queries the Wikidata Search API and takes the first result.
+
+    Args:
+        ctx (Context): The context object contains the worker ID, the current job and enables access to the core client
+>>>>>>> show ned on post page
         args ({id: string}): post_id
 
     Returns:
@@ -40,9 +47,12 @@ It simply queries the Wikidata REST API and takes the first result.
     post = ctx.get(f"/post/{post_id}")
     guid = post["$meta"]["guid"]
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     # Nothing to do if no nlp
 >>>>>>> first running implementation for naive_ned
+=======
+>>>>>>> show ned on post page
     if post["nlp"] is None or post["nlp"]["ner"] is None:
         return {}
     nlp_data = post["nlp"]
@@ -82,8 +92,7 @@ It simply queries the Wikidata REST API and takes the first result.
             if candidate["match"]["type"] == "label":
                 ent = get_entity_dict_from_api(candidate["id"])
                 res = WikidataItem(ent)
-                result[named_entity[0]] = candidate
-                print(candidate["id"], candidate["match"]["text"], res.get_description())  
+                result[named_entity[0]] = res  
     post["nlp"]["ned"] = result        
 
 >>>>>>> first running implementation for naive_ned

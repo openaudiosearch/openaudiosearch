@@ -172,6 +172,7 @@ export function PostPageInner (props = {}) {
   if (post.contributor) {
     contributors = post.contributor.map((contributor) =>
       <SearchTag label={contributor} facet='contributor' key={contributor} />
+<<<<<<< HEAD
     )
   }
   let wikidataEntities = []
@@ -191,7 +192,27 @@ export function PostPageInner (props = {}) {
         </ChakraLink>
       </Tooltip>
 
+=======
+>>>>>>> show ned on post page
     )
+  }
+  let wikidataEntities = []
+  if (post.nlp.ned) {
+    console.log('nlp:', post.nlp.ned)
+    wikidataEntities = Object.entries(post.nlp.ned).map((nel, i) =>
+
+      <ChakraLink
+        key={i}
+        href={nel[1].concepturi}
+        isExternal
+        p='2'
+        color='secondary.600'
+      >
+        {nel[0]}
+      </ChakraLink>
+
+    )
+    console.log('ENTS', wikidataEntities)
   }
 
   let duration = null
@@ -261,6 +282,7 @@ export function PostPageInner (props = {}) {
             </Flex>
 
             <Box mt='4'>{description}</Box>
+<<<<<<< HEAD
             <LicenseInfos post={post} />
           </Box>
           <Box>
@@ -274,6 +296,19 @@ export function PostPageInner (props = {}) {
               </Box>}
             <PostTranscriptSection post={post} />
           </Box>
+=======
+
+            <Box my='4'>
+              {post.nlp.ned &&
+                <Box>
+                  <Text>related wikidata entries: </Text>
+                  {wikidataEntities}
+                </Box>}
+              <LicenseInfos my='4' post={post} />
+            </Box>
+            <PostTranscriptSection post={post} />
+          </Box>
+>>>>>>> show ned on post page
 
         </Flex>
       </Box>
