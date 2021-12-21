@@ -47,9 +47,11 @@ impl OcypodClient {
             check_response(&res)?;
             let body: JobInput = res.json().await?;
             Ok(Some(body))
+     
         }
     }
 
+   
     pub async fn update_job(
         &self,
         job_id: JobId,
@@ -82,6 +84,13 @@ impl OcypodClient {
         check_response(&res)?;
         let job: JobInfo = res.json().await?;
         Ok(job)
+    }
+    
+    pub async fn delete_job(&self, job_id: JobId) -> anyhow::Result<()> {
+        let url = format!("{}/job/{}", self.base_url, job_id);
+        let res = self.client.delete(&url).send().await?;
+        check_response(&res)?;
+        Ok(())
     }
 
     pub async fn get_queues(&self) -> anyhow::Result<Vec<String>> {
