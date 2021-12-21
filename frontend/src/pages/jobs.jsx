@@ -131,6 +131,21 @@ function JobDetails (props) {
   const { job } = props
   const { isOpen, onOpen, onClose } = useDisclosure()
   const btnRef = React.useRef()
+  const [error, setError] = useState(null)
+  const [successDelete, setSuccessDelete] = useState(false)
+
+  async function deleteJob (id) {
+    try {
+      const res = await fetch('/job/' + id, {
+        method: 'DELETE'
+      })
+      console.log('RES', res)
+      setSuccessDelete(true)
+    } catch (err) {
+      setError(err)
+      console.log('ERR', err.data)
+    }
+  }
 
   return (
     <>
@@ -153,6 +168,13 @@ function JobDetails (props) {
           </DrawerBody>
 
           <DrawerFooter>
+            <Flex direction='column'>
+            <Button onClick={() => deleteJob(job.id)} colorScheme='red'>Delete Job</Button>
+              <Box mr='4' p='2'>
+              {error && <Error error={error} />}
+              {successDelete && <Box>Deleted job: {job.id}</Box>}
+              </Box>
+            </Flex>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
