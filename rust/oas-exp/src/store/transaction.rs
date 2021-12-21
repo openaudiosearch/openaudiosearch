@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use crate::{Guid, Record, RecordValue, Uuid};
+use crate::{Guid, Record};
 
 pub type Rev = String;
 

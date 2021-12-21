@@ -1,6 +1,6 @@
 // use oas_common::{Resolvable, Resolver};
+use crate::Uuid;
 use std::marker::PhantomData;
-use uuid::Uuid;
 
 use crate::{Record, RecordValue};
 
@@ -23,7 +23,7 @@ where
     }
 
     pub async fn get_one(&self, id: &Uuid) -> Result<Record, anyhow::Error> {
-        let record = self.store.get_one(T::name(), &id).await?;
+        let record = self.store.get_one(T::name(), id).await?;
         let record = record.into_upcast::<T>()?;
         Ok(record)
     }

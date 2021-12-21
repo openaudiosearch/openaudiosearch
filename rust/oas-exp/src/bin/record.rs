@@ -1,12 +1,18 @@
 use schemars::JsonSchema;
-use serde::de::DeserializeOwned;
+
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::any::{Any, TypeId};
+use std::any::{Any};
 
 use oas_exp::*;
 
-fn main() -> anyhow::Result<()> {
+fn main() {
+    if let Err(err) = run_all() {
+        panic!("{}", err)
+    }
+}
+fn run_all() -> anyhow::Result<()> {
+    run_inventory()?;
     run()
 }
 
@@ -57,35 +63,35 @@ pub fn run_inventory() -> anyhow::Result<()> {
     inventory.insert(Schema::from_value_typ::<Post>());
 
     let json1 = json!({
-        "id": "abc",
+        "id": uuid_from_str("abc"),
         "typ": "media",
         "value": {
             "url": "hyper://foo"
         }
     });
     let json2 = json!({
-        "id": "def",
+        "id": uuid_from_str("def"),
         "typ": "post",
         "value": {
             "headline": "Foobar foo"
         }
     });
     let json3 = json!({
-        "id": "def",
+        "id": uuid_from_str("def"),
         "typ": "foo",
         "value": {
             "headline": "Foobar foo"
         }
     });
     let json4 = json!({
-        "id": "def",
+        "id": uuid_from_str("def"),
         "typ": "post",
         "value": {
             "boo": "bazz"
         }
     });
 
-    let jsons = vec![json1.clone(), json2.clone(), json3.clone(), json4.clone()];
+    let jsons = vec![json1.clone(), json2.clone(), json3, json4];
 
     let mut records: Vec<_> = jsons
         .clone()
@@ -119,22 +125,20 @@ pub fn run_inventory() -> anyhow::Result<()> {
 }
 
 pub fn run() -> anyhow::Result<()> {
-    run_inventory()?;
-    return Ok(());
     let json = json!({
-        "id": "abc",
+        "id": uuid_from_str("abc"),
         "typ": "media",
         "value": {
             "url": "hyper://foo"
         }
     });
-    let record = Record::from_json(json)?;
+    let mut record = Record::from_json(json)?;
     record.upcast::<Media>()?;
 
     let media = record.value::<Media>()?;
     eprintln!("typed media {:?}", media);
-    let post = record.value::<Post>()?;
-    eprintln!("typed post {:?}", post);
+    let post_res = record.value::<Post>();
+    eprintln!("typed post res {:?}", post_res);
     let media: &Media = record.value()?;
     eprintln!("typed {:?}", media);
     let media = media.clone();
@@ -163,7 +167,7 @@ pub fn run() -> anyhow::Result<()> {
     eprintln!("\n\nround 2\n\n");
     let json = unblank.into_json_cloned()?;
     eprintln!("json {}", json);
-    let mut record = Record::from_json(json.clone())?;
+    let mut record = Record::from_json(json)?;
     eprintln!("blank {:?}", record);
     record.upcast::<Media>()?;
     let media = record;
@@ -171,7 +175,7 @@ pub fn run() -> anyhow::Result<()> {
     let value = media.value::<Media>()?.clone();
     eprintln!("media {:?}", value);
 
-    let record = Record::new("newone".to_string(), value);
+    let record = Record::new(uuid_from_str("newone"), value);
     eprintln!("record {:?}", record);
     let json = record.into_json()?;
     eprintln!("json {}", json);
@@ -179,19 +183,19 @@ pub fn run() -> anyhow::Result<()> {
     eprintln!("\n\nround3\n\n");
     let media: Record = Record::from_json(json.clone())?;
     eprintln!("media {:?}", media);
-    eprintln!("\n\nround3\n\n");
-    let blank: Record = Record::from_json(json.clone())?;
+    let blank: Record = Record::from_json(json)?;
     eprintln!("blank {:?}", blank);
-    let post = blank.clone().into_upcast::<Post>();
-    eprintln!("upcast post {:?}", post);
-    // let post = blank.upcast_lucky::<Post>();
-    // eprintln!("upcast post lucky {:?}", post);
-    let post = post?;
+    let media = blank.into_upcast::<Media>()?;
+    eprintln!("upcast media {:?}", media);
+    // let media = blank.upcast_lucky::<Post>();
+    // eprintln!("upcast media lucky {:?}", media);
 
-    let reblank = post.blank();
+    let reblank = media.blank();
     eprintln!("reblank {:?}", reblank);
     let media = reblank.into_upcast::<Media>()?;
     eprintln!("upcast media {:?}", media.value::<Media>());
+    let json = serde_json::to_string(&media)?;
+    eprintln!("media as json {}", json);
 
     // eprintln!("\n\nround4\n\n");
     // let media = media;

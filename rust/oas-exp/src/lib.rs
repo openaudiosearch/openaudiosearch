@@ -10,4 +10,4 @@ pub use record::*;
 pub use schema::*;
 pub use store::*;
 
-pub use uuid::Uuid;
+pub use crate::Uuid;

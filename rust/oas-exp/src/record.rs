@@ -3,32 +3,101 @@ use serde::de::DeserializeOwned;
 use serde::ser::Error;
 use serde::{Deserialize, Serialize};
 use std::any::{Any, TypeId};
-use std::marker::PhantomData;
 use std::sync::Arc;
 use thiserror::Error;
-use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Blank;
+pub use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
-pub struct RawRecord {
-    id: Uuid,
-    typ: String,
-    value: serde_json::Value,
-}
+#[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, Eq, PartialEq)]
+struct Typ(String);
 
-#[derive(JsonSchema, Serialize, Deserialize, Debug, Clone)]
+/// A Guid identifies a record. It contains a type string and a random UUID.
+#[derive(JsonSchema, Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct Guid {
     id: Uuid,
     typ: String,
-    rev: Option<String>,
 }
 
-// pub struct TypedRecord<T> {
-//     record: Record,
-//     phantom: PhantomData<T>,
-// }
+impl Guid {
+    pub fn new(typ: impl ToString, id: Uuid) -> Self {
+        Self {
+            typ: typ.to_string(),
+            id,
+        }
+    }
+
+    pub fn create(typ: String) -> Self {
+        Self::new(typ, uuid())
+    }
+
+    pub fn from_str(typ: String, id_payload: &str) -> Self {
+        Self::new(typ, uuid_from_str(id_payload))
+    }
+
+    pub fn id(&self) -> &Uuid {
+        &self.id
+    }
+
+    pub fn typ(&self) -> &str {
+        &self.typ
+    }
+}
+
+impl From<(String, Uuid)> for Guid {
+    fn from((typ, id): (String, Uuid)) -> Self {
+        Self::new(typ, id)
+    }
+}
+
+pub fn uuid() -> Uuid {
+    Uuid::new_v4()
+}
+
+pub fn uuid_from_str(input: &str) -> Uuid {
+    const UUID_PREFIX: &str = "arso.xyz/uuid/";
+    Uuid::new_v5(
+        &Uuid::NAMESPACE_URL,
+        format!("{}{}", UUID_PREFIX, input).as_bytes(),
+    )
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
+pub struct RawRecord {
+    #[serde(flatten)]
+    pub guid: Guid,
+    pub value: serde_json::Value,
+}
+
+impl RawRecord {
+    pub fn new(guid: Guid, value: serde_json::Value) -> Self {
+        Self { guid, value }
+    }
+
+    pub fn empty(guid: Guid) -> Self {
+        Self {
+            guid,
+            value: serde_json::Value::Null,
+        }
+    }
+    pub fn typ(&self) -> &str {
+        &self.guid.typ
+    }
+
+    pub fn id(&self) -> &Uuid {
+        &self.guid.id
+    }
+
+    pub fn guid(&self) -> &Guid {
+        &self.guid
+    }
+
+    pub fn value(&self) -> &serde_json::Value {
+        &self.value
+    }
+}
+
+// pub struct Ext(HashMap<String, serde_json::Value>);
+// pub struct Links(HashMap<String, Vec<Guid>);
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct Record {
@@ -114,11 +183,8 @@ fn upcast_mut<'s, T: RecordValue>(value: &'s mut Box<dyn AsAny>) -> Result<&'s m
 
 impl Record {
     pub fn new<T: RecordValue>(id: Uuid, value: T) -> Self {
-        let raw = RawRecord {
-            id,
-            typ: T::NAME.to_string(),
-            value: serde_json::Value::Null,
-        };
+        let guid = Guid::new(T::NAME, id);
+        let raw = RawRecord::empty(guid);
         let record: Record = Record {
             raw,
             raw_is_dirty: true,
@@ -150,16 +216,20 @@ impl Record {
         match self.typed.as_ref() {
             None => Err(UpcastError::TypeMismatch(
                 T::NAME.to_string(),
-                "unknown".to_string(),
+                self.typ().to_string(),
             )),
             Some(Err(err)) => Err(err.clone()),
-            Some(Ok(typed)) => upcast(&typed),
+            Some(Ok(typed)) => upcast(typed),
         }
     }
     pub fn value_mut<T: RecordValue>(&mut self) -> Result<&mut T, UpcastError> {
-        match self.typed.as_mut().unwrap() {
-            Err(err) => Err(err.clone()),
-            Ok(typed) => {
+        match self.typed.as_mut() {
+            None => Err(UpcastError::TypeMismatch(
+                T::NAME.to_string(),
+                self.raw.typ().to_string(),
+            )),
+            Some(Err(err)) => Err(err.clone()),
+            Some(Ok(typed)) => {
                 let value = upcast_mut(typed)?;
                 self.raw_is_dirty = true;
                 Ok(value)
@@ -167,11 +237,15 @@ impl Record {
         }
     }
     pub fn typ(&self) -> &str {
-        &self.raw.typ
+        self.raw.typ()
     }
 
     pub fn id(&self) -> &Uuid {
-        &self.raw.id
+        self.raw.id()
+    }
+
+    pub fn guid(&self) -> &Guid {
+        self.raw.guid()
     }
 
     pub fn into_upcast<T: RecordValue>(mut self) -> Result<Self, UpcastError> {

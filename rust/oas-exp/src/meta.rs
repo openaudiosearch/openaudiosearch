@@ -1,38 +1,45 @@
 use crate::RecordValue;
+use crate::Uuid;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 pub type DateTime = chrono::DateTime<chrono::Utc>;
 
-pub type Root = Arc<str>;
-pub type Schema = Arc<str>;
-pub type Id = Arc<str>;
+pub struct Meta {
+    created_at: DateTime,
+    updated_at: DateTime,
+    publisher: Option<Guid>,
+    revision: Option<String>,
+}
 
-pub struct Pubkey([u8; 32]);
+// pub type Root = Arc<str>;
+// pub type Schema = Arc<str>;
+// pub type Id = Arc<str>;
 
-#[derive(Serialize, Deserialize)]
-pub struct TypName(String);
+// pub struct Pubkey([u8; 32]);
 
-pub struct Rev(Uuid);
-pub struct Id(Uuid);
-pub struct InstanceId(Uuid);
-pub struct Typ(String);
+// #[derive(Serialize, Deserialize)]
+// pub struct TypName(String);
+
+// pub struct Rev(Uuid);
+// pub struct Id(Uuid);
+// pub struct InstanceId(Uuid);
+// pub struct Typ(String);
 
 // pub struct Signature {
 //     version: u16,
 //     sig: [u8; 32],
 // }
 
-struct Meta {
-    typ: Typ,
-    id: Id,
-    instance: InstanceId,
-    rev: Rev,
-    created_at: DateTime,
-    updated_at: DateTime,
-    parents: Vec<Rev>,
-    author: Vec<Id>,
-}
+// struct Meta {
+//     typ: Typ,
+//     id: Id,
+//     instance: InstanceId,
+//     rev: Rev,
+//     created_at: DateTime,
+//     updated_at: DateTime,
+//     parents: Vec<Rev>,
+//     author: Vec<Id>,
+// }
 
 // addresses are instance:rev or typ:id
 

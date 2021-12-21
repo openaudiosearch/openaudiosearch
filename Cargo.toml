@@ -1,2 +1,2 @@
 [workspace]
-members = ["rust/oas-core", "rust/oas-common"]
+members = ["rust/oas-core", "rust/oas-common", "rust/oas-exp"]

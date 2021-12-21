@@ -1,9 +1,9 @@
+use crate::Uuid;
 use async_trait::async_trait;
 use futures::stream::Stream;
-use uuid::Uuid;
 // use oas_common::{Guid, Record, Resolver, TypedValue, UntypedRecord};
 use std::pin::Pin;
-use std::str::FromStr;
+
 use std::sync::Arc;
 
 pub mod structs;
@@ -161,7 +161,7 @@ impl RecordStore {
         let records = self.inner.store.fetch_many(guids).await?;
         let records = records
             .into_iter()
-            .map(|r| r.map(|r| Record::from_raw(r)))
+            .map(|r| r.map(Record::from_raw))
             .collect();
         Ok(records)
     }
@@ -171,8 +171,7 @@ impl RecordStore {
         tx.put(record);
         let res = self.inner.store.commit(tx).await?;
         let res = res
-            .into_iter()
-            .nth(0)
+            .into_iter().next()
             .ok_or_else(|| anyhow::anyhow!("Transaction produced no results"))?;
         match res {
             TxResult::Ok(res) => Ok(res),
