@@ -6,85 +6,38 @@ use std::any::{Any, TypeId};
 use std::sync::Arc;
 use thiserror::Error;
 
-pub use uuid::Uuid;
+use crate::uuid::{Guid, Uuid};
 
-#[derive(Serialize, Deserialize, JsonSchema, Debug, Clone, Eq, PartialEq)]
-struct Typ(String);
-
-/// A Guid identifies a record. It contains a type string and a random UUID.
-#[derive(JsonSchema, Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
-pub struct Guid {
-    id: Uuid,
-    typ: String,
-}
-
-impl Guid {
-    pub fn new(typ: impl ToString, id: Uuid) -> Self {
-        Self {
-            typ: typ.to_string(),
-            id,
-        }
-    }
-
-    pub fn create(typ: String) -> Self {
-        Self::new(typ, uuid())
-    }
-
-    pub fn from_str(typ: String, id_payload: &str) -> Self {
-        Self::new(typ, uuid_from_str(id_payload))
-    }
-
-    pub fn id(&self) -> &Uuid {
-        &self.id
-    }
-
-    pub fn typ(&self) -> &str {
-        &self.typ
-    }
-}
-
-impl From<(String, Uuid)> for Guid {
-    fn from((typ, id): (String, Uuid)) -> Self {
-        Self::new(typ, id)
-    }
-}
-
-pub fn uuid() -> Uuid {
-    Uuid::new_v4()
-}
-
-pub fn uuid_from_str(input: &str) -> Uuid {
-    const UUID_PREFIX: &str = "arso.xyz/uuid/";
-    Uuid::new_v5(
-        &Uuid::NAMESPACE_URL,
-        format!("{}{}", UUID_PREFIX, input).as_bytes(),
-    )
-}
+mod meta;
+use meta::Meta;
 
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct RawRecord {
     #[serde(flatten)]
     pub guid: Guid,
     pub value: serde_json::Value,
+    #[serde(default)]
+    pub meta: Meta,
 }
 
 impl RawRecord {
     pub fn new(guid: Guid, value: serde_json::Value) -> Self {
-        Self { guid, value }
+        Self {
+            guid,
+            value,
+            meta: Default::default(),
+        }
     }
 
     pub fn empty(guid: Guid) -> Self {
-        Self {
-            guid,
-            value: serde_json::Value::Null,
-        }
+        Self::new(guid, serde_json::Value::Null)
     }
     pub fn typ(&self) -> &str {
-        &self.guid.typ
+        &self.guid.typ()
     }
 
     pub fn id(&self) -> &Uuid {
-        &self.guid.id
+        &self.guid.id()
     }
 
     pub fn guid(&self) -> &Guid {
@@ -164,20 +117,16 @@ pub enum DowncastError {
 fn upcast<'s, T: RecordValue>(value: &'s Box<dyn AsAny>) -> Result<&'s T, UpcastError> {
     let value: &dyn std::any::Any = value.as_ref().as_any();
     let value: Option<&T> = <dyn std::any::Any>::downcast_ref::<T>(value);
-    let value = value.ok_or(UpcastError::TypeMismatch(
-        T::NAME.to_string(),
-        "unknown".to_string(),
-    ))?;
+    let value = value
+        .ok_or_else(|| UpcastError::TypeMismatch(T::NAME.to_string(), "unknown".to_string()))?;
     Ok(value)
 }
 
 fn upcast_mut<'s, T: RecordValue>(value: &'s mut Box<dyn AsAny>) -> Result<&'s mut T, UpcastError> {
     let value: &mut dyn std::any::Any = value.as_mut().as_any_mut();
     let value: Option<&mut T> = <dyn std::any::Any>::downcast_mut::<T>(value);
-    let value = value.ok_or(UpcastError::TypeMismatch(
-        T::NAME.to_string(),
-        "unknown".to_string(),
-    ))?;
+    let value = value
+        .ok_or_else(|| UpcastError::TypeMismatch(T::NAME.to_string(), "unknown".to_string()))?;
     Ok(value)
 }
 
@@ -246,6 +195,14 @@ impl Record {
 
     pub fn guid(&self) -> &Guid {
         self.raw.guid()
+    }
+
+    pub fn meta(&self) -> &Meta {
+        &self.raw.meta
+    }
+
+    pub fn meta_mut(&mut self) -> &mut Meta {
+        &mut self.raw.meta
     }
 
     pub fn into_upcast<T: RecordValue>(mut self) -> Result<Self, UpcastError> {

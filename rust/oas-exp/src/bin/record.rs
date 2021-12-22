@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::any::{Any};
+use std::any::Any;
 
 use oas_exp::*;
 
@@ -192,8 +192,9 @@ pub fn run() -> anyhow::Result<()> {
 
     let reblank = media.blank();
     eprintln!("reblank {:?}", reblank);
-    let media = reblank.into_upcast::<Media>()?;
+    let mut media = reblank.into_upcast::<Media>()?;
     eprintln!("upcast media {:?}", media.value::<Media>());
+    media.meta_mut().revision = Some(uuid());
     let json = serde_json::to_string(&media)?;
     eprintln!("media as json {}", json);
 

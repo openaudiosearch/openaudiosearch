@@ -33,3 +33,4 @@ anyhow = "1.0.51"
 erased-serde = "0.3.16"
 oas-common = { path = "../oas-common" }
 uuid = { version = "0.8.2", features = ["v4", "v5", "serde"] }
+base32 = "0.4.0"

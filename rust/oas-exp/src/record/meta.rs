@@ -1,14 +1,42 @@
-use crate::RecordValue;
-use crate::Uuid;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use crate::Uuid;
 
 pub type DateTime = chrono::DateTime<chrono::Utc>;
 
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 pub struct Meta {
-    created_at: DateTime,
-    updated_at: DateTime,
-    publisher: Option<Guid>,
-    revision: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub revision: Option<Uuid>,
+    #[serde(serialize_with = "ser_datetime_seconds")]
+    pub created_at: DateTime,
+    #[serde(serialize_with = "ser_datetime_seconds")]
+    pub updated_at: DateTime,
+    // publisher: Option<Guid>,
+}
+
+pub fn ser_datetime_seconds<S>(
+    dt: &chrono::DateTime<chrono::Utc>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: serde::ser::Serializer,
+{
+    let string = dt.to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+    string.serialize(serializer)
+}
+
+impl Default for Meta {
+    fn default() -> Self {
+        let now = chrono::Local::now();
+        let now: DateTime = now.into();
+        Self {
+            revision: None,
+            created_at: now.clone(),
+            updated_at: now,
+        }
+    }
 }
 
 // pub type Root = Arc<str>;
