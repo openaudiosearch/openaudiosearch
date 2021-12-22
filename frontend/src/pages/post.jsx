@@ -172,7 +172,6 @@ export function PostPageInner (props = {}) {
   if (post.contributor) {
     contributors = post.contributor.map((contributor) =>
       <SearchTag label={contributor} facet='contributor' key={contributor} />
-<<<<<<< HEAD
     )
   }
   let wikidataEntities = []
@@ -192,28 +191,25 @@ export function PostPageInner (props = {}) {
         </ChakraLink>
       </Tooltip>
 
-=======
->>>>>>> show ned on post page
     )
   }
   let wikidataEntities = []
   if (post.nlp.ned) {
     console.log('nlp:', post.nlp.ned)
     wikidataEntities = Object.entries(post.nlp.ned).map((nel, i) =>
-      <Tooltip key={i} label={nel[1].description}>
-        <ChakraLink
-          href={nel[1].concepturi}
-          isExternal
-          pr={2}
-        >
-          <Tag>
-            {nel[0]}
-          </Tag>
 
-        </ChakraLink>
-      </Tooltip>
+      <ChakraLink
+        key={i}
+        href={nel[1].concepturi}
+        isExternal
+        p='2'
+        color='secondary.600'
+      >
+        {nel[0]}
+      </ChakraLink>
 
     )
+    console.log('ENTS', wikidataEntities)
   }
 
   let duration = null
@@ -283,37 +279,19 @@ export function PostPageInner (props = {}) {
             </Flex>
 
             <Box mt='4'>{description}</Box>
-<<<<<<< HEAD
-<<<<<<< HEAD
             <LicenseInfos post={post} />
           </Box>
           <Box>
             {post.nlp && post.nlp.ned &&
-=======
-            <LicenseInfos post={post} />
-          </Box>
-          <Box>
-            {post.nlp.ned &&
->>>>>>> improved view of wikidata links
               <Box my='4' p='4' border='1px' borderColor='gray.200' bg='white' borderRadius='sm'>
                 <Heading as='h4' size='sm' mb={4}>
                     Possible matching Wikidata Entries:
                 </Heading>
-<<<<<<< HEAD
 
                 {wikidataEntities}
               </Box>}
             <PostTranscriptSection post={post} />
           </Box>
-=======
-=======
->>>>>>> improved view of wikidata links
-
-                {wikidataEntities}
-              </Box>}
-            <PostTranscriptSection post={post} />
-          </Box>
->>>>>>> show ned on post page
 
         </Flex>
       </Box>
