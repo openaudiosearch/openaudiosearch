@@ -3,7 +3,10 @@ import { extendTheme } from '@chakra-ui/react'
 export const reactiveBaseTheme = {
   typography: {
     fontFamily: 'Inter, sans-serif'
-  }
+  },
+  colors: {
+		primaryColor: '#9672EB',
+	}
 }
 
 export default function createTheme (props = {}) {
