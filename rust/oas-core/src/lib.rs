@@ -10,6 +10,7 @@ pub mod jobs;
 pub mod rss;
 mod runtime;
 pub mod server;
+pub mod store;
 pub mod util;
 
 use crate::rss::FeedManager;
@@ -17,6 +18,7 @@ use couch::{CouchDB, CouchManager};
 pub use oas_common as common;
 pub use oas_common::{types, Record, Reference, TypedValue, UntypedRecord};
 pub use runtime::Runtime;
+pub use store::RecordStore;
 
 /// Main application state.
 ///
@@ -29,6 +31,7 @@ pub struct State {
     pub db: couch::CouchDB,
     pub index_manager: index::IndexManager,
     pub jobs: jobs::JobManager,
+    pub store: RecordStore,
     did_init: Arc<AtomicBool>,
 }
 
@@ -40,12 +43,15 @@ impl State {
         feed_manager: FeedManager,
         jobs: jobs::JobManager,
     ) -> Self {
+        let storage = db.clone();
+        let store = RecordStore::with_storage(Box::new(storage));
         Self {
             db_manager,
             db,
             index_manager,
             feed_manager,
             jobs,
+            store,
             did_init: Arc::new(AtomicBool::new(false)),
         }
     }

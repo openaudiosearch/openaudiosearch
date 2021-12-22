@@ -21,6 +21,7 @@ pub(crate) mod durable_changes;
 pub(crate) mod error;
 mod manager;
 pub mod resolver;
+mod store;
 mod table;
 pub(crate) mod types;
 
@@ -321,6 +322,17 @@ impl CouchDB {
             errors
         );
         Ok(res)
+    }
+
+    pub async fn delete_bulk_update(&self, ids: Vec<String>) -> Result<Vec<PutResult>> {
+        if ids.is_empty() {
+            return Ok(Default::default());
+        }
+        let docs = ids
+            .into_iter()
+            .map(|id| Doc::new(DocMeta::with_id(id).into_deleted(), Default::default()))
+            .collect();
+        self.put_bulk_update(docs).await
     }
 
     /// Put a list of docs into the database in a single bulk operation, while first fetching the

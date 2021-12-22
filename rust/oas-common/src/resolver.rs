@@ -22,10 +22,8 @@ pub trait Resolvable: TypedValue {
 /// A trait to be implemented on data stores that can resolve records by their type and id strings.
 #[async_trait::async_trait]
 pub trait Resolver {
-    type Error: std::error::Error + Send + Sync + 'static;
-
     /// Resolve (load) a single record by its id.
-    async fn resolve<T: TypedValue>(&self, id: &str) -> Result<Record<T>, Self::Error>;
+    async fn resolve<T: TypedValue>(&self, id: &str) -> Result<Record<T>, anyhow::Error>;
 
     /// Resolve (load) all records with their ids.
     ///
@@ -34,7 +32,7 @@ pub trait Resolver {
     async fn resolve_all<T: TypedValue + Send>(
         &self,
         ids: &[&str],
-    ) -> Vec<Result<Record<T>, Self::Error>> {
+    ) -> Vec<Result<Record<T>, anyhow::Error>> {
         let futs: Vec<_> = ids.iter().map(|id| self.resolve(id)).collect();
         let results = futures_util::future::join_all(futs).await;
         results

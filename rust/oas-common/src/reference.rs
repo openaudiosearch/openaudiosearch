@@ -98,7 +98,7 @@ impl<T: TypedValue> Reference<T> {
         let record = resolver
             .resolve(self.id())
             .await
-            .map_err(|err| ResolveError::new(self.id(), anyhow::Error::new(err)))?;
+            .map_err(|err| ResolveError::new(self.id(), err))?;
         *self = Self::Resolved(record);
         Ok(())
     }

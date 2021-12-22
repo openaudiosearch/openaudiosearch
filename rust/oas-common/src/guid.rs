@@ -26,6 +26,22 @@ pub struct Guid {
     id: Range<usize>,
 }
 
+impl schemars::JsonSchema for Guid {
+    fn schema_name() -> String {
+        "Guid".into()
+    }
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        schemars::schema::SchemaObject {
+            instance_type: Some(schemars::schema::InstanceType::String.into()),
+            format: None,
+            ..Default::default()
+        }
+        .into()
+    }
+
+    // fn is_referenceable() -> bool { ... }
+}
+
 impl fmt::Display for Guid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.guid)
@@ -109,6 +125,10 @@ impl Guid {
 
     pub fn with_typ_and_seed(typ: &str, seed: &str) -> Self {
         Self::from_parts(typ, &id_from_hashed_string(seed))
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.guid()
     }
 }
 

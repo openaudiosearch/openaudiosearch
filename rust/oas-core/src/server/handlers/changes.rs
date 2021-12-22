@@ -28,6 +28,7 @@ pub async fn durable_changes(
     max_len: Option<usize>,
 ) -> Result<Custom<Json<Option<ChangesResponse>>>, AppError> {
     let opts = ChangesOpts::default().set_infinite(false);
+    let opts = opts.set_timeout(std::time::Duration::from_secs(2));
     let opts = match max_len {
         Some(max_len) => opts.set_max_batch_len(max_len),
         None => opts,

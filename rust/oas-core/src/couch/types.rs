@@ -13,17 +13,39 @@ pub struct DocMeta {
     #[serde(skip_serializing_if = "is_null")]
     #[serde(rename = "_rev")]
     rev: Option<String>,
+    #[serde(skip_serializing_if = "is_null")]
+    #[serde(rename = "_deleted")]
+    deleted: Option<bool>,
 }
 
 impl DocMeta {
     pub fn new(id: String, rev: Option<String>) -> Self {
-        Self { id, rev }
+        Self {
+            id,
+            rev,
+            deleted: None,
+        }
     }
     pub fn with_id(id: String) -> Self {
-        Self { id, rev: None }
+        Self {
+            id,
+            rev: None,
+            deleted: None,
+        }
     }
     pub fn with_id_and_rev(id: String, rev: String) -> Self {
-        Self { id, rev: Some(rev) }
+        Self {
+            id,
+            rev: Some(rev),
+            deleted: None,
+        }
+    }
+    pub fn into_deleted(self) -> Self {
+        Self {
+            id: self.id,
+            rev: self.rev,
+            deleted: Some(true),
+        }
     }
 }
 
