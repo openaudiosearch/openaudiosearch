@@ -175,7 +175,7 @@ export function PostPageInner (props = {}) {
     )
   }
   let wikidataEntities = []
-  if (post.nlp.ned) {
+  if (post.nlp != null && post.nlp.ned) {
     console.log('nlp:', post.nlp.ned)
     wikidataEntities = Object.entries(post.nlp.ned).map((nel, i) =>
       <Tooltip key={i} label={nel[1].description}>
@@ -264,7 +264,7 @@ export function PostPageInner (props = {}) {
             <LicenseInfos post={post} />
           </Box>
           <Box>
-            {post.nlp.ned &&
+            {post.nlp && post.nlp.ned &&
               <Box my='4' p='4' border='1px' borderColor='gray.200' bg='white' borderRadius='sm'>
                 <Heading as='h4' size='sm' mb={4}>
                     Possible matching Wikidata Entries:
