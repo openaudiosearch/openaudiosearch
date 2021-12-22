@@ -6,10 +6,7 @@ use lazy_static::lazy_static;
 use rand_core::OsRng;
 
 lazy_static! {
-    static ref SALT: SaltString = {
-        
-        SaltString::generate(&mut OsRng)
-    };
+    static ref SALT: SaltString = SaltString::generate(&mut OsRng);
 }
 
 lazy_static! {

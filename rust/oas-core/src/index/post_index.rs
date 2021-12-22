@@ -245,7 +245,7 @@ fn generate_transcript_token_string(transcript: &Transcript, id: usize) -> Strin
         );
         tokens.push(token);
     }
-    
+
     tokens.join(" ")
 }
 

@@ -44,10 +44,7 @@ impl Sessions {
     }
 
     pub async fn get(&self, session_id: &str) -> Option<Arc<SessionInfo>> {
-        self.sessions
-            .read()
-            .await
-            .get(session_id).cloned()
+        self.sessions.read().await.get(session_id).cloned()
     }
 
     pub async fn remove(&self, session_id: &str) {

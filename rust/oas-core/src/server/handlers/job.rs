@@ -2,7 +2,7 @@ use rocket::http::Status;
 use rocket::response::status::Custom;
 use rocket::serde::json::Json;
 use rocket::FromForm;
-use rocket::{get, post, put, delete};
+use rocket::{delete, get, post, put};
 use rocket_okapi::openapi;
 
 use crate::server::auth::AdminUser;
