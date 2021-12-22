@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import ReactJson from 'react-json-view'
 import Moment from 'moment'
-import useSWR from 'swr'
+import useSWR, { mutate } from 'swr'
 import {
   Flex, Stack, Box, Text, Heading, IconButton, Input, Button, useDisclosure, Link, FormControl, Select, FormLabel, Spinner, AlertIcon, Alert,
   Table, Thead, Tbody, Tfoot, Tr, Th, Td, TableCaption,
-  Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton
+  Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, Progress
 } from '@chakra-ui/react'
 import {
   FaEdit as EditIcon,
@@ -35,9 +35,8 @@ function JobList (props) {
   const { data, error, mutate } = useSWR('/jobs')
   if (error) return <Error error={error} />
   if (!data) return <Loading />
-  console.log('JOBS', data)
+  const sortedJobs = data.sort((a, b) => (a.id > b.id) ? 1 : -1)
   return (
-
     <Box
       mt={2}
     >
@@ -54,7 +53,7 @@ function JobList (props) {
           </Tr>
         </Thead>
         <Tbody>
-          {data.map(job => (
+          {sortedJobs.map(job => (
             <Job key={job.id} job={job} />
           ))}
         </Tbody>
@@ -69,11 +68,27 @@ function Job (props) {
   return (
     <Tr>
       <Td>{job.id}</Td>
-      <Td>{job.status}</Td>
+      <Td><JobStatus job={job} /></Td>
       <Td> {Moment(job.created_at).fromNow()}</Td>
       <Td>{job.queue}</Td>
       <Td><JobDetails job={job} /></Td>
     </Tr>
+  )
+}
+
+function JobStatus (props) {
+  const { job } = props
+  const progress = job.status == 'running' && job.output && job.output.progress
+  const percent = progress ? progress * 100 : undefined
+  return (
+    <span>
+      {job.status}
+      {job.status === 'running' && (
+        <span>
+          <Progress mt='1' hasStripe value={percent} />
+        </span>
+      )}
+    </span>
   )
 }
 
@@ -89,11 +104,11 @@ function JobDetails (props) {
       const res = await fetch('/job/' + id, {
         method: 'DELETE'
       })
-      console.log('RES', res)
       setSuccessDelete(true)
     } catch (err) {
       setError(err)
-      console.log('ERR', err.data)
+    } finally {
+      mutate('/jobs')
     }
   }
 
@@ -107,6 +122,7 @@ function JobDetails (props) {
         placement='right'
         onClose={onClose}
         finalFocusRef={btnRef}
+        size='lg'
       >
         <DrawerOverlay />
         <DrawerContent>
