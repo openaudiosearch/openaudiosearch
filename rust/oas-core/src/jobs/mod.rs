@@ -4,11 +4,14 @@ use std::{collections::HashMap, time::Duration};
 
 use crate::couch::CouchDB;
 
+// pub mod argfuns;
 pub mod bin;
 pub mod changes;
+pub mod config;
 mod ocypod;
 pub mod typs;
 
+pub use config::JobConfig;
 pub use ocypod::{
     JobFilter, JobId, JobInfo, JobInput, JobOutput, JobStatus, OcypodClient, DEFAULT_OCYPOD_URL,
 };
@@ -17,12 +20,27 @@ pub use ocypod::{
 pub struct JobManager {
     client: OcypodClient,
     db: CouchDB,
+    config: JobConfig,
+    // argfuns: argfuns::ArgFunctions,
 }
 
 impl JobManager {
     pub fn new(db: CouchDB, base_url: impl ToString) -> Self {
         let client = OcypodClient::new(base_url.to_string());
-        Self { db, client }
+        let config = JobConfig::default();
+        // let argfuns = argfuns::Argfunctions::with_defaults();
+        Self {
+            db,
+            client,
+            config,
+            // argfuns,
+        }
+    }
+
+    pub async fn init(&mut self) -> anyhow::Result<()> {
+        let config = JobConfig::load().await?;
+        self.config = config;
+        Ok(())
     }
 
     pub async fn create_job(&self, job: JobCreateRequest) -> anyhow::Result<ocypod::JobId> {
@@ -166,8 +184,29 @@ impl JobManager {
 
     async fn on_complete(&self, job: &JobInfo) -> anyhow::Result<()> {
         let typ = &job.queue;
+        // Run static configs.
         if typ.as_str() == typs::ASR {
             typs::on_asr_complete(&self.db, self, job).await?;
+        }
+        // Run dynamic configs.
+        // let argfun_ctx = argfuns::ArgFunContext {
+        //     db: self.db.clone(),
+        // };
+        if let Some(conf) = self.config.on_complete.get(typ) {
+            for job_conf in conf {
+                let args = job_conf
+                    // .template_to_args(&job.input, &self.argfuns, &argfun_ctx)
+                    .template_to_args(&job.input);
+                if let Ok(args) = args {
+                    let req = JobCreateRequest {
+                        typ: job_conf.job.to_string(),
+                        args,
+                        subjects: job.tags.clone(),
+                    };
+                    // let res =
+                    let _ = self.create_job(req).await;
+                }
+            }
         }
         Ok(())
     }

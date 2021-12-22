@@ -1,0 +1,7 @@
+[[on_complete.asr]]
+job = "recasepunc"
+args = { media_id = "{{args.media_id}}" }
+
+[[on_complete.nlp]]
+job = "naive_ned"
+args = { post_id = "{{args.post_id}}" }

@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use anyhow::Context;
 
+pub mod config;
 pub mod couch;
 // pub mod couch2;
 pub mod index;
@@ -72,6 +73,10 @@ impl State {
             .init(Default::default())
             .await
             .context("Failed to initialize Elasticsearch.")?;
+        self.jobs
+            .init()
+            .await
+            .context("Failed to initialize job manager")?;
         Ok(())
     }
 }

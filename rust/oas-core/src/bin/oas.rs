@@ -305,7 +305,15 @@ async fn run_list(state: State, opts: ListOpts) -> anyhow::Result<()> {
 }
 
 async fn run_debug(_state: State) -> anyhow::Result<()> {
-    eprintln!("OAS debug -- nothing here");
+    let config = crate::jobs::config::JobConfig::load().await;
+    eprintln!("job config {:#?}", config);
+    let config = config?;
+    let args = serde_json::json!({ "media_id": "asdf123" });
+    let on_complete_asr = config.on_complete.get("asr").unwrap().get(0).unwrap();
+    eprintln!("prev job args {}", args);
+    let res = on_complete_asr.template_to_args(&args)?;
+    eprintln!("next job args {}", res);
+    // eprintln!("OAS debug -- nothing here");
     Ok(())
 }
 
