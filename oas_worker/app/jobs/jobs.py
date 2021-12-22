@@ -105,7 +105,7 @@ def asr(ctx, args):
 
     # transcribe with vosk
     start = time.time()
-    result = transcribe_vosk(media_id, temp_wav, model_path)
+    result = transcribe_vosk(ctx, media_id, temp_wav, model_path)
     duration = time.time() - start
 
     try:

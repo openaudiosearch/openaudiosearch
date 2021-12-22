@@ -4,7 +4,7 @@ import json
 
 model = None
 
-def transcribe_vosk(media_id, audio_file_path, model_path):
+def transcribe_vosk(ctx, media_id, audio_file_path, model_path):
     global model
     if not model:
         model = Model(model_path)
@@ -34,6 +34,8 @@ def transcribe_vosk(media_id, audio_file_path, model_path):
             result = json.loads(rec.Result())
             print(media_id + ' at ' + str(round((count/frames) * 100, 2)) + '%')
             #  print("RESULT", result)
+            progress = count / frames
+            ctx.set_progress(progress)
             text = result['text']
             transcript = transcript + ' ' + result['text']
             if 'result' in result:
