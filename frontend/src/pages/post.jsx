@@ -15,6 +15,7 @@ import {
   Text,
   Icon,
   Center
+  , Tooltip
 } from '@chakra-ui/react'
 import { useParams, useLocation, useHistory } from 'react-router'
 
@@ -177,19 +178,20 @@ export function PostPageInner (props = {}) {
   if (post.nlp.ned) {
     console.log('nlp:', post.nlp.ned)
     wikidataEntities = Object.entries(post.nlp.ned).map((nel, i) =>
+      <Tooltip key={i} label={nel[1].description}>
+        <ChakraLink
+          href={nel[1].concepturi}
+          isExternal
+          pr={2}
+        >
+          <Tag>
+            {nel[0]}
+          </Tag>
 
-      <ChakraLink
-        key={i}
-        href={nel[1].concepturi}
-        isExternal
-        p='2'
-        color='secondary.600'
-      >
-        {nel[0]}
-      </ChakraLink>
+        </ChakraLink>
+      </Tooltip>
 
     )
-    console.log('ENTS', wikidataEntities)
   }
 
   let duration = null
@@ -203,14 +205,14 @@ export function PostPageInner (props = {}) {
       <Box w={['90vw', '80vw', '750px', '750px']}>
         <Flex direction='column' maxWidth='750px'>
           {fromSearch && (
-            <Flex direction='row' w='100%' mb='2'>
+            <Flex direction='row' w='100%'>
               <Button onClick={() => history.goBack()} size='sm' variant='ghost'>
                 <Box mr='2'><FaChevronLeft /></Box>
                 <Box>{t('backtosearch', 'Back to search')}</Box>
               </Button>
             </Flex>
           )}
-          <Box bg='white' borderRadius='md' boxShadow='sm' borderWidth='1px' borderColor='gray.300' p='4'>
+          <Box bg='white' borderRadius='sm' boxShadow='sm' borderWidth='1px' borderColor='gray.300' p='4'>
             <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' w='100%'>
               <Flex direction='column' w='100%'>
                 <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' w='100%'>
@@ -259,15 +261,17 @@ export function PostPageInner (props = {}) {
             </Flex>
 
             <Box mt='4'>{description}</Box>
+            <LicenseInfos post={post} />
+          </Box>
+          <Box>
+            {post.nlp.ned &&
+              <Box my='4' p='4' border='1px' borderColor='gray.200' bg='white' borderRadius='sm'>
+                <Heading as='h4' size='sm' mb={4}>
+                    Possible matching Wikidata Entries:
+                </Heading>
 
-            <Box my='4'>
-              {post.nlp.ned &&
-                <Box>
-                  <Text>related wikidata entries: </Text>
-                  {wikidataEntities}
-                </Box>}
-              <LicenseInfos my='4' post={post} />
-            </Box>
+                {wikidataEntities}
+              </Box>}
             <PostTranscriptSection post={post} />
           </Box>
 
