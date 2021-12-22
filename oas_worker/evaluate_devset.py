@@ -6,7 +6,7 @@ Evaluate OAS Devset:
   * Transcripts (TBD)
 
 Author(s): flipsimon, datadonk23
-Date: 16.12.21
+Date: 22.12.21
 """
 
 import httpx
@@ -336,7 +336,8 @@ def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="OAS NLP example scripts")
-    parser.add_argument("dataset", nargs="?", default="devset/Devset.csv",
+    parser.add_argument("dataset", nargs="?",
+                        default="devset/assets/Devset.csv",
                         type=str, help="Filepath to devset CSV")
     args = parser.parse_args()
 
