@@ -26,7 +26,7 @@ where
 
     pub async fn get(&self, id: &str) -> CouchResult<Record<T>> {
         // TODO: Make this clean.
-        let guid = if id.contains("_") {
+        let guid = if id.contains('_') {
             id.to_string()
         } else {
             T::guid(id)

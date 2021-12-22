@@ -38,7 +38,7 @@ pub struct LoginResponse {
 }
 
 impl UserInfo {
-    pub fn into_public(&self) -> UserPublicInfo {
+    pub fn to_public(&self) -> UserPublicInfo {
         self.clone().into()
     }
 }

@@ -118,18 +118,18 @@ pub struct ProxyHandler {
     rank: isize,
 }
 
-impl Into<Vec<Route>> for ProxyHandler {
-    fn into(self) -> Vec<Route> {
+impl From<ProxyHandler> for Vec<Route> {
+    fn from(proxy: ProxyHandler) -> Self {
         let mut routes = vec![
-            Route::ranked(self.rank, Method::Get, "/<path..>", self.clone()),
-            Route::ranked(self.rank, Method::Put, "/<path..>", self.clone()),
-            Route::ranked(self.rank, Method::Post, "/<path..>", self.clone()),
-            Route::ranked(self.rank, Method::Patch, "/<path..>", self.clone()),
-            Route::ranked(self.rank, Method::Head, "/<path..>", self.clone()),
-            Route::ranked(self.rank, Method::Delete, "/<path..>", self.clone()),
+            Route::ranked(proxy.rank, Method::Get, "/<path..>", proxy.clone()),
+            Route::ranked(proxy.rank, Method::Put, "/<path..>", proxy.clone()),
+            Route::ranked(proxy.rank, Method::Post, "/<path..>", proxy.clone()),
+            Route::ranked(proxy.rank, Method::Patch, "/<path..>", proxy.clone()),
+            Route::ranked(proxy.rank, Method::Head, "/<path..>", proxy.clone()),
+            Route::ranked(proxy.rank, Method::Delete, "/<path..>", proxy.clone()),
         ];
         for route in routes.iter_mut() {
-            route.name = Some(format!("Proxy({})", self.target).into());
+            route.name = Some(format!("Proxy({})", proxy.target).into());
         }
         routes
     }

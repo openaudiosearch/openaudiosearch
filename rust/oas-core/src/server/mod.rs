@@ -36,7 +36,8 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
         ));
 
     // TODO: Don't do this default.
-    let admin_password = &std::env::var("OAS_ADMIN_PASSWORD").unwrap_or("password".to_string());
+    let admin_password =
+        &std::env::var("OAS_ADMIN_PASSWORD").unwrap_or_else(|_| "password".to_string());
 
     let cors = rocket_cors::CorsOptions::default().to_cors()?;
     let auth = auth::Auth::new();

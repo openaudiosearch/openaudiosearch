@@ -4,14 +4,14 @@ use toml;
 extern crate dirs;
 use anyhow::Context;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tokio::fs::{metadata, read_to_string};
 
 pub type AllMappings = HashMap<String, String>;
 
 const DEFAULT_MAPPING: &str = include_str!("../../../../config/mapping.toml");
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct MappingManager {
     mappings: HashMap<String, Mapping>,
     path: Option<PathBuf>,
@@ -30,10 +30,7 @@ pub struct FieldMapping {
 
 impl MappingManager {
     pub fn new() -> Self {
-        Self {
-            mappings: Default::default(),
-            path: None,
-        }
+        Self::default()
     }
 
     pub fn with_file(f: &str) -> Self {
@@ -94,15 +91,14 @@ async fn mapping_path() -> Option<PathBuf> {
     None
 }
 
-async fn path_exists(path: &PathBuf) -> bool {
-    let path = path.clone();
+async fn path_exists(path: &Path) -> bool {
     let metadata = match metadata(&path).await {
         Ok(metadata) => metadata.is_file(),
         Err(e) => {
             log::debug!(
                 "{} on path: {}",
                 e,
-                path.into_os_string().into_string().unwrap()
+                path.as_os_str().to_str().unwrap_or_default()
             );
             false
         }

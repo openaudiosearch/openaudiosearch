@@ -166,9 +166,8 @@ impl JobManager {
 
     async fn on_complete(&self, job: &JobInfo) -> anyhow::Result<()> {
         let typ = &job.queue;
-        match typ.as_str() {
-            typs::ASR => typs::on_asr_complete(&self.db, &self, &job).await?,
-            _ => {}
+        if typ.as_str() == typs::ASR {
+            typs::on_asr_complete(&self.db, self, job).await?;
         }
         Ok(())
     }

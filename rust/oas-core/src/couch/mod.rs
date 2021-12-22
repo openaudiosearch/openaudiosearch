@@ -247,7 +247,7 @@ impl CouchDB {
 
     /// Delete a doc by its id
     pub async fn delete_doc(&self, id: &str) -> Result<PutResponse> {
-        let last_doc = self.get_doc(&id).await;
+        let last_doc = self.get_doc(id).await;
         let mut path = id.to_owned();
         if let Ok(last_doc) = last_doc {
             if let Some(rev) = last_doc.rev() {
@@ -266,7 +266,7 @@ impl CouchDB {
         } else {
             log::trace!("[{}] delete OK for {}", self.config.database, id);
         }
-        return res;
+        res
     }
 
     /// Put a doc into the database.
