@@ -1,10 +1,11 @@
 use json_patch::Patch;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use std::{collections::HashMap, time::Duration};
 
 use crate::couch::CouchDB;
 
-// pub mod argfuns;
+pub mod argfuns;
 pub mod bin;
 pub mod changes;
 pub mod config;
@@ -21,19 +22,19 @@ pub struct JobManager {
     client: OcypodClient,
     db: CouchDB,
     config: JobConfig,
-    // argfuns: argfuns::ArgFunctions,
+    argfuns: Arc<argfuns::ArgFunctions>,
 }
 
 impl JobManager {
     pub fn new(db: CouchDB, base_url: impl ToString) -> Self {
         let client = OcypodClient::new(base_url.to_string());
         let config = JobConfig::default();
-        // let argfuns = argfuns::Argfunctions::with_defaults();
+        let argfuns = argfuns::ArgFunctions::with_defaults();
         Self {
             db,
             client,
             config,
-            // argfuns,
+            argfuns: Arc::new(argfuns),
         }
     }
 
@@ -189,21 +190,20 @@ impl JobManager {
             typs::on_asr_complete(&self.db, self, job).await?;
         }
         // Run dynamic configs.
-        // let argfun_ctx = argfuns::ArgFunContext {
-        //     db: self.db.clone(),
-        // };
+        let argfun_ctx = argfuns::ArgFunContext {
+            db: self.db.clone(),
+        };
         if let Some(conf) = self.config.on_complete.get(typ) {
             for job_conf in conf {
                 let args = job_conf
-                    // .template_to_args(&job.input, &self.argfuns, &argfun_ctx)
-                    .template_to_args(&job.input);
+                    .template_to_args(&job.input, &self.argfuns, argfun_ctx.clone())
+                    .await;
                 if let Ok(args) = args {
                     let req = JobCreateRequest {
                         typ: job_conf.job.to_string(),
                         args,
                         subjects: job.tags.clone(),
                     };
-                    // let res =
                     let _ = self.create_job(req).await;
                 }
             }

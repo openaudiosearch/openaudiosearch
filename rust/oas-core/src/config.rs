@@ -16,7 +16,6 @@ where
         locations.push(dir);
     }
     locations.push(Path::new("/etc").join(location));
-    eprintln!("locs {:#?}", locations);
 
     let buf = loop {
         if let Some(location) = locations.pop() {

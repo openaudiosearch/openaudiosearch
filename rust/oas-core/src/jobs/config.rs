@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::collections::HashMap;
 
-// use super::argfuns::{ArgFunContext, ArgFunctions};
+use super::argfuns::{ArgFunContext, ArgFunctions};
 
 const DEFAULT_CONFIG: &'static [u8] = include_bytes!("../../../../config/jobs.toml");
 
@@ -23,12 +23,11 @@ pub struct StartConfig {
 }
 
 impl StartConfig {
-    // pub async fn template_to_args(
-    pub fn template_to_args(
+    pub async fn template_to_args(
         &self,
         args: &serde_json::Value,
-        // argfuns: &ArgFunctions,
-        // argfun_ctx: &ArgFunContext,
+        argfuns: &ArgFunctions,
+        argfun_ctx: ArgFunContext,
     ) -> anyhow::Result<serde_json::Value> {
         let mut template = self.args.clone();
         let input = serde_json::json!({ "args": args });
@@ -37,19 +36,22 @@ impl StartConfig {
                 serde_json::Value::String(string) => {
                     if string.starts_with("{{") && string.ends_with("}}") {
                         let pattern = &string[2..(string.len() - 2)];
-                        let mut parts = pattern.split("|");
-                        let getter = parts.nth(0).unwrap();
-                        // let argfun = parts.nth(1);
+                        let parts: Vec<_> = pattern.split("|").collect();
+                        let getter = parts.get(0).unwrap();
+                        let argfun = parts.get(1);
 
                         let replacement = extract_replacement(&input, &getter);
 
                         if let Some(replacement) = replacement {
                             // Run argfuns if present.
-                            // let replacement = if let Some(argfun) = argfun {
-                            //     argfuns.apply(&argfun_ctx, argfun, replacement)?
-                            // } else {
-                            //     replacement
-                            // };
+                            let replacement = if let Some(argfun) = argfun {
+                                eprintln!("run!");
+                                argfuns
+                                    .apply(argfun_ctx.clone(), argfun, replacement)
+                                    .await?
+                            } else {
+                                replacement
+                            };
 
                             // Replace the value.
                             *value = replacement
