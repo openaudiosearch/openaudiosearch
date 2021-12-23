@@ -7,36 +7,14 @@ import wikipedia
 from qwikidata.entity import WikidataItem, WikidataLexeme, WikidataProperty
 from qwikidata.linked_data_interface import get_entity_dict_from_api
 
-<<<<<<< HEAD
-=======
-def get_candidates(query):
-    r = httpx.get('https://www.wikidata.org/w/api.php?action=wbsearchentities&search={}&language=de&format=json'.format(query))
-    print(20 * "#")
-    print(r)
-    return r.text
->>>>>>> first running implementation for naive_ned
 
 @worker.job(name="naive_ned")
 def naive_ned(ctx, args):
     """Simple implementation of naive named entity linking with Wikidata.
-<<<<<<< HEAD
-<<<<<<< HEAD
-It simply queries the Wikidata Search API and takes the first result.
+       It simply queries the Wikidata REST API and takes the first result.
 
     Args:
         ctx (Context): The context object contains the worker ID, the current job and enables access to the core client
-=======
-It simply queries the Wikidata REST API and takes the first result.
-
-    Args:
-        ctx (Context): Context Object holds worker id & current job
->>>>>>> docu
-=======
-It simply queries the Wikidata Search API and takes the first result.
-
-    Args:
-        ctx (Context): The context object contains the worker ID, the current job and enables access to the core client
->>>>>>> show ned on post page
         args ({id: string}): post_id
 
     Returns:
