@@ -7,14 +7,6 @@ import wikipedia
 from qwikidata.entity import WikidataItem, WikidataLexeme, WikidataProperty
 from qwikidata.linked_data_interface import get_entity_dict_from_api
 
-<<<<<<< HEAD
-=======
-def get_candidates(query):
-    r = httpx.get('https://www.wikidata.org/w/api.php?action=wbsearchentities&search={}&language=de&format=json'.format(query))
-    print(20 * "#")
-    print(r)
-    return r.text
->>>>>>> first running implementation for naive_ned
 
 @worker.job(name="naive_ned")
 def naive_ned(ctx, args):
@@ -32,15 +24,10 @@ It simply queries the Wikidata Search API and takes the first result.
 
     post = ctx.get(f"/post/{post_id}")
     guid = post["$meta"]["guid"]
-<<<<<<< HEAD
-=======
-    # Nothing to do if no nlp
->>>>>>> first running implementation for naive_ned
     if post["nlp"] is None or post["nlp"]["ner"] is None:
         return {}
     nlp_data = post["nlp"]
     result  =  {}
-<<<<<<< HEAD
     wikipedia.set_lang("de")
 
     for item in nlp_data["ner"]:
@@ -62,27 +49,6 @@ It simply queries the Wikidata Search API and takes the first result.
 
     nlp_data["ned"] = result        
     
-=======
-    for named_entity in nlp_data["ner"]:
-        print(40 * '#')
-        print(named_entity)
-        candidates = get_candidates(named_entity[0])
-        print(candidates)
-        if candidates is None:
-            return {}
-        try:
-            candidates = json.loads(candidates)
-        except:
-	        return {}
-        for candidate in candidates['search']:
-            if candidate["match"]["type"] == "label":
-                ent = get_entity_dict_from_api(candidate["id"])
-                res = WikidataItem(ent)
-                result[named_entity[0]] = candidate
-                print(candidate["id"], candidate["match"]["text"], res.get_description())  
-    post["nlp"]["ned"] = result        
-
->>>>>>> first running implementation for naive_ned
     patch = [
         {"op": "replace", "path": "/nlp", "value": nlp_data},
     ]
