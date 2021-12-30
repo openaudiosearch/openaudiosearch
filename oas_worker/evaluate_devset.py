@@ -99,13 +99,42 @@ def get_post_ids(cba_ids: list):
     for cba_id, job_id in job_ids.items():
         completed = False
         job_url = url + f"/{job_id}"
-        while not completed:  # this is blocking, fixme when evaluate fun works
+        while not completed:  # FIXME this is blocking
             res = httpx.get(job_url)
             if res.json()["status"] == "completed":
                 oas_ids[cba_id] = res.json()["output"]["meta"]["oas_id"]
                 completed = True
 
     return oas_ids
+
+
+def trigger_nlp(cba_oas_ids: dict):
+    """
+    Trigger NLP jobs in OAS on devset posts.
+    Blocking, waits till all jobs are completed.
+
+    :param cba_oas_ids:
+    :return: Dict of CBA IDs as keys and OAS post IDs as values
+    """
+    url = f"{OAS_URL}/job"
+    job_ids = {}
+
+    for cba_id, oas_id in cba_oas_ids.items():
+        body = {
+            "typ": "nlp",
+            "subjects": [""],
+            "args": {"post_id": oas_id}
+        }
+        res = httpx.post(url, json=body)
+        job_ids[cba_id] = str(res.json())
+
+    for cba_id, job_id in job_ids.items():
+        completed = False
+        job_url = url + f"/{job_id}"
+        while not completed:  # FIXME this is blocking
+            res = httpx.get(job_url)
+            if res.json()["status"] == "completed":
+                completed = True
 
 
 def get_post(post_id: str):
@@ -130,7 +159,7 @@ def get_keywords(cba_id_oas_id):
     """
     Gets keywords from devset post.
 
-    :param cba_id_oas_id: (cba_id and oas_id) of post
+    :param cba_id_oas_id: (cba_id, oas_id) of post
     :return: Dict of CBA track ID - keywords list
     :return type: dict(cba_id: [keywords])
     """
@@ -352,12 +381,13 @@ if __name__ == "__main__":
     #print(f"CBA IDs: {cba_ids}")  # dev print
     oas_post_ids = get_post_ids(cba_ids)
     #print(f"OAS IDs: {oas_post_ids}")  # dev print
-    oas_keywords = [get_keywords(ids) for ids in oas_post_ids.items()]
-    #print(f"OAS keywords: {oas_keywords}")  # dev print
-
-    """ Evaluate """
-    keyword_metrics = ["Precision", "Recall", "F1", "MAP"]
-    evaluate_keywords(oas_keywords, true_labels, keyword_metrics)
+    trigger_nlp(oas_post_ids)
+    # oas_keywords = [get_keywords(ids) for ids in oas_post_ids.items()]
+    # print(f"OAS keywords: {oas_keywords}")  # dev print
+    #
+    # """ Evaluate """
+    # keyword_metrics = ["Precision", "Recall", "F1", "MAP"]
+    # evaluate_keywords(oas_keywords, true_labels, keyword_metrics)
 
 
     # generate feed from devset
