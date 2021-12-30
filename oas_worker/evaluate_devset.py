@@ -166,19 +166,11 @@ def get_keywords(cba_id_oas_id):
     cba_id, oas_id = cba_id_oas_id
 
     post = get_post(oas_id)
-    ### As nlp job is currently not working correctly, hardcoded version
-    ### instead of query:
-    # try:
-    #     post_keywords = post["media"][0]["nlp"]["keywords"]
-    #     return {cba_id: post_keywords}
-    # except Exception as e:
-    #     print(f"Couldn't find keywords for post {post['$meta']['id']}\n{e}")
-    transcript = post["media"][0]["transcript"]["text"]
-    spacy = SpacyPipe(["textrank"])
-    nlp_res = spacy.run(transcript)
-    post_keywords = nlp_res["keywords"]
-
-    return {cba_id: post_keywords}
+    try:
+        post_keywords = post["nlp"]["keywords"]
+        return {cba_id: post_keywords}
+    except Exception as e:
+        print(f"Couldn't find keywords for post {post['$meta']['id']}\n{e}")
 
 
 def flatten_oas_keywords(oas_keywords: list):
@@ -382,12 +374,12 @@ if __name__ == "__main__":
     oas_post_ids = get_post_ids(cba_ids)
     #print(f"OAS IDs: {oas_post_ids}")  # dev print
     trigger_nlp(oas_post_ids)
-    # oas_keywords = [get_keywords(ids) for ids in oas_post_ids.items()]
-    # print(f"OAS keywords: {oas_keywords}")  # dev print
-    #
-    # """ Evaluate """
-    # keyword_metrics = ["Precision", "Recall", "F1", "MAP"]
-    # evaluate_keywords(oas_keywords, true_labels, keyword_metrics)
+    oas_keywords = [get_keywords(ids) for ids in oas_post_ids.items()]
+    #print(f"OAS keywords: {oas_keywords}")  # dev print
+
+    """ Evaluate """
+    keyword_metrics = ["Precision", "Recall", "F1", "MAP"]
+    evaluate_keywords(oas_keywords, true_labels, keyword_metrics)
 
 
     # generate feed from devset
