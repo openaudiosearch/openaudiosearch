@@ -10,11 +10,12 @@ from app.config import config
 from app.jobs.spacy_pipe import get_spacy_path, spacy_model
 
 def download(url, path):
-    p = subprocess.Popen(["curl", "--insecure", "--output", path, url], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    p = subprocess.Popen(["curl", "--insecure", "-C", "-", "--output", path, url])
     p.wait()
 
 
 def extract(filepath):
+    print("extracting {filepath}")
     path, _ = os.path.split(filepath)
     with zipfile.ZipFile(filepath) as zip_ref:
         zip_ref.extractall(path)
