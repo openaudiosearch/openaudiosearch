@@ -6,17 +6,18 @@ Evaluate OAS Devset:
   * Transcripts (TBD)
 
 Author(s): flipsimon, datadonk23
-Date: 22.12.21
+Date: 04.01.22
 """
 
+import os
 import httpx
 import json
 import argparse
 import pandas as pd
 import statistics
+from datetime import datetime
 from nltk.stem.cistem import Cistem
 from string import punctuation
-from app.jobs.spacy_pipe import SpacyPipe  # dev
 
 OAS_URL = 'http://admin:password@localhost:8080/api/v1'
 
@@ -173,8 +174,27 @@ def get_keywords(cba_id_oas_id):
         print(f"Couldn't find keywords for post {post['$meta']['id']}\n{e}")
 
 
+def get_transcript(cba_id_oas_id):
+    """
+    Gets transcript from devset post.
+
+    :param cba_id_oas_id: (cba_id, oas_id) of post
+    :return: Dict of CBA track ID - transcript
+    :return type: dict(cba_id: transcript)
+    """
+    cba_id, oas_id = cba_id_oas_id
+
+    post = get_post(oas_id)
+    try:
+        post_transcript = post["media"][0]["transcript"]["text"]
+        return {cba_id: post_transcript}
+    except Exception as e:
+        print(f"Couldn't find transcript for post {post['$meta']['id']}\n{e}")
+
+
 def flatten_oas_keywords(oas_keywords: list):
-    """ Flattens oas_keywords list to [{cba_ids: [kw]}]. Removes unused
+    """
+    Flattens oas_keywords list to [{cba_ids: [kw]}]. Removes unused
     informations on keyword count and rank.
     Helper for evaluate_keywords().
 
@@ -326,10 +346,10 @@ def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
     :param true_keywords: List of {{cba_id: [kws]}}
     :param metrics: List of metrics to compute. available metrics [
     "Precision", "Recall", "F1", "MAP"]
-    :return: -
+    :return: Evaluation results - dict of metrics as keys and results as values
+    :return type: dict
     """
-    print(f"OAS Keywords [{{cba_id: (kw, count, rank)}}]:\n{oas_keywords}")
-    print(f"Ground Truth [{{cba_id: [kws]}}]:\n{true_keywords}")
+    results = {}
     keywords = flatten_oas_keywords(oas_keywords)
 
     # Uniform NLP processing of keywords
@@ -342,44 +362,90 @@ def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
                                                                 true_keywords)
 
         if "Precision" in metrics:
+            results["Precision"] = f"{avg_precision:.4f}"
             print(f"Avg Prec: {avg_precision:.4f}")
         if "Recall" in metrics:
+            results["Recall"] = f"{avg_recall:.4f}"
             print(f"Avg Rec: {avg_recall:.4f}")
         if "F1" in metrics:
+            results["F1"] = f"{avg_f1:.4f}"
             print(f"Avg F1: {avg_f1:.4f}")
 
     # Rank aware metrics: MAP
     if "MAP" in metrics:
         for k in range(1, 8):
             map_at_k = mean_average_precision_k(keywords, true_keywords, k=k)
+            results[f"MAP@k={k}"] = f"{map_at_k:.4f}"
             print(f"MAP@k [k={k}]: {map_at_k:.4f}")
+
+    return results
+
+
+def log_results(results: dict, oas_keywords: list, ground_truth: list,
+                transcripts: list, log_path: str):
+    f"""
+    Logs Evaluation results and samples data (OAS keywords, Ground truth
+    keywords, OAS transcripts).
+
+    :param results: Evaluation results - dict of metric: results
+    :param oas_keywords: List of keywords - [{{cba_id: (kw, count, rank)}}]
+    :param ground_truth: Ground truth keywords - [{{cba_id: [kws]}}]
+    :param transcripts: List of transcripts - [{{cba_id: transcript}}]
+    :param log_path: Directory to log into
+    :return: -
+    """
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
+
+    ground_truth_dict = dict([(k, v) for element in ground_truth
+                              for k, v in element.items()])
+    transcripts_dict = dict([(k, v) for element in transcripts
+                              for k, v in element.items()])
+
+    fpath = f"devset_evaluation_log_{datetime.now().strftime('%Y%m%d%H%M')}.txt"
+    log_fpath = os.path.join(log_path, fpath)
+    with open(log_fpath, "a") as f:
+        f.write(f"*** KEYWORD EVALUATION RESULTS ***\n")
+        for metric in results:
+            f.write(f"{metric}: {results[metric]}\n")
+        f.write(f"\n\n*** LOG SAMPLE RESULTS ***\n")
+        for oas_results in oas_keywords:
+            cba_id = list(oas_results.keys())[0]
+            f.write(f"\nSAMPLE {cba_id}\n")
+            f.write(f"OAS KWs: {oas_results[cba_id]}\n")
+            f.write(f"Ground Truth KWs: {ground_truth_dict[cba_id]}\n")
+            f.write(f"Transcipt: {transcripts_dict[cba_id]}\n")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="OAS NLP example scripts")
+    parser = argparse.ArgumentParser(description="OAS Keyword example script")
     parser.add_argument("dataset", nargs="?",
                         default="devset/assets/Devset.csv",
                         type=str, help="Filepath to devset CSV")
+    parser.add_argument("log_path", nargs="?",
+                        default="devset/evaluations",
+                        type=str, help="Path to log evaluation")
     args = parser.parse_args()
-
     devset_fpath = args.dataset
+    log_path = args.log_path
 
     """ Get true labels """
     true_labels = get_true_labels(devset_fpath)
-    #print(f"Ground truth: {true_labels}")  # dev print
 
-    """ Get OAS keywords """
+    """ Get OAS keywords & transcript """
     cba_ids = devsetIDs_to_cbaIDs(devset_fpath)
-    #print(f"CBA IDs: {cba_ids}")  # dev print
     oas_post_ids = get_post_ids(cba_ids)
-    #print(f"OAS IDs: {oas_post_ids}")  # dev print
     trigger_nlp(oas_post_ids)
     oas_keywords = [get_keywords(ids) for ids in oas_post_ids.items()]
-    #print(f"OAS keywords: {oas_keywords}")  # dev print
+    oas_transcripts = [get_transcript(ids) for ids in oas_post_ids.items()]
 
     """ Evaluate """
     keyword_metrics = ["Precision", "Recall", "F1", "MAP"]
-    evaluate_keywords(oas_keywords, true_labels, keyword_metrics)
+    eval_results = evaluate_keywords(oas_keywords, true_labels, keyword_metrics)
+
+    """ LOG Results """
+    log_results(eval_results, oas_keywords, true_labels, oas_transcripts,
+                log_path)
 
 
     # generate feed from devset
