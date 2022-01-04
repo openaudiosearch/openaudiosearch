@@ -10,7 +10,8 @@ import {
 import {
   FaEdit as EditIcon,
   FaCheck as SaveIcon,
-  FaSync as RefreshIcon
+  FaSync as RefreshIcon,
+  FaCaretDown, FaCaretUp
 } from 'react-icons/fa'
 import { useForm } from 'react-hook-form'
 
@@ -33,9 +34,20 @@ export default function JobPage (props) {
 function JobList (props) {
   const { onSelect, selected } = props
   const { data, error, mutate } = useSWR('/jobs')
+  const [sort, setSort] = useState('id')
+  const [sortDirection, setSortDirection] = useState('asc')
+  const sortedJobs = React.useMemo(() => {
+    const [key, dir] = sort.split(':')
+    return data.sort((a, b) => {
+      const res = (a[key] > b[key]) ? 1 : -1
+      if (sortDirection === 'desc') return res * -1
+      return res
+    })
+  }, [data, sort, sortDirection])
   if (error) return <Error error={error} />
   if (!data) return <Loading />
-  const sortedJobs = data.sort((a, b) => (a.id > b.id) ? 1 : -1)
+  const sortProps = { sort, setSort, sortDirection, setSortDirection }
+  // const sortedJobs = data.sort((a, b) => (a.id > b.id) ? 1 : -1)
   return (
     <Box
       mt={2}
@@ -46,10 +58,10 @@ function JobList (props) {
       <Table variant='striped'>
         <Thead>
           <Tr>
-            <Th>ID</Th>
-            <Th>Status</Th>
-            <Th>Created at</Th>
-            <Th>Queue</Th>
+            <FieldHeader {...sortProps} id='id'>ID</FieldHeader>
+            <FieldHeader {...sortProps} id='status'>Status</FieldHeader>
+            <FieldHeader {...sortProps} id='created_at'>Created at</FieldHeader>
+            <FieldHeader {...sortProps} id='queue'>Queue</FieldHeader>
           </Tr>
         </Thead>
         <Tbody>
@@ -60,6 +72,32 @@ function JobList (props) {
       </Table>
     </Box>
   )
+}
+
+function FieldHeader (props) {
+  const { id, sort, setSort, sortDirection, setSortDirection, label: labelProp, children } = props
+  const label = labelProp || children
+  return (
+    <Th onClick={onClick}>
+      <Link href="#" display='flex'>
+        {label}
+        {sort === id && (
+          <Box ml='2'>
+            {sortDirection === 'asc' && <FaCaretDown />}
+            {sortDirection === 'desc' && <FaCaretUp />}
+          </Box>
+        )}
+      </Link>
+    </Th>
+  )
+  function onClick (e) {
+    e.preventDefault()
+    if (id === sort) setSortDirection(dir => dir === 'asc' ? 'desc' : 'asc')
+    else {
+      setSort(id)
+      setSortDirection('asc')
+    }
+  }
 }
 
 function Job (props) {
