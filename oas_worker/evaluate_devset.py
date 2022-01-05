@@ -6,7 +6,7 @@ Evaluate OAS Devset:
   * Transcripts (TBD)
 
 Author(s): flipsimon, datadonk23
-Date: 04.01.22
+Date: 05.01.22
 """
 
 import os
@@ -16,10 +16,14 @@ import argparse
 import pandas as pd
 import statistics
 from datetime import datetime
-from nltk.stem.cistem import Cistem
 from string import punctuation
+import spacy
+from app.jobs.spacy_pipe import spacy_load
+
 
 OAS_URL = 'http://admin:password@localhost:8080/api/v1'
+nlp = spacy_load("de_core_news_lg")
+
 
 def create_feed(url):
     url = f"{OAS_URL}/feed"
@@ -219,13 +223,12 @@ def clean_keywords(keyword_dicts: list):
         * Lowercasing
         * Punctuation removal
         * String stripping
-        * Stem words
+        * Lemmatize keywords (resp. keyphrases)
 
     :param keyword_dicts: List of {cba_ids: [kws]}
     :return: cleaned keywords in list of keyword dicts
     """
     cleaned_keyword_dicts = []
-    stemmer = Cistem(case_insensitive=False)
 
     for kw_dict in keyword_dicts:
         for cba_id, kws in kw_dict.items():
@@ -234,8 +237,8 @@ def clean_keywords(keyword_dicts: list):
                 cleaned_string = (kw.lower()
                                   .translate(str.maketrans("", "", punctuation))
                                   .strip())
-                cleaned_kws.append(" ".join([stemmer.stem(word) for word in
-                          cleaned_string.split()]))  # Possible keyphrases
+                cleaned_kws.append(" ".join(
+                    [token.lemma_ for token in nlp(cleaned_string)]))
             cleaned_keyword_dicts.append({cba_id: cleaned_kws})
 
     return cleaned_keyword_dicts
@@ -382,7 +385,7 @@ def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
 
 
 def log_results(results: dict, oas_keywords: list, ground_truth: list,
-                transcripts: list, log_path: str):
+                transcripts: list, log_path: str, duration: str):
     f"""
     Logs Evaluation results and samples data (OAS keywords, Ground truth
     keywords, OAS transcripts).
@@ -392,6 +395,7 @@ def log_results(results: dict, oas_keywords: list, ground_truth: list,
     :param ground_truth: Ground truth keywords - [{{cba_id: [kws]}}]
     :param transcripts: List of transcripts - [{{cba_id: transcript}}]
     :param log_path: Directory to log into
+    :param duration: Run time of evaluation
     :return: -
     """
     if not os.path.exists(log_path):
@@ -408,6 +412,7 @@ def log_results(results: dict, oas_keywords: list, ground_truth: list,
         f.write(f"*** KEYWORD EVALUATION RESULTS ***\n")
         for metric in results:
             f.write(f"{metric}: {results[metric]}\n")
+        f.write(f"Evaluation run time: {duration}\n")
         f.write(f"\n\n*** LOG SAMPLE RESULTS ***\n")
         for oas_results in oas_keywords:
             cba_id = list(oas_results.keys())[0]
@@ -428,6 +433,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     devset_fpath = args.dataset
     log_path = args.log_path
+    start = datetime.now()  # track run time of evaluation
 
     """ Get true labels """
     true_labels = get_true_labels(devset_fpath)
@@ -444,8 +450,10 @@ if __name__ == "__main__":
     eval_results = evaluate_keywords(oas_keywords, true_labels, keyword_metrics)
 
     """ LOG Results """
+    end = datetime.now()
+    eval_duration = str(end - start)
     log_results(eval_results, oas_keywords, true_labels, oas_transcripts,
-                log_path)
+                log_path, eval_duration)
 
 
     # generate feed from devset
