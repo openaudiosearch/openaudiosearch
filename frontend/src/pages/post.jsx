@@ -1,5 +1,6 @@
 import React from 'react'
-import { FaCog, FaPlay, FaTasks, FaExternalLinkAlt, FaChevronLeft, FaCreativeCommons } from 'react-icons/fa'
+import { FaCog, FaWikipediaW, FaPlay, FaTasks, FaExternalLinkAlt, FaChevronLeft, FaCreativeCommons } from 'react-icons/fa'
+import { SiWikidata } from 'react-icons/si'
 import {
   IconButton,
   Menu,
@@ -14,7 +15,12 @@ import {
   Tag,
   Text,
   Icon,
-  Center
+  Center,
+  Tooltip,
+  List,
+  ListItem,
+  ListIcon,
+  Divider
 } from '@chakra-ui/react'
 import { useParams, useLocation, useHistory } from 'react-router'
 
@@ -174,6 +180,46 @@ export function PostPageInner (props = {}) {
     )
   }
 
+  let wikidataEntities = []
+  if (post.nlp && post.nlp.ned) {
+    wikidataEntities = Object.entries(post.nlp.ned).map((nel, i) => {
+      console.log(nel)
+      return (
+        <Box key={nel[0]}>
+          <Heading size='sm'>{nel[0]}</Heading>
+          <List spacing={0}>
+            {nel[1].map((entry) => {
+              const { wikibase_item: qid } = entry.pageprops
+              return (
+                <Tooltip key={entry.pageid} label={entry.description}>
+                  <ListItem h={10}>
+                    <Flex>
+                      <Box mr={3}>
+                        <ListIcon as={FaWikipediaW} />
+                        <ChakraLink href={'https://de.wikipedia.org/wiki/' + entry.title} isExternal>
+                          {entry.title}
+                        </ChakraLink>
+                      </Box>
+                      <Box>
+                        <ListIcon as={SiWikidata} />
+
+                        <ChakraLink href={'https://www.wikidata.org/wiki/' + qid} isExternal>
+                          {qid}
+                        </ChakraLink>
+                      </Box>
+                    </Flex>
+                  </ListItem>
+                </Tooltip>
+              )
+            })}
+          </List>
+        </Box>
+
+      )
+    }
+    )
+  }
+
   let duration = null
   if (post.media.length > 0) {
     duration = (post.media[0].duration / 60).toFixed() + ' min'
@@ -239,11 +285,20 @@ export function PostPageInner (props = {}) {
                 <Box flex='1' fontSize='sm'>{duration}</Box>
               )}
             </Flex>
-
             <Box mt='4'>{description}</Box>
             <Box my='4'>
               <LicenseInfos my='4' post={post} />
             </Box>
+
+            {post.nlp && post.nlp.ned &&
+              <Box my='4' p='4' border='1px' borderColor='gray.200' bg='white' borderRadius='sm'>
+                <Heading as='h4' size='md' mb={4}>
+                Wiki content that might be relevant:
+                </Heading>
+
+                {wikidataEntities}
+
+              </Box>}
             <PostTranscriptSection post={post} />
           </Box>
         </Flex>

@@ -1,12 +1,8 @@
 from app.worker import worker
-import httpx
+from enum import Enum
+from httpx import Client
+from pprint import pprint
 import json
-
-import wikipedia
-
-from qwikidata.entity import WikidataItem, WikidataLexeme, WikidataProperty
-from qwikidata.linked_data_interface import get_entity_dict_from_api
-
 
 @worker.job(name="naive_ned")
 def naive_ned(ctx, args):
@@ -24,35 +20,27 @@ def naive_ned(ctx, args):
 
     post = ctx.get(f"/post/{post_id}")
     guid = post["$meta"]["guid"]
-
     if post["nlp"] is None or post["nlp"]["ner"] is None:
         return {}
-    nlp_data = post["nlp"]
-    result  =  {}
-
-    wikipedia.set_lang("de")
-
-    for item in nlp_data["ner"]:
-        if item[1] == "PER" or item[1] == "LOC":
-            print(20 * "#")
-            print(item)
-            search_res = wikipedia.search("\"" + item[0] + "\"" , results=1)
-            if len(search_res) > 0:
-                page = wikipedia.page(search_res[0])
-                qid = get_qid(page.title, page.pageid)
-                print(page.title, qid)
-
-                ent = get_entity_dict_from_api(qid)
-
-                wikiitem = WikidataItem(ent)
-                print(wikiitem)
-                result[item[0]] = {"description": wikiitem.get_description(), "qid": qid,  }  
-    print(result)
-
-    nlp_data["ned"] = result        
+    accepted_labels = ["LOC", "PER"]
+    result = dict()
+    for item in post["nlp"]["ner"]:
+        text, label, _start, _end = item
+        pages = None
+        if label in accepted_labels:
+            params = set_search_params(text)
+            r = search_wikipedia(params, language="de")
+            if r:
+                pages = r.get("pages")
+            if pages:
+                result[text] = sorted(list(pages.values()),key=lambda x :x['index'])
+                pprint(result[text])
+    
+    pprint(result)
+    post["nlp"]["ned"] = result        
     
     patch = [
-        {"op": "replace", "path": "/nlp", "value": nlp_data},
+        {"op": "replace", "path": "/nlp", "value":post["nlp"]},
     ]
     patches = { guid: patch }
 
@@ -60,21 +48,46 @@ def naive_ned(ctx, args):
         "patches": patches
     }
 
-def get_qid(title, id):
-    r = httpx.get('https://de.wikipedia.org/w/api.php?action=query&prop=pageprops&ppprop=wikibase_item&redirects=1&titles={}&format=json'.format(title))
-    try:
-        pprops = json.loads(r.text)
-        if pprops['query']['pages'][id]["pageprops"]["wikibase_item"]:
-            qid = pprops['query']['pages'][id]["pageprops"]["wikibase_item"]
-    except:
-        return {}
-    return qid
+class lang(Enum):
+    de = "de"
+    en = "en"
+    fr = "fr"
+    es = "es"
 
-def get_candidates(query):
-    r = httpx.get('https://www.wikidata.org/w/api.php?action=wbsearchentities&search={}&language=de&format=json'.format(query))
-    print(20 * "#")
-    print(r)
-    return r.text
+    @classmethod
+    def has_value(cls, value):
+        return value in cls._value2member_map_
+
+
+def set_search_params(query, limit = 3) :
+    params = {
+      "action": "query",
+    "format": "json",
+    "prop":"pageprops|description",
+    "ppprop":"wikibase_item",
+    "generator" : "search",
+    "gsrsearch": "\"{}\"".format(query),
+    "gsrlimit": limit,
+    "redirects": True,
+    }
+    return params
+
+def search_wikipedia(params, language = "de"):
+    if lang.has_value(language):
+        headers = {"user-agent": "openaudiosearch/0.0.1"}
+        with Client(headers=headers) as client:
+            url = "https://{}.wikipedia.org/w/api.php".format(language)
+            r = client.get(url, params=params)
+            result = r.json()
+            error = result.get("error")
+            warnings = result.get("warnings")
+            if not warnings and not error and result.get("query"):
+                return result["query"]
+            elif error:
+                print(error) 
+            elif warnings:
+                print(warnings) 
+            return
 
 # https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
 # https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1%7CQ42&props=descriptions&languages=en%7Cde%7Cfr

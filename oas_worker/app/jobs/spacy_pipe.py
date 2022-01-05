@@ -63,7 +63,8 @@ class SpacyPipe():
         """
         if self.nlp is None:
             return {}
-
+        transcript = transcript.replace("\r"," ")
+        transcript = transcript.replace("\n"," ")
         doc = self.nlp(transcript)
         ner = []
         pos = []
@@ -72,7 +73,7 @@ class SpacyPipe():
         keywords = []
         if "ner" in self.pipeline:
             for ent in doc.ents:
-                ner.append((ent.text, ent.label_))
+                ner.append((ent.text, ent.label_, ent.start_char, ent.end_char))
         token_based = ("pos" or "missed" or "lemma") in self.pipeline
         if token_based:   
             for token in doc:
@@ -83,7 +84,7 @@ class SpacyPipe():
                     if _token not in self.nlp.vokab:
                         missed.append(token.text)
                 if "lemma" in self.pipeline:
-                    lemma.append(token.text, token.lemma)
+                    lemma.append((token.text, token.lemma))
 
         if "textrank" in self.pipeline:
             max_n = 10
