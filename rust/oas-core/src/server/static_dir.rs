@@ -22,9 +22,9 @@ impl IncludedStaticDir {
     }
 }
 
-impl Into<Vec<Route>> for IncludedStaticDir {
-    fn into(self) -> Vec<Route> {
-        let mut route = Route::ranked(self.rank, Method::Get, "/<path..>", self);
+impl From<IncludedStaticDir> for Vec<Route> {
+    fn from(included_dir: IncludedStaticDir) -> Self {
+        let mut route = Route::ranked(included_dir.rank, Method::Get, "/<path..>", included_dir);
         route.name = Some("IncludedStaticDir".to_string().into());
         vec![route]
     }

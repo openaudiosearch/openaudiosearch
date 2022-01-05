@@ -137,14 +137,11 @@ impl PostIndex {
 
         // Resolve all unresolved media references.
         let resolve_result = db.resolve_all_refs(&mut posts.as_mut_slice()).await;
-        match resolve_result {
-            Err(errs) => {
-                log::error!("{}", errs);
-                for err in errs.0 {
-                    log::debug!("  {}", err);
-                }
+        if let Err(errs) = resolve_result {
+            log::error!("{}", errs);
+            for err in errs.0 {
+                log::debug!("  {}", err);
             }
-            _ => {}
         }
 
         for post in posts.iter_mut() {
@@ -191,28 +188,25 @@ fn report_indexing_results(res: &Result<BulkPutResponse, IndexError>) {
         }
         Ok(res) => {
             let stats = res.stats();
-            match res.errors {
-                true => {
-                    log::error!("Index failed for {} docs", stats.errors);
-                    if let Some((id, err)) = stats.first_error {
-                        log::error!(
-                            "First error occured on doc {}: {} {}",
-                            id,
-                            err.r#type,
-                            err.reason
-                        );
-                    }
-
-                    for error in res.errors() {
-                        log::debug!(
-                            "Index fail for doc {}: {} {}",
-                            error.0,
-                            error.1.r#type,
-                            error.1.reason
-                        );
-                    }
+            if res.errors {
+                log::error!("Index failed for {} docs", stats.errors);
+                if let Some((id, err)) = stats.first_error {
+                    log::error!(
+                        "First error occured on doc {}: {} {}",
+                        id,
+                        err.r#type,
+                        err.reason
+                    );
                 }
-                _ => {}
+
+                for error in res.errors() {
+                    log::debug!(
+                        "Index fail for doc {}: {} {}",
+                        error.0,
+                        error.1.r#type,
+                        error.1.reason
+                    );
+                }
             }
         }
     }
@@ -245,7 +239,7 @@ fn generate_transcript_token_string(transcript: &Transcript, id: usize) -> Strin
         );
         tokens.push(token);
     }
-    
+
     tokens.join(" ")
 }
 

@@ -1,6 +1,6 @@
 use oas_common::{types, util, Record, TypedValue};
 use rocket::serde::json::Json;
-use rocket::{get, post, put, delete};
+use rocket::{delete, get, post, put};
 use rocket_okapi::openapi;
 
 use crate::couch::types::PutResponse;

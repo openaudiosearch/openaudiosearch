@@ -84,6 +84,13 @@ impl OcypodClient {
         Ok(job)
     }
 
+    pub async fn delete_job(&self, job_id: JobId) -> anyhow::Result<()> {
+        let url = format!("{}/job/{}", self.base_url, job_id);
+        let res = self.client.delete(&url).send().await?;
+        check_response(&res)?;
+        Ok(())
+    }
+
     pub async fn get_queues(&self) -> anyhow::Result<Vec<String>> {
         let url = format!("{}/queue", self.base_url);
         let res = self.client.get(&url).send().await?;
@@ -109,7 +116,7 @@ impl OcypodClient {
         Ok(jobs)
     }
 
-    async fn fetch_ids_by_tags(&self, tags: &Vec<String>) -> anyhow::Result<Vec<JobId>> {
+    async fn fetch_ids_by_tags(&self, tags: &[String]) -> anyhow::Result<Vec<JobId>> {
         let ids = join_all(tags.iter().map(|tag| self.fetch_ids_by_tag(tag))).await;
         let ids = ids
             .into_iter()
@@ -129,13 +136,13 @@ impl OcypodClient {
 
     async fn fetch_ids_by_queues_and_status(
         &self,
-        queues: &Vec<String>,
-        status: &Vec<JobStatus>,
+        queues: &[String],
+        status: &[JobStatus],
     ) -> anyhow::Result<Vec<JobId>> {
         let ids = join_all(
             queues
-                .into_iter()
-                .map(|queue| self.fetch_ids_by_queue_and_status(&queue, &status)),
+                .iter()
+                .map(|queue| self.fetch_ids_by_queue_and_status(queue, status)),
         )
         .await;
         let ids = ids
@@ -149,7 +156,7 @@ impl OcypodClient {
     async fn fetch_ids_by_queue_and_status(
         &self,
         queue: &str,
-        status: &Vec<JobStatus>,
+        status: &[JobStatus],
     ) -> anyhow::Result<Vec<JobId>> {
         let url = format!("{}/queue/{}/job_ids", self.base_url, queue);
         let res = self.client.get(&url).send().await?;
@@ -240,7 +247,7 @@ impl JobFilter {
         }
         if !self.tag.is_empty() {
             for tag in &self.tag {
-                if job.tags.contains(&tag) {
+                if job.tags.contains(tag) {
                     return true;
                 }
             }
@@ -270,24 +277,15 @@ pub enum JobStatus {
 
 impl JobStatus {
     pub fn pending(&self) -> bool {
-        match self {
-            Self::Queued | Self::Running => true,
-            _ => false,
-        }
+        matches!(self, Self::Queued | Self::Running)
     }
 
     pub fn failed(&self) -> bool {
-        match self {
-            Self::Failed | Self::Cancelled | Self::TimedOut => true,
-            _ => false,
-        }
+        matches!(self, Self::Failed | Self::Cancelled | Self::TimedOut)
     }
 
     pub fn completed(&self) -> bool {
-        match self {
-            Self::Completed => true,
-            _ => false,
-        }
+        matches!(self, Self::Completed)
     }
 }
 

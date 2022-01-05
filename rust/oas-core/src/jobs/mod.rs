@@ -47,6 +47,10 @@ impl JobManager {
         Ok(job_id)
     }
 
+    pub async fn delete_job(&self, job: JobId) -> anyhow::Result<()> {
+        self.client.delete_job(job).await?;
+        Ok(())
+    }
     pub async fn take_job_timeout(
         &self,
         typ: &str,
@@ -149,22 +153,21 @@ impl JobManager {
             meta: req.meta,
             duration: req.duration,
         };
+
+        let job = self.client.get_job(job_id).await?;
+        self.on_complete(&job).await?;
+
         self.client
             .update_job(job_id, Some(JobStatus::Completed), Some(output))
             .await?;
-
-        let job = self.client.get_job(job_id).await?;
-
-        self.on_complete(&job).await?;
 
         Ok(())
     }
 
     async fn on_complete(&self, job: &JobInfo) -> anyhow::Result<()> {
         let typ = &job.queue;
-        match typ.as_str() {
-            typs::ASR => typs::on_asr_complete(&self.db, &self, &job).await?,
-            _ => {}
+        if typ.as_str() == typs::ASR {
+            typs::on_asr_complete(&self.db, self, job).await?;
         }
         Ok(())
     }

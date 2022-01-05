@@ -19,6 +19,7 @@ from app.jobs.transcribe_vosk import transcribe_vosk
 import app.jobs.recasepunc.recasepunc
 import app.jobs.naive_ned.naive_ned
 
+
 def local_dir_mkdir(path):
     path = config.local_dir(path)
     os.makedirs(Path(path).parent, exist_ok=True)
@@ -106,7 +107,7 @@ def asr(ctx, args):
 
     # transcribe with vosk
     start = time.time()
-    result = transcribe_vosk(media_id, temp_wav, model_path)
+    result = transcribe_vosk(ctx, media_id, temp_wav, model_path)
     duration = time.time() - start
 
     try:
@@ -133,12 +134,17 @@ def asr(ctx, args):
 @worker.job(name="nlp")
 def nlp(ctx, args):
     post_id = args["post_id"]
-    pipeline = "ner"
+    pipeline = ["ner", "textrank"]
     post = ctx.get(f"/post/{post_id}")
     guid = post["$meta"]["guid"]
-    fields = ["headline", "description", "transcript.text"]
+    if "media" in post:
+        for media in post["media"]:
+            text = media.get('transcript', {}).get('text')
+    fields = ["headline", "description"]
     values = filter(None.__ne__, map(lambda f: find_in_dict(post, f), fields))
-    text = "\n".join(values)
+    text = text + " " + "\n".join(values)
+    print(100 * "§")
+    print(text)
     spacy = SpacyPipe(pipeline)
     res = spacy.run(text)
     patch = [

@@ -48,7 +48,6 @@ fn job_setting<T: TypedValue>(record: &Record<T>, typ: &str) -> serde_json::Valu
     record
         .meta()
         .jobs()
-        .setting(typ)
-        .map(|x| x.clone())
+        .setting(typ).cloned()
         .unwrap_or_else(|| serde_json::Value::Object(Default::default()))
 }

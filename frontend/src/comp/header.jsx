@@ -119,17 +119,20 @@ function Navbar () {
             _placeholder={{ color: 'gray.300' }}
           />
         </Box>
-        {/* <NavLink to='/jobs'>
-          <Text fontSize='xl' fontWeight='bold'>
-            {t('jobs', 'Jobs')}
-          </Text>
-        </NavLink> */}
-        {isAdmin &&
-          <NavLink to='/importer'>
-            <Text fontSize='lg' fontWeight='bold'>
-              {t('importer', 'Importer')}
-            </Text>
-          </NavLink>}
+        {isAdmin && (
+          <>
+            <NavLink to='/importer'>
+              <Text fontSize='lg' fontWeight='bold'>
+                {t('importer', 'Importer')}
+              </Text>
+            </NavLink>
+            <NavLink to='/jobs'>
+              <Text fontSize='lg' fontWeight='bold'>
+                {t('jobs', 'Jobs')}
+              </Text>
+            </NavLink>
+          </>
+        )}
       </Flex>
     </nav>
   )

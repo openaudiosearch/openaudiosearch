@@ -3,7 +3,6 @@ use oas_common::{TypedValue, UntypedRecord};
 use rocket::serde::json::Json;
 use rocket::{get, post};
 use rocket_okapi::openapi;
-use serde_json::Value;
 
 use crate::couch::Doc;
 use crate::server::auth::AdminUser;

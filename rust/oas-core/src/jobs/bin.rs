@@ -110,10 +110,7 @@ pub async fn load_medias_with_opts(
             .get_all()
             .await?
             .into_iter()
-            .filter_map(|r| match r.value.transcript {
-                None => Some(r),
-                Some(_) => None,
-            })
+            .filter(|r| r.value.transcript.is_none())
             .collect(),
         AsrOpts { latest: true, .. } => db.table::<Media>().get_all().await?,
         _ => {

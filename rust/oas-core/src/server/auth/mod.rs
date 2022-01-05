@@ -229,7 +229,7 @@ pub async fn get_login(session: Option<SessionInfo>) -> Json<LoginResponse> {
     match session {
         Some(session) => Json(LoginResponse {
             ok: true,
-            user: Some(session.user().into_public()),
+            user: Some(session.user().to_public()),
         }),
         None => Json(LoginResponse {
             ok: false,
@@ -249,7 +249,7 @@ pub async fn post_login(
     let session_id = try_login(auth, cookies, &data, session_id.as_ref()).await;
     if let Some(session_id) = session_id {
         let session = auth.session(&session_id.0).await.unwrap();
-        let public_user_info = session.user().into_public();
+        let public_user_info = session.user().to_public();
         Json(LoginResponse {
             ok: true,
             user: Some(public_user_info),

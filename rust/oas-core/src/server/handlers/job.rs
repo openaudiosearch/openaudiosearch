@@ -2,7 +2,7 @@ use rocket::http::Status;
 use rocket::response::status::Custom;
 use rocket::serde::json::Json;
 use rocket::FromForm;
-use rocket::{get, post, put};
+use rocket::{delete, get, post, put};
 use rocket_okapi::openapi;
 
 use crate::server::auth::AdminUser;
@@ -59,6 +59,18 @@ pub async fn post_job(
 ) -> Result<JobId> {
     let res = state.jobs.create_job(value.into_inner()).await?;
     Ok(Json(res))
+}
+
+/// Delete a job by ID
+#[openapi(skip)]
+#[delete("/job/<id>")]
+pub async fn delete_job(
+    _user: AdminUser,
+    state: &rocket::State<crate::State>,
+    id: u64,
+) -> Result<()> {
+    state.jobs.delete_job(id).await?;
+    Ok(Json(()))
 }
 
 /// Pull a job to work it.

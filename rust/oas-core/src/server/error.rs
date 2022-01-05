@@ -71,22 +71,19 @@ impl<'r> Responder<'r, 'static> for AppError {
             Err(res) => Err(res),
             Ok(mut res) => {
                 res.set_status(code);
-                match self {
-                    Self::Unauthorized => {
-                        // TODO: This is nice as it makes the API accessible in regular browsers.
-                        // However, this also makes logout basically "not work" because browsers
-                        // remember the basic auth details by default and re-add them.
-                        let header_value = format!(
-                            r#"Basic realm="{}", charset="UTF-8""#,
-                            "Please enter user username and password"
-                        );
-                        let header = rocket::http::Header::new(
-                            http::header::WWW_AUTHENTICATE.as_str(),
-                            header_value,
-                        );
-                        res.set_header(header);
-                    }
-                    _ => {}
+                if let Self::Unauthorized = self {
+                    // TODO: This is nice as it makes the API accessible in regular browsers.
+                    // However, this also makes logout basically "not work" because browsers
+                    // remember the basic auth details by default and re-add them.
+                    let header_value = format!(
+                        r#"Basic realm="{}", charset="UTF-8""#,
+                        "Please enter user username and password"
+                    );
+                    let header = rocket::http::Header::new(
+                        http::header::WWW_AUTHENTICATE.as_str(),
+                        header_value,
+                    );
+                    res.set_header(header);
                 }
                 Ok(res)
             }

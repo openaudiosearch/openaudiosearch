@@ -565,17 +565,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "elasticsearch-dsl"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7990c3a6b025369a961bd6574c36508377282a2c4b86e15af9a81dc6a1a3a888"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "encode_unicode"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1214,7 +1203,6 @@ dependencies = [
  "dialoguer",
  "dirs",
  "elasticsearch",
- "elasticsearch-dsl",
  "futures",
  "futures-batch",
  "futures-timer 3.0.2",

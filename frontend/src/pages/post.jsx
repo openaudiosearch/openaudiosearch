@@ -1,5 +1,6 @@
 import React from 'react'
-import { FaCog, FaPlay, FaTasks, FaExternalLinkAlt, FaChevronLeft, FaCreativeCommons } from 'react-icons/fa'
+import { FaCog, FaWikipediaW, FaPlay, FaTasks, FaExternalLinkAlt, FaChevronLeft, FaCreativeCommons } from 'react-icons/fa'
+import { SiWikidata } from 'react-icons/si'
 import {
   IconButton,
   Menu,
@@ -14,8 +15,12 @@ import {
   Tag,
   Text,
   Icon,
-  Center
-  , Tooltip
+  Center,
+  Tooltip,
+  List,
+  ListItem,
+  ListIcon,
+  Divider
 } from '@chakra-ui/react'
 import { useParams, useLocation, useHistory } from 'react-router'
 
@@ -174,23 +179,44 @@ export function PostPageInner (props = {}) {
       <SearchTag label={contributor} facet='contributor' key={contributor} />
     )
   }
+
   let wikidataEntities = []
-  if (post.nlp != null && post.nlp.ned) {
-    console.log('nlp:', post.nlp.ned)
-    wikidataEntities = Object.entries(post.nlp.ned).map((nel, i) =>
-      <Tooltip key={i} label={nel[1].description}>
-        <ChakraLink
-          href={nel[1].concepturi}
-          isExternal
-          pr={2}
-        >
-          <Tag>
-            {nel[0]}
-          </Tag>
+  if (post.nlp && post.nlp.ned) {
+    wikidataEntities = Object.entries(post.nlp.ned).map((nel, i) => {
+      console.log(nel)
+      return (
+        <Box key={nel[0]}>
+          <Heading size='sm'>{nel[0]}</Heading>
+          <List spacing={0}>
+            {nel[1].map((entry) => {
+              const { wikibase_item: qid } = entry.pageprops
+              return (
+                <Tooltip key={entry.pageid} label={entry.description}>
+                  <ListItem h={10}>
+                    <Flex>
+                      <Box mr={3}>
+                        <ListIcon as={FaWikipediaW} />
+                        <ChakraLink href={'https://de.wikipedia.org/wiki/' + entry.title} isExternal>
+                          {entry.title}
+                        </ChakraLink>
+                      </Box>
+                      <Box>
+                        <ListIcon as={SiWikidata} />
 
-        </ChakraLink>
-      </Tooltip>
+                        <ChakraLink href={'https://www.wikidata.org/wiki/' + qid} isExternal>
+                          {qid}
+                        </ChakraLink>
+                      </Box>
+                    </Flex>
+                  </ListItem>
+                </Tooltip>
+              )
+            })}
+          </List>
+        </Box>
 
+      )
+    }
     )
   }
 
@@ -205,14 +231,14 @@ export function PostPageInner (props = {}) {
       <Box w={['90vw', '80vw', '750px', '750px']}>
         <Flex direction='column' maxWidth='750px'>
           {fromSearch && (
-            <Flex direction='row' w='100%'>
+            <Flex direction='row' w='100%' mb='2'>
               <Button onClick={() => history.goBack()} size='sm' variant='ghost'>
                 <Box mr='2'><FaChevronLeft /></Box>
                 <Box>{t('backtosearch', 'Back to search')}</Box>
               </Button>
             </Flex>
           )}
-          <Box bg='white' borderRadius='sm' boxShadow='sm' borderWidth='1px' borderColor='gray.300' p='4'>
+          <Box bg='white' borderRadius='md' boxShadow='sm' borderWidth='1px' borderColor='gray.300' p='4'>
             <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' w='100%'>
               <Flex direction='column' w='100%'>
                 <Flex direction={['column', 'column', 'row', 'row']} justify='space-between' w='100%'>
@@ -259,22 +285,22 @@ export function PostPageInner (props = {}) {
                 <Box flex='1' fontSize='sm'>{duration}</Box>
               )}
             </Flex>
-
             <Box mt='4'>{description}</Box>
-            <LicenseInfos post={post} />
-          </Box>
-          <Box>
+            <Box my='4'>
+              <LicenseInfos my='4' post={post} />
+            </Box>
+
             {post.nlp && post.nlp.ned &&
               <Box my='4' p='4' border='1px' borderColor='gray.200' bg='white' borderRadius='sm'>
-                <Heading as='h4' size='sm' mb={4}>
-                    Possible matching Wikidata Entries:
+                <Heading as='h4' size='md' mb={4}>
+                Wiki content that might be relevant:
                 </Heading>
 
                 {wikidataEntities}
+
               </Box>}
             <PostTranscriptSection post={post} />
           </Box>
-
         </Flex>
       </Box>
     </Center>

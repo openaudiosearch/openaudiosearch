@@ -47,8 +47,8 @@ pub async fn post_post_batch(
         .map(|mut value| {
             let id = value.identifier.unwrap_or_else(util::id_from_uuid);
             value.identifier = Some(id.clone());
-            let record = Record::from_id_and_value(id, value);
-            record
+            
+            Record::from_id_and_value(id, value)
         })
         .collect::<Vec<_>>();
     let res = state.db.put_record_bulk(records).await?;
