@@ -6,16 +6,14 @@ Evaluate OAS Devset:
   * Transcripts (TBD)
 
 Author(s): flipsimon, datadonk23
-Date: 05.01.22
+Date: 10.01.22
 """
 
 import httpx
-import json
 import argparse
 import pandas as pd
 from datetime import datetime
 from string import punctuation
-import spacy
 
 from app.jobs.spacy_pipe import spacy_load
 from devset.evaluate_devset_utils import (
@@ -25,24 +23,6 @@ from devset.evaluate_devset_utils import (
 
 OAS_URL = 'http://admin:password@localhost:8080/api/v1'
 nlp = spacy_load("de_core_news_lg")
-
-
-def create_feed(url):
-    url = f"{OAS_URL}/feed"
-    body = {
-        "url": url,
-        "media_jobs": {},
-        "post_jobs": {}
-    }
-    res = httpx.post(url, json=body)
-    res = res.json()
-    return res
-
-def get_changes(token: str):
-    url = f"{OAS_URL}/changes/durable/{token}"
-    res = httpx.post(url)
-    res = res.json()
-    return res
 
 
 def get_true_labels(fpath: str):
@@ -55,7 +35,7 @@ def get_true_labels(fpath: str):
     :return list: list(dict(cba ID: [keywords]))
     """
     ground_truth = []
-    df = pd.read_csv(devset_fpath)
+    df = pd.read_csv(fpath)
     df["cba_id"] = df["URL"].apply(
         lambda s: "https://cba.fro.at/?p=" + s.split("/")[-1]
     )
@@ -75,7 +55,7 @@ def devsetIDs_to_cbaIDs(fpath: str):
     :param fpath: Filepath to devset spreadsheet
     :return: List of OAS identifiers
     """
-    df = pd.read_csv(devset_fpath)
+    df = pd.read_csv(fpath)
     cba_head = "https://cba.fro.at/"
     oas_param = "?p="
     ids = df.URL.apply(lambda s: cba_head + oas_param + s.split("/")[-1])
@@ -106,7 +86,7 @@ def get_post_ids(cba_ids: list):
     for cba_id, job_id in job_ids.items():
         completed = False
         job_url = url + f"/{job_id}"
-        while not completed:  # FIXME this is blocking
+        while not completed:
             res = httpx.get(job_url)
             if res.json()["status"] == "completed":
                 oas_ids[cba_id] = res.json()["output"]["meta"]["oas_id"]
@@ -138,7 +118,7 @@ def trigger_nlp(cba_oas_ids: dict):
     for cba_id, job_id in job_ids.items():
         completed = False
         job_url = url + f"/{job_id}"
-        while not completed:  # FIXME this is blocking
+        while not completed:
             res = httpx.get(job_url)
             if res.json()["status"] == "completed":
                 completed = True
@@ -291,7 +271,16 @@ def evaluate_keywords(oas_keywords: list, true_keywords: list, metrics: list):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="OAS Keyword example script")
+    """
+    Script parses CBA IDs and ground truth keywords (manually labeled)
+    from samples in Devset spreadsheet. Transforms CBA IDs to OAS IDs. 
+    Triggers NLP job on those samples in OAS. Gets KW extraction results and 
+    the corresponding transcript per sample. Evaluates KW extraction results
+    (currently Average Precision, Average Recall, Average F1 and MAP@k are 
+    supported). Logs evaluation results and OAS responses to 
+    oas_worker/devset/evaluations or custom log path.
+    """
+    parser = argparse.ArgumentParser(description="OAS KW evaluation script")
     parser.add_argument("dataset", nargs="?",
                         default="devset/assets/Devset.csv",
                         type=str, help="Filepath to devset CSV")
@@ -322,23 +311,3 @@ if __name__ == "__main__":
     eval_duration = str(end - start)
     log_results(eval_results, oas_keywords, true_labels, oas_transcripts,
                 log_path, eval_duration)
-
-
-    # generate feed from devset
-    # serve via http
-
-    # url = 'http://localhost:6650/rss.xml'
-    # res = create_feed(url)
-    # print('created feed', res)
-    #
-    # # wait for all jobs to be finished
-    # token = 'evaluate_devset'
-    # while True:
-    #     changes = get_changes(token)
-    #     print('changes', json.dumps(changes))
-        
-    # get all posts
-    # save posts and/or transcripts to files
-    # (( optionally (or other script) to run evaluations/comparisons with previous results ))
-   
-    #print(f"Result:\n{res['nlp']}")
