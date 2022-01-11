@@ -39,6 +39,7 @@ Open Audio Search is still **in development**. No API stability guarantees yet. 
 * The worker has a [README](oas_worker/README.md) with docs on how to run and create jobs
 * When working with the Rust core, the [Rust API docs](https://openaudiosearch.github.io/openaudiosearch/rustdocs/oas_core/) may help you
 * We have some resources and docs in a [documentation book](https://openaudiosearch.github.io/openaudiosearch/book/) (still incomplete and partially outdated)
+* A usage guide from user perspective (incl. How-to-Guides and FAQs) can be found in the [user docs section](https://openaudiosearch.github.io/openaudiosearch/book/user.html) of our [documentation book](https://openaudiosearch.github.io/openaudiosearch/book/) (again, still incomplete and partially outdated)
 
 ## Installation and usage
 
