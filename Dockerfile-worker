@@ -1,7 +1,7 @@
 # poetry-build: export poetry deps to requirements.txt
 # this is seperate from backend-build so that poetry deps don't end
 # among the python modules that will be copied to the final image
-FROM python:3.9.0-slim as poetry-build
+FROM python:3.6.0-slim as poetry-build
 RUN python -m pip install -U pip poetry
 WORKDIR /build
 COPY oas_worker/pyproject.toml pyproject.toml
@@ -9,14 +9,25 @@ COPY oas_worker/poetry.lock poetry.lock
 RUN poetry export -f requirements.txt --without-hashes -o /build/requirements.txt
 
 # backend-build: install all python deps from requirements.txt to /build/pip
-FROM python:3.9.0-slim as backend-build
+FROM ubuntu:18.04 as build-backend
+# These two lines prevent problems with using Ubuntu's apt-get non-interactively
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Vienna
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3 python3-pip python3-setuptools python3-wheel gcc \
+    && apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install -q -y gcc
 WORKDIR /build
 COPY --from=poetry-build /build/requirements.txt .
 RUN pip install --prefix="/build/pip" --no-warn-script-location -r requirements.txt
 
 # python-base: base image with a few utilities installed
-FROM python:3.9.0-slim as python-base
+FROM pykaldi/pykaldi:latest as python-base
+# These two lines prevent problems with using Ubuntu's apt-get non-interactively
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Vienna
 RUN apt-get update && apt-get install -q -y wget curl xz-utils iputils-ping iproute2
 
 # build main image
