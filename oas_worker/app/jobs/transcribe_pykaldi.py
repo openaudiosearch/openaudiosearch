@@ -12,11 +12,24 @@
 from kaldi.base import set_verbose_level
 from kaldi.segmentation import NnetSAD, SegmentationProcessor
 from kaldi.asr import NnetLatticeFasterRecognizer
-from kaldi.matrix import Matrix, SubMatrix
+from kaldi.matrix import Matrix, SubMatrix, Vector
+from kaldi.matrix.common import MatrixTransposeType
+from kaldi.cudamatrix import CuMatrix
 from kaldi.decoder import LatticeFasterDecoderOptions
 from kaldi.fstext import SymbolTable, shortestpath, indices_to_symbols
 from kaldi.fstext.utils import get_linear_symbol_sequence
-from kaldi.nnet3 import NnetSimpleComputationOptions
+from kaldi.ivector import Plda
+from kaldi.nnet3 import (
+    Nnet,
+    NnetComputer,
+    NnetComputeOptions,
+    NnetSimpleComputationOptions,
+    CachingOptimizingCompiler,
+    CachingOptimizingCompilerOptions,
+    NnetOptimizeOptions,
+    ComputationRequest,
+    IoSpecification
+)
 from kaldi.feat.online import OnlineMatrixFeature
 from kaldi.lat.align import (
     WordBoundaryInfo,
@@ -32,8 +45,10 @@ from kaldi.online2 import (
     OnlineEndpointConfig
 )
 from kaldi.feat.mfcc import Mfcc, MfccOptions
+from kaldi.feat.functions import SlidingWindowCmnOptions, sliding_window_cmn
 from kaldi.util.options import ParseOptions
 from kaldi.util.table import SequentialWaveReader
+from kaldi.util.io import xopen
 from kaldi.cudamatrix import cuda_available
 if cuda_available():
     from kaldi.cudamatrix import CuDevice
@@ -43,9 +58,11 @@ if cuda_available():
 import wave
 from typing import List, Tuple
 import os
+from math import sqrt
 
 sad = None
 asr = None
+diar = None
 
 class Segmenter:
     def __init__(self, model_folder: os.PathLike, frame_subsampling_factor=3):
@@ -136,6 +153,162 @@ class Segmenter:
                     (start*self.frame_shift, end*self.frame_shift)
                 )
             return time_segments
+
+
+class Diarizer:
+    def __init__(self, model_folder: os.PathLike):
+        """Diarizer class.
+
+        Currently uses hard-coded values for the Callhome Diarization Xvector model
+        (http://kaldi-asr.org/models/m6).
+
+        Args:
+            model_folder: Path to folder that contains Kaldi model files.
+                This class expects this folder to contain a folder "diarization"
+                containing the following three files:
+                    - mean.vec
+                    - transform.mat
+                    - plda
+                    - extract.raw
+        """
+        self.window_length = 1.5 # seconds
+        self.window_shift = 0.75 # seconds
+
+        mfcc_opts = MfccOptions()
+        mfcc_opts.use_energy = False   # use average of log energy, not energy.
+        mfcc_opts.frame_opts.samp_freq = 8000
+        mfcc_opts.num_ceps = 23
+        mfcc_opts.mel_opts.low_freq = 20
+        mfcc_opts.mel_opts.high_freq = -300
+        mfcc_opts.frame_opts.allow_downsample = True
+        self.mfcc = Mfcc(mfcc_opts)
+
+        self.cmn_opts = SlidingWindowCmnOptions()
+        self.cmn_opts.center = True
+        self.cmn_opts.cmn_window = 300
+
+        # Read xvector neural network
+        self.diar_nnet = Nnet()
+        with xopen(os.path.join(model_folder, "diarization", 'extract.raw')) as ki:
+            self.diar_nnet.read(ki.stream(), ki.binary)
+
+        # Create caching optimizing compiler for neural network 
+        self.compiler = CachingOptimizingCompiler.new_with_optimize_opts(
+            self.diar_nnet,
+            NnetOptimizeOptions(),
+            CachingOptimizingCompilerOptions()
+        )
+        # Read PLDA model
+        self.plda = Plda()
+        with xopen(os.path.join(model_folder, "diarization", "plda"), "r") as ko:
+            self.plda.read(ko.stream(), ko.binary)
+        # Read LDA transform
+        self.lda = Matrix()
+        with xopen(os.path.join(model_folder, "diarization", "transform.mat"), "r") as ko:
+            self.lda.read_(ko.stream(), ko.binary)
+        # Read global mean offset vector
+        self.mean = Vector()
+        with xopen(os.path.join(model_folder, "diarization", "mean.vec"), "r") as ko:
+            self.mean.read_(ko.stream(), ko.binary)
+
+    def process(self, audio_file_path: os.PathLike, segments: List[Tuple[int, int, int]]):
+        """
+        Diarize speech segments in an audio file
+
+        Args:
+            audio_file_path: Path to audio file.
+            segments: List of tuples of floats with segment (start, end) times in seconds.
+        Returns:
+            Not sure yet
+        """
+        with SequentialWaveReader(f"scp:echo utterance-id1 {audio_file_path}|") as reader:
+            key, wav = next(iter(reader))
+            # Get audio signal as vector
+            signal = wav.data().row(0)
+            # compute MFCC features
+            feats = self.mfcc.compute_features(signal, wav.samp_freq, 1.0)
+
+            # Go through each segment
+            shift = int(self.window_shift/0.01)
+            all_xvectors = []
+            for seg_index, (seg_start_time, seg_end_time) in enumerate(segments):
+                seg_start_idx = int(seg_start_time/0.01)
+                seg_end_idx = min(int(seg_end_time/0.01), feats.num_rows)
+                seg_feats = SubMatrix(
+                    feats,
+                    row_start=seg_start_idx,
+                    num_rows=seg_end_idx-seg_start_idx
+                )
+                # Apply sliding-window cepstral mean normalization
+                cmn_feats = Matrix.from_matrix(seg_feats)
+                sliding_window_cmn(self.cmn_opts, seg_feats, cmn_feats)
+
+                # Extract x-vectors from subsegments
+                start_rel = 0
+                end_rel = int(self.window_length/0.01)
+                seg_xvectors = []
+                while end_rel < seg_feats.num_rows:
+                    subseg_feats = SubMatrix(
+                        cmn_feats,
+                        row_start=start_rel,
+                        num_rows=end_rel-start_rel
+                    )
+                    xvector = self.extract_xvector(subseg_feats)
+                    # Subtract global mean vector
+                    xvector.add_vec_(-1.0, self.mean)
+                    # Apply LDA transform
+                    trans_xvector = Vector(xvector.dim)
+                    trans_xvector.add_mat_vec_(
+                        1.0,
+                        self.lda,
+                        MatrixTransposeType.NO_TRANS,
+                        xvector,
+                        0
+                    )
+                    # Apply length normalization
+                    norm = trans_xvector.norm(2.0)
+                    trans_xvector.scale_(1.0 / (norm / sqrt(trans_xvector.dim)))
+                    # Add normalized xvector to segment list
+                    seg_xvectors.append(trans_xvector)
+                    start_rel += shift
+                    end_rel += shift
+                print(f"seg {seg_index:3d}: {len(seg_xvectors)} xvectors")
+                all_xvectors.extend(seg_xvectors)
+
+    def extract_xvector(self, features: Matrix) -> Vector:
+        # Create neural network computation request
+        num_feats = features.num_rows
+        request = ComputationRequest()
+        request.need_model_derivative = False
+        request.store_component_stats = False
+        # Inputs are cmn feature vectors
+        request.inputs = [IoSpecification.from_interval("input", 0, num_feats)]
+        # Outputs are speaker embeddings from a layer after the stats pooling (aggregation) layer
+        output_spec = IoSpecification.from_interval("output", 0, 128)
+        output_spec.has_deriv = False
+        request.outputs = [output_spec]
+        # Compile neural network computation
+        computation = self.compiler.compile(request)
+        nnet_to_update = Nnet()
+        computer = NnetComputer(
+            NnetComputeOptions(),
+            computation,
+            self.diar_nnet,
+            nnet_to_update
+        )
+        # Input features have to be provided in a CuMatrix
+        input_feats_cu = CuMatrix.from_matrix(features)
+        computer.accept_input("input", input_feats_cu)
+        computer.run()
+        outputs_cu = computer.get_output_destructive("output")
+        # print(f"{outputs_cu.num_rows()}, {outputs_cu.num_cols()}")
+        # Outputs are in a CuMatrix, so we have to copy them to a Matrix
+        outputs_mat = Matrix(outputs_cu.num_rows(), outputs_cu.num_cols())
+        outputs_cu.copy_to_mat(outputs_mat)
+        # Copy speaker embedding from output matrix to vector
+        xvector = Vector(outputs_cu.num_rows())
+        xvector.copy_row_from_mat_(outputs_mat, 0)
+        return xvector
 
 
 class SpeechRecognizer:
