@@ -13,8 +13,10 @@ import httpx
 import argparse
 import pandas as pd
 import time
+import os
 from datetime import datetime
 from string import punctuation
+from devset.http_server import serve_directory
 
 from app.jobs.spacy_pipe import spacy_load
 from devset.evaluate_devset_utils import (
@@ -22,7 +24,7 @@ from devset.evaluate_devset_utils import (
 )
 
 
-OAS_URL = 'http://admin:password@localhost:8080/api/v1'
+OAS_URL = os.environ.get("OAS_URL", "http://admin:password@localhost:8080/api/v1")
 nlp = spacy_load("de_core_news_lg")
 
 
@@ -213,6 +215,14 @@ def get_post(post_id: str):
     except httpx.RequestError as e:
         print(f"An error occurred while requesting {e.request.url!r}.")
 
+def post_feed(url: str):
+    body = {
+        "mediaJobs": {"asr": None},
+        "postJobs": {"nlp": None},
+        "url": url
+    }
+
+    return httpx.post(f"{OAS_URL}/feed", json=body).json()
 
 def get_keywords(cba_id_oas_id):
     """
@@ -361,10 +371,20 @@ if __name__ == "__main__":
                         type=str, help="Path to log evaluation")
     parser.add_argument("--asr", default=False, action='store_true',
                         help="Force run ASR jobs")
+    parser.add_argument("--feed", default=False, action='store_true',
+                        help="Serve devset feed and add to OAS on start")
     args = parser.parse_args()
     devset_fpath = args.dataset
     log_path = args.log_path
     start = datetime.now()  # track runtime of evaluation
+
+    if args.feed is True:
+        serve_directory(directory="./devset/assets",port=6650)
+        time.sleep(1)
+        res = post_feed("http://localhost:6650/rss.xml")
+        feed_id = res["id"]
+        print(f"Created feed {feed_id}")
+        time.sleep(5)
 
     """ Get true labels """
     true_labels = get_true_labels(devset_fpath)
@@ -373,6 +393,7 @@ if __name__ == "__main__":
     cba_ids = devsetIDs_to_cbaIDs(devset_fpath)
     oas_post_ids = get_post_ids(cba_ids)
 
+    """ Start ASR tasks """
     if args.asr is True:
         trigger_asr(oas_post_ids)
 

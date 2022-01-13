@@ -6,13 +6,22 @@ Devset is our own development dataset to evaluate transcript quality and keyword
 ## Evaluation
 
 You can do an evaluation run either on our OAS devset or generate your own devset feed (which is described in the below section). Follow these steps to run evaluation on the OAS devset:  
-1. Serve OAS devset feed: run in `oas_worker/devset/` this command: `sh serve_nlp_devset.sh`.
-2. Start OAS by following the instructions for the "Development and local setup" section in the [README](../../README.md).
-3. In OAS UI, login and add in the Importer-Tab this Feed URL: `http://127.0.0.1:6650/rss.xml`
-4. Trigger an evaluation run in `oas_worker/` directory:
+1. Optional: Generate a devset (see below). A demo devset is included in the repo.
+2. Start the required services via Docker (see the [docs on the Docker test setup](../../docker/test/README.md))
+3. Start OAS core (`cargo run -- run`) and a worker (`cd oas_worker; poetry run python worker.py`). Detail are in the "Development and local setup" section in the [README](../../README.md).
+4. Start the evaluation script. The script can optionally serve the devset and add it to OAS, which - when started from a clean and empty environment - will perform all required steps to get an evaluation.
+
 ```
-poetry run python evaluate_devset.py [DATASET] [LOG_PATH]
+poetry run python evaluate_devset.py [DATASET] [LOG_PATH] [--asr] [--feed]
 ```
+
+To run the evaluation script on the demo devset, while serving the devset feed and also running the ASR jobs, use the following command:
+
+```
+cd oas_worker
+poetry run python evaluate_devset.py --asr --feed
+```
+
 By using the optional arguments you can specify the filepath to the devset (\[DATASET\]) and path in which logging results should be persisted (\[LOG_PATH]\). E.g., `poetry run python evaluate_devset.py devset/assets/Devset.csv devset/evaluation`, which are the default arguments used by OAS.
 
 Per default evaluation is done by using all currently available metrics, which are Precsion, Recall, F1 and MAP@k at the moment.
