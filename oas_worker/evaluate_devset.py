@@ -101,6 +101,29 @@ def get_oas_id_from_cba_id(identifier):
         oas_id = res["hits"]["hits"][0]["_id"]
         return oas_id
 
+
+def trigger_asr(cba_oas_ids: dict):
+    """
+    Trigger NLP jobs in OAS on devset posts.
+    Blocking, waits till all jobs are completed.
+
+    :param cba_oas_ids:
+    :return: Dict of CBA IDs as keys and OAS post IDs as values
+    """
+
+    job_ids = []
+    print(f"Creating {len(cba_oas_ids)} jobs")
+    for cba_id, oas_id in cba_oas_ids.items():
+        post = get_post(oas_id)
+        for media in post["media"]:
+            job_id = create_asr_job(media["$meta"]["id"])
+            print(f"created ASR job {job_id}")
+        job_ids.append(job_id)
+
+    print(f"Waiting for {len(job_ids)} jobs to complete")
+    wait_for_jobs(job_ids)
+    print("All jobs finished")
+
 def trigger_nlp(cba_oas_ids: dict):
     """
     Trigger NLP jobs in OAS on devset posts.
@@ -154,6 +177,15 @@ def create_nlp_job(post_id):
         "typ": "nlp",
         "subjects": [post_id],
         "args": {"post_id": post_id}
+    }
+    return create_job(body)
+
+
+def create_asr_job(media_id):
+    body = {
+        "typ": "asr",
+        "subjects": [media_id],
+        "args": {"media_id": media_id}
     }
     return create_job(body)
 
@@ -327,6 +359,8 @@ if __name__ == "__main__":
     parser.add_argument("log_path", nargs="?",
                         default="devset/evaluations",
                         type=str, help="Path to log evaluation")
+    parser.add_argument("--asr", default=False, action='store_true',
+                        help="Force run ASR jobs")
     args = parser.parse_args()
     devset_fpath = args.dataset
     log_path = args.log_path
@@ -338,6 +372,9 @@ if __name__ == "__main__":
     """ Get OAS keywords & transcript """
     cba_ids = devsetIDs_to_cbaIDs(devset_fpath)
     oas_post_ids = get_post_ids(cba_ids)
+
+    if args.asr is True:
+        trigger_asr(oas_post_ids)
 
     trigger_nlp(oas_post_ids)
     oas_keywords = [get_keywords(ids) for ids in oas_post_ids.items()]
