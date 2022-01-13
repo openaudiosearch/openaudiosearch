@@ -128,16 +128,21 @@ def asr(ctx, args):
     }
 
 
+spacy_globals = {}
 @worker.job(name="nlp")
 def nlp(ctx, args):
+    if not spacy_globals.get("pipeline"):
+        pipeline = ["ner", "textrank"]
+        spacy_globals["pipeline"] = SpacyPipe(pipeline)
+
+    spacy = spacy_globals["pipeline"]
+
     post_id = args["post_id"]
-    pipeline = ["ner", "textrank"]
     post = ctx.get(f"/post/{post_id}")
     guid = post["$meta"]["guid"]
     fields = ["headline", "description", "transcript.text"]
     values = filter(None.__ne__, map(lambda f: find_in_dict(post, f), fields))
     text = "\n".join(values)
-    spacy = SpacyPipe(pipeline)
     res = spacy.run(text)
     patch = [
         {"op": "replace", "path": "/nlp", "value": res},
