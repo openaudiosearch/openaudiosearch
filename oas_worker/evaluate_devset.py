@@ -194,7 +194,7 @@ def create_asr_job(media_id):
 
 def get_job_status(job_id):
     job_url = OAS_URL + f"/job/{job_id}"
-    res = httpx.get(job_url)
+    res = httpx.get(job_url, timeout=None)
     return res.json()["status"]
 
 
