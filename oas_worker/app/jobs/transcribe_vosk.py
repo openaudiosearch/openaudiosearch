@@ -1,15 +1,17 @@
-from vosk import Model, KaldiRecognizer, SetLogLevel
+from vosk import Model, KaldiRecognizer, SetLogLevel, SpkModel
 import wave
 import json
 
 model = None
 
-def transcribe_vosk(ctx, media_id, audio_file_path, model_path):
+def transcribe_vosk(ctx, media_id, audio_file_path, model_path, spk_model_path):
     global model
     if not model:
         model = Model(model_path)
 
+    spk_model = SpkModel(spk_model_path)
     rec = KaldiRecognizer(model, 16000)
+    rec.SetSpkModel(spk_model)
     rec.SetMaxAlternatives(0)
     rec.SetWords(True)
     results = []
@@ -33,7 +35,7 @@ def transcribe_vosk(ctx, media_id, audio_file_path, model_path):
         if rec.AcceptWaveform(data):
             result = json.loads(rec.Result())
             print(media_id + ' at ' + str(round((count/frames) * 100, 2)) + '%')
-            #  print("RESULT", result)
+            print("RESULT", result)
             progress = count / frames
             ctx.set_progress(progress)
             text = result['text']

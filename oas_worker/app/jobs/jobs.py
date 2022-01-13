@@ -16,7 +16,7 @@ from app.worker import worker
 from app.jobs.spacy_pipe import SpacyPipe
 from app.jobs.transcribe_vosk import transcribe_vosk
 
-import app.jobs.recasepunc.recasepunc
+#  import app.jobs.recasepunc.recasepunc
 
 def local_dir_mkdir(path):
     path = config.local_dir(path)
@@ -72,6 +72,7 @@ def asr(ctx, args):
 
     model_base_path = config.model_path
     model_path = os.path.join(model_base_path, config.model)
+    spk_model_path = os.path.join(model_base_path, config.spk_model)
 
     # fetch media record
     media = ctx.get("/media/" + media_id)
@@ -105,7 +106,7 @@ def asr(ctx, args):
 
     # transcribe with vosk
     start = time.time()
-    result = transcribe_vosk(ctx, media_id, temp_wav, model_path)
+    result = transcribe_vosk(ctx, media_id, temp_wav, model_path, spk_model_path)
     duration = time.time() - start
 
     try:

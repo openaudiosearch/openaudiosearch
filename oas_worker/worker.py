@@ -11,7 +11,7 @@ import app.jobs.jobs
 # module where it was saved. As we use a model that was create from
 # a foreign script in __main__ we need to import the class here.
 # See https://stackoverflow.com/questions/55488795 for details.
-from recasepunc import WordpieceTokenizer
+#  from recasepunc import WordpieceTokenizer
 
 if __name__ == '__main__':
     run(worker)
