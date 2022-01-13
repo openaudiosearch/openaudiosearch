@@ -25,7 +25,7 @@ If you want to generate your own devset feed:
 1. Change samples data in Devset spreadsheet (`oas_worker/devset/assets/Devset.csv`).
 2. To generate the custom RSS Feed, run in `oas_worker/` directory:
   ```
-  poetry run python generate_devset.py
+  poetry run python devset/generate_devset.py
   ```
 3. Proceed with an evaluation run, as described in the section above.
 

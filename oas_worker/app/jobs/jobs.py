@@ -169,24 +169,3 @@ def asr_mock(ctx, args):
     meta = { "mock": "yes" }
     return { "patches": patches, "meta": meta }
 
-
-# Devset Evaluation Util
-@worker.job(name="cba2oas_id")
-def cba2oas_id(ctx, args):
-    print(args)
-    identifier = args["identifier"]
-    query = {
-        "query": {
-            "term": {
-                "identifier": identifier
-            }
-        },
-        "_source": False,
-        "fields": [
-            "$meta.id"
-        ]
-    }
-    res = ctx.post("/search/oas/_search", body=query)
-    print("res", res)
-    oas_id = res["hits"]["hits"][0]["_id"]
-    return {"meta": {"oas_id": oas_id}}

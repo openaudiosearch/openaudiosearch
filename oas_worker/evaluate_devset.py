@@ -12,6 +12,7 @@ Date: 10.01.22
 import httpx
 import argparse
 import pandas as pd
+import time
 from datetime import datetime
 from string import punctuation
 
@@ -70,30 +71,35 @@ def get_post_ids(cba_ids: list):
     :param cba_ids: List of CBA identifiers
     :return: Dict of CBA IDs as keys and OAS post IDs as values
     """
-    url = f"{OAS_URL}/job"
-    job_ids = {}
     oas_ids = {}
 
     for cba_id in cba_ids:
-        body = {
-            "typ": "cba2oas_id",
-            "subjects": [""],
-            "args": {"identifier": cba_id}
-        }
-        res = httpx.post(url, json=body)
-        job_ids[cba_id] = str(res.json())
-
-    for cba_id, job_id in job_ids.items():
-        completed = False
-        job_url = url + f"/{job_id}"
-        while not completed:
-            res = httpx.get(job_url)
-            if res.json()["status"] == "completed":
-                oas_ids[cba_id] = res.json()["output"]["meta"]["oas_id"]
-                completed = True
+        oas_id = get_oas_id_from_cba_id(cba_id)
+        if oas_id is not None:
+            oas_ids[cba_id] = oas_id
 
     return oas_ids
 
+
+def get_oas_id_from_cba_id(identifier):
+    query = {
+        "query": {
+            "term": {
+                "identifier": identifier
+            }
+        },
+        "_source": False,
+        "fields": [
+            "$meta.id"
+        ]
+    }
+    url = OAS_URL + '/search/oas/_search'
+    res = httpx.post(url, json=query).json()
+    if not res["hits"]["hits"]:
+        return None
+    else:
+        oas_id = res["hits"]["hits"][0]["_id"]
+        return oas_id
 
 def trigger_nlp(cba_oas_ids: dict):
     """
@@ -103,25 +109,59 @@ def trigger_nlp(cba_oas_ids: dict):
     :param cba_oas_ids:
     :return: Dict of CBA IDs as keys and OAS post IDs as values
     """
-    url = f"{OAS_URL}/job"
-    job_ids = {}
 
+    job_ids = []
+    print(f"Creating {len(cba_oas_ids)} jobs")
     for cba_id, oas_id in cba_oas_ids.items():
-        body = {
-            "typ": "nlp",
-            "subjects": [""],
-            "args": {"post_id": oas_id}
-        }
-        res = httpx.post(url, json=body)
-        job_ids[cba_id] = str(res.json())
+        job_id = create_nlp_job(oas_id)
+        print(f"created job {job_id} for post {oas_id} (external id {cba_id}")
+        job_ids.append(job_id)
 
-    for cba_id, job_id in job_ids.items():
-        completed = False
-        job_url = url + f"/{job_id}"
-        while not completed:
-            res = httpx.get(job_url)
-            if res.json()["status"] == "completed":
-                completed = True
+    print(f"Waiting for {len(job_ids)} NLP jobs to complete")
+    wait_for_jobs(job_ids)
+    print("All jobs finished")
+
+
+def wait_for_jobs(job_ids: list):
+    """
+    Wait for a list of jobs to be finished.
+    As the core currently doesn't have a nice API for this, we poll
+    each job until it is finished.
+    This blocks until everything is done.
+    """
+    pending = job_ids
+    while pending:
+        finished = []
+        for job_id in pending:
+            if get_job_status(job_id) == "completed":
+                finished.append(job_id)
+
+        if len(finished):
+            for job_id in finished:
+                pending.remove(job_id)
+            print(f"Waiting for {len(pending)} of {len(job_ids)} jobs") 
+
+        time.sleep(1)
+
+def create_job(body):
+    url = f"{OAS_URL}/job"
+    res = httpx.post(url, json=body)
+    return str(res.json())
+
+
+def create_nlp_job(post_id):
+    body = {
+        "typ": "nlp",
+        "subjects": [post_id],
+        "args": {"post_id": post_id}
+    }
+    return create_job(body)
+
+
+def get_job_status(job_id):
+    job_url = OAS_URL + f"/job/{job_id}"
+    res = httpx.get(job_url)
+    return res.json()["status"]
 
 
 def get_post(post_id: str):
@@ -298,6 +338,7 @@ if __name__ == "__main__":
     """ Get OAS keywords & transcript """
     cba_ids = devsetIDs_to_cbaIDs(devset_fpath)
     oas_post_ids = get_post_ids(cba_ids)
+
     trigger_nlp(oas_post_ids)
     oas_keywords = [get_keywords(ids) for ids in oas_post_ids.items()]
     oas_transcripts = [get_transcript(ids) for ids in oas_post_ids.items()]
