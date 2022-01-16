@@ -67,8 +67,8 @@ def generate_xml(items):
 
 if __name__ == "__main__":
     """ Generates RSS Feed XML file from spreadsheet containing source URLs """
-    source_urls = pd.read_csv("devset/Devset.csv")["URL"].tolist()
+    source_urls = pd.read_csv("devset/assets/Devset.csv")["URL"].tolist()
     items = fetch_items(source_urls)
     xml = generate_xml(items)
-    with open("devset/rss.xml", "w") as f:
+    with open("devset/assets/rss.xml", "w") as f:
         f.write(xml)

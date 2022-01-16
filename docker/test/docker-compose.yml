@@ -1,0 +1,43 @@
+version: "3.3"
+   
+services:
+  redis:
+    image: "redis:alpine"
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - 6379:6379
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.11.2
+    ports:
+      - 9200:9200
+    environment:
+      http.host: 0.0.0.0
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms500m -Xmx500m"
+      TAKE_FILE_OWNERSHIP: 1
+      http.cors.enabled: "true"
+      http.cors.allow-credentials: "true"
+      http.cors.allow-origin: "http://localhost:4000, http://localhost:8080, http://localhost:51000"
+      http.cors.allow-headers: X-Requested-With, X-Auth-Token, Content-Type, Content-Length, Authorization, Access-Control-Allow-Headers, Accept
+
+  couchdb:
+    image: couchdb:3
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+      - COUCHDB_SECRET=secret
+      - ERL_FLAGS=-setcookie "brumbrum"
+    ports:
+      - "5984:5984"
+      - "4369:4369"
+      - "9100:9100"
+
+  ocypod:
+    build:
+      context: ../ocypod
+    volumes:
+      - ../../config/ocypod.toml:/etc/ocypod.toml:ro
+    command: ["redis:6379", "--", "ocypod-server", "/etc/ocypod.toml"]
+    ports:
+      - 8023:8023
