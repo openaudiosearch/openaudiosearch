@@ -24,6 +24,10 @@ To login as administrative User, scroll down to the bottom of the UI and click o
 
 This section walks you through specific tasks, you might want to accomplish:
 
+### Find the term "Open Audio Search" in an audio tracks
+
+Just enter the searchterm into a searchbox on the front page, the header or in `Search`-Tab. Results are getting displayed as cards. To access the part of the audio, in which the search term gets spoken, just click into the transcript snippet in the lower part of the cards, where the term gets highlighted.
+
 
 ### Import new sources
 
