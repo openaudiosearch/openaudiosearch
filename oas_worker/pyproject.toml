@@ -19,6 +19,8 @@ loguru = "^0.5.3"
 httpx = "^0.18.1"
 mpire = "^2.3.0"
 recasepunc = { git = "https://github.com/openaudiosearch/recasepunc.git", branch = "oas2" }
+pandas = "^1.1.5"
+bs4 = "^0.0.1"
 
 [tool.poetry.dev-dependencies]
 rope = "^0.18.0"

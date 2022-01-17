@@ -11,3 +11,4 @@ data
 target
 docker-compose.override.yml
 docker-lock.json
+oas_worker/devset/evaluations/*

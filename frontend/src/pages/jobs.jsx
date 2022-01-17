@@ -37,6 +37,7 @@ function JobList (props) {
   const [sort, setSort] = useState('id')
   const [sortDirection, setSortDirection] = useState('asc')
   const sortedJobs = React.useMemo(() => {
+    if (!data) return null
     const [key, dir] = sort.split(':')
     return data.sort((a, b) => {
       const res = (a[key] > b[key]) ? 1 : -1
@@ -45,7 +46,7 @@ function JobList (props) {
     })
   }, [data, sort, sortDirection])
   if (error) return <Error error={error} />
-  if (!data) return <Loading />
+  if (!sortedJobs) return <Loading />
   const sortProps = { sort, setSort, sortDirection, setSortDirection }
   // const sortedJobs = data.sort((a, b) => (a.id > b.id) ? 1 : -1)
   return (

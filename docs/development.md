@@ -73,9 +73,9 @@ python task-run.py asr --engine vosk --file_path ../examples/frn-leipzig.wav
 
 Generate and serve Devset RSS feed on localhost port 6650:  
 ```
-cd scripts/
-python generate_devset.py
-sh serve_nlp_devset.sh
+cd oas_worker/
+poetry run python devset/generate_devset.py
+sh devset/serve_nlp_devset.sh
 ```
 
 Import RSS feed:  
