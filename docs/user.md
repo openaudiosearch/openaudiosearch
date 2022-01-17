@@ -15,7 +15,7 @@ tbd
 
 ### Login
 
-tbd
+To login as administrative User, scroll down to the bottom of the UI and click on the `Login`-Link. In the popping up window, fill in your Username & Password and hit the `Login`-Button.
 
 
 ## How To...
@@ -25,7 +25,7 @@ tbd
 
 ### Import new sources
 
-tbd
+To import new sources, login to *OAS* (described above) and go to the `Importer`-Tab in the UI. There you can post in the link to an RSS feed (e.g. `FIXME`). Specify, if you want to enable speech recognition and natural language processing, by adjusting the sliders and the click on the `Save & import`-Button.
 
 
 ## Frequently Asked Questions
