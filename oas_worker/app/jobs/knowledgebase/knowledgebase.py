@@ -6,10 +6,7 @@ from Levenshtein import distance
 
 @worker.job(name="knowledgebase")
 def knowledgebase(ctx, args):
-    """Simple implementation of naive named entity linking with Wikidata.
-       It simply queries the Wikibase API and takes the first three results.
-       https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
-       https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1%7CQ42&props=descriptions&languages=en%7Cde%7Cfr
+    """Simple proof-of-concept integration of spacys knowledgebase
 
     Args:
         ctx (Context): The context object contains the worker ID, the current job and enables access to the core client
