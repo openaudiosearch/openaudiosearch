@@ -1,5 +1,6 @@
 ### create an example job
 @identifier = "https://www.freie-radios.net/112600"
+@post = "npk501c442qg2gaxq2vkqac5z4"
 POST {{api}}/job
 Authorization: Basic admin:password
 
@@ -8,6 +9,21 @@ Authorization: Basic admin:password
   "typ": "example",
   "args": {
     "identifier": {{identifier}}
+  },
+  "subjects": []
+}
+
+### add to knowledgebase
+@api = http://localhost:8080/api/v1
+@post = "npk501c442qg2gaxq2vkqac5z4"
+POST {{api}}/job
+Authorization: Basic admin:password
+
+
+{
+  "typ": "knowledgebase",
+  "args": {
+    "post_id": {{post}}
   },
   "subjects": []
 }

@@ -18,6 +18,7 @@ from app.jobs.transcribe_vosk import transcribe_vosk
 
 import app.jobs.recasepunc.recasepunc
 import app.jobs.naive_ned.naive_ned
+import app.jobs.knowledgebase.knowledgebase
 
 
 def local_dir_mkdir(path):
@@ -143,8 +144,6 @@ def nlp(ctx, args):
     fields = ["headline", "description"]
     values = filter(None.__ne__, map(lambda f: find_in_dict(post, f), fields))
     text = text + " " + "\n".join(values)
-    print(100 * "§")
-    print(text)
     spacy = SpacyPipe(pipeline)
     res = spacy.run(text)
     patch = [

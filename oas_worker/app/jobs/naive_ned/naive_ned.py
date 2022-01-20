@@ -43,7 +43,11 @@ def naive_ned(ctx, args):
                    pages = r.get("pages")
                if pages:
                    result[text] = {
-                    "results":  sorted(list(pages.values()),key=lambda x :x['index']),
+                    "results":  sorted(
+                        list(
+                            pages.values()),
+                            key=lambda x :x['index']
+                            ),
                     "count": 1
                     }
             
@@ -67,7 +71,6 @@ class lang(Enum):
     @classmethod
     def has_value(cls, value):
         return value in cls._value2member_map_
-
 
 def set_search_params(query, limit = 3) :
     params = {
@@ -98,5 +101,3 @@ def search_wikipedia(params, language = "de"):
             elif warnings:
                 print(warnings) 
             return
-
-
