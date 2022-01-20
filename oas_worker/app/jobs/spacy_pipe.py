@@ -71,6 +71,7 @@ class SpacyPipe():
         missed = []
         lemma = []
         keywords = []
+        print(self.nlp.Defaults.stop_words)
         if "ner" in self.pipeline:
             for ent in doc.ents:
                 ner.append((ent.text, ent.label_, ent.start_char, ent.end_char))
