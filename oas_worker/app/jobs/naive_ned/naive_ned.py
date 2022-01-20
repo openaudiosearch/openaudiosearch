@@ -7,7 +7,9 @@ import json
 @worker.job(name="naive_ned")
 def naive_ned(ctx, args):
     """Simple implementation of naive named entity linking with Wikidata.
-       It simply queries the Wikidata REST API and takes the first result.
+       It simply queries the Wikibase API and takes the first three results.
+       https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
+       https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1%7CQ42&props=descriptions&languages=en%7Cde%7Cfr
 
     Args:
         ctx (Context): The context object contains the worker ID, the current job and enables access to the core client
@@ -26,17 +28,25 @@ def naive_ned(ctx, args):
     result = dict()
     for item in post["nlp"]["ner"]:
         text, label, _start, _end = item
+        text = text.casefold()
         pages = None
-        if label in accepted_labels:
-            params = set_search_params(text)
-            r = search_wikipedia(params, language="de")
-            if r:
-                pages = r.get("pages")
-            if pages:
-                result[text] = sorted(list(pages.values()),key=lambda x :x['index'])
-                pprint(result[text])
-    
-    pprint(result)
+        if text in result:
+            result[text] = {
+                "results":  result[text]["results"],
+                "count": result[text]["count"] + 1
+            }
+        else:
+            if label in accepted_labels:
+               params = set_search_params(text)
+               r = search_wikipedia(params, language="de")
+               if r:
+                   pages = r.get("pages")
+               if pages:
+                   result[text] = {
+                    "results":  sorted(list(pages.values()),key=lambda x :x['index']),
+                    "count": 1
+                    }
+            
     post["nlp"]["ned"] = result        
     
     patch = [
@@ -61,7 +71,7 @@ class lang(Enum):
 
 def set_search_params(query, limit = 3) :
     params = {
-      "action": "query",
+    "action": "query",
     "format": "json",
     "prop":"pageprops|description",
     "ppprop":"wikibase_item",
@@ -89,5 +99,4 @@ def search_wikipedia(params, language = "de"):
                 print(warnings) 
             return
 
-# https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
-# https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1%7CQ42&props=descriptions&languages=en%7Cde%7Cfr
+

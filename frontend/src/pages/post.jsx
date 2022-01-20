@@ -1,7 +1,16 @@
 import React from 'react'
+import { TagCloud } from 'react-tagcloud'
+
 import { FaCog, FaWikipediaW, FaPlay, FaTasks, FaExternalLinkAlt, FaChevronLeft, FaCreativeCommons } from 'react-icons/fa'
 import { SiWikidata } from 'react-icons/si'
 import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverHeader,
+  PopoverBody,
+  PopoverArrow,
+  PopoverCloseButton,
   IconButton,
   Menu,
   MenuButton,
@@ -22,6 +31,7 @@ import {
   ListIcon,
   Divider
 } from '@chakra-ui/react'
+
 import { useParams, useLocation, useHistory } from 'react-router'
 
 import { stripHTML } from '../lib/sanitize'
@@ -54,7 +64,6 @@ export function PostTaskMenuButton (props = {}) {
       const jobId = await fetch(`/task/transcribe-media/${mediaId}`, {
         method: 'POST'
       })
-      console.log('Created job: ' + jobId)
     } catch (err) {
     }
   }
@@ -144,6 +153,52 @@ export function PostPageHelmet (props) {
   )
 }
 
+const tagCloudRenderer = (tag, size, color) => {
+  return (
+    <Popover key={tag.value}>
+      <PopoverTrigger>
+        <Button p='2' variant='unstyled' fontSize={size} color={color}>{tag.value}</Button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverArrow />
+        <PopoverCloseButton />
+        <PopoverHeader>{tag.value}{size}</PopoverHeader>
+        <PopoverBody>
+          {tag.props.map((entry) => {
+            const { wikibase_item: qid } = entry.pageprops
+            return (
+              <Tooltip key={entry.pageid} label={entry.description}>
+                <Box>
+                  <Flex>
+                    <Box mr={3}>
+                      <ListIcon as={FaWikipediaW} />
+                      <ChakraLink href={'https://de.wikipedia.org/wiki/' + entry.title} isExternal>
+                        {entry.title}
+                      </ChakraLink>
+                    </Box>
+                    <Box>
+                      <ListIcon as={SiWikidata} />
+                      <ChakraLink href={'https://www.wikidata.org/wiki/' + qid} isExternal>
+                        {qid}
+                      </ChakraLink>
+
+                    </Box>
+
+                  </Flex>
+                  <Divider />
+                </Box>
+
+              </Tooltip>
+            )
+          })}
+
+        </PopoverBody>
+      </PopoverContent>
+    </Popover>
+
+  )
+}
+
 export function PostPageInner (props = {}) {
   const { post } = props
   const { t } = useTranslation()
@@ -179,45 +234,11 @@ export function PostPageInner (props = {}) {
       <SearchTag label={contributor} facet='contributor' key={contributor} />
     )
   }
-
-  let wikidataEntities = []
+  let tags = []
   if (post.nlp && post.nlp.ned) {
-    wikidataEntities = Object.entries(post.nlp.ned).map((nel, i) => {
-      console.log(nel)
-      return (
-        <Box key={nel[0]}>
-          <Heading size='sm'>{nel[0]}</Heading>
-          <List spacing={0}>
-            {nel[1].map((entry) => {
-              const { wikibase_item: qid } = entry.pageprops
-              return (
-                <Tooltip key={entry.pageid} label={entry.description}>
-                  <ListItem h={10}>
-                    <Flex>
-                      <Box mr={3}>
-                        <ListIcon as={FaWikipediaW} />
-                        <ChakraLink href={'https://de.wikipedia.org/wiki/' + entry.title} isExternal>
-                          {entry.title}
-                        </ChakraLink>
-                      </Box>
-                      <Box>
-                        <ListIcon as={SiWikidata} />
-
-                        <ChakraLink href={'https://www.wikidata.org/wiki/' + qid} isExternal>
-                          {qid}
-                        </ChakraLink>
-                      </Box>
-                    </Flex>
-                  </ListItem>
-                </Tooltip>
-              )
-            })}
-          </List>
-        </Box>
-
-      )
-    }
-    )
+    tags = Object.entries(post.nlp.ned).map((nel, i) => {
+      return ({ value: nel[0], count: nel[1].count, props: nel[1].results })
+    })
   }
 
   let duration = null
@@ -296,7 +317,14 @@ export function PostPageInner (props = {}) {
                 Wiki content that might be relevant:
                 </Heading>
 
-                {wikidataEntities}
+                {/* {wikidataEntities} */}
+                <TagCloud
+                  minSize={12}
+                  maxSize={35}
+                  tags={tags}
+                  renderer={tagCloudRenderer}
+                  colorOptions={{ luminosity: 'dark' }}
+                />
 
               </Box>}
             <PostTranscriptSection post={post} />
