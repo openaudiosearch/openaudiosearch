@@ -3,6 +3,7 @@ import React from 'react'
 import { usePlayer, usePlayerRegionIfPlaying, formatDuration } from './player'
 import { useTranslation } from 'react-i18next'
 import { FaVolumeUp } from 'react-icons/fa'
+import moment from 'moment'
 
 export function PostTranscriptSection (props) {
   const { post } = props
@@ -40,45 +41,83 @@ export function PostTranscript (props) {
 
 let styleInjected = false
 
+function Word (props) {
+  const { word, post, media, player } = props
+  const conf = word.conf
+  const exp = 5
+  const hue = (Math.pow(conf, exp)) * 100
+  const color = `hsla(${hue}, 100%, 90%, 30%)`
+  const style = {
+    cursor: 'pointer',
+    background: color
+  }
+  let wordWithPunct = word.word
+  if (word.suffix) wordWithPunct += word.suffix
+  return (
+    <span className='word' style={style} onClick={onClick}>
+      {wordWithPunct}&nbsp;
+    </span>
+  )
+  function onClick (e) {
+    player.setPost(post)
+    player.setTrack(media)
+    player.setMark(word)
+  }
+}
+
 export function MediaTranscript (props) {
   const { media, post, delta } = props
-  const parts = media.transcript.parts
+  const player = usePlayer()
 
-  const { setTrack, setMark, setPost } = usePlayer()
+  const sections = React.useMemo(() => {
+    const parts = media.transcript.parts
+    const segments = media.transcript.segments || []
+    const speakers = segments.filter(segment => segment.type === 'speaker')
+    const voice = segments.filter(segment => segment.type === 'voice')
+    speakers.sort((a, b) => a.start < b.start ? -1 : 1)
 
-  const words = React.useMemo(() => (
-    <>
-      {parts.map((word, i) => {
-        // Hue 0 = red, hue 100 = green
-        const conf = word.conf
-        const exp = 5
-        const hue = (Math.pow(conf, exp)) * 100
-        const color = `hsla(${hue}, 100%, 90%, 30%)`
-        const style = {
-          background: color
+    const sections = []
+    let speaker = speakers.shift()
+    let section = null
+    for (const word of parts) {
+      if (!section) {
+        if (!speaker || speaker.start > word.start) {
+          const end = speaker ? speaker.start : Infinity 
+          section = { 'speaker': 'unknown', start: word.start, end, words: [] }
+        } else {
+          section = { 'speaker': 'speaker-' + speaker.data, start: speaker.start, end: speaker.end, words: [] }
         }
-        let wordWithPunct = word.word
-        if (word.suffix) wordWithPunct += word.suffix
-        return (
-          <span key={i} style={style} onClick={onClick}>
-            {wordWithPunct}&nbsp;
-          </span>
-        )
-        function onClick (e) {
-          setPost(post)
-          setTrack(media)
-          setMark(word)
-        }
-      })}
-    </>
-  ), [parts])
+      }
+      section.words.push(word)
+      if (word.end > section.end) {
+        sections.push(section)
+        section = null
+        if (speakers.length) speaker = speakers.shift()
+        else speaker = null
+      }
+    }
+    if (section) sections.push(section)
+
+    return (
+      <div>
+        {sections.map((section,i) => (
+          <div key={i}>
+            <Heading fontSize='sm' color='gray.500' mt='2' fontWeight='normal'>
+              [{fmtTime(section.start)}] {section.speaker}
+            </Heading>
+            {section.words.map((word, i) => <Word key={i} word={word} post={post} media={media} player={player} />)}
+          </div>
+        ))}
+      </div>
+    )
+  }, [post])
 
   // TODO: Don't do this like this.
   let globalStyle = null
   if (!styleInjected) {
     globalStyle = (
       <style>
-        {`.transcript-container > span {
+        {`.transcript-container span.word {
           border-radius: 5px;
           border: 1px solid transparent;
           padding: 0;
@@ -86,7 +125,7 @@ export function MediaTranscript (props) {
           display: inline-block;
           cursor: pointer;
         }
-        .transcript-container > span:hover {
+        .transcript-container span.word:hover {
           border-color: rgba(0,0,0,0.4);
         }`}
       </style>
@@ -96,7 +135,7 @@ export function MediaTranscript (props) {
   return (
     <Box className='transcript-container'>
       {globalStyle}
-      {words}
+      {sections}
     </Box>
   )
 
@@ -266,4 +305,10 @@ export function parseTranscriptWords (value) {
       return item
     }
   }).filter(x => x)
+}
+
+function fmtTime (seconds) {
+  return new Date(seconds * 1000).toISOString().substr(11, 8)
+  // const dur = moment.duration(seconds, 'seconds')
+  //   .format("*hh:mm", { trunc: true });
 }
