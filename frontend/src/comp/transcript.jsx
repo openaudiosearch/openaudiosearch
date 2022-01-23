@@ -76,6 +76,7 @@ export function MediaTranscript (props) {
     const voice = segments.filter(segment => segment.type === 'voice')
     speakers.sort((a, b) => a.start < b.start ? -1 : 1)
 
+    // sort words into speaker sections.
     const sections = []
     let speaker = speakers.shift()
     let section = null
@@ -98,12 +99,41 @@ export function MediaTranscript (props) {
     }
     if (section) sections.push(section)
 
+    // mark speaker sections as voice or no-voice
+    // todo: write better algorithm
+    for (const section of sections) {
+      const vsegs = []
+      for (const vseg of voice) {
+        if (vseg.start <= section.start && vseg.end >= section.end) {
+          section.voice = true
+          break
+        }
+        if (vseg.start > voice.end) {
+          break
+        }
+        if (vseg.start <= section.start && vseg.end > section.start) {
+          vsegs.push([section.start, vseg.end])
+        }
+        if (vseg.start > section.start && vseg.start < section.end) {
+          vsegs.push([vseg.start, section.end])
+        }
+      }
+      if (vsegs.length) {
+        const vseg = vsegs.reduce((agg, [s, e]) => agg + (e - s), 0)
+        const total = section.end - section.start
+        if (vseg > total / 1.5) section.voice = true
+      }
+      if (!section.voice) section.voice = false
+    }
+
+
     return (
       <div>
         {sections.map((section,i) => (
-          <div key={i}>
-            <Heading fontSize='sm' color='gray.500' mt='2' fontWeight='normal'>
+          <div key={i} className={`section-${section.voice ? 'voice' : 'novoice'}`}>
+            <Heading fontSize='md' color='gray.500' mt='2' fontWeight='normal'>
               [{fmtTime(section.start)}] {section.speaker}
+              {!section.voice && ' (no voice detected)'}
             </Heading>
             {section.words.map((word, i) => <Word key={i} word={word} post={post} media={media} player={player} />)}
           </div>
@@ -124,6 +154,9 @@ export function MediaTranscript (props) {
           // margin-right: 2px;
           display: inline-block;
           cursor: pointer;
+        }
+        .transcript-container .section-novoice {
+          opacity: .5;
         }
         .transcript-container span.word:hover {
           border-color: rgba(0,0,0,0.4);
