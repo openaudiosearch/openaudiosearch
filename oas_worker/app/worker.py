@@ -147,7 +147,7 @@ class Context(object):
         return self.worker.config
 
     def set_progress(self, progress, meta=None):
-        self.log.debug(f"  Progress: {progress}")
+        #  self.log.debug(f"  Progress: {progress}")
         return self.worker.client.set_progress(self.job_id, progress, meta=meta)
 
     def get(self, url):

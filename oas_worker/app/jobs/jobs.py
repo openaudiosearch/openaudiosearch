@@ -71,9 +71,6 @@ def asr(ctx, args):
     if engine != "vosk":
         raise NotImplementedError(f"Speech recognition engine `{engine}` is not implemented")
 
-    model_base_path = config.model_path
-    model_path = os.path.join(model_base_path, config.model)
-
     # fetch media record
     media = ctx.get("/media/" + media_id)
     guid = media["$meta"]["guid"]
@@ -86,27 +83,27 @@ def asr(ctx, args):
     workdir = ctx.workdir()
     os.makedirs(workdir, exist_ok=True)
     temp_wav = os.path.join(workdir, "processed.wav")
-
-    subprocess.call(
-        [
-            "ffmpeg",
-            "-i",
-            downloaded_path,
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-ar",
-            str(samplerate),
-            "-ac",
-            "1",
-            temp_wav,
-        ],
-        stdout=subprocess.PIPE,
-    )
+    if not os.path.isfile(temp_wav):
+        subprocess.call(
+            [
+                "ffmpeg",
+                "-i",
+                downloaded_path,
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-ar",
+                str(samplerate),
+                "-ac",
+                "1",
+                temp_wav,
+            ],
+            stdout=subprocess.PIPE,
+        )
 
     # transcribe with vosk
     start = time.time()
-    result = transcribe_vosk(ctx, media_id, temp_wav, model_path)
+    result = transcribe_vosk(ctx, media_id, temp_wav)
     duration = time.time() - start
 
     try:

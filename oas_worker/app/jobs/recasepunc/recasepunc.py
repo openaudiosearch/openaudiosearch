@@ -1,4 +1,5 @@
 import os
+import time
 import datetime
 from recasepunc import CasePuncPredictor
 from recasepunc import WordpieceTokenizer
@@ -6,22 +7,16 @@ from recasepunc import Config
 
 from app.worker import worker
 
-@worker.job(name="recasepunc")
-def recasepunc(ctx, args):
-    media_id = args["media_id"]
-    media = ctx.get(f"/media/{media_id}")
-
-    guid = media["$meta"]["guid"]
-
-    transcript = media["transcript"]
+def perform_recase(config, transcript):
     # Nothing to do if no transcript
     if transcript is None:
         return {}
 
+    timer = time.time()
     text_orig = transcript["text"].strip()
 
-    model_base_path = ctx.config.model_path
-    model_path = os.path.join(model_base_path, ctx.config.recase_model)
+    model_base_path = config.model_path
+    model_path = os.path.join(model_base_path, config.recase_model)
     predictor = CasePuncPredictor(model_path, lang="de", device="cpu")
     tokens = list(enumerate(predictor.tokenize(text_orig)))
 
@@ -52,13 +47,24 @@ def recasepunc(ctx, args):
 
     transcript["text"] = text_recased
     transcript["meta"]["recasepunc"] = {
-        "processed": True,
         "created": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "model": ctx.config.recase_model
+        "model": config.recase_model,
+        "time": round(time.time() - timer, 2)
     }
+    return transcript
+
+@worker.job(name="recasepunc")
+def recasepunc(ctx, args):
+    media_id = args["media_id"]
+    media = ctx.get(f"/media/{media_id}")
+
+    guid = media["$meta"]["guid"]
+
+    transcript = media["transcript"]
+    updated_transcript = perform_recase(ctx.config, transcript)
 
     patch = [
-        {"op": "replace", "path": "/transcript", "value": transcript},
+        {"op": "replace", "path": "/transcript", "value": updated_transcript},
     ]
     patches = { guid: patch }
 

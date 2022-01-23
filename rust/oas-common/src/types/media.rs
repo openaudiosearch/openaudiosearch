@@ -36,8 +36,19 @@ pub struct Media {
 pub struct Transcript {
     pub text: String,
     pub parts: Vec<TranscriptPart>,
+    pub segments: Vec<Segment>,
     #[serde(default)]
     pub meta: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
+pub struct Segment {
+    pub start: f32,
+    pub end: f32,
+    #[serde(rename = "type")]
+    pub typ: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data: Option<serde_json::Value>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, JsonSchema)]
