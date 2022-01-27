@@ -162,7 +162,7 @@ const tagCloudRenderer = (tag, size, color) => {
       <PopoverContent>
         <PopoverArrow />
         <PopoverCloseButton />
-        <PopoverHeader>{tag.value}{size}</PopoverHeader>
+        <PopoverHeader>{tag.value}</PopoverHeader>
         <PopoverBody>
           {tag.props.map((entry) => {
             const { wikibase_item: qid } = entry.pageprops
