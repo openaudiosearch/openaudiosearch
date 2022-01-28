@@ -1,59 +1,59 @@
 # User Guide
 
-The following paragraphs will outline the usage of Open Audio Search (*OAS*). This is directed towards users of the system and should help you getting started easily. We intend to expand and improve this document over time. If something in here is unclear to you or you miss explanations, please feel invited to [open an issue](https://github.com/openaudiosearch/openaudiosearch/issues/new/choose).
+The following paragraphs will outline the usage of Open Audio Search (*OAS*). This guide is directed towards users of the system and should help you get started easily. We intend to expand and improve this document over time. If something in here is unclear to you or you miss explanations, please feel invited to [open an issue](https://github.com/openaudiosearch/openaudiosearch/issues/new/choose).
 
 
 ## User Interface
 
-The main page of *OAS* shows the `Discover`-Tab. It displays a subset of audio tracks, which are indexed into the system and you're might be curious about. On the cards, you find some basic informations on the track, like *Title*, *Duration* and a short *Description*. In case you want to get more information, just click the card to get into details view. Or if you want to hear the audio track right away, just press the play button on the upper-right side of the card.
+The main page of *OAS* shows the `Discover` tab. It displays a sample of radio features from community media stations you might be curious about. These audio tracks, like many others, are indexed in the system and are therefore searchable through the search engine. Some basic information, such as *title*, *duration* and a short *description*, is already provided for every track in a box. If you want to get more information on a specific track, just click on its title to get to its detail view, which also includes the transcript. If you prefer to hear the audio track right away, just press the play button in the upper-right corner of the box.
 
 
 ### Search
 
-As *OAS* is a search engine for audio, one of its core features is to find specific words or terms in audio tracks. To accomplish such a search, you can either use the searchbox in the header of the frontpage. Or navigate in the `Search`-Tab and enter your query there in the searchbox. Results are getting displayed right in the middle of the page and you can sort them according to Publishing Date or Duration. They are shown as cards, from which you get basic informations on the audio track: *Title*, *Description* of the track, its *Duration*, as well as those parts in the transcript, in which the search term can be found. You can jump right into that part of the audio just by hitting the box around this part of the transcript. Of course you can play the whole audio file as well by pushing the Play-Button on the upper-right part of the results cards.
+As *OAS* is a search engine for audio data, one of its core features is to find specific words or terms in audio tracks. To accomplish such a search, you can use one of the search boxes in the title bar or on the frontpage. For more search options navigate to the `Search` tab and submit your query using the search box there. Results are displayed as boxes in the middle of the page and you can sort them by date of publication or duration. For each search result some basic information on the audio track is provided: the *radio station*, its *title*, *duration*, *date of publication*, as well as a short *description* of its content. But you'll also find snippets of the transcript where the search term was found. By clicking on the box around the snippet, you can jump right to the part of the audio track where the snippet was taken from. Of course you can also play the whole audio file from start by pressing the Play button in the upper-right corner of the box.
 
-To fine-tune your search, you can use the facettes on the left side of the page, with which you can filter the results according to *Creator*, *Genre*, *Publishing Date* and/or *Duration*. You can find examples on how to apply such facettes in the `How To...`-Section below.
+To fine-tune your search, you can use the search options (facets) on the left side of the page. You can filter the results by *creator*, *genre*, *publishing date* and/or *duration*. You can find examples on how to apply such search facets in the `How To...`-Section below.
 
-To access the whole information on the resulted audio track, just click on results cards to get into its details view. Here you can access the transcript and jump into specific parts in the audio track just by clicking a word.
+In order to get more information on a specific track, including its transcript, just click on its title to get to its detail view. In the transcript, clicking on a word makes the audio player jump to the part of the track where it is mentioned.
 
 
 ### Login
 
-To login as administrative User, scroll down to the bottom of the UI and click on the `Login`-Link. In the popping up window, fill in your *Username* & *Password* and hit the `Login`-Button.
+To login as administrative user, scroll down to the bottom of the page and click on the `Login` button on the right. In the pop up window, fill in your *username* and *password* and hit `Login`.
 
 
 ## How To...
 
-This section walks you through specific tasks, you might want to accomplish:
+This section walks you through specific tasks you might want to accomplish:
 
-### Find the term "Open Audio Search" in an audio track
+### Find a seach term in an audio track
 
-Just enter the searchterm into a searchbox on the front page, the header or in `Search`-Tab. Results are getting displayed as cards. To access the part of the audio, in which the search term gets spoken, just click into the transcript snippet in the lower part of the cards, where the term gets highlighted.
+Enter the search term into one of the search boxes, on the front page, the title bar or in the `Search` tab. Resulting audio tracks are displayed as boxes and snippets of their transcripts containing the search term are shown within. By clicking on the boxes around the snippets, you can jump right to the parts of the audio track where the snippet was taken from. Voilà - you found the search term in the audio file!
 
 
 ### Find all audio tracks of a specific genre
 
-Open the `Search`-Tab and select in the `Genre`-Facette on the left side that genre you want to filter on. To quickly find a specific genre, enter its first characters in the searchbox above the displayed genres.
+Open the `Search` tab. On the left side find the *Genre* search option and chose a genre from the list. To quickly find a specific genre, start typing it into the search box above the displayed genres.
 
 
-### Get audio tracks, which are pulished within the last month
+### Get audio tracks from last month
 
-In `Search`-Tab, you can filter results based on the date it has been published. Use the facette *Publishing Date* and enter there as start date the day one month before today, respectively the current date as end date.
+In the `Search` tab, you can filter audio tracks by their date of publication. Use the facet *Publishing Date* and enter corresponding start and end dates.
 
 
-### Filter audio tracks on its duration
+### Filter audio tracks by their duration
 
-Just adjust the slider in the `Duration`-Facette on the left hand side of `Search`-Tab.
+Adjust the slider in the `Duration` facet on the left side of the `Search` tab.
 
 
 ### Import new sources
 
-To import new sources, login to *OAS* (described above) and go to the `Importer`-Tab in the UI. There you can post in the link to an RSS feed (e.g. `FIXME`). Specify, if you want to *enable speech recognition* and *natural language processing*, by adjusting the sliders and the click on the `Save & import`-Button.
+To import new sources, login to *OAS* as described above and navigate to the `Importer` tab in the title bar. Enter the link to an RSS feed in the input field (e.g. `https://media.ccc.de/updates.rdf`). Specify if you want to *enable speech recognition* and *natural language processing* by clicking on the corresponding switches. Confirm by hitting `Save & import`.
 
 
-### Get the transcript of an audio track
+### Get an audio track's transcript
 
-Find the audio track from which you want the transcript in `Search`-Tab. Click on the card to get into details views. There the transcript is displayed in the lower part of the information card.
+Find the audio track you want transcripted by using one of the search boxes, e.g. in the `Search` tab. Click on its title to navigate to its detail view. Here you find the transcript displayed in the lower part of the page.
 
 
 ## Frequently Asked Questions

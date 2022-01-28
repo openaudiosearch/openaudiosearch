@@ -14,9 +14,9 @@
 
 ## What is it?
 
-**Open Audio Search** is a search engine for audio. It can index RSS feeds and use automatic speech recognition to extract text from audio. The feeds and transcripts are then indexed in a search engine, empowering users to use full-text search on the indexed transcripts and listen to the audio files while jumping right to search result snippets.
+**Open Audio Search** is a search engine for audio files. It indexes RSS feeds and uses automatic speech recognition to extract text from audio. The feeds and transcripts are indexed in a search engine, empowering users to use full-text search on the transcripts and listen to the audio files while jumping right to search result snippets.
 
-With **Open Audio Search**, we want to make the archives of community media, radio stations, podcasts searchable and discoverable, through open source tech and APIs.
+With **Open Audio Search**, we want to make the archives of community media, radio stations and podcasts searchable and discoverable, through open source tech and APIs.
 
 ## Status
 
@@ -35,11 +35,11 @@ Open Audio Search is still **in development**. No API stability guarantees yet. 
 
 
 * For installation and usage see further down in here
-* [HTTP API docs](https://demo.openaudiosearch.org/swagger-ui/) are auto-generated (still incomplete) and can be viewed on the [demo site](https://demo.openaudiosearch.org/swagger-ui/). Some useful examples on how to use the HTTP API can be found in the [rest-examples](scripts/rest-examples/README.md) folder.
+* HTTP API docs are auto-generated (still incomplete) and can be viewed on the [demo site](https://demo.openaudiosearch.org/swagger-ui/). Some useful examples on how to use the HTTP API can be found in the [rest-examples](scripts/rest-examples/README.md) folder
 * The worker has a [README](oas_worker/README.md) with docs on how to run and create jobs
 * When working with the Rust core, the [Rust API docs](https://openaudiosearch.github.io/openaudiosearch/rustdocs/oas_core/) may help you
 * We have some resources and docs in a [documentation book](https://openaudiosearch.github.io/openaudiosearch/book/) (still incomplete and partially outdated)
-* A usage guide from user perspective (incl. How-to-Guides and FAQs) can be found in the [user docs section](https://openaudiosearch.github.io/openaudiosearch/book/user.html) of our [documentation book](https://openaudiosearch.github.io/openaudiosearch/book/) (again, still incomplete and partially outdated)
+* A user guide focusing on the user perspective (incl. How-to-Guides and FAQs) can be found in the [user docs section](https://openaudiosearch.github.io/openaudiosearch/book/user.html) of our [documentation book](https://openaudiosearch.github.io/openaudiosearch/book/) (again, still incomplete and partially outdated)
 
 ## Installation and usage
 
