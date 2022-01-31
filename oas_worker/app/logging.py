@@ -60,7 +60,7 @@ def setup_logging():
             format=file_formatter,
             level="INFO")
 
-    logging.basicConfig(handlers=[InterceptHandler()], level=0)
+    #  logging.basicConfig(handlers=[InterceptHandler()], level=0)
 
 
 class InterceptHandler(logging.Handler):

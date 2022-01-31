@@ -124,6 +124,7 @@ function JobStatus (props) {
       {job.status}
       {job.status === 'running' && (
         <span>
+          &nbsp;{Math.round(percent)}%
           <Progress mt='1' hasStripe value={percent} />
         </span>
       )}
