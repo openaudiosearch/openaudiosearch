@@ -15,7 +15,7 @@ pytextrank = "^3.0.5"
 scipy = "^1.6.0"
 wget = "^3.2"
 vosk = "^0.3.30"
-loguru = "^0.5.3"
+loguru = "^0.6.0"
 httpx = "^0.18.1"
 mpire = "^2.3.0"
 recasepunc = { git = "https://github.com/openaudiosearch/recasepunc.git", branch = "oas2" }
