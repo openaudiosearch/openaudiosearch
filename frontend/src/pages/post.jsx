@@ -38,18 +38,27 @@ export function PostTaskMenuButton (props = {}) {
   const { post } = props
 
   let mediaId = null
+  let mediaGuid = null
   if (post.media && post.media.length) {
     mediaId = post.media[0].$meta.id
+    mediaGuid = post.media[0].$meta.guid
   }
 
   async function onTranscribeClick (_e) {
     if (!mediaId) return
+    const req = {
+      typ: 'asr',
+      args: { media_id: mediaId },
+      subjects: [mediaGuid]
+    }
     try {
-      const jobId = await fetch(`/task/transcribe-media/${mediaId}`, {
-        method: 'POST'
+      const res = await fetch(`/job`, {
+        method: 'POST',
+        body: req
       })
-      console.log('Created job: ' + jobId)
+      console.log('Created job', res)
     } catch (err) {
+      console.log('Error', err)
     }
   }
 
