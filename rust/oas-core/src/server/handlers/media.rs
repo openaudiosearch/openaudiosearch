@@ -6,6 +6,7 @@ use rocket_okapi::openapi;
 use serde_json::Value;
 
 use crate::couch::PutResponse;
+use crate::jobs::typs as job_typs;
 use crate::server::auth::AdminUser;
 use crate::server::error::{AppError, Result};
 use crate::server::proxy;
@@ -24,14 +25,23 @@ pub async fn get_media(state: &rocket::State<crate::State>, id: String) -> Resul
 
 /// Create a new media record
 #[openapi(tag = "Media")]
-#[post("/media", data = "<value>")]
+#[post("/media?<transcribe>", data = "<value>")]
 pub async fn post_media(
     _user: AdminUser,
     state: &rocket::State<crate::State>,
     value: Json<Media>,
+    transcribe: Option<String>,
 ) -> Result<PutResponse> {
     let value = value.into_inner();
-    let record = Record::from_id_and_value(util::id_from_hashed_string(&value.content_url), value);
+    let mut record = Record::from_id_and_value(util::id_from_hashed_string(&value.content_url), value);
+    if let Some(_) = transcribe {
+        let typ = job_typs::ASR;
+        record
+            .meta_mut()
+            .jobs_mut()
+            .settings_mut()
+            .insert(typ.into(), Some(serde_json::Value::Bool(true)));
+    }
     let res = state.db.put_record(record).await?;
     Ok(Json(res))
 }
