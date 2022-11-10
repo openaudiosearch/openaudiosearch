@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["jobs",""],["mapping",""],["record",""],["reference",""],["resolver",""],["ser",""],["types",""],["util",""]],"struct":[["Guid","A GUID is a string that is composed of a typ string and a id string."],["RecordMap",""]],"trait":[["ElasticMapping",""]]};

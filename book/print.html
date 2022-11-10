@@ -1,0 +1,328 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Open Audo Search</title>
+        <meta name="robots" content="noindex" />
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">1.</strong> Architecture</a></li><li class="chapter-item expanded "><a href="development.html"><strong aria-hidden="true">2.</strong> Development</a></li><li class="chapter-item expanded "><a href="notes.html"><strong aria-hidden="true">3.</strong> Development Notes</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="elastic.html"><strong aria-hidden="true">3.1.</strong> Elasticsearch</a></li><li class="chapter-item expanded "><a href="ffmpeg.html"><strong aria-hidden="true">3.2.</strong> FFMPEG</a></li></ol></li><li class="chapter-item expanded "><a href="user.html"><strong aria-hidden="true">4.</strong> User Guide</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Open Audo Search</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="architecture"><a class="header" href="#architecture">Architecture</a></h1>
+<p>The following paragraphs will outline the technical architecture of Open Audio Search (<em>OAS</em>). This is directed towards developers and system administrators. We intend to expand and improve this document over time. If something in here is unclear to you or you miss explanations, please feel invited to <a href="https://github.com/openaudiosearch/openaudiosearch/issues/new/choose">open an issue</a>.</p>
+<h3 id="core-or-backend"><a class="header" href="#core-or-backend">Core (or backend)</a></h3>
+<p>This is a server daemon written in <a href="https://rust-lang.org">Rust</a>. It provides a REST-style HTTP API and talks to our main data services: <a href="https://couchdb.org">CouchDB</a> and <a href="https://www.elastic.co/">Elasticsearch</a> or <a href="https://opensearch.org/">OpenSearch</a>.</p>
+<p>The core compiles to a static binary that includes various sub commands, the most important being the <code>run</code> command which runs all parts of the core concurrently. The other commands currently mostly serve debug and administration purposes.</p>
+<p>The core oftenly uses the <a href="https://docs.couchdb.org/en/stable/api/database/changes.html"><code>_changes</code></a> endpoint in CouchDB. This endpoint returns a live-streaming list of all changes to the CouchDB. Internally, CouchDB maintains a log of all changes made to the database, and each revision is assigned a sequence string. Various services in OAS make use of this feature to visit all changes made to the database.</p>
+<p>The core uses the asynchronous <a href="https://tokio.rs/">Tokio</a> runtime to run various tasks in parallel. Currently, this includes:</p>
+<ul>
+<li>A <strong>HTTP server</strong> to provide a REST-style API that allows to <code>GET</code>, <code>POST</code>, <code>PUT</code> and <code>PATCH</code> the various data records in OAS (feeds, posts, medias, transcripts, ...). It also manages authentication for the routes. It can serve the web frontend either by statically including the HTML, JavaScript and other assets directly in the binary, or by proxying to another HTTP server (useful for development). The HTTP server uses <a href="https://rocket.rs/">Rocket</a>, an async HTTP framework for Rust.</li>
+<li>An <strong>indexer</strong> service that listens on the CouchDB changes stream and indexes all posts, medias and transcripts into an Elasticsearch index. For the index, our data model is partially flattened to make querying more straightforward.</li>
+<li>The <strong>RSS importer</strong> also listens on the changes stream for <em>Feed</em> records and then periodically fetches these RSS feeds and saves new items into <em>Post</em> and <em>Media</em> records. It also sets a flag on the <em>Media</em> records depending on the settings that are part of the <em>Feed</em> record whether a transcribe job is wanted or not.</li>
+<li>A <strong>job queue</strong> also listens on the changes stream and may, depending on a <em>TaskState</em> flag, create jobs for the worker. The job services currently uses the <a href="https://docs.celeryproject.org/en/stable/getting-started/introduction.html">Celery</a> job queue with a <a href="https://redis.io/">Redis</a> backend.</li>
+</ul>
+<p>The core still is rough at several edges. While it works, the internal APIs will still change quite significantly towards better abstractions that makes these data pipelines more flexible and reliable. We need better error handling in cases of failures and better observability. There is <em>a lot</em> of room for optimizations. For example, at this point each service consumes a separate changes stream, and there is no internal caching of data records. This also means that any performance issues that might be visible at the moment will have a clear path to being solved.</p>
+<h3 id="worker"><a class="header" href="#worker">Worker</a></h3>
+<p>The worker is written in Python. It currently uses the <a href="https://docs.celeryproject.org/en/stable/">Celery</a> job queue to retrieve jobs that are created in the core. It performs the jobs and then posts back its results to the core over the HTTP API exposed by the core. Usually, it will send a set of JSON patches to update one or more records in the database with its results.</p>
+<p>Currently, the two main tasks are:</p>
+<ul>
+<li><code>transcribe</code>: This task takes an audio file, downloads and converts it into a WAV file and then uses the <a href="https://alphacephei.com/vosk/">Vosk</a> toolkit to create a text transcription of the audio file. Vosk is based on <a href="https://kaldi-asr.org/">Kaldi ASR</a>, an open-source speech-to-text engine. To create these transcripts, a model for the language of the audio is needed. At the moment, the only model that is automatically used in OAS is the German language model from the Vosk model repository. We will soon provide more models, and will then also need to implement a mechanism to first detect the spoken language to then use the correct model.</li>
+<li><code>nlp</code>: This task takes the transcript, description and other metadata of a post as input, and then performs various NLP (natural language processing) steps on this text. Most importantly, it tries to extract keywords through an NER (named entity recognition) pipeline. Currently, we are using the <a href="https://spacy.io/">SpaCy</a> toolkit for this task.</li>
+</ul>
+<p>We plan to add further processing tasks, e.g. to detect the language of speech, restore punctuation in the transcript, chunk the transcript into fitting snippets for subtitles.</p>
+<h3 id="frontend"><a class="header" href="#frontend">Frontend</a></h3>
+<p>The frontend is a single-page web application written with <a href="https://reactjs.org/">React</a>. It uses the <a href="https://chakra-ui.com/">Chakra UI</a> toolkit for various components and UI elements. The frontend talks to the core through its HTTP API. It is mostly public-facing with a dynamic search page that allows filtering and faceting the search results. We currently use <a href="https://github.com/appbaseio/reactivesearch">ReactiveSearch</a> components for the search page. It also features a login form for administrators, which unlocks administrative sections. Currently, this only includes a page to manage RSS feeds and some debug sections. We will add more administrative features in the future.</p>
+<h3 id="packaging"><a class="header" href="#packaging">Packaging</a></h3>
+<p>OAS includes <a href="https://docs.docker.com/engine/reference/builder/">Dockerfiles</a> for the core and the worker to easily package and run OAS as Linux containers. It also includes <a href="https://docs.docker.com/compose/">docker-compose</a> files to easily start and run OAS together with all required services: CouchDB, Elasticsearch and Redis.</p>
+<p>The docker images can be built from source with the provided Dockerfiles. We also push nightly images to Dockerhub, which allows to run OAS without building from source.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="development-setup"><a class="header" href="#development-setup">Development setup</a></h1>
+<p>Follow the instructions for the development setup in the <a href="../README.html">README</a>.</p>
+<h1 id="tips-and-tricks"><a class="header" href="#tips-and-tricks">Tips and tricks</a></h1>
+<h2 id="development-mode"><a class="header" href="#development-mode">Development mode</a></h2>
+<p>The server can be reloaded automatically when application code changes. You can enable it by setting the <code>oas_dev</code> env config, or starting the server with <code>OAS_DEV=1 server.py</code>.</p>
+<h2 id="frontend-development"><a class="header" href="#frontend-development">Frontend development</a></h2>
+<h3 id="requirements"><a class="header" href="#requirements">Requirements</a></h3>
+<p>You need Node.js and npm or yarn. yarn is recommended because it's much faster.</p>
+<p>On Debian based systems use the following to install both Node.js and yarn:</p>
+<pre><code class="language-bash">curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+echo &quot;deb https://dl.yarnpkg.com/debian/ stable main&quot; | sudo tee /etc/apt/sources.list.d/yarn.list
+sudo apt update
+sudo apt install yarn nodejs
+</code></pre>
+<h4 id="development"><a class="header" href="#development">Development</a></h4>
+<p>For development <code>webpack-dev-server</code> is included. In this folder, run <code>yarn</code> to install all dependencies and then <code>yarn start</code> to start the live-reloading development server. Then open the UI at <a href="http://localhost:4000">http://localhost:4000</a>. In development mode, the UI expects a running oas_worker server at <code>http://localhost:8080</code>.</p>
+<h4 id="deployment"><a class="header" href="#deployment">Deployment</a></h4>
+<p>Make sure to run <code>yarn build</code> in this directory after pulling in changes. The <code>oas_worker</code> server serves the UI at <code>/ui</code> from the <code>dist/</code> folder in this directory. </p>
+<h2 id="inspect-the-redis-databaes"><a class="header" href="#inspect-the-redis-databaes">Inspect the Redis databaes</a></h2>
+<p><a href="https://www.npmjs.com/package/redis-commander"><code>redis-commander</code></a> is a useful tool to inspect the Redis database. </p>
+<pre><code class="language-bash"># install redis-commander
+yarn global add redis-commander
+# or: npm install -g redis-commander
+
+# start redis-commander
+redis-commander
+</code></pre>
+<p>Now, open your browser at <a href="http://localhost:8081/">http://localhost:8081/</a></p>
+<h2 id="asr-evaluation"><a class="header" href="#asr-evaluation">ASR Evaluation</a></h2>
+<p>Start worker:</p>
+<pre><code>cd oas_worker
+python worker.py
+</code></pre>
+<p>Run transcription using ASR engine in another Terminal:</p>
+<pre><code>cd oas_worker
+# download models if needed
+python task-run.py download_models
+# transcribe a single file
+python task-run.py asr --engine ENGINE [--language LANGUAGE] --file_path FILE_PATH [--help]
+# (e.g). 
+python task-run.py asr --engine vosk --file_path ../examples/frn-leipzig.wav
+</code></pre>
+<h2 id="nlp-evaluation"><a class="header" href="#nlp-evaluation">NLP Evaluation</a></h2>
+<h3 id="generate-devset"><a class="header" href="#generate-devset">Generate Devset</a></h3>
+<p>Generate and serve Devset RSS feed on localhost port 6650:</p>
+<pre><code>cd oas_worker/
+poetry run python devset/generate_devset.py
+sh devset/serve_nlp_devset.sh
+</code></pre>
+<p>Import RSS feed:<br />
+In UI, login first. Then head over to <code>Importer</code>-Tab. There fill in the URL 
+<code>http://127.0.0.1:6650/rss.xml</code> into the <code>Add new feed</code>-Section and make sure 
+to check the <code>Transcribe items</code>-Button.</p>
+<h3 id="access-nlp-results"><a class="header" href="#access-nlp-results">Access NLP Results</a></h3>
+<p>In Search-UI, click on a post you want to inspect. From its URL, copy the 
+Post-ID and paste it as argument to the examples nlp.py script:</p>
+<pre><code>cd oas_worker/examples
+poetry run python nlp.py &lt;OAS-POST-ID&gt;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="notes"><a class="header" href="#notes">Notes</a></h1>
+<p>This section contains various notes, tips and tricks and other discoveries that are somehow related to Open Audio Search development.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="notes-on-elastic"><a class="header" href="#notes-on-elastic">Notes on Elastic</a></h1>
+<p>We want to encode the ASR metadata for each word (start, end, conf) into the elastic index with the <code>delimited_payload</code> filter.</p>
+<h2 id="create-an-index-with-a-delimited-payload-filter"><a class="header" href="#create-an-index-with-a-delimited-payload-filter">Create an index with a delimited payload filter:</a></h2>
+<pre><code class="language-json">{
+  &quot;mappings&quot;: {
+    &quot;properties&quot;: {
+      &quot;text&quot;: {
+        &quot;type&quot;: &quot;text&quot;,
+        &quot;term_vector&quot;: &quot;with_positions_payloads&quot;,
+        &quot;analyzer&quot;: &quot;whitespace_plus_delimited&quot;
+      }
+    }
+  },
+  &quot;settings&quot;: {
+    &quot;analysis&quot;: {
+      &quot;analyzer&quot;: {
+        &quot;whitespace_plus_delimited&quot;: {
+          &quot;tokenizer&quot;: &quot;whitespace&quot;,
+          &quot;filter&quot;: [ &quot;plus_delimited&quot; ]
+        }
+      },
+      &quot;filter&quot;: {
+        &quot;plus_delimited&quot;: {
+          &quot;type&quot;: &quot;delimited_payload&quot;,
+          &quot;delimiter&quot;: &quot;|&quot;,
+          &quot;encoding&quot;: &quot;float&quot;
+        }
+      }
+    }
+  }
+}
+'
+</code></pre>
+<p>top level &quot;transcript&quot; field,</p>
+<p>token|mediaNum,start,end,conf</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="ffmpeg"><a class="header" href="#ffmpeg">ffmpeg</a></h1>
+<p>some useful ffmpeg commands</p>
+<p>Cut mp3 to first 30 seconds:</p>
+<pre><code class="language-bash">ffmpeg -t 30 -i inputfile.mp3 -acodec copy outputfile.mp3
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="user-guide"><a class="header" href="#user-guide">User Guide</a></h1>
+<p>The following paragraphs will outline the usage of Open Audio Search (<em>OAS</em>). This guide is directed towards users of the system and should help you get started easily. We intend to expand and improve this document over time. If something in here is unclear to you or you miss explanations, please feel invited to <a href="https://github.com/openaudiosearch/openaudiosearch/issues/new/choose">open an issue</a>.</p>
+<h2 id="user-interface"><a class="header" href="#user-interface">User Interface</a></h2>
+<p>The main page of <em>OAS</em> shows the <code>Discover</code> tab. It displays a sample of radio features from community media stations you might be curious about. These audio tracks, like many others, are indexed in the system and are therefore searchable through the search engine. Some basic information, such as <em>title</em>, <em>duration</em> and a short <em>description</em>, is already provided for every track in a box. If you want to get more information on a specific track, just click on its title to get to its detail view, which also includes the transcript. If you prefer to hear the audio track right away, just press the play button in the upper-right corner of the box.</p>
+<h3 id="search"><a class="header" href="#search">Search</a></h3>
+<p>As <em>OAS</em> is a search engine for audio data, one of its core features is to find specific words or terms in audio tracks. To accomplish such a search, you can use one of the search boxes in the title bar or on the frontpage. For more search options navigate to the <code>Search</code> tab and submit your query using the search box there. Results are displayed as boxes in the middle of the page and you can sort them by date of publication or duration. For each search result some basic information on the audio track is provided: the <em>radio station</em>, its <em>title</em>, <em>duration</em>, <em>date of publication</em>, as well as a short <em>description</em> of its content. But you'll also find snippets of the transcript where the search term was found. By clicking on the box around the snippet, you can jump right to the part of the audio track where the snippet was taken from. Of course you can also play the whole audio file from start by pressing the Play button in the upper-right corner of the box.</p>
+<p>To fine-tune your search, you can use the search options (facets) on the left side of the page. You can filter the results by <em>creator</em>, <em>genre</em>, <em>publishing date</em> and/or <em>duration</em>. You can find examples on how to apply such search facets in the <code>How To...</code>-Section below.</p>
+<p>In order to get more information on a specific track, including its transcript, just click on its title to get to its detail view. In the transcript, clicking on a word makes the audio player jump to the part of the track where it is mentioned.</p>
+<h3 id="login"><a class="header" href="#login">Login</a></h3>
+<p>To login as administrative user, scroll down to the bottom of the page and click on the <code>Login</code> button on the right. In the pop up window, fill in your <em>username</em> and <em>password</em> and hit <code>Login</code>.</p>
+<h2 id="how-to"><a class="header" href="#how-to">How To...</a></h2>
+<p>This section walks you through specific tasks you might want to accomplish:</p>
+<h3 id="find-a-seach-term-in-an-audio-track"><a class="header" href="#find-a-seach-term-in-an-audio-track">Find a seach term in an audio track</a></h3>
+<p>Enter the search term into one of the search boxes, on the front page, the title bar or in the <code>Search</code> tab. Resulting audio tracks are displayed as boxes and snippets of their transcripts containing the search term are shown within. By clicking on the boxes around the snippets, you can jump right to the parts of the audio track where the snippet was taken from. Voilà - you found the search term in the audio file!</p>
+<h3 id="find-all-audio-tracks-of-a-specific-genre"><a class="header" href="#find-all-audio-tracks-of-a-specific-genre">Find all audio tracks of a specific genre</a></h3>
+<p>Open the <code>Search</code> tab. On the left side find the <em>Genre</em> search option and chose a genre from the list. To quickly find a specific genre, start typing it into the search box above the displayed genres.</p>
+<h3 id="get-audio-tracks-from-last-month"><a class="header" href="#get-audio-tracks-from-last-month">Get audio tracks from last month</a></h3>
+<p>In the <code>Search</code> tab, you can filter audio tracks by their date of publication. Use the facet <em>Publishing Date</em> and enter corresponding start and end dates.</p>
+<h3 id="filter-audio-tracks-by-their-duration"><a class="header" href="#filter-audio-tracks-by-their-duration">Filter audio tracks by their duration</a></h3>
+<p>Adjust the slider in the <code>Duration</code> facet on the left side of the <code>Search</code> tab.</p>
+<h3 id="import-new-sources"><a class="header" href="#import-new-sources">Import new sources</a></h3>
+<p>To import new sources, login to <em>OAS</em> as described above and navigate to the <code>Importer</code> tab in the title bar. Enter the link to an RSS feed in the input field (e.g. <code>https://media.ccc.de/updates.rdf</code>). Specify if you want to <em>enable speech recognition</em> and <em>natural language processing</em> by clicking on the corresponding switches. Confirm by hitting <code>Save &amp; import</code>.</p>
+<h3 id="get-an-audio-tracks-transcript"><a class="header" href="#get-an-audio-tracks-transcript">Get an audio track's transcript</a></h3>
+<p>Find the audio track you want transcripted by using one of the search boxes, e.g. in the <code>Search</code> tab. Click on its title to navigate to its detail view. Here you find the transcript displayed in the lower part of the page.</p>
+<h2 id="frequently-asked-questions"><a class="header" href="#frequently-asked-questions">Frequently Asked Questions</a></h2>
+<h3 id="how-can-i-contribute-to-oas"><a class="header" href="#how-can-i-contribute-to-oas">How can I contribute to <em>OAS</em>?</a></h3>
+<p>All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. Please <a href="https://github.com/openaudiosearch/openaudiosearch/issues/new/choose">open issues</a> or <a href="http://discord.openaudiosearch.org">talk to us on our Discord server</a>. We want to welcome anyone and commit to creating an inclusive environment.</p>
+<h3 id="how-do-you-transcribe-audio-tracks"><a class="header" href="#how-do-you-transcribe-audio-tracks">How do you transcribe audio tracks?</a></h3>
+<p>Feel free to <a href="http://discord.openaudiosearch.org">talk to us on our Discord server</a>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+    </body>
+</html>

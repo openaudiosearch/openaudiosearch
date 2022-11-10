@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["JobTypId",""],["JobsLog",""]],"type":[["JobId",""],["JobTyp",""],["SettingsMap",""]]};

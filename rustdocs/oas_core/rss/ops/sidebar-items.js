@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["Next",""]],"fn":[["crawl_and_save",""],["crawler_loop",""],["fetch_and_save",""],["fetch_and_save_with_client",""]],"struct":[["CrawlOpts",""],["FetchOpts",""],["FetchedFeedPage",""]],"trait":[["Crawler",""]]};

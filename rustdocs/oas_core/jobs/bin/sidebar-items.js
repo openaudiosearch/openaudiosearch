@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["CreateJob",""],["JobCommand",""]],"fn":[["load_medias_with_opts",""],["main",""]],"struct":[["AsrOpts",""],["CreateOpts",""],["JobOpts",""],["NlpOpts",""]]};

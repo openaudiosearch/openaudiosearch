@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"oas_core":[["impl <a class=\"trait\" href=\"oas_common/resolver/trait.Resolver.html\" title=\"trait oas_common::resolver::Resolver\">Resolver</a> for <a class=\"struct\" href=\"oas_core/couch/struct.CouchDB.html\" title=\"struct oas_core::couch::CouchDB\">CouchDB</a>"],["impl&lt;'impl0&gt; <a class=\"trait\" href=\"oas_common/resolver/trait.Resolver.html\" title=\"trait oas_common::resolver::Resolver\">Resolver</a> for &amp;'impl0 <a class=\"struct\" href=\"oas_core/couch/struct.CouchDB.html\" title=\"struct oas_core::couch::CouchDB\">CouchDB</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["oas","oas_common","oas_core"];

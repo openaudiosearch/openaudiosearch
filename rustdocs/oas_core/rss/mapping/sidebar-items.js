@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["FieldMapping",""],["Mapping",""],["MappingManager",""]],"type":[["AllMappings",""]]};

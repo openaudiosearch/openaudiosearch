@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["MappingError",""]],"struct":[["FieldMap",""],["FieldMapping",""]],"trait":[["Mappable",""]]};
