@@ -39,7 +39,7 @@ rand = { version = "0.8.4", features = ["std"] }
 rand_core = { version = "0.6", features = ["std"] }
 reqwest = { version = "0.11.4", default_features = false, features = ["stream", "rustls-tls"] }
 rocket = { version = "0.5.0-rc.1", features = ["json"] }
-rocket_cors = { git = "https://github.com/lawliet89/rocket_cors.git" }
+rocket_cors = "0.6.0-alpha1"
 rocket_okapi = "0.7.0-alpha-1"
 rss = "2.0.0"
 schemars = "0.8.3"
