@@ -17,7 +17,7 @@ def perform_recase(config, transcript):
 
     model_base_path = config.model_path
     model_path = os.path.join(model_base_path, config.recase_model)
-    predictor = CasePuncPredictor(model_path, lang="de", device="cpu")
+    predictor = CasePuncPredictor(model_path, lang="de")
     tokens = list(enumerate(predictor.tokenize(text_orig)))
 
     text_recased = ""

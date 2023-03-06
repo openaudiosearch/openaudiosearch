@@ -1,7 +1,11 @@
 
 import time
 import torch
-torch.set_num_threads(1)
+torch.device("cpu")
+# torch.set_num_threads(1)
+# torch.multiprocessing.set_start_method('spawn')
+# torch.device("cpu")
+
 
 SAMPLE_RATE = 16000
 USE_ONNX = False
@@ -18,6 +22,7 @@ def get_model():
                                     model='silero_vad',
                                     #  force_reload=True,
                                     onnx=USE_ONNX)
+        model.share_memory()
         vad_model = (model, utils)
     return vad_model
 

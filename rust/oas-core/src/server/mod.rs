@@ -9,6 +9,7 @@ use rocket_okapi::swagger_ui::{make_swagger_ui, SwaggerUIConfig};
 mod auth;
 pub mod error;
 mod handlers;
+mod handlers_v2;
 mod proxy;
 mod static_dir;
 
@@ -92,6 +93,12 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 // changes routes
                 handlers::changes::durable_changes,
             ],
+        )
+        .mount(
+            "/api/v2",
+            routes_with_openapi![
+            handlers_v2::transcribe::post_transcribe_job
+            ]
         )
         .mount(
             "/swagger-ui/",

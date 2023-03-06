@@ -169,6 +169,16 @@ impl JobManager {
         if typ.as_str() == typs::ASR {
             typs::on_asr_complete(&self.db, self, job).await?;
         }
+        let webhook = job.input.get("webhook_on_complete").and_then(|v| v.as_str().map(|x| x.to_owned()));
+        let media_id = job.input.get("media_id").and_then(|v| v.as_str().map(|x| x.to_owned()));
+        let job_id = job.id;
+        if let (Some(webhook), Some(media_id)) = (webhook, media_id) {
+            let payload = serde_json::json!({ "job_id": job_id, "media_id": media_id });
+            tokio::task::spawn(async move {
+                let client = reqwest::Client::new();
+                let _res = client.post(webhook).json(&payload).send().await;
+            });
+        }
         Ok(())
     }
 }
