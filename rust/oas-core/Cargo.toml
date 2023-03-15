@@ -59,3 +59,4 @@ tracing-log = "0.1.2"
 tracing-subscriber = { version = "0.3.1", features = ["env-filter"] }
 url = { version = "2.2", features = ["serde"] }
 uuid = { version = "0.8.2", features = ["v4"] }
+regex = "1.5.4"
