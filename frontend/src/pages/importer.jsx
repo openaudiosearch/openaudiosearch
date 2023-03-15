@@ -1,35 +1,23 @@
 import React, { useState } from 'react'
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 
 import useSWR from 'swr'
 import {
-  Flex, Stack, Box, Text, Spacer, Heading, SimpleGrid, IconButton, Input, Button, useDisclosure, Link, FormControl, Select, FormLabel, Spinner, AlertIcon, Alert, Container,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  Flex, Stack, Box, Text, Heading, Input, Button, useDisclosure, Link, FormControl, Select, FormLabel, Spinner, AlertIcon, Alert, Container,
   Switch,
-  Checkbox,
-  Table,
   Tooltip,
-  AlertTitle,
-  AlertDescription,
   Code,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
-  Thead,
-  Tbody,
-  Tfoot,
-  Tr,
-  Th,
-  Td,
-  TableCaption,
   Tag
 } from '@chakra-ui/react'
 
@@ -49,7 +37,7 @@ const DEFAULT_FEED_VALUES = {
   enableNlp: true
 }
 
-export default function FeedPage (props = {}) {
+export default function FeedPage (props) {
   const isAdmin = useIsAdmin()
   if (!isAdmin) return <LoginRequired />
   return (
@@ -78,24 +66,30 @@ function ListFeeds (props = {}) {
   return (
     <>
       {rows}
+
     </>
   )
 }
 
-function FeedRow (props = {}) {
+function FeedRow (props) {
   const { feed } = props
   if (!feed) return null
   const settings = toValues(feed)
+  const settingsState = useFormState()
   return (
-    <Flex p={2} m={2} border='1px' borderColor='gray.200' bg='white'>
-      <Box py={2} flex={1}>
-        URL: <Code>{feed.url}</Code>
-        <FeedTag enabled={settings.enableAsr} label='ASR' tooltip='Speech recognition is enabled' />
-        <FeedTag enabled={settings.enableNlp} label='NLP' tooltip='Natural language processing is enabled' />
-        <Text fontSize='sm'>{feed.$meta.guid}</Text>
-      </Box>
-      <FeedSettingsModal feed={feed} />
-    </Flex>
+    <>
+
+      <Flex p={2} m={2} border='1px' borderColor='gray.200' bg='white'>
+        <Box py={2} flex={1}>
+          URL: <Code>{feed.url}</Code>
+          <FeedTag enabled={settings.enableAsr} label='ASR' tooltip='Speech recognition is enabled' />
+          <FeedTag enabled={settings.enableNlp} label='NLP' tooltip='Natural language processing is enabled' />
+          <Text fontSize='sm'>{feed.$meta.guid}</Text>
+        </Box>
+        <FeedSettingsModal feed={feed} settingsState={settingsState} />
+      </Flex>
+      <FormState successMessage='Feed settings saved!' {...settingsState} />
+    </>
   )
 }
 
@@ -110,23 +104,81 @@ function FeedTag (props = {}) {
 }
 
 function FeedSettingsModal (props) {
-  const { feed } = props
+  const { feed, settingsState } = props
   const { isOpen, onOpen, onClose } = useDisclosure()
   return (
     <>
-    <Button onClick={onOpen} leftIcon={<SettingsIcon />}>Settings</Button>
+      <Button onClick={onOpen} leftIcon={<SettingsIcon />}>Settings</Button>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Feed settings</ModalHeader>
           <ModalCloseButton />
           <ModalBody mb={2}>
-            <FeedSettings feed={feed} handleClose={onClose} />
+            <FeedSettings feed={feed} handleClose={onClose} settingsState={settingsState} />
           </ModalBody>
         </ModalContent>
       </Modal>
     </>
   )
+}
+
+function FeedDeleteDialog (props) {
+  const { mutate } = useSWR('/feed')
+  const [isOpen, setIsOpen] = React.useState(false)
+  const onClose = () => setIsOpen(false)
+  const cancelRef = React.useRef()
+  const deleteState = useFormState()
+  const { feed } = props
+
+  return (
+    <>
+      <FormState successMessage='Feed deleted!' {...deleteState} />
+
+      <Button colorScheme='red' onClick={() => setIsOpen(true)}>
+        Delete feed
+      </Button>
+
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+              Delete {feed.url}
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Are you sure?
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                Cancel
+              </Button>
+              <Button colorScheme='red' onClick={onDelete} ml={3}>
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+    </>
+  )
+  async function onDelete () {
+    deleteState.setIsSubmitting(true)
+    try {
+      await fetch('/feed/' + feed.$meta.id, {
+        method: 'DELETE'
+      })
+      deleteState.setSuccess(true)
+      mutate()
+    } catch (err) {
+      deleteState.setError(err)
+    }
+  }
 }
 
 function useFormState (props = {}) {
@@ -164,46 +216,47 @@ function FeedSettingsInner (props) {
 
 function FeedSettings (props) {
   const { mutate } = useSWR('/feed')
-  const { feed, handleClose } = props
+  const { feed, handleClose, settingsState } = props
   const defaultValues = React.useMemo(() => toValues(feed), [feed])
   const { handleSubmit, errors, register } = useForm({
     defaultValues
   })
-  const formState = useFormState()
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack>
-        <FormState
-          mb={4}
-          successMessage='Feed settings saved!'
-          {...formState}
-        />
         <FeedSettingsInner register={register} />
         <Flex>
-          <Button type='submit' isLoading={formState.isSubmitting}>
+          <Button
+            type='submit'
+            onClick={handleClose}
+            colorScheme='green'
+            isLoading={settingsState.isSubmitting}
+          >
             Save
           </Button>
           <Box flex={1} />
-          <Button variant='ghost' onClick={handleClose}>
+          <FeedDeleteDialog feed={feed} />
+          <Button
+            onClick={handleClose}
+          >
             Close
           </Button>
         </Flex>
       </Stack>
     </form>
   )
-
   async function onSubmit (formValues) {
-    formState.setIsSubmitting(true)
+    settingsState.setIsSubmitting(true)
     try {
       const nextFeed = patchFeed(feed, formValues)
       const res = await fetch('/feed/' + feed.$meta.id, {
         body: nextFeed,
         method: 'PUT'
       })
-      formState.setSuccess(true)
+      settingsState.setSuccess(true)
       mutate()
     } catch (err) {
-      formState.setError(err)
+      settingsState.setError(err)
     }
   }
 }
@@ -212,7 +265,7 @@ function toValues (feed) {
   return {
     url: feed.url,
     enableAsr: feed.mediaJobs?.asr !== undefined,
-    enableNlp: feed.postJobs?.nlp !== undefined,
+    enableNlp: feed.postJobs?.nlp !== undefined
   }
 }
 
@@ -275,40 +328,6 @@ function CreateFeed (props) {
       })
       formState.setSuccess(true)
       mutate(feed)
-    } catch (err) {
-      formState.setError(err)
-    }
-  }
-}
-
-function DeleteFeed (props) {
-  const { id } = props
-  const { mutate } = useSWR('/feed')
-  const { handleSubmit, errors, register } = useForm()
-  const formState = useFormState()
-  return (
-    <Box>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <FeedSettingsInner register={register} />
-        <Flex direction='column' justifyContent='end'>
-          <Button type='submit' isLoading={formState.isSubmitting}>Delete</Button>
-        </Flex>
-        <FormState successMessage='Feed deleted!' {...formState} />
-      </form>
-    </Box>
-  )
-
-  async function onSubmit (formValues) {
-    formState.setIsSubmitting(true)
-    try {
-      const res = await fetch('/feed/' + id, {
-        method: 'DELETE'
-      })
-      if (res.error) {
-        formState.setError(res.error)
-      }
-      formState.setSuccess(true)
-      mutate()
     } catch (err) {
       formState.setError(err)
     }
