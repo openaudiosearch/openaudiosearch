@@ -18,8 +18,9 @@ async-trait = "0.1.50"
 base32 = "0.4.0"
 base64 = "0.13.0"
 bytes = "1.0.1"
+cookie = "0.16.2"
 chrono = { version = "0.4.19", features=["serde"] }
-clap = "3.0.0-beta.5"
+clap = { version = "4", features = ["derive", "env"] }
 convert_case = "0.4.0"
 dialoguer = "0.8.0"
 dirs = "3.0.2"
@@ -34,13 +35,15 @@ json-patch = "0.2.6"
 lazy_static = "1.4.0"
 log = "0.4.14"
 oas-common = { path = "../oas-common" }
-okapi = { version = "0.6.0-alpha-1" }
+okapi = { version = "0.7.0-rc.1" }
 rand = { version = "0.8.4", features = ["std"] }
 rand_core = { version = "0.6", features = ["std"] }
 reqwest = { version = "0.11.4", default_features = false, features = ["stream", "rustls-tls"] }
-rocket = { version = "=0.5.0-rc.1", features = ["json"] }
-rocket_cors = { git = "https://github.com/lawliet89/rocket_cors.git", rev = "d98bb2ba33a4558172d1f3afe77d9cfe147e2ab6" }
-rocket_okapi = "0.7.0-alpha-1"
+rocket = { version = "=0.5.0-rc.2", features = ["json"] }
+# rocket_cors = { git = "https://github.com/lawliet89/rocket_cors.git", rev = "d98bb2ba33a4558172d1f3afe77d9cfe147e2ab6" }
+rocket_cors = { git = "https://github.com/lawliet89/rocket_cors.git", rev = "c17e8145baa4790319fdb6a473e465b960f55e7c" }
+# rocket_cors = "=0.6.0-alpha1"
+rocket_okapi = { version = "=0.8.0-rc.2", features = ["swagger"]}
 rss = "2.0.0"
 schemars = "0.8.3"
 serde = "1.0.126"
@@ -48,9 +51,9 @@ serde_json = "1.0.64"
 sha2 = "0.9.5"
 thiserror = "1.0.25"
 time = { version = "0.2" }
-tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "time", "signal"]}
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "time", "signal", "io-util"]}
 tokio-stream = { version = "0.1.6", features = ["io-util"] }
-tokio-util = "0.6.7"
+tokio-util = { version = "0.6.7", features = ["io"] }
 toml = "0.5.8"
 tracing = "0.1.29"
 tracing-attributes = "0.1.18"

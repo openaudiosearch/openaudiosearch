@@ -5,7 +5,8 @@ use rocket::State;
 use rocket::{catch, get, post};
 use rocket_okapi::openapi;
 use std::sync::Arc;
-use time::{Duration, OffsetDateTime};
+// use time::{Duration, OffsetDateTime};
+use rocket::time::{Duration, OffsetDateTime};
 // use okapi::openapi3::Responses;
 // use rocket::response::Responder;
 // use rocket_okapi::gen::OpenApiGenerator;
@@ -29,7 +30,7 @@ use super::error::AppError;
 
 pub const SESSION_COOKIE: &str = "oas_session_id";
 pub const SESSION_HEADER: &str = "X-Oas-Session-Id";
-pub const SESSION_EXPIRATION: Duration = time::Duration::weeks(8);
+pub const SESSION_EXPIRATION: Duration = Duration::weeks(8);
 
 #[derive(Debug, Clone)]
 pub enum LoginError {
@@ -40,6 +41,15 @@ pub enum LoginError {
 /// header "X-Oas-Session-Id".
 #[derive(Debug, PartialEq, Clone)]
 pub struct SessionId(String);
+impl<'r> rocket_okapi::request::OpenApiFromRequest<'r> for SessionId {
+    fn from_request_input(
+        _gen: &mut rocket_okapi::gen::OpenApiGenerator,
+        _name: String,
+        _required: bool,
+    ) -> rocket_okapi::Result<rocket_okapi::request::RequestHeaderInput> {
+        Ok(rocket_okapi::request::RequestHeaderInput::None)
+    }
+}
 
 async fn try_login(
     auth: &State<Auth>,
@@ -168,6 +178,16 @@ impl<'r> FromRequest<'r> for AdminUser {
             Outcome::Failure(x) => Outcome::Failure(x),
             Outcome::Forward(x) => Outcome::Forward(x),
         }
+    }
+}
+
+impl<'r> rocket_okapi::request::OpenApiFromRequest<'r> for AdminUser {
+    fn from_request_input(
+        _gen: &mut rocket_okapi::gen::OpenApiGenerator,
+        _name: String,
+        _required: bool,
+    ) -> rocket_okapi::Result<rocket_okapi::request::RequestHeaderInput> {
+        Ok(rocket_okapi::request::RequestHeaderInput::None)
     }
 }
 
