@@ -6,7 +6,7 @@ authors = ["Open Audio Search team"]
 license = "APGL-3.0"
 
 [tool.poetry.dependencies]
-python = "3.8.0"
+python = "3.9.0"
 setuptools = "^54.2.0"
 requests = "^2.25.1"
 jiwer = "^2.2.0"
