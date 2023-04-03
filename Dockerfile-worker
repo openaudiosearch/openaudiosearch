@@ -10,14 +10,14 @@ RUN poetry export -f requirements.txt --without-hashes -o /build/requirements.tx
 
 # backend-build: install all python deps from requirements.txt to /build/pip
 FROM python:3.9.0-slim as backend-build
-RUN apt-get update && apt-get install -q -y gcc
+RUN apt-get update && apt-get install -q -y gcc git
 WORKDIR /build
 COPY --from=poetry-build /build/requirements.txt .
 RUN pip install --prefix="/build/pip" --no-warn-script-location -r requirements.txt
 
 # python-base: base image with a few utilities installed
 FROM python:3.9.0-slim as python-base
-RUN apt-get update && apt-get install -q -y wget curl xz-utils iputils-ping iproute2
+RUN apt-get update && apt-get install -q -y wget curl xz-utils iputils-ping iproute2 git
 
 # build main image
 FROM python-base
