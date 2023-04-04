@@ -749,9 +749,9 @@ transformers = "^4.12.5"
 
 [package.source]
 type = "git"
-url = "https://github.com/openaudiosearch/recasepunc.git"
-reference = "oas2"
-resolved_reference = "0f20e05e6a392fdd6b16e9d926bc8f48170a3b75"
+url = "https://github.com/benob/recasepunc.git"
+reference = "main"
+resolved_reference = "cd965182ae2feaf7e66c22566c16adafa22301d1"
 
 [[package]]
 name = "regex"
@@ -1300,7 +1300,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "flake8 (<5)", "pytest-co
 [metadata]
 lock-version = "1.1"
 python-versions = "3.9.0"
-content-hash = "b07446039a80b7d283d9765431fa2d08d452857b55ec138b62f8e42549c18837"
+content-hash = "4d301f72c5489b1032297c576abc26188a8ad16fab3a3538a14b367fd564be71"
 
 [metadata.files]
 anyio = []
