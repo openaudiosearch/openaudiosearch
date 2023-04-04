@@ -27,7 +27,7 @@ pub struct State {
     pub feed_manager: FeedManager,
     pub db_manager: CouchManager,
     pub db: couch::CouchDB,
-    pub index_manager: index::IndexManager,
+    pub index_manager: Option<index::IndexManager>,
     pub jobs: jobs::JobManager,
     did_init: Arc<AtomicBool>,
 }
@@ -36,7 +36,7 @@ impl State {
     pub fn new(
         db_manager: CouchManager,
         db: CouchDB,
-        index_manager: index::IndexManager,
+        index_manager: Option<index::IndexManager>,
         feed_manager: FeedManager,
         jobs: jobs::JobManager,
     ) -> Self {
@@ -68,13 +68,12 @@ impl State {
             .init(&self.db)
             .await
             .context("Failed to initialize RSS feed watcher")?;
-        match self.index_manager
+        if let Some(index_manager) = self.index_manager.as_mut() {
+            index_manager
             .init(Default::default())
             .await
-            .context("Failed to initialize Elasticsearch.") {
-                Ok(_) => {},
-                Err(err) => log::warn!("{err}"),
-            }
+            .context("Failed to initialize Elasticsearch.")?;
+        }
         Ok(())
     }
 }

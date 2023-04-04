@@ -27,7 +27,11 @@ pub async fn search(
         ));
     }
 
-    let index = &state.index_manager.post_index();
+    let index = &state
+        .index_manager
+        .as_ref()
+        .ok_or_else(|| AppError::Http(Status::NotFound, "Search not available".to_owned()))?
+        .post_index();
     let client = &index.client();
 
     let path = format!("{}/{}", index.name(), search_method);
