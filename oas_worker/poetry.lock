@@ -1123,6 +1123,17 @@ typing-extensions = "*"
 opt-einsum = ["opt-einsum (>=3.3)"]
 
 [[package]]
+name = "torchaudio"
+version = "0.13.1"
+description = "An audio package for PyTorch"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+torch = "*"
+
+[[package]]
 name = "tqdm"
 version = "4.65.0"
 description = "Fast, Extensible Progress Meter"
@@ -1328,7 +1339,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "flake8 (<5)", "pytest-co
 [metadata]
 lock-version = "1.1"
 python-versions = "3.9.0"
-content-hash = "6df198d0cf2b6943cae55070865037724d7bc7ab44211901ba3a258a159411ba"
+content-hash = "4b3d12043fdddb8f0f3da36b96488a9322ccf5b28af371b6c57654aaed456ed5"
 
 [metadata.files]
 anyio = []
@@ -1565,6 +1576,7 @@ toolwrapper = [
     {file = "toolwrapper-2.1.0.tar.gz", hash = "sha256:128088c93cb02fcaa6701c488e62e027f45ca5597b5c9bcf28816ad70e830bf7"},
 ]
 torch = []
+torchaudio = []
 tqdm = []
 transformers = []
 typer = []
