@@ -22,10 +22,11 @@ mpire = "^2.3.0"
 recasepunc = { git = "https://github.com/benob/recasepunc.git", branch = "main" }
 pandas = "^1.1.5"
 bs4 = "^0.0.1"
-pydiar = "^0.0.6"
+pydiar = "^0.0.7"
 torch = "^1.12.0"
 pydub = "^0.25.1"
 torchaudio = "^0.13"
+numpy = "^1.21.0"
 
 [tool.poetry.dev-dependencies]
 rope = "^0.18.0"

@@ -644,7 +644,7 @@ email = ["email-validator (>=1.0.3)"]
 
 [[package]]
 name = "pydiar"
-version = "0.0.6"
+version = "0.0.7"
 description = "A simple to use library for speaker diarization"
 category = "main"
 optional = false
@@ -1339,7 +1339,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "flake8 (<5)", "pytest-co
 [metadata]
 lock-version = "1.1"
 python-versions = "3.9.0"
-content-hash = "4b3d12043fdddb8f0f3da36b96488a9322ccf5b28af371b6c57654aaed456ed5"
+content-hash = "f25ab6414b90e6c273f274e4ce805d3e035f09003189755658b94d997de7d8b3"
 
 [metadata.files]
 anyio = []
@@ -1428,10 +1428,7 @@ pycparser = [
     {file = "pycparser-2.21.tar.gz", hash = "sha256:e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206"},
 ]
 pydantic = []
-pydiar = [
-    {file = "PyDiar-0.0.6-py3-none-any.whl", hash = "sha256:76c5b36f3506bc97fdf03320bed5585f9b43dfde7f670c997e86dce258338d83"},
-    {file = "PyDiar-0.0.6.tar.gz", hash = "sha256:0115ec4263d08f1110c1999d718bb66b988eb7aac73c3b4393cdf8f81903ac0c"},
-]
+pydiar = []
 pydub = [
     {file = "pydub-0.25.1-py2.py3-none-any.whl", hash = "sha256:65617e33033874b59d87db603aa1ed450633288aefead953b30bded59cb599a6"},
     {file = "pydub-0.25.1.tar.gz", hash = "sha256:980a33ce9949cab2a569606b65674d748ecbca4f0796887fd6f46173a7b0d30f"},
