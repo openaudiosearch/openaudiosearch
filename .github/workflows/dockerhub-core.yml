@@ -7,9 +7,15 @@ on:
       - 'main'
     tags:
       - 'v*'
+    paths:
+      - 'rust/**'
+      - 'Dockerfile-core'
   pull_request:
     branches:
       - 'main'
+    paths:
+      - 'rust/**'
+      - 'Dockerfile-core'
 
 jobs:
   docker:

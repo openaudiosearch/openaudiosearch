@@ -7,9 +7,15 @@ on:
       - 'main'
     tags:
       - 'v*'
+    paths:
+      - 'oas_worker/**'
+      - 'Dockerfile-worker'
   pull_request:
     branches:
       - 'main'
+    paths:
+      - 'oas_worker/**'
+      - 'Dockerfile-worker'
 
 jobs:
   docker:
