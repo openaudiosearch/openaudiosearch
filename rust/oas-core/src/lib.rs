@@ -68,10 +68,13 @@ impl State {
             .init(&self.db)
             .await
             .context("Failed to initialize RSS feed watcher")?;
-        self.index_manager
+        match self.index_manager
             .init(Default::default())
             .await
-            .context("Failed to initialize Elasticsearch.")?;
+            .context("Failed to initialize Elasticsearch.") {
+                Ok(_) => {},
+                Err(err) => log::warn!("{err}"),
+            }
         Ok(())
     }
 }
