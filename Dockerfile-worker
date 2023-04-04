@@ -1,6 +1,6 @@
 # python-base: base image with a few utilities installed
 FROM python:3.9.0-slim as python-base
-RUN apt-get update && apt-get install -q -y wget curl xz-utils iputils-ping iproute2 git
+RUN apt-get update && apt-get install -q -y wget curl xz-utils iputils-ping iproute2 git sed
 RUN python -m pip install --upgrade pip
 
 # poetry-build: export poetry deps to requirements.txt
@@ -12,6 +12,8 @@ WORKDIR /build
 COPY oas_worker/pyproject.toml pyproject.toml
 COPY oas_worker/poetry.lock poetry.lock
 RUN poetry export -f requirements.txt --without-hashes -o /build/requirements.txt
+# hotfix for poetry resolution weirdness
+RUN sed -i 's/benob\/mosestokenizer.git@master/benob\/mosestokenizer.git/g' /build/requirements.txt
 
 # backend-build: install all python deps from requirements.txt to /build/pip
 FROM python-base as backend-build
