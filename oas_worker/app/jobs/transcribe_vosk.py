@@ -40,10 +40,13 @@ def diarization_segments(audio):
 def perform_transcription(model_path, audio, sample_rate=SAMPLE_RATE, on_progress=None):
     global vosk_model
     if not vosk_model:
+        ctx.log.trace(f"loading vosk model from {model_path}")
         vosk_model = Model(model_path)
+        ctx.log.trace(f"model loaded")
     rec = KaldiRecognizer(vosk_model, sample_rate)
     rec.SetMaxAlternatives(0)
     rec.SetWords(True)
+    ctx.log.trace(f"vosk kaldi recognizer initialized")
     chunk_ms = 2000 # chunk size in miliseconds
     duration = len(audio) # total audio duration in miliseconds
 
@@ -105,7 +108,7 @@ def transcribe_vosk(ctx, media_id, audio_file_path, voice_activity=True, diariza
         ctx.log.trace(f"  transcribing {media_id} - progress {str(round(progress*100, 1))}%")
         ctx.set_progress(progress)
 
-    vosk_result = perform_transcription(vosk_model_path, audio, sample_rate=SAMPLE_RATE, on_progress=on_progress)
+    vosk_result = perform_transcription(ctx, vosk_model_path, audio, sample_rate=SAMPLE_RATE, on_progress=on_progress)
     meta["asr"] = {"engine":"vosk","model":vosk_model,"time": round(time.time() - timer, 2)}
     ctx.log.trace("finished transcription")
 
