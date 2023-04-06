@@ -3,7 +3,7 @@ use clap::Parser;
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::{catchers, Orbit, Request, Rocket};
-use rocket_okapi::routes_with_openapi;
+use rocket_okapi::openapi_get_routes;
 use rocket_okapi::swagger_ui::{make_swagger_ui, SwaggerUIConfig};
 
 mod auth;
@@ -50,7 +50,7 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
         .attach(OasFairing)
         .mount(
             "/api/v1",
-            routes_with_openapi![
+            openapi_get_routes![
                 // /record routes
                 handlers::record::get_record,
                 handlers::record::post_record,
@@ -91,6 +91,9 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
                 handlers::job::put_job_progress,
                 // changes routes
                 handlers::changes::durable_changes,
+
+                // transcribe route
+                handlers::transcribe::post_transcribe_job
             ],
         )
         .mount(
@@ -109,7 +112,7 @@ pub async fn run_server(mut state: State, opts: ServerOpts) -> anyhow::Result<()
         Err(_) => app.mount("/", static_dir::IncludedStaticDir::new(&FRONTEND_DIR)),
     };
 
-    app.launch().await?;
+    let _rocket = app.launch().await?;
 
     Ok(())
 }

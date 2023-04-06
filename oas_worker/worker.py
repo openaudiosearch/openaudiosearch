@@ -13,6 +13,13 @@ import app.jobs.jobs
 # See https://stackoverflow.com/questions/55488795 for details.
 from recasepunc import WordpieceTokenizer
 
+# again run some global pytorch init stuff
+import torch
+torch.set_num_threads(1)
+# torch.multiprocessing.set_start_method('spawn')
+torch.device("cpu")
+
+
 if __name__ == '__main__':
     run(worker)
 

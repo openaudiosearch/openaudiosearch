@@ -73,6 +73,7 @@ def asr(ctx, args):
 
     # fetch media record
     media = ctx.get("/media/" + media_id)
+    print(media)
     guid = media["$meta"]["guid"]
     url = media["contentUrl"]
 
@@ -80,7 +81,7 @@ def asr(ctx, args):
     downloaded_path = download(url)
 
     # convert to wav
-    workdir = ctx.workdir()
+    workdir = ctx.cachedir()
     os.makedirs(workdir, exist_ok=True)
     temp_wav = os.path.join(workdir, "processed.wav")
     if not os.path.isfile(temp_wav):

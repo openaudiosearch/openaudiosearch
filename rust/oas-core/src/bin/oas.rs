@@ -175,7 +175,10 @@ fn setup(args: &Args) -> anyhow::Result<()> {
 fn state_from_args(args: &Args) -> anyhow::Result<State> {
     let db_manager = couch::CouchManager::with_url(args.couchdb_url.as_deref())?;
     let db = db_manager.record_db().clone();
-    let index_manager = index::IndexManager::with_url(args.elasticsearch_url.as_deref())?;
+    let index_manager = match args.elasticsearch_url.as_ref() {
+        Some(url) => Some(index::IndexManager::with_url(url)?),
+        None => None
+    };
     let feed_manager_opts = FeedManagerOpts {
         mapping_file: args.mapping_file.clone(),
     };
@@ -225,7 +228,9 @@ async fn run_nuke(state: State, _args: Args) -> anyhow::Result<()> {
         println!("Deleting CouchDB");
         let _ = state.db_manager.destroy_and_init().await;
         println!("Deleting Elasticsearch");
-        let _ = state.index_manager.destroy_and_init().await;
+        if let Some(index_manager) = state.index_manager.as_ref() {
+          let _ = index_manager.destroy_and_init().await;
+        }
     } else {
         println!("exit");
     }
@@ -324,7 +329,7 @@ async fn run_watch(state: State, opts: WatchOpts) -> anyhow::Result<()> {
 }
 
 async fn run_index(state: State, opts: IndexOpts) -> anyhow::Result<()> {
-    let manager = state.index_manager;
+    let manager = state.index_manager.ok_or_else(|| anyhow::anyhow!("Index is disabled"))?;
 
     let init_opts = match opts.recreate {
         true => index::InitOpts::delete_all(),
@@ -348,7 +353,7 @@ async fn run_index(state: State, opts: IndexOpts) -> anyhow::Result<()> {
 }
 
 async fn run_search(state: State, opts: SearchOpts) -> anyhow::Result<()> {
-    let index = state.index_manager.post_index();
+    let index = state.index_manager.as_ref().ok_or_else(|| anyhow::anyhow!("Index is disabled"))?.post_index();
     let records = index
         .index()
         .find_records_with_text_query(&opts.query)

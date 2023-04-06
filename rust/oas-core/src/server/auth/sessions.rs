@@ -1,14 +1,24 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use schemars::JsonSchema;
 use tokio::sync::RwLock;
 
 use super::structs::UserInfo;
 
 /// Session info that's stored for each active session.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, JsonSchema)]
 pub struct SessionInfo {
     pub(super) is_admin: bool,
     pub(super) user: Arc<UserInfo>,
+}
+impl<'r> rocket_okapi::request::OpenApiFromRequest<'r> for SessionInfo {
+    fn from_request_input(
+        _gen: &mut rocket_okapi::gen::OpenApiGenerator,
+        _name: String,
+        _required: bool,
+    ) -> rocket_okapi::Result<rocket_okapi::request::RequestHeaderInput> {
+        Ok(rocket_okapi::request::RequestHeaderInput::None)
+    }
 }
 
 impl SessionInfo {

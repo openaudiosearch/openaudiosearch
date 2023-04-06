@@ -18,6 +18,7 @@ class Config(object):
     def __init__(self):
         self.base_url = os.environ.get("OAS_URL") or DEFAULT_OAS_URL
         self.storage_path = os.environ.get("OAS_STORAGE") or default_storage_dir() 
+        self.cache_path = os.environ.get("OAS_CACHE_DIR") or os.path.join(self.storage_path, "cache")
         self.log_level = os.environ.get('LOG', 'INFO')
         self.log_file = os.environ.get('OAS_LOGFILE') or os.path.join(self.storage_path, 'oas-worker.log')
         self.model = 'vosk-model-de-0.21'
@@ -32,6 +33,9 @@ class Config(object):
 
     def local_dir(self, path):
         return os.path.join(self.storage_path, path)
+
+    def cache_dir(self, path):
+        return os.path.join(self.cache_path, path)
 
 
 config = Config()

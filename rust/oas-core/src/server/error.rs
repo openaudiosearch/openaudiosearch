@@ -64,7 +64,7 @@ impl<'r> Responder<'r, 'static> for AppError {
 
         // let json = json!({ "error": message });
         let json_string = serde_json::to_string(&response).unwrap();
-        let res = content::Json(json_string).respond_to(req);
+        let res = content::RawJson(json_string).respond_to(req);
 
         // Handle authentication error: Add WWW-Authenticate header.
         match res {

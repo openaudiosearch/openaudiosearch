@@ -1,23 +1,26 @@
+# python-base: base image with a few utilities installed
+FROM python:3.9.0-slim as python-base
+RUN apt-get update && apt-get install -q -y wget curl xz-utils iputils-ping iproute2 git sed
+RUN python -m pip install --upgrade pip
+
 # poetry-build: export poetry deps to requirements.txt
 # this is seperate from backend-build so that poetry deps don't end
 # among the python modules that will be copied to the final image
-FROM python:3.9.0-slim as poetry-build
+FROM python-base as poetry-build
 RUN python -m pip install -U pip poetry
 WORKDIR /build
 COPY oas_worker/pyproject.toml pyproject.toml
 COPY oas_worker/poetry.lock poetry.lock
 RUN poetry export -f requirements.txt --without-hashes -o /build/requirements.txt
+# hotfix for poetry resolution weirdness
+RUN sed -i 's/benob\/mosestokenizer.git@master/benob\/mosestokenizer.git/g' /build/requirements.txt
 
 # backend-build: install all python deps from requirements.txt to /build/pip
-FROM python:3.9.0-slim as backend-build
-RUN apt-get update && apt-get install -q -y gcc
+FROM python-base as backend-build
+RUN apt-get update && apt-get install -q -y gcc git
 WORKDIR /build
 COPY --from=poetry-build /build/requirements.txt .
 RUN pip install --prefix="/build/pip" --no-warn-script-location -r requirements.txt
-
-# python-base: base image with a few utilities installed
-FROM python:3.9.0-slim as python-base
-RUN apt-get update && apt-get install -q -y wget curl xz-utils iputils-ping iproute2
 
 # build main image
 FROM python-base

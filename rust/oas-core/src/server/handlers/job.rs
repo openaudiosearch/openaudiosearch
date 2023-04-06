@@ -85,7 +85,7 @@ pub async fn work_job(
 ) -> std::result::Result<Custom<rocket::serde::json::Json<Option<JobRequest>>>, AppError> {
     let wait = wait.map(|_any| true).unwrap_or(false);
     let job = match wait {
-        false => state.jobs.take_job(&typ).await?,
+        false => state.jobs.take_job(&typ).await.map_err(|_err| AppError::Http(Status::NoContent, "".into()))?,
         true => {
             // TODO: This is not aborted in rocket when the request ends.
             // Enable after switching to axum

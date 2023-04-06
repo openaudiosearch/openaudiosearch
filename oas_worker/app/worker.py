@@ -49,7 +49,7 @@ class Worker(object):
             for i in range(job.concurrency):
                 jobs.append((job.name, i))
         n_jobs = len(jobs)
-        with WorkerPool(n_jobs=n_jobs, shared_objects=self) as pool:
+        with WorkerPool(n_jobs=n_jobs, start_method='fork', shared_objects=self) as pool:
             self.pool = pool
             pool.map(work_loop, jobs)
 
@@ -164,6 +164,11 @@ class Context(object):
         if self.job_id is None:
             raise RuntimeException("No job set")
         return self.worker.workdir(self.job_id)
+
+    def cachedir(self):
+        if self.job_id is None:
+            raise RuntimeException("No job set")
+        return self.worker.config.cache_dir(f"job/{self.job_id}")
 
 
 class JobFn(object):

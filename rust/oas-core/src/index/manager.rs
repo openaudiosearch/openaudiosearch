@@ -131,12 +131,12 @@ impl IndexManager {
     }
 
     /// Create a new index manager from an Elasticsearch endpoint URL.
-    pub fn with_url<S>(url: Option<S>) -> anyhow::Result<Self>
+    pub fn with_url<S>(url: S) -> anyhow::Result<Self>
     where
         S: AsRef<str>,
     {
-        let url = url.map(|s| s.as_ref().to_string());
-        let config = Config::from_url_or_default(url.as_deref())?;
+        let url = url.as_ref();
+        let config = Config::from_url_or_default(Some(url))?;
         let manager = Self::with_config(config)?;
         Ok(manager)
     }
